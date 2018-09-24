@@ -16,7 +16,3 @@ freqfilter(wave, FUN = NULL, ...)
 \description{
 Allows for complex frequency filtering of Wave objects.
 }
-\references{
-Stammers (2011) “Audio Event Classification for Urban Soundscape Analysis”. PhD thesis. University of York.
-}
-\keyword{TDSC}

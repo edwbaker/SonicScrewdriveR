@@ -3,6 +3,8 @@
 export(autoBandPass)
 export(defaultCluster)
 export(freqfilter)
+export(pulseDetection)
+export(ste)
 export(windowing)
 import(parallel)
 importFrom(stats,dnorm)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/autoBandPass.R
 \name{autoBandPass}
 \alias{autoBandPass}
-\title{AUtoamtic band pass}
+\title{Autoamtic band pass}
 \usage{
 autoBandPass(wave, sd, nsd)
 }

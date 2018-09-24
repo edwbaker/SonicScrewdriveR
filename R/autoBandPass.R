@@ -6,8 +6,6 @@
 #' @param FUN A function to provide the filter value at a frequency
 #' @param ... Additional parameters to provide to the filter function
 #' 
-#' @keywords TDSC
-#' @references Stammers (2011) “Audio Event Classification for Urban Soundscape Analysis”. PhD thesis. University of York.
 #' @importFrom stats dnorm fft
 #' @export
 #' 
@@ -33,7 +31,7 @@ freqfilter <- function(
   return(wave)
 }
 
-#' AUtoamtic band pass
+#' Autoamtic band pass
 #'
 #' Allows for automatic complex frequency filtering of Wave objects, using a normal distribution.
 #' 
@@ -58,6 +56,3 @@ normalFilter <- function(i, mean, sd, nsd) {
     return(dnorm(i,mean,sd)/dnorm(mean,mean,sd))
   }
 }
-
-#autoBandPass(wave, sd=1, nsd=1) -> w2
-#spec(w2)
