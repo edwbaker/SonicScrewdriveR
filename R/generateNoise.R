@@ -22,20 +22,20 @@ generateNoise <- function(
     source <- normalize(source)
     source_d <- duration(source)
     if (plot==TRUE) {
-      oscillo(source)
+      seewave::oscillo(source)
     }
     for (j in 1:length(noise)) {
-      noises <- silence(duration=source_d, samp.rate = source@samp.rate, bit = source@bit, pcm=source@pcm, xunit="time")
+      noises <- tuneR::silence(duration=source_d, samp.rate = source@samp.rate, bit = source@bit, pcm=source@pcm, xunit="time")
       for (m in 1:length(noiseComponents)) {
         if (noiseComponents[[m]] %in% c("unif", "gaussian")) {
-          n <- noisew(source@samp.rate, source_d, type=noiseComponents[[m]], output="Wave")
-          n <- normalize(n)
+          n <- seewave::noisew(source@samp.rate, source_d, type=noiseComponents[[m]], output="Wave")
+          n <- tuneR::normalize(n)
           noises <- noises + n
           next()
         }
         if (noiseComponents[[m]] %in% c("white", "pink", "power", "red")) {
-          n <- noise(kind=noiseComponents[[m]], duration=source_d, samp.rate=source@samp.rate, bit=source@bit, pcm=source@pcm, xunit="time")
-          n <- normalize(n)
+          n <- tuneR::noise(kind=noiseComponents[[m]], duration=source_d, samp.rate=source@samp.rate, bit=source@bit, pcm=source@pcm, xunit="time")
+          n <- tuneR::normalize(n)
           noises <- noises + n
           next()
         }
@@ -44,21 +44,21 @@ generateNoise <- function(
           next()
         }
         if (is.numeric(noiseComponents[[m]])) {
-          n <- sine(noiseComponents[[m]], duration=source_d, samp.rate=source@samp.rate, bit=source@bit, pcm=source@pcm, xunit="time")
+          n <- tuneR::sine(noiseComponents[[m]], duration=source_d, samp.rate=source@samp.rate, bit=source@bit, pcm=source@pcm, xunit="time")
           n <- normalize(n)
           noises <- noises + n
           next()
         }
         if (file.exists(noiseComponents[[m]])) {
-          nf <- readWave(noiseComponents[[m]], from=0, to=source_d, units="seconds")
-          nf <- normalize(nf)
-          nf_d <- duration(nf)
+          nf <- tuneR::readWave(noiseComponents[[m]], from=0, to=source_d, units="seconds")
+          nf <- tuneR::normalize(nf)
+          nf_d <- seewave::duration(nf)
           
           n <- nf
           while (duration(n) < source_d) {
-            n <- bind(n, nf)
+            n <- tuneR::bind(n, nf)
           }
-          n <- cutw(n, nf@samp.rate, from=0, to=source_d, output="Wave")
+          n <- seewave::cutw(n, nf@samp.rate, from=0, to=source_d, output="Wave")
           
           noises <- noises + n
           next()
@@ -68,12 +68,12 @@ generateNoise <- function(
       }
       noises <-normalize(noises)
       if (plot==TRUE) {
-        oscillo(noises)
+        seewave::oscillo(noises)
       }
       for (k in 1:length(noiseRatio)) {
         ratioNoise <- source + noises * noiseRatio[[k]]
         if (plot==TRUE) {
-          oscillo(ratioNoise)
+          seewave::oscillo(ratioNoise)
         }
         
         row <- list(noise=noise[[j]], noiseRatio=noiseRatio[[k]], wave=ratioNoise)
