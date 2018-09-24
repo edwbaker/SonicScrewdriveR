@@ -6,6 +6,7 @@
 #' @param window.length The lag used to create the A-matrix
 #' @param window.overlap A matrix used to code the Duration-Shape pairs
 #' @param max_D The maximum Duration to code
+#' @param bind.wave If TRUE and FUN returns wave objects these are combined into a single object
 #' @param FUN If TRUE plots the workings of the coding algorithm
 #' @param ... Additional parameters to FUN
 #' @param cluster A cluser form the 'parallel' package for multicore computation
@@ -16,7 +17,14 @@
 #' wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
 #' t <- tdsc(wave)
 
-windowing <- function(wave, window.length, window.overlap=0, FUN, ..., cluster=NULL) {
+windowing <- function(
+  wave, 
+  window.length, 
+  window.overlap=0, 
+  bind.wave=TRUE,
+  FUN, 
+  ..., 
+  cluster=NULL){
   n.windows <- ceiling(length(wave@left) / (window.length - window.overlap))
   starts <- c(
     1,
@@ -29,6 +37,13 @@ windowing <- function(wave, window.length, window.overlap=0, FUN, ..., cluster=N
     l <- parLapply(cluster, starts, FUN, wave=wave, window.length=window.length, ...)
   }
   
+  if (typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
+    w <- l[[1]]
+    for (i in 2:length(l)) {
+      w <- tuneR::bind(w, l[[i]])
+    }
+    l <- w
+  }
   return(l)
 }
 
@@ -37,4 +52,10 @@ pwl <- function(start, wave=NULL, window.length=NULL) {
   w <- wave@left[start:(start+remaining)]
   s <- length(w)
   return(s)
+}
+
+noChange <- function(start, wave, window.length) {
+  remaining <- min(window.length, length(wave) + 1 - start) -1
+  w <- Wave(wave@left[start:(start+remaining)], samp.rate=wave@samp.rate, bit=wave@bit)
+  return(w)
 }
