@@ -5,7 +5,6 @@
 #' @param wave A Wave object
 #' @param window.length The lag used to create the A-matrix
 #' @param window.overlap A matrix used to code the Duration-Shape pairs
-#' @param max_D The maximum Duration to code
 #' @param bind.wave If TRUE and FUN returns wave objects these are combined into a single object
 #' @param FUN If TRUE plots the workings of the coding algorithm
 #' @param ... Additional parameters to FUN
@@ -13,9 +12,7 @@
 #' @keywords wave
 #' @export
 #' @examples
-#' library(tuneR)
-#' wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
-#' t <- tdsc(wave)
+#' windowing(wave, window.length=1000, window.overlap=0, bind.wave=TRUE, FUN=noChange)
 
 windowing <- function(
   wave, 
@@ -56,6 +53,6 @@ pwl <- function(start, wave=NULL, window.length=NULL) {
 
 noChange <- function(start, wave, window.length) {
   remaining <- min(window.length, length(wave) + 1 - start) -1
-  w <- Wave(wave@left[start:(start+remaining)], samp.rate=wave@samp.rate, bit=wave@bit)
+  w <- tuneR::Wave(wave@left[start:(start+remaining)], samp.rate=wave@samp.rate, bit=wave@bit)
   return(w)
 }
