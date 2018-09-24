@@ -4,8 +4,8 @@
 \alias{windowing}
 \title{Windowing Function for Wave Objects}
 \usage{
-windowing(wave, window.length, window.overlap = 0, FUN, ...,
-  cluster = NULL)
+windowing(wave, window.length, window.overlap = 0, bind.wave = TRUE,
+  FUN, ..., cluster = NULL)
 }
 \arguments{
 \item{wave}{A Wave object}
@@ -13,6 +13,8 @@ windowing(wave, window.length, window.overlap = 0, FUN, ...,
 \item{window.length}{The lag used to create the A-matrix}
 
 \item{window.overlap}{A matrix used to code the Duration-Shape pairs}
+
+\item{bind.wave}{If TRUE and FUN returns wave objects these are combined into a single object}
 
 \item{FUN}{If TRUE plots the workings of the coding algorithm}
 
