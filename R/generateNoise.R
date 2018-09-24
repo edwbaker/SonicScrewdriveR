@@ -18,9 +18,9 @@ generateNoise <- function(
   data <- list()
   
   for (i in 1:length(input)) {
-    source <- mono(input[[i]])
-    source <- normalize(source)
-    source_d <- duration(source)
+    source <- tuneR::mono(input[[i]])
+    source <- tuneR::normalize(source)
+    source_d <- seewave::duration(source)
     if (plot==TRUE) {
       seewave::oscillo(source)
     }
