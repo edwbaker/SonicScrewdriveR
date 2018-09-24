@@ -10,11 +10,6 @@
 #' @references Stammers (2011) “Audio Event Classification for Urban Soundscape Analysis”. PhD thesis. University of York.
 #' @importFrom stats dnorm fft
 #' @export
-#' @examples
-#' library(tuneR)
-#' wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
-#' t <- tdsc(wave)
-#' emptyBands(t,t)
 #' 
 freqfilter <- function(
   wave,
@@ -38,23 +33,16 @@ freqfilter <- function(
   return(wave)
 }
 
-#' Frequency Filtering
+#' AUtoamtic band pass
 #'
-#' Allows for complex frequency filtering of Wave objects.
+#' Allows for automatic complex frequency filtering of Wave objects, using a normal distribution.
 #' 
 #' @param wave A Wave object
-#' @param FUN A function to provide the filter value at a frequency
+#' @param sd Standard deviation of filter
+#' @param nsd Number of stanbard deviations eahc side of the mean to pass
 #' @param ... Additional parameters to provide to the filter function
-#' 
-#' @keywords TDSC
-#' @references Stammers (2011) “Audio Event Classification for Urban Soundscape Analysis”. PhD thesis. University of York.
 #' @importFrom stats dnorm fft
 #' @export
-#' @examples
-#' library(tuneR)
-#' wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
-#' t <- tdsc(wave)
-#' emptyBands(t,t)
 #'
 autoBandPass <- function(wave, sd, nsd) {
   wave <- freqfilter(wave, normalFilter, sd=1, nsd=1)

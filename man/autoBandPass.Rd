@@ -2,28 +2,19 @@
 % Please edit documentation in R/autoBandPass.R
 \name{autoBandPass}
 \alias{autoBandPass}
-\title{Frequency Filtering}
+\title{AUtoamtic band pass}
 \usage{
 autoBandPass(wave, sd, nsd)
 }
 \arguments{
 \item{wave}{A Wave object}
 
-\item{FUN}{A function to provide the filter value at a frequency}
+\item{sd}{Standard deviation of filter}
+
+\item{nsd}{Number of stanbard deviations eahc side of the mean to pass}
 
 \item{...}{Additional parameters to provide to the filter function}
 }
 \description{
-Allows for complex frequency filtering of Wave objects.
+Allows for automatic complex frequency filtering of Wave objects, using a normal distribution.
 }
-\examples{
-library(tuneR)
-wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
-t <- tdsc(wave)
-emptyBands(t,t)
-
-}
-\references{
-Stammers (2011) “Audio Event Classification for Urban Soundscape Analysis”. PhD thesis. University of York.
-}
-\keyword{TDSC}

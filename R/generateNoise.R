@@ -45,7 +45,7 @@ generateNoise <- function(
         }
         if (is.numeric(noiseComponents[[m]])) {
           n <- tuneR::sine(noiseComponents[[m]], duration=source_d, samp.rate=source@samp.rate, bit=source@bit, pcm=source@pcm, xunit="time")
-          n <- normalize(n)
+          n <- tuneR::normalize(n)
           noises <- noises + n
           next()
         }
@@ -55,7 +55,7 @@ generateNoise <- function(
           nf_d <- seewave::duration(nf)
           
           n <- nf
-          while (duration(n) < source_d) {
+          while (seewave::duration(n) < source_d) {
             n <- tuneR::bind(n, nf)
           }
           n <- seewave::cutw(n, nf@samp.rate, from=0, to=source_d, output="Wave")
@@ -66,7 +66,7 @@ generateNoise <- function(
         }
         
       }
-      noises <-normalize(noises)
+      noises <-tuneR::normalize(noises)
       if (plot==TRUE) {
         seewave::oscillo(noises)
       }

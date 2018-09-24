@@ -7,10 +7,13 @@
 #' @import parallel
 #' @export
 #' @examples
+#' \dontrun{
 #' cl <- defaultCluster()
-#' 
+#' stopCluster(cl)
 #' cl <- defaultCluster(FALSE)
-
+#' stopCluster(cl)
+#' }
+#' 
 defaultCluster <- function(fork=TRUE) {
   cores <- max(1, detectCores() - 1)
   if (fork) {

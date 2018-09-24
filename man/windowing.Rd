@@ -21,15 +21,13 @@ windowing(wave, window.length, window.overlap = 0, bind.wave = TRUE,
 \item{...}{Additional parameters to FUN}
 
 \item{cluster}{A cluser form the 'parallel' package for multicore computation}
-
-\item{max_D}{The maximum Duration to code}
 }
 \description{
 Seperates a Wave object into windows of a defined length and runs a function on the window section. Windows may overlap, and the function can make use of 'parallel' package for multicore processing.
 }
 \examples{
-library(tuneR)
-wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
-t <- tdsc(wave)
+\dontrun{
+windowing(wave, window.length=1000, window.overlap=0, bind.wave=TRUE, FUN=noChange)
+}
 }
 \keyword{wave}

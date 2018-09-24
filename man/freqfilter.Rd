@@ -16,13 +16,6 @@ freqfilter(wave, FUN = NULL, ...)
 \description{
 Allows for complex frequency filtering of Wave objects.
 }
-\examples{
-library(tuneR)
-wave <- readWave(system.file("extdata", "1.wav", package="tdsc"))
-t <- tdsc(wave)
-emptyBands(t,t)
-
-}
 \references{
 Stammers (2011) “Audio Event Classification for Urban Soundscape Analysis”. PhD thesis. University of York.
 }

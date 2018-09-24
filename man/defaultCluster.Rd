@@ -13,8 +13,12 @@ defaultCluster(fork = TRUE)
 Creates a default cluster using one less than the total cores available on the system. By default this uses forking, which may not be available on 'Windows'.
 }
 \examples{
+\dontrun{
 cl <- defaultCluster()
-
+stopCluster(cl)
 cl <- defaultCluster(FALSE)
+stopCluster(cl)
+}
+
 }
 \keyword{wave}

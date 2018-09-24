@@ -12,7 +12,9 @@
 #' @keywords wave
 #' @export
 #' @examples
+#' \dontrun{
 #' windowing(wave, window.length=1000, window.overlap=0, bind.wave=TRUE, FUN=noChange)
+#' }
 
 windowing <- function(
   wave, 
