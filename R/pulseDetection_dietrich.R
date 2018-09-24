@@ -1,3 +1,16 @@
+#' Pulse detection using Dietrich (2004)
+#'
+#' Detects pulses in a Wave.
+#' 
+#' @param wave A Wave object
+#' @param U Window length
+#' @param gamma Gamma
+#' @param alpha Alpha
+#' @param scaling Scaling
+#' @param V V Window length
+#' @param psi Psi
+#' @export
+#'
 pd_dietrich2004 <- function(
   wave, 
   U=120,
