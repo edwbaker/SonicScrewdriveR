@@ -24,7 +24,7 @@ freqfilter <- function(
   ft <- fft(wave@left)
   n <- length(wave@left)
   f <- wave@samp.rate
-  x <- ((0:(n - 1)) * f/n/1000)[1:(n%/%2)]
+  x <- (as.numeric((0:(n - 1))) * f/n/1000)[1:(n%/%2)]
   
   r <- Re(ft)
   p <- which(r == max(r))
