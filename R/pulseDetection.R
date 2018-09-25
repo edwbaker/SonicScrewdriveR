@@ -9,11 +9,14 @@
 #'
 pulseDetection <- function(
   wave,
-  method="dietrich2004",
+  method="simple",
   ...
 ) {
   if (method == "dietrich2004") {
     return(pd_dietrich2004(wave,...))
+  }
+  if (method == "simple") {
+    return(pd_simple(wave,...))
   }
   stop("No valid method supplied.")
 }

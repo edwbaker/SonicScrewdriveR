@@ -89,6 +89,7 @@ pd_dietrich2004 <- function(
     e_u = e_u,
     e_v = e_v,
     onsets=which(onsets == TRUE),
-    offsets=which(offsets==TRUE)
+    offsets=which(offsets==TRUE),
+    pulse_simple=e_u>F_1
   ))
 }
