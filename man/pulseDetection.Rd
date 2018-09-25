@@ -4,7 +4,7 @@
 \alias{pulseDetection}
 \title{Pulse detection}
 \usage{
-pulseDetection(wave, method = "dietrich2004", ...)
+pulseDetection(wave, method = "simple", ...)
 }
 \arguments{
 \item{wave}{A Wave object containing pulses}

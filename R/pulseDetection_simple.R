@@ -32,7 +32,7 @@ pd_simple <- function(
     F_1 = F_1,
     e_u = e_u,
     pulse = pulse,
-    onsets = which(diff(d$pulse) == 1),
-    offsets = which(diff(d$pulse) == -1)
+    onsets = which(diff(pulse) == 1),
+    offsets = which(diff(pulse) == -1)
   ))
 }
