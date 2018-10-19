@@ -1,4 +1,4 @@
-#' Windowing Function for Wave Objects
+#' Windowing Function for Wave Objects 
 #'
 #' Seperates a Wave object into windows of a defined length and runs a function on the window section. Windows may overlap, and the function can make use of 'parallel' package for multicore processing.
 #' 
@@ -45,6 +45,8 @@ windowing <- function(
   }
   return(l)
 }
+
+
 
 pwl <- function(start, wave=NULL, window.length=NULL) {
   remaining <- min(window.length, length(wave) + 1 - start) -1

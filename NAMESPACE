@@ -3,6 +3,7 @@
 export(autoBandPass)
 export(defaultCluster)
 export(freqfilter)
+export(ntd)
 export(pd_dietrich2004)
 export(pd_simple)
 export(pulseDetection)
