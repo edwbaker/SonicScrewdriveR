@@ -5,6 +5,7 @@
 #' @param wave A Wave object containing pulses
 #' @param events Onset of detected events, e.g. from pulseDetction()
 #' @param FUN The function to run
+#' @param ... Additional arguments to FUN
 #' @param normalise If TRUE the output is a probability density
 #' @param argument If "wave" supplies a weave object to the function, if "vector" supplies the left channel as a numeric vector.
 #' @export

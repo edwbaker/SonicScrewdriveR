@@ -4,7 +4,7 @@
 \alias{ntd}
 \title{Natural Time Domain}
 \usage{
-ntd(wave, events, FUN, normalise = FALSE)
+ntd(wave, events, FUN, normalise = FALSE, argument = "wave", ...)
 }
 \arguments{
 \item{wave}{A Wave object containing pulses}
@@ -14,6 +14,10 @@ ntd(wave, events, FUN, normalise = FALSE)
 \item{FUN}{The function to run}
 
 \item{normalise}{If TRUE the output is a probability density}
+
+\item{argument}{If "wave" supplies a weave object to the function, if "vector" supplies the left channel as a numeric vector.}
+
+\item{...}{Additional arguments to FUN}
 }
 \description{
 Runs a function on the wave and outpiuts values in the Natural Time Domain.
