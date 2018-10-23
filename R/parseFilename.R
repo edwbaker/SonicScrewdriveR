@@ -1,8 +1,9 @@
 #' Parse a filename
 #'
-#' Attempts to extract menaingful information froma  filename. 
+#' Attempts to extract menaingful information from a filename. 
 #' 
 #' @param string A filename
+#' @return A list of raw results, plus calculated values for date, time and device.
 #' @export
 #'
 parseFilename <- function(string) {
