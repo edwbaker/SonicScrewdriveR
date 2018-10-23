@@ -1,6 +1,6 @@
 #' Natural Time Domain
 #'
-#' Runs a function on the wave and outpiuts values in the Natural Time Domain.
+#' Runs a function on the wave and outputs values in the Natural Time Domain (see Varotsos, Sarlis & Skordas(2011) <doi:10.1007/978-3-642-16449-1>).
 #' 
 #' @param wave A Wave object containing pulses
 #' @param events Onset of detected events, e.g. from pulseDetction()

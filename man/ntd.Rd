@@ -20,5 +20,5 @@ ntd(wave, events, FUN, normalise = FALSE, argument = "wave", ...)
 \item{...}{Additional arguments to FUN}
 }
 \description{
-Runs a function on the wave and outpiuts values in the Natural Time Domain.
+Runs a function on the wave and outputs values in the Natural Time Domain (see Varotsos, Sarlis & Skordas(2011) <doi:10.1007/978-3-642-16449-1>).
 }
