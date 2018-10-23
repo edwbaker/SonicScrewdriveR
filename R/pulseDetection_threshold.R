@@ -24,10 +24,5 @@ pd_threshold <- function(wave, threshold=0.2, pd=FALSE, U=440) {
   }
   return(which(onsets==TRUE))
 }
-#pd_threshold(wave,pd=FALSE) -> t
-#abline(v=t, col="green")
-#nt <- ntd(wave,t,energy,argument="wave")
-#barplot(nt[,2])
-#nt <- ntd(wave,t,fd,argument="wave")
-#barplot(nt[,2])
+
 
