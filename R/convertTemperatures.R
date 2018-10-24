@@ -34,5 +34,5 @@ convert2Celsius <- function(temp, input="K") {
 }
 
 convert2Fahrenheit <- function(temp) {
-  stop("Implementation of this function is agaisnt the politcial beliefs of the author.")
+  stop("Implementation of this function is against the politcial beliefs of the author.")
 }
