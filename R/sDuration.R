@@ -15,7 +15,7 @@ sDuration <- function(
   samp.rate = NULL
 ){
   if (is.null(wave) & is.null(samp.rate)){
-    stop("samp.rate or f must be specified")
+    stop("samp.rate or wave must be specified")
   }
   if (!is.null(wave)) {
     samp.rate <- wave@samp.rate
