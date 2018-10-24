@@ -31,6 +31,7 @@ convert2Celsius <- function(temp, input="K") {
     validateKelvin(convert2Kelvin(temp, input="C"))
     return(temp)
   }
+  stop("Unknown unit: ", input)
 }
 
 convert2Fahrenheit <- function(temp) {
