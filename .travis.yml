@@ -18,3 +18,4 @@ r_packages:
   - methods
 after_success:
   - Rscript -e 'devtools::install();devtools::test()'
+  - Rscript -e 'covr::coveralls()'
