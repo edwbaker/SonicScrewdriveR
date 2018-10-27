@@ -1,4 +1,4 @@
-[![Travis-CI Build Status](https://travis-ci.org/edwbaker/SonicScrewdriveR.svg?branch=master)](https://travis-ci.org/edwbaker/SonicScrewdriveR) [![Coverage Status](https://coveralls.io/repos/github/edwbaker/SonicScrewdriveR/badge.svg?branch=master)](https://coveralls.io/github/edwbaker/SonicScrewdriveR?branch=master)
+[![Travis-CI Build Status](https://travis-ci.org/edwbaker/SonicScrewdriveR.svg?branch=master)](https://travis-ci.org/edwbaker/SonicScrewdriveR) [![Coverage Status](https://coveralls.io/repos/github/edwbaker/SonicScrewdriveR/badge.svg?branch=master&bi)](https://coveralls.io/github/edwbaker/SonicScrewdriveR?branch=master)
 
 # Sonic ScrewdriveR
 This package provides basic tools for manipulating sound files for analysis. 
