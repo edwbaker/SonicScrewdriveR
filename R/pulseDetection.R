@@ -18,5 +18,8 @@ pulseDetection <- function(
   if (method == "simple") {
     return(pd_simple(wave,...))
   }
+  if (method == "threshold") {
+    return(pd_threshold(wave, ...))
+  }
   stop("No valid method supplied.")
 }
