@@ -56,20 +56,20 @@ frequencyStats <- function(
   
   data <- list(
     "-3dB" = list(
-      "min" = min_3,
-      "max" = max_3,
-      "peak" = x[which(y==max(y))],
-      "centre" = mean(c(min_3,max_3)),
-      "bandwidth" = max_3 - min_3,
-      "Q" = x[which(y==max(y))] / (max_3 - min_3)
+      "min" = validateFreqIsPossible(min_3, samp.rate=wave@samp.rate),
+      "max" = validateFreqIsPossible(max_3, samp.rate=wave@samp.rate),
+      "peak" = validateFreqIsPossible(x[which(y==max(y))], samp.rate=wave@samp.rate),
+      "centre" = validateFreqIsPossible(mean(c(min_3,max_3)), samp.rate=wave@samp.rate),
+      "bandwidth" = validateBandwidthIsPossible(max_3 - min_3, samp.rate=wave@samp.rate),
+      "Q" = validateQ(x[which(y==max(y))] / (max_3 - min_3))
     ),
     "-10dB" = list(
-      "min" = min_10,
-      "max" = max_10,
-      "peak" = x[which(y==max(y))],
-      "centre" = mean(c(min_10,max_10)),
-      "bandwidth" = max_10 - min_10,
-      "Q" = x[which(y==max(y))] / (max_10 - min_10)
+      "min" = validateFreqIsPossible(min_10, samp.rate=wave@samp.rate),
+      "max" = validateFreqIsPossible(max_10, samp.rate=wave@samp.rate),
+      "peak" = validateFreqIsPossible(x[which(y==max(y))], samp.rate=wave@samp.rate),
+      "centre" = validateFreqIsPossible(mean(c(min_10,max_10)), samp.rate=wave@samp.rate),
+      "bandwidth" = validateBandwidthIsPossible(max_10 - min_10, samp.rate=wave@samp.rate),
+      "Q" = validateQ(x[which(y==max(y))] / (max_10 - min_10))
     )
   )
   

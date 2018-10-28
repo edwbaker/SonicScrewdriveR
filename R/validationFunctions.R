@@ -28,11 +28,14 @@ validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
   if (!is.numeric(f)) {
     stop("Frequency must be numeric.")
   }
+  if (f < 0) {
+    stop("Frequency must be positive.")
+  }
   if (is.null(wave) & is.null(samp.rate)) {
-    stop("Validation of frequency requires Wave object or samp.rate")
+    stop("Frequency requires Wave object or samp.rate")
   }
   if (!is.null(wave) & !is.null(samp.rate)) {
-    stop("Validation of frequency requires Wave object OR samp.rate")
+    stop("Frequency requires Wave object OR samp.rate")
   }
   if (!is.null(wave)) {
     validateIsWave(wave)
@@ -50,6 +53,26 @@ validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
       stop("Frequency is greater than half sample rate.")
     }
   }
-
   return(f)
+}
+
+validateBandwidthIsPossible <-function(bw, wave=NULL, samp.rate=NULL){
+  #Same tests as for frequency
+  tryCatch(
+    validateFreqIsPossible(bw, wave=wave, samp.rate=samp.rate),
+    error = function(e) {
+      stop(gsub("Frequency", "Bandwidth", e[1]))
+    }
+  )
+  return(bw)
+}
+
+validateQ <- function(Q) {
+  if (!is.numeric(Q)) {
+    stop("Q must be numeric.")
+  }
+  if (Q < 0){
+    stop("Q must be positive.")
+  }
+  return(Q)
 }
