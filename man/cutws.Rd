@@ -11,7 +11,9 @@ cutws(wave, from, to, plot = FALSE)
 
 \item{from}{First sample to return}
 
-\item{end}{Last sample to return}
+\item{to}{Last sample to return}
+
+\item{plot}{If TRUE shows the cut region within the original waveform}
 }
 \description{
 Extract a section of a Wave object based on sample positions

@@ -4,7 +4,8 @@
 #' 
 #' @param wave A Wave object 
 #' @param from First sample to return
-#' @param end Last sample to return
+#' @param to Last sample to return
+#' @param plot If TRUE shows the cut region within the original waveform
 #' @export
 #'
 cutws <- function(wave, from, to, plot=FALSE) {
