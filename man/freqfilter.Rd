@@ -4,14 +4,15 @@
 \alias{freqfilter}
 \title{Frequency Filtering}
 \usage{
-freqfilter(wave, FUN = NULL, highpass = NULL, ...)
+freqfilter(wave, method = "highpass", n.bandwidth = 1,
+  bandwidth = "-10dB", highpass = 2000)
 }
 \arguments{
 \item{wave}{A Wave object}
 
-\item{FUN}{A function to provide the filter value at a frequency}
-
 \item{highpass}{If numeric cut off frequewncies below this cut off}
+
+\item{FUN}{A function to provide the filter value at a frequency}
 
 \item{...}{Additional parameters to provide to the filter function}
 }

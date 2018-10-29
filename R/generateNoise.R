@@ -1,14 +1,12 @@
 generateNoise <- function(
-  input, 
+  wave, 
   noise = "white", 
   noiseAdd = FALSE, 
   noiseRatio=0.5, 
   output = "file",
   plot=FALSE) {
   
-  if (typeof(input) == "S4") {
-    input <- list(input)
-  }
+  validateIsWave(wave)
   
   noiseComponents <- noise
   if (noiseAdd) {

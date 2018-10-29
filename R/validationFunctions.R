@@ -18,6 +18,13 @@ validateKelvin <- function(T) {
   return(T)
 }
 
+#' Check an object is a Wave object
+#'
+#' Helper function to test that the input is a Wave object. Will crete an error if not.
+#' 
+#' @param wave Object to test
+#' @export
+#'
 validateIsWave <- function(wave) {
   if (typeof(wave) != "S4" | class(wave) != "Wave") {
     stop("Expecting a Wave object")
