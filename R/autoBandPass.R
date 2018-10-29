@@ -8,7 +8,6 @@
 #' @param n.bw The number of bandwidths either side of the centre of the centre to keep
 #' @param lowcut High-pass filtering is applied at this frequency before calculating the centre frequency and bandwith
 #' 
-#' @importFrom stats dnorm fft
 #' @export
 #' 
 autoBandPass <- function(
@@ -17,7 +16,7 @@ autoBandPass <- function(
   n.bw=1,
   lowcut=1000
 ) {
-  wave2 <- ffilter(wave, from=lowcut, output="Wave")
+  wave2 <- seewave::ffilter(wave, from=lowcut, output="Wave")
   data <- frequencyStats(wave2)
   rm(wave2)
   if (bw=="-3dB") {
@@ -28,7 +27,7 @@ autoBandPass <- function(
     bw <- data$`-10dB`$bandwidth * 1000
     centre <- data$`-10dB`$centre * 1000
   }
-  wave <- ffilter(
+  wave <- seewave::ffilter(
     wave,
     from=centre-n.bw*bw,
     to=centre+n.bw*bw,
