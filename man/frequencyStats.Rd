@@ -4,7 +4,7 @@
 \alias{frequencyStats}
 \title{Various measurements of frequency values for a Wave object}
 \usage{
-frequencyStats(wave, warn = TRUE, plot = FALSE)
+frequencyStats(wave, warn = TRUE, lowcut = 1, plot = FALSE)
 }
 \arguments{
 \item{wave}{A Wave object}
