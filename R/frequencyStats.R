@@ -6,6 +6,7 @@
 #' @param wave A Wave object
 #' @param plot IF TRUE displays values
 #' @param warn If TRUE provides warnings when values are not consistent
+#' @param lowcut Frequency (in kHz) values below which are ignored.
 #' @importFrom graphics abline plot title
 #' @export
 #' 
