@@ -65,3 +65,9 @@ test_that("validateQ rejects negative input", {
   expect_error(validateQ(-1), "Q must be positive.")
   expect_equal(validateQ(1), 1)
 })
+
+test_that("validateDutyCycle inputs", {
+  expect_error(validateDutyCycle("string"), "Duty cycle must be numeric.")
+})
+
+test_that("validateDutyCycle rejects out of range values")

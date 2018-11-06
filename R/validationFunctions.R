@@ -83,3 +83,16 @@ validateQ <- function(Q) {
   }
   return(Q)
 }
+
+validateDutyCycle <- function(dc) {
+  if (!is.numeric(dc)) {
+    stop("Duty cycle must be numeric.")
+  }
+  if (dc < 0) {
+    stop("Duty cycle must be greater than or equal to zero.")
+  }
+  if (dc > 1) {
+    stop("Duty cycle must be less than or equal to one.")
+  }
+  return(dc)
+}
