@@ -11,6 +11,8 @@ frequencyStats(wave, warn = TRUE, lowcut = 1, plot = FALSE)
 
 \item{warn}{If TRUE provides warnings when values are not consistent}
 
+\item{lowcut}{Frequency (in kHz) values below which are ignored.}
+
 \item{plot}{IF TRUE displays values}
 }
 \description{
