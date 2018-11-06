@@ -12,7 +12,7 @@ dutyCycle <- function(
   limit=0.1,
   output="unit"
 ) {
-  wave <- seewave::normalize(wave)
+  wave <- tuneR::normalize(wave)
   w <- abs(wave@left)
   l <- length(w)
   c <- sum(w > limit*max(w))
