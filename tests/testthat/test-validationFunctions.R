@@ -70,4 +70,9 @@ test_that("validateDutyCycle inputs", {
   expect_error(validateDutyCycle("string"), "Duty cycle must be numeric.")
 })
 
-test_that("validateDutyCycle rejects out of range values")
+test_that("validateDutyCycle rejects out of range values", {
+  expect_error(validateDutyCycle(2), "Duty cycle must be less than or equal to one.")
+  expect_error(validateDutyCycle(-1), "Duty cycle must be greater than or equal to zero.")
+  expect_equal(validateDutyCycle(0), 0)
+  expect_equal(validateDutyCycle(1), 1)
+})
