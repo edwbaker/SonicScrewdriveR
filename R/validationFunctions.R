@@ -21,7 +21,7 @@ validateKelvin <- function(T) {
 #' Check an object is a Wave object
 #'
 #' Helper function to test that the input is a Wave object. Will crete an error if not.
-#' 
+#'
 #' @param wave Object to test
 #' @export
 #'
@@ -32,32 +32,34 @@ validateIsWave <- function(wave) {
 }
 
 validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
-  if (!is.numeric(f)) {
-    stop("Frequency must be numeric.")
-  }
-  if (f < 0) {
-    stop("Frequency must be positive.")
-  }
-  if (is.null(wave) & is.null(samp.rate)) {
-    stop("Frequency requires Wave object or samp.rate")
-  }
-  if (!is.null(wave) & !is.null(samp.rate)) {
-    stop("Frequency requires Wave object OR samp.rate")
-  }
-  if (!is.null(wave)) {
-    validateIsWave(wave)
-  }
-  if (!is.null(samp.rate) & !is.numeric(samp.rate)) {
-    stop("samp.rate must be numeric")
-  }
-  if (!is.null(samp.rate)) {
-    if ( f > samp.rate/2) {
-      stop("Frequency is greater than half sample rate.")
+  for (i in 1:length(f)) {
+    if (!is.numeric(f[[i]])) {
+      stop("Frequency must be numeric.")
     }
-  }
-  if (!is.null(wave)) {
-    if (f > wave@samp.rate/2) {
-      stop("Frequency is greater than half sample rate.")
+    if (f[[i]] < 0) {
+      stop("Frequency must be positive.")
+    }
+    if (is.null(wave) & is.null(samp.rate)) {
+      stop("Frequency requires Wave object or samp.rate")
+    }
+    if (!is.null(wave) & !is.null(samp.rate)) {
+      stop("Frequency requires Wave object OR samp.rate")
+    }
+    if (!is.null(wave)) {
+      validateIsWave(wave)
+    }
+    if (!is.null(samp.rate) & !is.numeric(samp.rate)) {
+      stop("samp.rate must be numeric")
+    }
+    if (!is.null(samp.rate)) {
+      if ( f[[i]] > samp.rate/2) {
+        stop("Frequency is greater than half sample rate.")
+      }
+    }
+    if (!is.null(wave)) {
+      if (f[[i]] > wave@samp.rate/2) {
+        stop("Frequency is greater than half sample rate.")
+      }
     }
   }
   return(f)
