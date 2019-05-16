@@ -98,3 +98,52 @@ validateDutyCycle <- function(dc) {
   }
   return(dc)
 }
+
+validateSpectrum <- function(s, coerceNegative=FALSE, coerceNA = TRUE) {
+  if (typeof(s) != "double") {
+    stop("Spectrum must be double")
+  }
+  if (class(s) != "matrix") {
+    stop("Spectrum must be a matrix.")
+  }
+  if (ncol(s) != 2) {
+    stop("Spectrum must have two columns.")
+  }
+  if (nrow(s) < 1) {
+    stop("Spectrum must have one or more rows.")
+  }
+  for (i in 1:nrow(s)) {
+    for (j in 1:2) {
+      if (!is.numeric(s[i,j])) {
+        stop("All values in sepctrum must be numeric.")
+      }
+      if (is.na(s[[i,j]])) {
+        if (coerceNA) {
+          if (j==2) {
+            s[[i,j]] <- 0
+          }
+        } else {
+          stop("No NA allowedin spectra.")
+        }
+      }
+      if (s[[i,j]] < 0) {
+        if (coerceNegative) {
+          s[[i,j]] <- 0
+        } else {
+          stop("No negative values in spectrum.")
+        }
+      }
+    }
+  }
+  return(s)
+}
+
+validateComparableSpectra <- function(s1, s2) {
+  if (nrow(s1) != nrow(s2)) {
+    stop("Spectra must have equal number of rows.")
+  }
+  if (all(s1[,1] == s2[,1]) != TRUE) {
+    stop("Spectra must have same frequency bins.")
+  }
+
+}
