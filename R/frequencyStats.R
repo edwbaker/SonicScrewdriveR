@@ -4,10 +4,12 @@
 #' -3dB and -10dB as discussed by Bennett-Clark (1999)  <doi: 10.1080/09524622.1999.9753408>.
 #'
 #' @param wave A Wave object
+#' @param wave_spec A precomputed spectrum (optional, if not present will be generated)
 #' @param plot IF TRUE displays values
 #' @param warn If TRUE provides warnings when values are not consistent
 #' @param lowcut Frequency (in kHz) values below which are ignored.
 #' @importFrom graphics abline plot title
+#' @importFrom seewave sfm
 #' @export
 #'
 frequencyStats <- function(

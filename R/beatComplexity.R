@@ -18,6 +18,7 @@ beatComplexity <-function(
   
   c <- max(bs$period[peaks]) / length(peaks)
   
+  #ToDo: return period range, number of peaks as list
   return(c)
   
 }

@@ -4,10 +4,13 @@
 \alias{frequencyStats}
 \title{Various measurements of frequency values for a Wave object}
 \usage{
-frequencyStats(wave, warn = TRUE, lowcut = 1, plot = FALSE)
+frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1,
+  plot = FALSE)
 }
 \arguments{
 \item{wave}{A Wave object}
+
+\item{wave_spec}{A precomputed spectrum (optional, if not present will be generated)}
 
 \item{warn}{If TRUE provides warnings when values are not consistent}
 

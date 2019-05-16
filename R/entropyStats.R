@@ -4,6 +4,7 @@
 #' -3dB and -10dB as discussed by Bennett-Clark (1999)  <doi: 10.1080/09524622.1999.9753408>.
 #'
 #' @param wave A Wave object
+#' @importFrom seewave meanspec sh
 #' @export
 #'
 entropyStats <- function(

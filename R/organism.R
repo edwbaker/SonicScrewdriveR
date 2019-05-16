@@ -1,0 +1,10 @@
+setClass(
+  "organism", 
+  representation(
+    position="numeric",
+    song="numeric",
+    mode="character",
+    input="numeric",
+    input_detail="data.frame"
+  )
+)
