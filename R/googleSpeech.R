@@ -11,7 +11,6 @@
 #' @importFrom googleCloudStorageR gcs_upload gcs_delete_object
 #' @export
 #'
-#'
 gs_transcribe <- function(filename, bucket=NULL,...) {
   max_d <- 3 #Max duration for objects not in Cloud Storage
   wave <- readWave(filename)
