@@ -1,5 +1,14 @@
-soundSpeed <- function(medium="air", 
-                       method=NULL, 
+#' Get the speed of sound in a medium
+#'
+#' TODO: Description
+#'
+#' @param medium Propagation medium (default is "air")
+#' @param method The method used to calculate speed of sound (default is "vague")
+#' @param temperature The temperature used to calculate the sound speed
+#' @export
+#'
+soundSpeed <- function(medium="air",
+                       method=NULL,
                        temperature=NULL) {
   if (is.null(method)) {
     if (is.null(temperature)) {
@@ -8,7 +17,7 @@ soundSpeed <- function(medium="air",
   }
 }
 
-soundSpeed_vague <- function(medium="air") {
+soundSpeed_vague <- function(medium="air", temperature=NULL) {
   if (medium == "air") {
     return (343)
   }

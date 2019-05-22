@@ -1,3 +1,11 @@
+#' Convert pressure to Pascals
+#'
+#' Converts pressure measurements into Pascals
+#'
+#' @param P The value of the pressure to convert
+#' @param input The unit of the pressure to convert, allowed values are "kPa".
+#' @export
+#'
 convert2Pascals <- function(P, input="kPa") {
   if (input == "kPa") {
     return(P*1000)
