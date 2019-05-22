@@ -12,8 +12,6 @@ sDuration(n = 1, wave = NULL, samp.rate = NULL)
 \item{wave}{A Wave object containing pulses}
 
 \item{samp.rate}{Ineteger sampling rate}
-
-\item{...}{Other arguments to pass to pulse detection function}
 }
 \description{
 Calculates the time represenetd by n samples in a Wave.
