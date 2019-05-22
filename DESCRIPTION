@@ -1,8 +1,8 @@
 Package: sonicscrewdriver
 Title: Tools for Manipulating Sound Files
 Version: 0.0.0.1
-Authors@R: person("Ed", "Baker", email = "ed.baker@york.ac.uk", role = c("aut", "cre"))
-Description: This package provides basic tools for manipulating sound files for analysis. A windowing function is provided for chunking large calculations. This package can make use of multicore architectures using 'parallel'.
+Authors@R: person("Ed", "Baker", email = "edwbaker@gmail.com", role = c("aut", "cre"))
+Description: Provides basic tools for manipulating sound files for analysis. A windowing function is provided for chunking large calculations. This package can make use of multicore architectures using 'parallel'.
 Depends: R (>= 3.4.0)
 Imports:
   tuneR,
