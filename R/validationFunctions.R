@@ -147,3 +147,28 @@ validateComparableSpectra <- function(s1, s2) {
   }
 
 }
+
+validateTimeInSeconds <- function(t, coerceNegative=FALSE, max_t=NULL, coerceMaximum=FALSE) {
+  for (i in 1:length(t)) {
+    if (!is.numeric(t[[i]])) {
+      stop("Time in Seconds must be numeric.")
+    }
+    if (t[[i]] < 0) {
+      if (coerceNegative) {
+        t[[i]] <- 0
+      } else {
+        stop("Time in Seconds cannot be negative")
+      }
+    }
+  }
+  if (!is.null(max_t)){
+    if (t[[i]] > max_t) {
+      if (coerceMaximum) {
+        t[[i]] <- max_t
+      } else {
+        stop("Time in Seconds cannot be longer than max_t")
+      }
+    }
+  }
+  return(t)
+}
