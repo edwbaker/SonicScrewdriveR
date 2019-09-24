@@ -12,7 +12,7 @@ rainfallDetection <- function(
   method="bedoya2017",
   ...
 ) {
-  if (method == "dietrich2004") {
+  if (method == "bedoya2017") {
     return(rainfall_bedoya2017(wave,...))
   }
   stop("No valid method supplied.")
