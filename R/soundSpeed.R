@@ -26,5 +26,8 @@ soundSpeed_vague <- function(medium="air", temperature=NULL) {
   if (medium == "air") {
     return (343)
   }
+  if (medium == "sea water") {
+    return(1500)
+  }
   stop("No sound speed data for medium: ", medium)
 }
