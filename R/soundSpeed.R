@@ -26,7 +26,7 @@ soundSpeed <- function(medium="air",
 #' @export
 #'
 soundSpeedBMD <- function(bm, d) {
-  s <- sqrt(validateBM(bm)/validateDensity(d))
+  s <- sqrt(validateBulkModulus(bm)/validateDensity(d))
   return(s)
 }
 
