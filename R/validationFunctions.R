@@ -8,6 +8,26 @@ validateRH <- function(RH) {
   return(RH)
 }
 
+validateBulkModulus <- function(b) {
+  if (!is.numeric(b)) {
+    stop("Bulk modulus must be numeric")
+  }
+  if (b < 0) {
+    stop("Bulk modulus must not be negative.")
+  }
+  return(b)
+}
+
+validateDensity<- function(b) {
+  if (!is.numeric(b)) {
+    stop("Density must be numeric")
+  }
+  if (b < 0) {
+    stop("Density must not be negative.")
+  }
+  return(b)
+}
+
 validateKelvin <- function(T) {
   if (!is.numeric(T)) {
     stop("Kelvin must be numeric")

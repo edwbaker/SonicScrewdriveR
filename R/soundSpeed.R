@@ -17,6 +17,11 @@ soundSpeed <- function(medium="air",
   }
 }
 
+soundSpeedBMD <- function(bm, d) {
+  s <- sqrt(validateBM(bm)/validateDensity(d))
+  return(s)
+}
+
 soundSpeed_vague <- function(medium="air", temperature=NULL) {
   if (medium == "air") {
     return (343)
