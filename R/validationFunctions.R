@@ -18,6 +18,23 @@ validateBulkModulus <- function(b) {
   return(b)
 }
 
+validateSpeed <- function(b) {
+  if (!is.numeric(b)) {
+    stop("Speed must be numeric")
+  }
+  return(b)
+}
+
+validateWavelength <- function(b) {
+  if (!is.numeric(b)) {
+    stop("Wavelength must be numeric")
+  }
+  if (b < 0) {
+    stop("Wavelength must not be negative.")
+  }
+  return(b)
+}
+
 validateDensity<- function(b) {
   if (!is.numeric(b)) {
     stop("Density must be numeric")

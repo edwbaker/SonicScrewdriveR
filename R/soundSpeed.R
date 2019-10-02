@@ -17,6 +17,19 @@ soundSpeed <- function(medium="air",
   }
 }
 
+#' Get the speed of sound in a medium using wavelength and frequency
+#'
+#' TODO: Description
+#'
+#' @param wl Wavelength
+#' @param f Frequency
+#' @export
+#'
+soundSpeedWF <- function(wl, f) {
+  s <- validateWavelength(wl) * validateFreqIsPossible(f)
+  return(s)
+}
+
 #' Get the speed of sound in a medium using bulk modulus and density
 #'
 #' TODO: Description
