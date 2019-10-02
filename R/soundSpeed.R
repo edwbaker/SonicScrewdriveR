@@ -17,6 +17,14 @@ soundSpeed <- function(medium="air",
   }
 }
 
+#' Get the speed of sound in a medium using bulk modulus and density
+#'
+#' TODO: Description
+#'
+#' @param bm Bulk modulus
+#' @param d Density
+#' @export
+#'
 soundSpeedBMD <- function(bm, d) {
   s <- sqrt(validateBM(bm)/validateDensity(d))
   return(s)
