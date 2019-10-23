@@ -1,3 +1,4 @@
+#' @importFrom utils askYesNo install.packages installed.packages
 package.installed <- function(name, method=NULL, repo=NULL) {
   if(name %in% rownames(installed.packages()) == TRUE) {return(TRUE)}
   else {
@@ -11,7 +12,7 @@ package.installed <- function(name, method=NULL, repo=NULL) {
       }
       if (method == "github") {
         if (package.installed("devtools")) {
-          install_github(paste(repo,name, sep = "/"))
+          devtools::install_github(paste(repo,name, sep = "/"))
           return(TRUE)
         }
       }
