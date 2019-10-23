@@ -1,18 +1,30 @@
+#' Add noise to a soundwave
+#'
+#' TODO: Description
+#'
+#' @param wave Wave file to add noise to
+#' @param noise Vector of noise to add (unif, gaussian, white, pink, power, red, frequency of a sine wave in Hz, or filename)
+#' @param noiseAdd If TRUE all noise osurcves are added to wave. If FALSE seperate outputs are created for each noise source.
+#' @param noiseRatio Ratio of maximum noise amplitude to the maximum amplitude in wave
+#' @param output TODO: Is this implemented?
+#' @param plot If TRUE various plots are made to show how noise is addded.
+#' @export
+#'
 generateNoise <- function(
-  wave, 
-  noise = "white", 
-  noiseAdd = FALSE, 
-  noiseRatio=0.5, 
+  wave,
+  noise = c("white"),
+  noiseAdd = FALSE,
+  noiseRatio=0.5,
   output = "file",
   plot=FALSE) {
-  
+
   validateIsWave(wave)
-  
+
   noiseComponents <- noise
   if (noiseAdd) {
     noise <- paste(noise, collapse="+")
   }
-  
+
   data <- list()
 
   source <- tuneR::mono(wave)
@@ -37,7 +49,7 @@ generateNoise <- function(
         next()
       }
       if (noiseComponents[[m]] %in% c("rain", "thunder", "wind")) {
-        
+
         next()
       }
       if (is.numeric(noiseComponents[[m]])) {
@@ -50,18 +62,18 @@ generateNoise <- function(
         nf <- tuneR::readWave(noiseComponents[[m]], from=0, to=source_d, units="seconds")
         nf <- tuneR::normalize(nf)
         nf_d <- seewave::duration(nf)
-        
+
         n <- nf
         while (seewave::duration(n) < source_d) {
           n <- tuneR::bind(n, nf)
         }
         n <- seewave::cutw(n, nf@samp.rate, from=0, to=source_d, output="Wave")
-        
+
         noises <- noises + n
         next()
-        
+
       }
-      
+
     }
     noises <-tuneR::normalize(noises)
     if (plot==TRUE) {
@@ -72,9 +84,9 @@ generateNoise <- function(
       if (plot==TRUE) {
         seewave::oscillo(ratioNoise)
       }
-      
+
       row <- list(noise=noise[[j]], noiseRatio=noiseRatio[[k]], wave=ratioNoise)
-      
+
       data <- c(data, list(row))
     }
   }
