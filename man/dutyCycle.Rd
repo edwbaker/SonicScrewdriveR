@@ -11,8 +11,16 @@ dutyCycle(wave, limit = 0.1, output = "unit")
 
 \item{limit}{Threshold above which to consider the signal}
 
-\item{output}{If "unit" the duty cycle will be in the range 0-1. For a percntage use "percent".}
+\item{output}{If "unit" the duty cycle will be in the range 0-1. For a percentage use "percent".}
+}
+\value{
+A numerical value for the duty cycle between 0 and 1 (or 0 and 100% if percentage output).
 }
 \description{
 Proportion of a wave with signal above the limit
+}
+\examples{
+wave <- tuneR::sine(2000)
+dc <- dutyCycle(wave)
+pc <- dutyCycle(wave, output="percent")
 }
