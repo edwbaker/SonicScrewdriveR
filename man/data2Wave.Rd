@@ -13,6 +13,14 @@ data2Wave(left, samp.rate = 44100, bit = 16)
 
 \item{bit}{Bit depth of Wave object}
 }
+\value{
+A mono Wave object.
+}
 \description{
-TODO: Description
+Make a sequence of data into a normalised Wave object.
+}
+\examples{
+pattern <- seq(from=-1, to=1, length.out=100)
+data <- rep.int(pattern, 100)
+w <- data2Wave(data)
 }
