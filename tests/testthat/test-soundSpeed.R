@@ -1,7 +1,7 @@
 context("soundSpeed")
 
 test_that("default value is for air, and correct", {
-  expect_equal(soundSpeed(), 343)
+  expect_equal(soundSpeedMedium(), 343)
 })
 
 test_that("error in soundSpeed_vague for unknown medium", {

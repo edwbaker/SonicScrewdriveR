@@ -2,17 +2,20 @@
 % Please edit documentation in R/soundSpeed.R
 \name{soundSpeed}
 \alias{soundSpeed}
-\title{Get the speed of sound in a medium}
+\title{Calculate the speed of sound in a medium}
 \usage{
-soundSpeed(medium = "air", method = NULL, temperature = NULL)
+soundSpeed(wl = NULL, f = NULL, bulkModulus = NULL, density = NULL)
 }
 \arguments{
-\item{medium}{Propagation medium (default is "air")}
+\item{wl}{Wavelength}
 
-\item{method}{The method used to calculate speed of sound (default is "vague")}
+\item{f}{Frequency}
 
-\item{temperature}{The temperature used to calculate the sound speed}
+\item{bulkModulus}{Bulk modulus}
+
+\item{density}{Density}
 }
 \description{
-TODO: Description
+Given sufficient parameterd (i.e. wavelength and frequency, bulk modulus and density) this
+function calculates the speed of sound.
 }

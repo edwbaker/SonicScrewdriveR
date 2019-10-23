@@ -1,57 +1,41 @@
 #' Get the speed of sound in a medium
 #'
-#' TODO: Description
+#' Provides typical values of the speed of sound in a given medium (air, sea water, freshwater).
 #'
 #' @param medium Propagation medium (default is "air")
-#' @param method The method used to calculate speed of sound (default is "vague")
-#' @param temperature The temperature used to calculate the sound speed
 #' @export
 #'
-soundSpeed <- function(medium="air",
-                       method=NULL,
-                       temperature=NULL) {
-  if (is.null(method)) {
-    if (is.null(temperature)) {
-      return(soundSpeed_vague(medium=medium))
-    }
-  }
-}
-
-#' Get the speed of sound in a medium using wavelength and frequency
-#'
-#' TODO: Description
-#'
-#' @param wl Wavelength
-#' @param f Frequency
-#' @export
-#'
-soundSpeedWF <- function(wl, f) {
-  s <- validateWavelength(wl) * validateFreqIsPossible(f)
-  return(s)
-}
-
-#' Get the speed of sound in a medium using bulk modulus and density
-#'
-#' TODO: Description
-#'
-#' @param bm Bulk modulus
-#' @param d Density
-#' @export
-#'
-soundSpeedBMD <- function(bm, d) {
-  s <- sqrt(validateBulkModulus(bm)/validateDensity(d))
-  return(s)
-}
-
-soundSpeed_vague <- function(medium="air", temperature=NULL) {
+soundSpeedMedium <- function(medium="air") {
   if (medium == "air") {
     return (343)
   }
   if (medium == "sea water") {
     return(1500)
   }
-  if (medium == "freshwater" {
+  if (medium == "freshwater") {
     return(1430)
-  })
+  }
   stop("No sound speed data for medium: ", medium)
+}
+
+#' Calculate the speed of sound in a medium
+#'
+#' Given sufficient parameterd (i.e. wavelength and frequency, bulk modulus and density) this
+#' function calculates the speed of sound.
+#'
+#' @param wl Wavelength
+#' @param f Frequency
+#' @param bulkModulus Bulk modulus
+#' @param density Density
+#' @export
+#'
+soundSpeed <- function(wl=NULL, f=NULL, bulkModulus=NULL, density=NULL) {
+  if (!is.null(wl) & !is.null(f)) {
+    s <- validateWavelength(wl) * validateFreq(f)
+    return(s)
+  }
+  if (!is.null(bulkModulus) & !is.null(density)) {
+    s <- sqrt(validateBulkModulus(bulkModulus)/validateDensity(density))
+    return(s)
+  }
 }
