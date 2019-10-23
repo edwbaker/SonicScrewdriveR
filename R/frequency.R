@@ -1,12 +1,14 @@
 #' Get the frequency from wavelength and speed of sound
 #'
-#' TODO: Description
+#' Calculates the frequency of a sound wave given the wavelength and speed of sound in that medium.
 #'
 #' @param wl Wavelength
 #' @param s Speed of sound
+#' @examples
+#' f <- frequencySound(wl=100, s=343)
 #' @export
 #'
-frequencyWS <- function(wl, s) {
+frequencySound <- function(wl, s) {
   f <- validateWavelength(wl) / validateSpeed(s)
-  return(validateFreqIsPossible(f))
+  return(validateFreq(f))
 }
