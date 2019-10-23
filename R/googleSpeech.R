@@ -7,32 +7,32 @@
 #' @param ... Additional arguments to pass to gl_speech()
 #' @importFrom tuneR readWave
 #' @importFrom seewave duration
-#' @importFrom googleLanguageR gl_speech gl_speech_op
-#' @importFrom googleCloudStorageR gcs_upload gcs_delete_object
 #' @export
 #'
 gs_transcribe <- function(filename, bucket=NULL,...) {
-  max_d <- 3 #Max duration for objects not in Cloud Storage
-  wave <- readWave(filename)
-  if (duration(wave) < max_d) {
-    return(gs_transcribe_execute(filename,...))
-  } else {
-    #Upload
-    upload_try <- gcs_upload(filename, bucket=bucket, name="temp")
-    result <- gs_transcribe_execute(paste0("gs://",bucket,"/temp"),...)
-    #Cleanup
-    gcs_delete_object("temp", bucket=bucket)
-    return(result)
+  if (package.installed("googleCloudStorageR") & package.installed("googleLanguageR")) {
+    max_d <- 3 #Max duration for objects not in Cloud Storage
+    wave <- readWave(filename)
+    if (duration(wave) < max_d) {
+      return(gs_transcribe_execute(filename,...))
+    } else {
+      #Upload
+      upload_try <- googleCloudStorageR::gcs_upload(filename, bucket=bucket, name="temp")
+      result <- gs_transcribe_execute(paste0("gs://",bucket,"/temp"),...)
+      #Cleanup
+      googleCloudStorageR::gcs_delete_object("temp", bucket=bucket)
+      return(result)
+    }
   }
 }
 
 gs_transcribe_execute <- function(object,...) {
-  async <- gl_speech(object, asynch=TRUE,...)
-  result <- gl_speech_op(async)
+  async <- googleLanguageR::gl_speech(object, asynch=TRUE,...)
+  result <- googleLanguageR::gl_speech_op(async)
   tries <- 1
   while (is.null(result$transcript)) {
     Sys.sleep(exponential_backoff(tries))
-    result <- gl_speech_op(async)
+    result <- googleLanguageR::gl_speech_op(async)
     tries <- tries + 1
   }
   return(gs_preprocess_transcript(result))
