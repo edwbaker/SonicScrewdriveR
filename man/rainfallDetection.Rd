@@ -9,10 +9,11 @@ rainfallDetection(wave, method = "bedoya2017", ...)
 \arguments{
 \item{wave}{A Wave object to detect rainfall in}
 
-\item{method}{Which rainfall detection method to use}
+\item{method}{Which rainfall detection method to use ("bedoya2017", "hardRain")}
 
-\item{...}{Other arguments to pass to pulse detection function}
+\item{...}{Other arguments to pass to rain detection function}
 }
 \description{
-Detects rainfall in a Wave.
+Detects rainfall in a Wave. An uncallibrated version of Bedoya (REF) is available in this package. The hardRain
+package can also be accessed via this wrapper.
 }
