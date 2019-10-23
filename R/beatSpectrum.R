@@ -1,29 +1,34 @@
 #' Computes a beat spectrum
-#' 
+#'
 #' Beat spectra represent the periodicity in signal amplitude.
 #' It is computed by performing a continuous wavelet transform on
-#' the envelope of a preprocessed signal, and processing 
+#' the envelope of a preprocessed signal, and processing
 #' the average power per frequency band.
-#' 
+#'
 #' @param wave an R object or path to a wave file
 #' @param min_period the minimal rythmicity period expected, in seconds
 #' @param max_period the maximal rythmicity period expected, in seconds
 #' @param dj the frequency resolution of the cwt (in voices per octave)
 #' @param ... extra arguments passed to \code{analyze.wavelet()}
-#' @return a spectrum as a \code{data.table}. 
-#' It contains two columns: \code{power} and \code{period}. 
+#' @return a spectrum as a data frame.
+#' It contains two columns: \code{power} and \code{period}.
 #' The number of rows depend on the resolution and frequency range.
 #' @importFrom stats approx runmed
 #' @export
 #' @author Quentin Geissmann
-beatSpectrum <- function(wave, 
+#' @examples
+#' \dontrun{
+#' beatSpectrum(sheep)
+#' beatSpectrum(sheep, min_period=0.005, max_period=30, dj=1/32)
+#' }
+beatSpectrum <- function(wave,
                          min_period = 0.005,#s
                          max_period=30, #s,
                          dj=1/32, # 1/nvoices
                          ...
 ){
-  
-  #wave_std <- orthophonia::standardiseWave(wave) 
+
+  #wave_std <- orthophonia::standardiseWave(wave)
   wave_std <- wave
   scaling_ratio <- wave_std@samp.rate / (1/min_period)
   runmed_k <- 2*(floor(scaling_ratio/2))+1
@@ -39,7 +44,7 @@ beatSpectrum <- function(wave,
                         loess.span = 0, dj=dj,
                         lowerPeriod = 2 ^ 1,
                         upperPeriod = 2 ^ upper_period,
-                        make.pval =F, 
+                        make.pval =F,
                         verbose = F,...)
   #data.table(power=wt$Power.avg, period = wt$Period * min_period)
   data.frame(power=wt$Power.avg, period = wt$Period * min_period)

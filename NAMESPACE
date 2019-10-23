@@ -2,6 +2,7 @@
 
 export(addSpectra)
 export(autoBandPass)
+export(beatComplexity)
 export(beatSpectrum)
 export(convert2Celsius)
 export(convert2Fahrenheit)
