@@ -68,7 +68,7 @@ validateIsWave <- function(wave) {
   }
 }
 
-validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
+validateFreq <- function(f) {
   for (i in 1:length(f)) {
     if (!is.numeric(f[[i]])) {
       stop("Frequency must be numeric.")
@@ -76,6 +76,13 @@ validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
     if (f[[i]] < 0) {
       stop("Frequency must be positive.")
     }
+  }
+  return(f)
+}
+
+validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
+  for (i in 1:length(f)) {
+    validateFreq(f[[i]])
     if (is.null(wave) & is.null(samp.rate)) {
       stop("Frequency requires Wave object or samp.rate")
     }
