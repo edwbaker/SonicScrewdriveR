@@ -5,6 +5,8 @@
 #' @param left Data for  audio channel
 #' @param samp.rate Sampling rate for Wave object
 #' @param bit Bit depth of Wave object
+#' @param remove.offset If TRUE any DC offset is removed
+#' @param normalise IF TRUE the output Wave is normalised using tuneR
 #' @return A mono Wave object.
 #' @examples
 #' pattern <- seq(from=-1, to=1, length.out=100)
@@ -12,13 +14,17 @@
 #' w <- data2Wave(data)
 #' @export
 #'
-data2Wave <- function(left, samp.rate=44100, bit=16) {
+data2Wave <- function(left, samp.rate=44100, bit=16, remove.offset=TRUE, normalise=TRUE) {
   if (!is.numeric(left)) {
     stop("Data must be numeric.")
   }
-  a <- mean(left)
-  left <- left-a
+  if (remove.offset == TRUE) {
+    a <- mean(left)
+    left <- left-a
+  }
   wave <- tuneR::Wave(left=left, right = numeric(0), samp.rate=samp.rate, bit=bit)
-  wave <- tuneR::normalize(wave)
+  if (normalise == TRUE) {
+    wave <- tuneR::normalize(wave)
+  }
   return(wave)
 }
