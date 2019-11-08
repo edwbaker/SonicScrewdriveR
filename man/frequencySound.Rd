@@ -4,7 +4,7 @@
 \alias{frequencySound}
 \title{Get the frequency from wavelength and speed of sound}
 \usage{
-frequencySound(wl, s)
+frequencySound(wl, s = soundSpeedMedium("air"))
 }
 \arguments{
 \item{wl}{Wavelength}
