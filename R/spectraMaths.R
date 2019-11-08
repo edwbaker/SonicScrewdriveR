@@ -67,7 +67,14 @@ subtractSpectra <- function(s1, s2, coerceNegative="no") {
 #' @export
 #'
 zeroSpectrum <- function(s1) {
-  validateSpectrum(s1, coerceNegative = TRUE)
+  s1<- validateSpectrum(s1, coerceNegative = TRUE)
   s1[,2] <- rep_len(0, nrow(s1))
+  return(s1)
+}
+
+normaliseSpectrum <- function(s1) {
+  s1<- validateSpectrum(s1, coerceNegative = TRUE)
+  m <- max(s1[[,2]])
+  s1[[,2]] <- s1[[,2]]/m
   return(s1)
 }
