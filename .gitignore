@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .DS_Store
+CRAN-RELEASE
+cran-comments.md
