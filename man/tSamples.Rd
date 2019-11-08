@@ -11,7 +11,7 @@ tSamples(time = 1, wave = NULL, samp.rate = NULL)
 
 \item{wave}{A Wave object containing pulses}
 
-\item{samp.rate}{Ineteger sampling rate}
+\item{samp.rate}{Integer sampling rate}
 }
 \description{
 Calculates the number of samples for a given duration of a wave

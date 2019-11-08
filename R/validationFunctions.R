@@ -57,7 +57,7 @@ validateKelvin <- function(T) {
 
 #' Check an object is a Wave object
 #'
-#' Helper function to test that the input is a Wave object. Will crete an error if not.
+#' Helper function to test that the input is a Wave object. Will create an error if not.
 #'
 #' @param wave Object to test
 #' @export

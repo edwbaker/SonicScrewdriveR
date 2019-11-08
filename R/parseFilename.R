@@ -1,7 +1,7 @@
 #' Parse a filename
 #'
-#' Attempts to extract menaingful information from a filename. 
-#' 
+#' Attempts to extract meaningful information from a filename.
+#'
 #' @param string A filename
 #' @return A list of raw results, plus calculated values for date, time and device.
 #' @export
@@ -15,17 +15,17 @@ parseFilename <- function(string) {
   if (yyyymmdd[[1]][[1]] != -1) {
     date_calculated <- c(date_calculated, lapply(yyyymmdd[[1]], parseStringYYYYMMDD, string=string))
   }
-  
+
   hhmmss <- gregexpr("(^|\\D)((0|1)[0-9]|2[0-3])(:| : )?([0-5][0-9])(:| : )?([0-5][0-9])(\\D|$)", string)
   if (hhmmss[[1]][[1]] != -1) {
     time_calculated <- c(time_calculated, lapply(hhmmss[[1]], parseStringHHMMSS, string=string))
   }
-  
+
   songmeter <- gregexpr("SM[1-4]", string)
   if (songmeter[[1]][[1]] != -1) {
     device_calculated <- c(device_calculated, lapply(songmeter[[1]], parseStringSongMeter, string=string))
   }
-  
+
   return(list(
     date = list(
       "YYYYMMDD" = yyyymmdd,

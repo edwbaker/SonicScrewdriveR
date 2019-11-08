@@ -9,7 +9,7 @@ ntd(wave, events, FUN, normalise = FALSE, argument = "wave", ...)
 \arguments{
 \item{wave}{A Wave object containing pulses}
 
-\item{events}{Onset of detected events, e.g. from pulseDetction()}
+\item{events}{Onset of detected events, e.g. from pulseDetection()}
 
 \item{FUN}{The function to run}
 

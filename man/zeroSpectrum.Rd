@@ -7,7 +7,7 @@
 zeroSpectrum(s1)
 }
 \arguments{
-\item{s1}{Specrtrum to emulate the structure of.}
+\item{s1}{Spectrum to emulate the structure of.}
 }
 \value{
 A zero-valued spectrum.

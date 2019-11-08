@@ -1,6 +1,6 @@
 #' Convert temperature to Kelvin
 #'
-#' Converts tmperature measurements into Kelvin
+#' Converts temperature measurements into Kelvin
 #'
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "C", "F".
@@ -26,7 +26,7 @@ convert2Kelvin <- function(temp, input="C") {
 
 #' Convert temperature to Celsius
 #'
-#' Converts tmperature measurements into Celsius
+#' Converts temperature measurements into Celsius
 #'
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "K", "F".
@@ -50,9 +50,9 @@ convert2Celsius <- function(temp, input="K") {
   stop("Unknown unit: ", input)
 }
 
-#' Convert temperature to Farenheit
+#' Convert temperature to Fahrenheit
 #'
-#' Converts tmperature measurements into Farenheit
+#' Converts temperature measurements into Fahrenheit
 #'
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "K", "C".

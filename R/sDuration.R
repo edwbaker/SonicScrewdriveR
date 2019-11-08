@@ -4,7 +4,7 @@
 #'
 #' @param n The number of the samples
 #' @param wave A Wave object containing pulses
-#' @param samp.rate Ineteger sampling rate
+#' @param samp.rate Integer sampling rate
 #' @export
 #'
 #'
@@ -29,7 +29,7 @@ sDuration <- function(
 #'
 #' @param time The duration in seconds
 #' @param wave A Wave object containing pulses
-#' @param samp.rate Ineteger sampling rate
+#' @param samp.rate Integer sampling rate
 #' @export
 #'
 #'

@@ -1,12 +1,11 @@
 #' Get the speed of sound in air using Cramer (1993)
 #'
-#' TODO: Description
 #'
 #' @param temp Temperature
 #' @param temp.unit Temperature unit
 #' @param pressure Pressure
 #' @param pressure.unit Pressure unit
-#' @param RH Relatove humidity
+#' @param RH Relative humidity
 #' @param MoleFracCO2 Mole fraction of CO2
 #' @export
 #'

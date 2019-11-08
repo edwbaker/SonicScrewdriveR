@@ -9,7 +9,7 @@ beatComplexity(wave, plot = FALSE)
 \arguments{
 \item{wave}{A Wave object}
 
-\item{plot}{If TRUE a spectorgram overlaid with the peaks is plotted.}
+\item{plot}{If TRUE a spectrogram overlaid with the peaks is plotted.}
 }
 \value{
 A list of the complexity, a vector of the peak periods, and the number of peaks.

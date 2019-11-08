@@ -14,5 +14,5 @@ gs_transcribe(filename, bucket = NULL, ...)
 \item{...}{Additional arguments to pass to gl_speech()}
 }
 \description{
-Wrapper around various Google packages to simplify sppech transcription.
+Wrapper around various Google packages to simplify speech transcription.
 }

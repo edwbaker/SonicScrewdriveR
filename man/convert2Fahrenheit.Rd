@@ -2,7 +2,7 @@
 % Please edit documentation in R/convertTemperatures.R
 \name{convert2Fahrenheit}
 \alias{convert2Fahrenheit}
-\title{Convert temperature to Farenheit}
+\title{Convert temperature to Fahrenheit}
 \usage{
 convert2Fahrenheit(temp, input)
 }
@@ -12,5 +12,5 @@ convert2Fahrenheit(temp, input)
 \item{input}{The unit of the temperature to convert, allowed values are "K", "C".}
 }
 \description{
-Converts tmperature measurements into Farenheit
+Converts temperature measurements into Fahrenheit
 }

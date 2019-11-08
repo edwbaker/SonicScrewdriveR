@@ -7,9 +7,9 @@
 pulseIntervals(pulses, nsd = 2)
 }
 \arguments{
-\item{pulses}{The result of a pulsDetection.}
+\item{pulses}{The result of a pulseDetection.}
 
-\item{nsd}{The number of standard deviations each sid of the mean pulse intevral to discard}
+\item{nsd}{The number of standard deviations each sid of the mean pulse interval to discard}
 }
 \description{
 Used to locate area of no pulses from the results of pulseDetection().

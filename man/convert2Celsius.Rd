@@ -12,5 +12,5 @@ convert2Celsius(temp, input = "K")
 \item{input}{The unit of the temperature to convert, allowed values are "K", "F".}
 }
 \description{
-Converts tmperature measurements into Celsius
+Converts temperature measurements into Celsius
 }

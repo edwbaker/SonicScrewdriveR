@@ -1,6 +1,6 @@
 #' Google Speech API Transcribe
 #'
-#' Wrapper around various Google packages to simplify sppech transcription.
+#' Wrapper around various Google packages to simplify speech transcription.
 #'
 #' @param filename Path to file for analysis
 #' @param bucket Storage bucket on Google Cloud for larger files

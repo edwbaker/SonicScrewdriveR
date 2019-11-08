@@ -1,7 +1,7 @@
 Package: sonicscrewdriver
 Title: Tools for bioacoustic analysis and publication
 Version: 0.0.1
-Authors@R: person("Ed", "Baker", email = "edwbaker@gmail.com", role = c("aut", "cre"))
+Authors@R: person("Ed", "Baker", email = "ed@ebaker.me.uk", role = c("aut", "cre"))
 Description: Provides basic tools for manipulating sound files for bioacoustic analysis, and preparing analyses these for publication. The package validates that values are physically possible wherever feasible. 
 Depends: R (>= 3.4.0)
 Imports:

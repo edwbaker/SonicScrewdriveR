@@ -16,6 +16,6 @@ soundSpeed(wl = NULL, f = NULL, bulkModulus = NULL, density = NULL)
 \item{density}{Density}
 }
 \description{
-Given sufficient parameterd (i.e. wavelength and frequency, bulk modulus and density) this
+Given sufficient parameters (i.e. wavelength and frequency, bulk modulus and density) this
 function calculates the speed of sound.
 }

@@ -6,7 +6,7 @@
 #' @param wave A Wave object
 #' @param bw Either -3dB or -10dB. This is calculated by \code{frequencyStats}
 #' @param n.bw The number of bandwidths either side of the centre of the centre to keep
-#' @param lowcut High-pass filtering is applied at this frequency before calculating the centre frequency and bandwith
+#' @param lowcut High-pass filtering is applied at this frequency before calculating the centre frequency and bandwidth
 #' @return A band-pass filtered Wave object
 #' @examples
 #' \dontrun{

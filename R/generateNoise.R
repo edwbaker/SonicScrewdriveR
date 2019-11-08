@@ -4,7 +4,7 @@
 #'
 #' @param wave Wave file to add noise to
 #' @param noise Vector of noise to add (unif, gaussian, white, pink, power, red, frequency of a sine wave in Hz, or filename)
-#' @param noiseAdd If TRUE all noise osurcves are added to wave. If FALSE seperate outputs are created for each noise source.
+#' @param noiseAdd If TRUE all noise sources are added to wave. If FALSE separate outputs are created for each noise source.
 #' @param noiseRatio Ratio of maximum noise amplitude to the maximum amplitude in wave
 #' @param output TODO: Is this implemented?
 #' @param plot If TRUE various plots are made to show how noise is added.

@@ -5,7 +5,7 @@
 #' the number of peaks.
 #'
 #' @param wave A Wave object
-#' @param plot If TRUE a spectorgram overlaid with the peaks is plotted.
+#' @param plot If TRUE a spectrogram overlaid with the peaks is plotted.
 #' @return A list of the complexity, a vector of the peak periods, and the number of peaks.
 #' @examples
 #' \dontrun{

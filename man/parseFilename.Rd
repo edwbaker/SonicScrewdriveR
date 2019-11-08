@@ -13,5 +13,5 @@ parseFilename(string)
 A list of raw results, plus calculated values for date, time and device.
 }
 \description{
-Attempts to extract menaingful information from a filename.
+Attempts to extract meaningful information from a filename.
 }

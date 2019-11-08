@@ -12,13 +12,13 @@ generateNoise(wave, noise = c("white"), noiseAdd = FALSE,
 
 \item{noise}{Vector of noise to add (unif, gaussian, white, pink, power, red, frequency of a sine wave in Hz, or filename)}
 
-\item{noiseAdd}{If TRUE all noise osurcves are added to wave. If FALSE seperate outputs are created for each noise source.}
+\item{noiseAdd}{If TRUE all noise sources are added to wave. If FALSE separate outputs are created for each noise source.}
 
 \item{noiseRatio}{Ratio of maximum noise amplitude to the maximum amplitude in wave}
 
 \item{output}{TODO: Is this implemented?}
 
-\item{plot}{If TRUE various plots are made to show how noise is addded.}
+\item{plot}{If TRUE various plots are made to show how noise is added.}
 }
 \description{
 TODO: Description

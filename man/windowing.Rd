@@ -20,10 +20,10 @@ windowing(wave, window.length, window.overlap = 0, bind.wave = TRUE,
 
 \item{...}{Additional parameters to FUN}
 
-\item{cluster}{A cluser form the 'parallel' package for multicore computation}
+\item{cluster}{A cluster form the 'parallel' package for multicore computation}
 }
 \description{
-Seperates a Wave object into windows of a defined length and runs a function on the window section. Windows may overlap, and the function can make use of 'parallel' package for multicore processing.
+Separates a Wave object into windows of a defined length and runs a function on the window section. Windows may overlap, and the function can make use of 'parallel' package for multicore processing.
 }
 \examples{
 \dontrun{

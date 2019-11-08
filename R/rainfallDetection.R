@@ -1,4 +1,4 @@
-#' Rainfal detection
+#' Rainfall detection
 #'
 #' Detects rainfall in a Wave. An uncallibrated version of Bedoya (REF) is available in this package. The hardRain
 #' package can also be accessed via this wrapper.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/rainfallDetection.R
 \name{rainfallDetection}
 \alias{rainfallDetection}
-\title{Rainfal detection}
+\title{Rainfall detection}
 \usage{
 rainfallDetection(wave, method = "bedoya2017", ...)
 }

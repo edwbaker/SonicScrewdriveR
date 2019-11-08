@@ -16,10 +16,10 @@ soundSpeed_cramer1993(temp, temp.unit = "C", pressure,
 
 \item{pressure.unit}{Pressure unit}
 
-\item{RH}{Relatove humidity}
+\item{RH}{Relative humidity}
 
 \item{MoleFracCO2}{Mole fraction of CO2}
 }
 \description{
-TODO: Description
+Get the speed of sound in air using Cramer (1993)
 }

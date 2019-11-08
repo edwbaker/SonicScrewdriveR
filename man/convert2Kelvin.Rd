@@ -12,5 +12,5 @@ convert2Kelvin(temp, input = "C")
 \item{input}{The unit of the temperature to convert, allowed values are "C", "F".}
 }
 \description{
-Converts tmperature measurements into Kelvin
+Converts temperature measurements into Kelvin
 }

@@ -62,7 +62,7 @@ subtractSpectra <- function(s1, s2, coerceNegative="no") {
 #'
 #' This function takes a spectrum from seewave and creates a new zero-valued spectrum with the same structure.
 #'
-#' @param s1 Specrtrum to emulate the structure of.
+#' @param s1 Spectrum to emulate the structure of.
 #' @return A zero-valued spectrum.
 #' @export
 #'
