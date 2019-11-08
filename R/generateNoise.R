@@ -7,7 +7,7 @@
 #' @param noiseAdd If TRUE all noise osurcves are added to wave. If FALSE seperate outputs are created for each noise source.
 #' @param noiseRatio Ratio of maximum noise amplitude to the maximum amplitude in wave
 #' @param output TODO: Is this implemented?
-#' @param plot If TRUE various plots are made to show how noise is addded.
+#' @param plot If TRUE various plots are made to show how noise is added.
 #' @export
 #'
 generateNoise <- function(

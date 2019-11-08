@@ -1,17 +1,19 @@
 Package: sonicscrewdriver
-Title: Tools for Manipulating Sound Files
-Version: 0.0.0.1
+Title: Tools for bioacoustic analysis and publication
+Version: 0.0.1
 Authors@R: person("Ed", "Baker", email = "edwbaker@gmail.com", role = c("aut", "cre"))
-Description: Provides basic tools for manipulating sound files for analysis. A windowing function is provided for chunking large calculations. This package can make use of multicore architectures using 'parallel'.
+Description: Provides basic tools for manipulating sound files for bioacoustic analysis, and preparing analyses these for publication. The package validates that values are physically possible wherever feasible. 
 Depends: R (>= 3.4.0)
 Imports:
   tuneR,
   seewave,
-  methods
+  methods,
+  ggplot2
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
+Language: en-GB
 Suggests: 
   testthat,
   covr,
