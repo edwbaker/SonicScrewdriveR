@@ -5,6 +5,7 @@
 #' @param pulses The result of a pulseDetection.
 #' @param nsd The number of standard deviations each sid of the mean pulse interval to discard
 #' @export
+#' @return A list of onset and offset times for pulses
 #'
 pulseIntervals <- function(
   pulses,

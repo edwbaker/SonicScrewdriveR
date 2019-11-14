@@ -20,6 +20,10 @@ generateNoise(wave, noise = c("white"), noiseAdd = FALSE,
 
 \item{plot}{If TRUE various plots are made to show how noise is added.}
 }
+\value{
+A list of Wave objects with the required noise added.
+}
 \description{
-TODO: Description
+Adding noise to a soundwave allows for testing of the robustness of automated identification algorithms
+to noise.
 }

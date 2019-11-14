@@ -13,6 +13,17 @@ tSamples(time = 1, wave = NULL, samp.rate = NULL)
 
 \item{samp.rate}{Integer sampling rate}
 }
+\value{
+Number of samples
+}
 \description{
 Calculates the number of samples for a given duration of a wave
+}
+\examples{
+tSamples(10, samp.rate=44100)
+\dontrun{
+tSamples(10, wave=sheep)
+}
+
+
 }

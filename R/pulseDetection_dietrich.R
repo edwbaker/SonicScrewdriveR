@@ -1,7 +1,7 @@
 #' Pulse detection using Dietrich (2004)
 #'
-#' Detects pulses in a Wave.
-#' 
+#' Detects pulses in a Wave using the method described in Dietrich et al (2004) <doi:10.1016/j.patcog.2004.04.004>.
+#'
 #' @param wave A Wave object
 #' @param U Window length
 #' @param gamma Gamma
@@ -10,11 +10,12 @@
 #' @param V V Window length
 #' @param psi Psi
 #' @export
+#' @return A list of input values plus the onset and offset times of pulses
 #'
 pd_dietrich2004 <- function(
-  wave, 
+  wave,
   U=120,
-  gamma=0.05, 
+  gamma=0.05,
   alpha=1.4,
   scaling=32,
   V=480,
@@ -25,7 +26,7 @@ pd_dietrich2004 <- function(
   theta <- min(e_u) + gamma*(max(e_u) - min(e_u))
   F_a <- theta + alpha / scaling * e_v
   F_1 <- theta + e_v / scaling
-  
+
   onsets <- vector(mode="logical", length=length(wave@left))
   tau <- 0
   p <- 0

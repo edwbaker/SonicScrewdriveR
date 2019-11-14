@@ -1,6 +1,7 @@
 #' Add noise to a soundwave
 #'
-#' TODO: Description
+#' Adding noise to a soundwave allows for testing of the robustness of automated identification algorithms
+#' to noise.
 #'
 #' @param wave Wave file to add noise to
 #' @param noise Vector of noise to add (unif, gaussian, white, pink, power, red, frequency of a sine wave in Hz, or filename)
@@ -8,6 +9,7 @@
 #' @param noiseRatio Ratio of maximum noise amplitude to the maximum amplitude in wave
 #' @param output TODO: Is this implemented?
 #' @param plot If TRUE various plots are made to show how noise is added.
+#' @return A list of Wave objects with the required noise added.
 #' @export
 #'
 generateNoise <- function(

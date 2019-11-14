@@ -11,6 +11,13 @@ convert2Pascals(P, input = "kPa")
 
 \item{input}{The unit of the pressure to convert, allowed values are "kPa".}
 }
+\value{
+The numeric value in Pascals
+}
 \description{
 Converts pressure measurements into Pascals
+}
+\examples{
+convert2Pascals(1, input="kPa")
+
 }

@@ -11,6 +11,9 @@ frequencySound(wl, s)
 
 \item{s}{Speed of sound}
 }
+\value{
+Frequency of the sound in Hertz
+}
 \description{
 Calculates the frequency of a sound wave given the wavelength and speed of sound in that medium.
 }

@@ -14,3 +14,9 @@ convert2Fahrenheit(temp, input)
 \description{
 Converts temperature measurements into Fahrenheit
 }
+\examples{
+\dontrun{
+convert2Fahrenheit(15, input = "C")
+}
+
+}
