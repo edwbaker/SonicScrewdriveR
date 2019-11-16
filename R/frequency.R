@@ -12,3 +12,13 @@ frequencySound <- function(wl, s) {
   f <- validateWavelength(wl) / validateSpeed(s)
   return(validateFreq(f))
 }
+
+naturalFrequency <- function(L, C, R) {
+  F_nat <- sqrt((1/(L*C)) - R^2/(4*L^2)) / (2 * pi)
+  return(F_nat)
+}
+
+resonantFrequency <- function(L, C) {
+  F_res <- naturalFrequency(L,C,0)
+  return(F_res)
+}
