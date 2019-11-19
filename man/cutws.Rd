@@ -15,6 +15,16 @@ cutws(wave, from, to, plot = FALSE)
 
 \item{plot}{If TRUE shows the cut region within the original waveform}
 }
+\value{
+A Wave object
+}
 \description{
 Extract a section of a Wave object based on sample positions
+}
+\examples{
+\dontrun{
+cutws(sheep, 1, 20)
+cutws(sheep, 1, 20, plot=TRUE)
+}
+
 }

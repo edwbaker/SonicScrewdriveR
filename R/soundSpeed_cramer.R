@@ -1,5 +1,6 @@
-#' Get the speed of sound in air using Cramer (1993)
+#' Speed of sound in air using Cramer (1993)
 #'
+#' Calculate the speed of sound in air using the method described in Cramer (1993) <doi:10.1121/1.405827>
 #'
 #' @param temp Temperature
 #' @param temp.unit Temperature unit
@@ -8,6 +9,10 @@
 #' @param RH Relative humidity
 #' @param MoleFracCO2 Mole fraction of CO2
 #' @export
+#' @return Numeric value of the speed of sound in m/s
+#' @examples
+#' soundSpeed_cramer1993(14, pressure=3, RH=10)
+#' soundSpeed_cramer1993(14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
 #'
 soundSpeed_cramer1993 <- function(temp,
                                   temp.unit = "C",

@@ -13,6 +13,15 @@ gs_transcribe(filename, bucket = NULL, ...)
 
 \item{...}{Additional arguments to pass to gl_speech()}
 }
+\value{
+A gs_transcribe object containing details of the transcription
+}
 \description{
 Wrapper around various Google packages to simplify speech transcription.
+}
+\examples{
+\dontrun{
+gs_transcribe("demo.wav")
+}
+
 }

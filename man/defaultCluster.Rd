@@ -9,6 +9,9 @@ defaultCluster(fork = TRUE)
 \arguments{
 \item{fork}{If TRUE uses forking to create the cluster}
 }
+\value{
+A cluster object for parallel processing
+}
 \description{
 Creates a default cluster using one less than the total cores available on the system. By default this uses forking, which may not be available on 'Windows'.
 }

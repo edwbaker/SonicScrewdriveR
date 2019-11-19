@@ -4,6 +4,7 @@
 #'
 #' @param wl Wavelength
 #' @param s Speed of sound (defaults to the speed of sound in air)
+#' @return Frequency of the sound in Hertz
 #' @examples
 #' f <- frequencySound(wl=100, s=343)
 #' @export

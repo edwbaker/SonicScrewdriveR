@@ -20,3 +20,10 @@ A spectrum of s1 - s2
 This function takes two spectra from seewave (or equivalent) and subtracts their values. The spectra must have
 the same bins.
 }
+\examples{
+\dontrun{
+subtractSpectra(spec1, spec2)
+subtractSpectra(spec1, spec2, coerceNegative="both")
+}
+
+}

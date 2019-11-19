@@ -2,7 +2,7 @@
 % Please edit documentation in R/soundSpeed_cramer.R
 \name{soundSpeed_cramer1993}
 \alias{soundSpeed_cramer1993}
-\title{Get the speed of sound in air using Cramer (1993)}
+\title{Speed of sound in air using Cramer (1993)}
 \usage{
 soundSpeed_cramer1993(temp, temp.unit = "C", pressure,
   pressure.unit = "kPa", RH, MoleFracCO2 = 400^-6)
@@ -20,6 +20,14 @@ soundSpeed_cramer1993(temp, temp.unit = "C", pressure,
 
 \item{MoleFracCO2}{Mole fraction of CO2}
 }
+\value{
+Numeric value of the speed of sound in m/s
+}
 \description{
-Get the speed of sound in air using Cramer (1993)
+Calculate the speed of sound in air using the method described in Cramer (1993) <doi:10.1121/1.405827>
+}
+\examples{
+soundSpeed_cramer1993(14, pressure=3, RH=10)
+soundSpeed_cramer1993(14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
+
 }

@@ -9,6 +9,14 @@ soundSpeedMedium(medium = "air")
 \arguments{
 \item{medium}{Propagation medium (default is "air")}
 }
+\value{
+Typical value of the speed of sound in m/s for the medium
+}
 \description{
 Provides typical values of the speed of sound in a given medium (air, sea water, freshwater).
+}
+\examples{
+soundSpeedMedium("air")
+soundSpeedMedium("sea water")
+
 }

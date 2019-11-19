@@ -15,3 +15,9 @@ A zero-valued spectrum.
 \description{
 This function takes a spectrum from seewave and creates a new zero-valued spectrum with the same structure.
 }
+\examples{
+\dontrun{
+zeroSpectrum(spec)
+}
+
+}

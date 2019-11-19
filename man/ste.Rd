@@ -9,10 +9,20 @@ ste(wave, method = "dietrich2004", ...)
 \arguments{
 \item{wave}{A Wave object}
 
-\item{method}{Which method used to calculate the short term energy, by default dietrich2004 to use Dietrich (2004).}
+\item{method}{Which method used to calculate the short term energy,
+by default dietrich2004 to use Dietrich (2004) <doi:10.1016/j.patcog.2004.04.004>.}
 
 \item{...}{Other arguments to pass to STE function}
 }
+\value{
+A vector of short term energy values
+}
 \description{
 Computes the short term energy of a Wave.
+}
+\examples{
+\dontrun{
+ste(sheep, method="dietrich2004")
+}
+
 }

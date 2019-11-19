@@ -11,6 +11,9 @@ frequencySound(wl, s = soundSpeedMedium("air"))
 
 \item{s}{Speed of sound (defaults to the speed of sound in air)}
 }
+\value{
+Frequency of the sound in Hertz
+}
 \description{
 Calculates the frequency of a sound wave given the wavelength and speed of sound in that medium.
 }

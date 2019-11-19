@@ -6,6 +6,11 @@
 #' @param pad Amount of time (in seconds) to add to start and end
 #' @param max_t Optional. The duration of the file, so padding does not exceed length of file.
 #' @export
+#' @return A modified Google Speech API transcript object
+#' @examples
+#' \dontrun{
+#' labelPadding(t, pad=2, max_t=duration(wave))
+#' }
 #'
 labelPadding <- function(t, pad=0.5, max_t=NULL) {
   if (is.null(t$timings)) {
@@ -23,6 +28,11 @@ labelPadding <- function(t, pad=0.5, max_t=NULL) {
 #'
 #' @param t Transcript from Google Speech API
 #' @export
+#' @return A list containing start and end times of speech containing regions
+#' @examples
+#' \dontrun{
+#' labelReduction(t)
+#' }
 #'
 labelReduction <- function(t) {
   if (is.null(t$timings)) {

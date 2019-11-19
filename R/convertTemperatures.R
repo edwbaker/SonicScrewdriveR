@@ -5,6 +5,10 @@
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "C", "F".
 #' @export
+#' @return Numeric value in Kelvn
+#' @examples
+#' convert2Kelvin(15, input="C")
+#' convert2Kelvin(15, input="F")
 #'
 convert2Kelvin <- function(temp, input="C") {
   if (input == "C") {
@@ -31,6 +35,10 @@ convert2Kelvin <- function(temp, input="C") {
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "K", "F".
 #' @export
+#' @return Numeric value in degrees Celsius
+#' @examples
+#' convert2Celsius(15, input="K")
+#' convert2Celsius(15, input="F")
 #'
 convert2Celsius <- function(temp, input="K") {
   if (input == "K") {
@@ -57,6 +65,10 @@ convert2Celsius <- function(temp, input="K") {
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "K", "C".
 #' @export
+#' @examples
+#' \dontrun{
+#' convert2Fahrenheit(15, input = "C")
+#' }
 #'
 convert2Fahrenheit <- function(temp, input) {
   stop("Implementation of this function is against the politcial beliefs of the author.")

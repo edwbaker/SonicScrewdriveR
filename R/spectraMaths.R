@@ -8,6 +8,11 @@
 #' @param coerceNegative Sets any values below zero to zero, accepted values "input", "output" or "both".
 #' @return A spectrum of s1+s2
 #' @export
+#' @examples
+#' \dontrun{
+#' addSpectra(spec1, spec2)
+#' addSpectra(spec1, spec2, coerceNegative="input")
+#' }
 #'
 addSpectra <- function(s1, s2, coerceNegative="no") {
   validateComparableSpectra(s1, s2)
@@ -38,6 +43,11 @@ addSpectra <- function(s1, s2, coerceNegative="no") {
 #' @param coerceNegative Sets any values below zero to zero, accepted values "input", "output" or "both".
 #' @return A spectrum of s1 - s2
 #' @export
+#' @examples
+#' \dontrun{
+#' subtractSpectra(spec1, spec2)
+#' subtractSpectra(spec1, spec2, coerceNegative="both")
+#' }
 #'
 subtractSpectra <- function(s1, s2, coerceNegative="no") {
   validateComparableSpectra(s1, s2)
@@ -65,6 +75,10 @@ subtractSpectra <- function(s1, s2, coerceNegative="no") {
 #' @param s1 Spectrum to emulate the structure of.
 #' @return A zero-valued spectrum.
 #' @export
+#' @examples
+#' \dontrun{
+#' zeroSpectrum(spec)
+#' }
 #'
 zeroSpectrum <- function(s1) {
   s1<- validateSpectrum(s1, coerceNegative = TRUE)

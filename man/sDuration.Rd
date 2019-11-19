@@ -13,6 +13,17 @@ sDuration(n = 1, wave = NULL, samp.rate = NULL)
 
 \item{samp.rate}{Integer sampling rate}
 }
+\value{
+A numeirc value in seconds
+}
 \description{
-Calculates the time represenetd by n samples in a Wave.
+Calculates the time represented by n samples in a Wave.
+}
+\examples{
+sDuration(n=20, samp.rate=44100)
+\dontrun{
+sDuration(n=20, wave=sheep)#'
+}
+
+
 }

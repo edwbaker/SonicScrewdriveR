@@ -1,12 +1,18 @@
 #' Cut wave by samples
 #'
 #' Extract a section of a Wave object based on sample positions
-#' 
-#' @param wave A Wave object 
+#'
+#' @param wave A Wave object
 #' @param from First sample to return
 #' @param to Last sample to return
 #' @param plot If TRUE shows the cut region within the original waveform
+#' @return A Wave object
 #' @export
+#' @examples
+#' \dontrun{
+#' cutws(sheep, 1, 20)
+#' cutws(sheep, 1, 20, plot=TRUE)
+#' }
 #'
 cutws <- function(wave, from, to, plot=FALSE) {
   if (typeof(wave) != "S4" | class(wave) != "Wave") {

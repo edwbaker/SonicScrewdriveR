@@ -22,6 +22,9 @@ pd_dietrich2004(wave, U = 120, gamma = 0.05, alpha = 1.4,
 
 \item{psi}{Psi}
 }
+\value{
+A list of input values plus the onset and offset times of pulses
+}
 \description{
-Detects pulses in a Wave.
+Detects pulses in a Wave using the method described in Dietrich et al (2004) <doi:10.1016/j.patcog.2004.04.004>.
 }
