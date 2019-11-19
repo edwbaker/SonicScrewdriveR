@@ -8,6 +8,11 @@
 #' @importFrom tuneR readWave
 #' @importFrom seewave duration
 #' @export
+#' @return A gs_transcribe object containing details of the transcription
+#' @examples
+#' \dontrun{
+#' gs_transcribe("demo.wav")
+#' }
 #'
 gs_transcribe <- function(filename, bucket=NULL,...) {
   if (package.installed("googleCloudStorageR") & package.installed("googleLanguageR")) {

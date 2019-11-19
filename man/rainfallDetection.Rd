@@ -13,7 +13,17 @@ rainfallDetection(wave, method = "bedoya2017", ...)
 
 \item{...}{Other arguments to pass to rain detection function}
 }
+\value{
+Numeric value from the rianfall detection algorithm chosen.
+}
 \description{
-Detects rainfall in a Wave. An uncallibrated version of Bedoya (REF) is available in this package. The hardRain
+Detects rainfall in a Wave. An uncallibrated version of Bedoya et al (2017) <doi:10.1016/j.ecolind.2016.12.018> is available in this package. The hardRain
 package can also be accessed via this wrapper.
+}
+\examples{
+\dontrun{
+rainfallDetection(sheep, method="bedoya2017")
+rainfallDetection(sheep, method="hardRain")
+}
+
 }

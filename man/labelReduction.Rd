@@ -9,6 +9,15 @@ labelReduction(t)
 \arguments{
 \item{t}{Transcript from Google Speech API}
 }
+\value{
+A list containing start and end times of speech containing regions
+}
 \description{
 Takes labels from Google Speech API transcript and combines overlapping labels.
+}
+\examples{
+\dontrun{
+labelReduction(t)
+}
+
 }

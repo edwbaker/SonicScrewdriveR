@@ -4,6 +4,10 @@
 #'
 #' @param medium Propagation medium (default is "air")
 #' @export
+#' @return Typical value of the speed of sound in m/s for the medium
+#' @examples
+#' soundSpeedMedium("air")
+#' soundSpeedMedium("sea water")
 #'
 soundSpeedMedium <- function(medium="air") {
   if (medium == "air") {

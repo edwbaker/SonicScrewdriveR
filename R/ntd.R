@@ -9,6 +9,7 @@
 #' @param normalise If TRUE the output is a probability density
 #' @param argument If "wave" supplies a weave object to the function, if "vector" supplies the left channel as a numeric vector.
 #' @export
+#' @return A list of outputs form the applied function
 #'
 
 ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {

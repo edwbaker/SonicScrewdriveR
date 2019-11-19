@@ -15,3 +15,7 @@ A list of raw results, plus calculated values for date, time and device.
 \description{
 Attempts to extract meaningful information from a filename.
 }
+\examples{
+parseFilename("20180605.wav")
+
+}

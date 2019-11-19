@@ -11,6 +11,14 @@ convert2Celsius(temp, input = "K")
 
 \item{input}{The unit of the temperature to convert, allowed values are "K", "F".}
 }
+\value{
+Numeric value in degrees Celsius
+}
 \description{
 Converts temperature measurements into Celsius
+}
+\examples{
+convert2Celsius(15, input="K")
+convert2Celsius(15, input="F")
+
 }

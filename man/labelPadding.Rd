@@ -13,6 +13,15 @@ labelPadding(t, pad = 0.5, max_t = NULL)
 
 \item{max_t}{Optional. The duration of the file, so padding does not exceed length of file.}
 }
+\value{
+A modified Google Speech API transcript object
+}
 \description{
 Takes labels from Google Speech API transcript and pads the time by a specified number of seconds.
+}
+\examples{
+\dontrun{
+labelPadding(t, pad=2, max_t=duration(wave))
+}
+
 }

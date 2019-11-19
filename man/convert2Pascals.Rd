@@ -9,8 +9,16 @@ convert2Pascals(P, input = "kPa")
 \arguments{
 \item{P}{The value of the pressure to convert}
 
-\item{input}{The unit of the pressure to convert, allowed values are "kPa".}
+\item{input}{The unit of the pressure to convert, allowed values are "kPa", "dyne_cm2".}
+}
+\value{
+The numeric value in Pascals
 }
 \description{
 Converts pressure measurements into Pascals
+}
+\examples{
+convert2Pascals(1000, input="kPa")
+convert2Pascals(10, input="dyne_cm2")
+
 }
