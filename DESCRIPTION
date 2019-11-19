@@ -11,7 +11,7 @@ Imports:
   seewave,
   methods,
   ggplot2
-License: GPL-3
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
