@@ -3,3 +3,4 @@
 .travis.yml
 ^CRAN-RELEASE$
 ^cran-comments\.md$
+CODE_OF_CONDUCT.md
