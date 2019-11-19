@@ -6,7 +6,7 @@
 #' @return A list of raw results, plus calculated values for date, time and device.
 #' @export
 #' @examples
-#' parseFilename("20180605.wav)
+#' parseFilename("20180605.wav")
 #'
 parseFilename <- function(string) {
   date_calculated <- list()
