@@ -1,8 +1,4 @@
-wavelength <- function(frequency, speed=NULL, unit="m") {
-  if (is.null(speed)) {
-    warning("No speed set for wavelength calculation, relying on value for air (343m/s).")
-    speed <-343
-  }
+wavelength <- function(frequency, speed=soundSpeedMedium("air"), unit="m") {
   if (unit == "m") {
     return (speed/frequency)
   }
