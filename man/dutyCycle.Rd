@@ -4,7 +4,7 @@
 \alias{dutyCycle}
 \title{Calculate the duty cycle of a wave}
 \usage{
-dutyCycle(wave, limit = 0.1, output = "unit")
+dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
 }
 \arguments{
 \item{wave}{A Wave object}
@@ -12,6 +12,8 @@ dutyCycle(wave, limit = 0.1, output = "unit")
 \item{limit}{Threshold above which to consider the signal}
 
 \item{output}{If "unit" the duty cycle will be in the range 0-1. For a percentage use "percent".}
+
+\item{normalise}{If TRUE the Wave is normliased using tuneR}
 }
 \value{
 A numerical value for the duty cycle between 0 and 1 (or 0 and 100% if percentage output).
