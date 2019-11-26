@@ -20,4 +20,5 @@ install_github("edwbaker/SonicScrewdriveR")
 library(sonicscrewdriver)
 ````
 
-## Features
+## Extending
+[Writing windowing functions](https://github.com/edwbaker/SonicScrewdriveR/wiki/Extending-SonicScrewdriveR)
