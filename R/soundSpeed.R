@@ -19,6 +19,27 @@ soundSpeedMedium <- function(medium="air") {
   if (medium == "freshwater") {
     return(1430)
   }
+  if (medium == "helium") {
+    return(999)
+  }
+  if (medium == "hyrdogen") {
+    return(1330)
+  }
+  if (medium == "liquid helium") {
+    return(211)
+  }
+  if (medium == "mercury") {
+    return(1451)
+  }
+  if (medium == "aluminium") {
+    return(6420)
+  }
+  if (medium == "lead") {
+    return(1960)
+  }
+  if (medium == "steel") {
+    return(5941)
+  }
   stop("No sound speed data for medium: ", medium)
 }
 
