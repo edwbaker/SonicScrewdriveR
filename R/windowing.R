@@ -46,6 +46,18 @@ windowing <- function(
   return(l)
 }
 
+#' List available windowing functions
+#'
+#' Lists all available windowing functions.
+#'
+#' @keywords wave
+#' @export
+#' @importFrom utils getFromNamespace
+#' @examples
+#' \dontrun{
+#' windowing.functions()
+#' }
+
 windowing.functions <- function() {
   ip <- installed.packages()[,1]
   for (i in 1:length(ip)) {
