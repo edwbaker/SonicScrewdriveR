@@ -46,17 +46,12 @@ windowing <- function(
   return(l)
 }
 
-
-
-pwl <- function(start, wave=NULL, window.length=NULL) {
-  remaining <- min(window.length, length(wave) + 1 - start) -1
-  w <- wave@left[start:(start+remaining)]
-  s <- length(w)
-  return(s)
-}
-
-noChange <- function(start, wave, window.length) {
-  remaining <- min(window.length, length(wave) + 1 - start) -1
-  w <- tuneR::Wave(wave@left[start:(start+remaining)], samp.rate=wave@samp.rate, bit=wave@bit)
-  return(w)
+windowing.functions <- function() {
+  ip <- installed.packages()[,1]
+  for (i in 1:length(ip)) {
+    if (exists('ssRwindows', where=asNamespace(ip[i]))) {
+      l <- do.call(getFromNamespace("ssRwindows", ip[i]), args=list(), envir=asNamespace(ip[i]))
+      print(l)
+    }
+  }
 }
