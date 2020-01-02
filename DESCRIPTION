@@ -10,7 +10,8 @@ Imports:
   tuneR,
   seewave,
   methods,
-  ggplot2
+  ggplot2,
+  jsonlite
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
