@@ -25,7 +25,6 @@ convert2Pascals <- function(P, input="kPa") {
 
 convert2kPascals <- function(P, input="kPa") {
   return(convert2Pascals(P, input)/1000)
-  stop(paste("Unknown input to convert2Pascals:",input))
 }
 
 #' Convert pressure to dyne per square centimetre
