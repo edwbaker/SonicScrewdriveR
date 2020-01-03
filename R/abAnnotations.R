@@ -14,9 +14,9 @@
 ab_annotations <- function(...) {
   args <- list(...)
   nams <- names(args)
-  url <- "https://api.audioblast.org/annotations?"
+  url <- "https://api.audioblast.org/annotations?agent=sonicscrewdriver"
   for (i in 1:length(args)) {
-    if (i > 1) {url <- paste0(url, "&")}
+    url <- paste0(url, "&")
     url <- paste0(url, nams[[i]], "=", args[[i]])
   }
   ret <- jsonlite::fromJSON(URLencode(url))
