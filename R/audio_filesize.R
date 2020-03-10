@@ -4,20 +4,20 @@
 #'
 #' @param samp.rate Sample rate
 #' @param bit.depth Bit depth
+#' @param channels The number of audio channels
 #' @param duration Duration of recording
-#' @param duration.unit One of seconds, minutes, hours, days.
+#' @param duration.unit One of seconds, minutes, hours, days
+#' @param output.unit "bits" or  "bytes"
 #' @export
 #'
 
-audio_filesize <- function(samp.rate=44100, bit.depth=16, duration=1, duration.unit="seconds") {
-  if (duration.unit == "minutes") {
-    duration <- duration * 60
+audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1, duration.unit="seconds", output.unit="bits") {
+  duration <- convert2seconds(duration, duration.unit)
+  bits <- samp.rate * bit.depth * duration
+  if (output.unit == "bits") {
+    return (bits)
   }
-  if (duration.unit == "hours") {
-    duration <- duration * 60 * 60
+  if (output.unit == "bytes") {
+    return (convert2bytes(bits, "bits"))
   }
-  if (duration.unit == "days") {
-    duration <- duration * 60 * 60 * 24
-  }
-    return (samp.rate * bit.depth * duration)
 }

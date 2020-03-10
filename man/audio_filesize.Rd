@@ -4,17 +4,21 @@
 \alias{audio_filesize}
 \title{Calculated size of raw audio files}
 \usage{
-audio_filesize(samp.rate = 44100, bit.depth = 16, duration = 1,
-  duration.unit = "seconds")
+audio_filesize(samp.rate = 44100, bit.depth = 16, channels = 1,
+  duration = 1, duration.unit = "seconds", output.unit = "bits")
 }
 \arguments{
 \item{samp.rate}{Sample rate}
 
 \item{bit.depth}{Bit depth}
 
+\item{channels}{The number of audio channels}
+
 \item{duration}{Duration of recording}
 
-\item{duration.unit}{One of seconds, minutes, hours, days.}
+\item{duration.unit}{One of seconds, minutes, hours, days}
+
+\item{output.unit}{"bits" or  "bytes"}
 }
 \description{
 Calculates the raw size of audio date at set sample rate, bit depth and duration.
