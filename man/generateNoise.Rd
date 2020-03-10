@@ -4,8 +4,14 @@
 \alias{generateNoise}
 \title{Add noise to a soundwave}
 \usage{
-generateNoise(wave, noise = c("white"), noiseAdd = FALSE,
-  noiseRatio = 0.5, output = "file", plot = FALSE)
+generateNoise(
+  wave,
+  noise = c("white"),
+  noiseAdd = FALSE,
+  noiseRatio = 0.5,
+  output = "file",
+  plot = FALSE
+)
 }
 \arguments{
 \item{wave}{Wave file to add noise to}

@@ -20,5 +20,5 @@ convert2seconds <- function(T, input="minutes") {
   if (input == "days") {
     return(T*60*60*24)
   }
-  stop(paste("Unknown input to convert2Pascals:",input))
+  stop(paste("Unknown input to convert2seconds:",input))
 }

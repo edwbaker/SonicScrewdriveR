@@ -4,8 +4,7 @@
 \alias{beatSpectrum}
 \title{Computes a beat spectrum}
 \usage{
-beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32,
-  ...)
+beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 }
 \arguments{
 \item{wave}{an R object or path to a wave file}

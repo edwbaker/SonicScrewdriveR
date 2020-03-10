@@ -4,3 +4,5 @@
 ^CRAN-RELEASE$
 ^cran-comments\.md$
 CODE-OF-CONDUCT.md
+LICENSE
+^revdep$

@@ -4,8 +4,7 @@
 \alias{specStats}
 \title{Calculate and plot statistics on a  frequency spectrum}
 \usage{
-specStats(spectra, stats = "minMax", line.col = "black",
-  ribbon.col = "grey70")
+specStats(spectra, stats = "minMax", line.col = "black", ribbon.col = "grey70")
 }
 \arguments{
 \item{spectra}{A list of spectra}

@@ -4,8 +4,15 @@
 \alias{pd_dietrich2004}
 \title{Pulse detection using Dietrich (2004)}
 \usage{
-pd_dietrich2004(wave, U = 120, gamma = 0.05, alpha = 1.4,
-  scaling = 32, V = 480, psi = 1)
+pd_dietrich2004(
+  wave,
+  U = 120,
+  gamma = 0.05,
+  alpha = 1.4,
+  scaling = 32,
+  V = 480,
+  psi = 1
+)
 }
 \arguments{
 \item{wave}{A Wave object}

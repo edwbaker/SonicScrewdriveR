@@ -4,8 +4,14 @@
 \alias{audio_filesize}
 \title{Calculated size of raw audio files}
 \usage{
-audio_filesize(samp.rate = 44100, bit.depth = 16, channels = 1,
-  duration = 1, duration.unit = "seconds", output.unit = "bits")
+audio_filesize(
+  samp.rate = 44100,
+  bit.depth = 16,
+  channels = 1,
+  duration = 1,
+  duration.unit = "seconds",
+  output.unit = "bits"
+)
 }
 \arguments{
 \item{samp.rate}{Sample rate}

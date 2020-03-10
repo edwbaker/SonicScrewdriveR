@@ -4,8 +4,15 @@
 \alias{pd_simple}
 \title{Simplified pulse detection using Dietrich (2004)}
 \usage{
-pd_simple(wave, U = 120, gamma = 0.05, alpha = 1.4, scaling = 32,
-  V = 480, psi = 1)
+pd_simple(
+  wave,
+  U = 120,
+  gamma = 0.05,
+  alpha = 1.4,
+  scaling = 32,
+  V = 480,
+  psi = 1
+)
 }
 \arguments{
 \item{wave}{A Wave object}

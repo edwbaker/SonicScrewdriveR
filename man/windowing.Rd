@@ -4,8 +4,15 @@
 \alias{windowing}
 \title{Windowing Function for Wave Objects}
 \usage{
-windowing(wave, window.length, window.overlap = 0, bind.wave = TRUE,
-  FUN, ..., cluster = NULL)
+windowing(
+  wave,
+  window.length,
+  window.overlap = 0,
+  bind.wave = TRUE,
+  FUN,
+  ...,
+  cluster = NULL
+)
 }
 \arguments{
 \item{wave}{A Wave object}

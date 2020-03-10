@@ -4,8 +4,13 @@
 \alias{data2Wave}
 \title{Convert data into a Wave object}
 \usage{
-data2Wave(left, samp.rate = 44100, bit = 16, remove.offset = TRUE,
-  normalise = TRUE)
+data2Wave(
+  left,
+  samp.rate = 44100,
+  bit = 16,
+  remove.offset = TRUE,
+  normalise = TRUE
+)
 }
 \arguments{
 \item{left}{Data for  audio channel}

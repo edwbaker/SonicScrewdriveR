@@ -4,8 +4,14 @@
 \alias{soundSpeed_cramer1993}
 \title{Speed of sound in air using Cramer (1993)}
 \usage{
-soundSpeed_cramer1993(temp, temp.unit = "C", pressure,
-  pressure.unit = "kPa", RH, MoleFracCO2 = 400^-6)
+soundSpeed_cramer1993(
+  temp,
+  temp.unit = "C",
+  pressure,
+  pressure.unit = "kPa",
+  RH,
+  MoleFracCO2 = 400^-6
+)
 }
 \arguments{
 \item{temp}{Temperature}

@@ -14,6 +14,7 @@ convert2bytes <- function(S, input="bits") {
   if (input =="bytes") {
     return(S)
   }
+  stop(paste("Unknown input to convert2bytes:",input))
 }
 
 printHumanBytes <- function(S, input="bytes") {
