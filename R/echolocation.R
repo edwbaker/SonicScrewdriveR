@@ -6,7 +6,7 @@
 #' @param area Effective cross-sectional area of the target
 #' @param r Range of the target
 #' @param G_t Transmitter gain
-#' @param G_r Reciever gain
+#' @param G_r Receiver gain
 #' @param wl Wavelength (use only with G_r and G_t)
 #' @export
 #' @return The received power

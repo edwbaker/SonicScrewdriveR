@@ -5,7 +5,7 @@
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "C", "F".
 #' @export
-#' @return Numeric value in Kelvn
+#' @return Numeric value in Kelvin
 #' @examples
 #' convert2Kelvin(15, input="C")
 #' convert2Kelvin(15, input="F")

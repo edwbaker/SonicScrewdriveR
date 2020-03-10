@@ -2,7 +2,7 @@
 % Please edit documentation in R/frequency.R
 \name{resonantFrequency}
 \alias{resonantFrequency}
-\title{Calcuate the resonant frequency}
+\title{Calculate the resonant frequency}
 \usage{
 resonantFrequency(L, C = "default")
 }
@@ -12,7 +12,7 @@ resonantFrequency(L, C = "default")
 \item{C}{Capacitance, by default IUPAC standard pressure.}
 }
 \description{
-Calculates the resonant frequency given the inductance and capacitance. In the acosutic case
+Calculates the resonant frequency given the inductance and capacitance. In the acoustic case
 the inductance is inertia or mass, the capacitance is elasticity (bulk modulus) and resistance is composed of air
 resistance and related quantities. All units are SI.
 }

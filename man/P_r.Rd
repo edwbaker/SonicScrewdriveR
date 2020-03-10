@@ -15,7 +15,7 @@ P_r(P_t, r, area, G_t = 1, G_r = 1, wl = 1)
 
 \item{G_t}{Transmitter gain}
 
-\item{G_r}{Reciever gain}
+\item{G_r}{Receiver gain}
 
 \item{wl}{Wavelength (use only with G_r and G_t)}
 }

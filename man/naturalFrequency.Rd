@@ -2,7 +2,7 @@
 % Please edit documentation in R/frequency.R
 \name{naturalFrequency}
 \alias{naturalFrequency}
-\title{Calcuate the natural frequency}
+\title{Calculate the natural frequency}
 \usage{
 naturalFrequency(L, C = "default", R)
 }
@@ -14,7 +14,7 @@ naturalFrequency(L, C = "default", R)
 \item{R}{Resistance}
 }
 \description{
-Calculates the natural frequency given the inductance, capacitance and resistance. In the acosutic case
+Calculates the natural frequency given the inductance, capacitance and resistance. In the acoustic case
 the inductance is inertia or mass, the capacitance is elasticity (bulk modulus) and resistance is composed of air
 resistance and related quantities. All units are SI.
 }

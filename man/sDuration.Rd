@@ -14,7 +14,7 @@ sDuration(n = 1, wave = NULL, samp.rate = NULL)
 \item{samp.rate}{Integer sampling rate}
 }
 \value{
-A numeirc value in seconds
+A numeric value in seconds
 }
 \description{
 Calculates the time represented by n samples in a Wave.

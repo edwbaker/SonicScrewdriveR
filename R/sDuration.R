@@ -6,7 +6,7 @@
 #' @param wave A Wave object containing pulses
 #' @param samp.rate Integer sampling rate
 #' @export
-#' @return A numeirc value in seconds
+#' @return A numeric value in seconds
 #' @examples
 #' sDuration(n=20, samp.rate=44100)
 #' \dontrun{

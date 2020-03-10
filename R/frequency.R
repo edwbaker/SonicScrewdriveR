@@ -14,9 +14,9 @@ frequencySound <- function(wl, s=soundSpeedMedium("air")) {
   return(validateFreq(f))
 }
 
-#' Calcuate the natural frequency
+#' Calculate the natural frequency
 #'
-#' Calculates the natural frequency given the inductance, capacitance and resistance. In the acosutic case
+#' Calculates the natural frequency given the inductance, capacitance and resistance. In the acoustic case
 #' the inductance is inertia or mass, the capacitance is elasticity (bulk modulus) and resistance is composed of air
 #' resistance and related quantities. All units are SI.
 #'
@@ -39,9 +39,9 @@ naturalFrequency <- function(L, C="default", R) {
   return(F_nat)
 }
 
-#' Calcuate the resonant frequency
+#' Calculate the resonant frequency
 #'
-#' Calculates the resonant frequency given the inductance and capacitance. In the acosutic case
+#' Calculates the resonant frequency given the inductance and capacitance. In the acoustic case
 #' the inductance is inertia or mass, the capacitance is elasticity (bulk modulus) and resistance is composed of air
 #' resistance and related quantities. All units are SI.
 #'

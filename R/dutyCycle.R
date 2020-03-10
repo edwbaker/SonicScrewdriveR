@@ -5,7 +5,7 @@
 #' @param wave A Wave object
 #' @param limit Threshold above which to consider the signal
 #' @param output If "unit" the duty cycle will be in the range 0-1. For a percentage use "percent".
-#' @param normalise If TRUE the Wave is normliased using tuneR
+#' @param normalise If TRUE the Wave is normalised using tuneR
 #' @return A numerical value for the duty cycle between 0 and 1 (or 0 and 100% if percentage output).
 #' @examples
 #' wave <- tuneR::sine(2000)
