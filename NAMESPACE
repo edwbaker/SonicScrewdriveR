@@ -3,6 +3,7 @@
 export(P_r)
 export(ab_annotations)
 export(addSpectra)
+export(audio_filesize)
 export(autoBandPass)
 export(beatComplexity)
 export(beatSpectrum)
