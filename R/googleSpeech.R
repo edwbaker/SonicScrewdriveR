@@ -6,7 +6,7 @@
 #' @param bucket Storage bucket on Google Cloud for larger files
 #' @param ... Additional arguments to pass to gl_speech()
 #' @importFrom tuneR readWave
-#' @importFrom seewave duration
+#' @importFrom seewave duration savewav
 #' @export
 #' @return A gs_transcribe object containing details of the transcription
 #' @examples
@@ -16,10 +16,17 @@
 #'
 gs_transcribe <- function(filename, bucket=NULL,...) {
   if (package.installed("googleCloudStorageR") & package.installed("googleLanguageR")) {
-    max_d <- 3 #Max duration for objects not in Cloud Storage
+    max_d <- 3000 #Max duration for objects not in Cloud Storage
+    max_samp_rate = 48000
     wave <- readWave(filename)
+    if (wave@samp.rate > max_samp_rate) {
+      print("Downsampling to 48kHz")
+      savewav(wave, f=max_samp_rate, filename="temp.wav", extensible = FALSE)
+      filename <- "temp.wav"
+      wave@samp.rate <- max_samp_rate
+    }
     if (duration(wave) < max_d) {
-      return(gs_transcribe_execute(filename,...))
+      return(gs_transcribe_execute(filename, ...))
     } else {
       #Upload
       upload_try <- googleCloudStorageR::gcs_upload(filename, bucket=bucket, name="temp")
@@ -31,16 +38,17 @@ gs_transcribe <- function(filename, bucket=NULL,...) {
   }
 }
 
-gs_transcribe_execute <- function(object,...) {
+gs_transcribe_execute <- function(object, ...) {
+  object
   async <- googleLanguageR::gl_speech(object, asynch=TRUE,...)
-  result <- googleLanguageR::gl_speech_op(async)
+  async <- googleLanguageR::gl_speech_op(async)
   tries <- 1
-  while (is.null(result$transcript)) {
+  while (TRUE) {
     Sys.sleep(exponential_backoff(tries))
-    result <- googleLanguageR::gl_speech_op(async)
+    async <- googleLanguageR::gl_speech_op(async)
     tries <- tries + 1
   }
-  return(gs_preprocess_transcript(result))
+  return(gs_preprocess_transcript(async))
 }
 
 gs_preprocess_transcript <- function(transcript, offset=0) {
