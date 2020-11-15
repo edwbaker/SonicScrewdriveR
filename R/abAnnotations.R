@@ -9,7 +9,9 @@
 #' @importFrom jsonlite fromJSON
 #' @return A data frame of matching annotations
 #' @examples
+#' \dontrun{
 #' ab_annotations(taxon="Gryllotalpa vineae")
+#' }
 #'
 ab_annotations <- function(...) {
   args <- list(...)

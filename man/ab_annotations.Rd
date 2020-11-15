@@ -17,6 +17,8 @@ A data frame of matching annotations
 Search for annotated audio sections on audioBlast (via the ann-o-mate project).
 }
 \examples{
+\dontrun{
 ab_annotations(taxon="Gryllotalpa vineae")
+}
 
 }
