@@ -23,5 +23,5 @@ convert2seconds <- function(T, input="minutes") {
   if (input == "years") {
     return(T*60*60*24*365)
   }
-  stop(paste("Unknown input to convert2seconds:",input))
+  stop(paste("Unknown input to convert2seconds: ",input))
 }
