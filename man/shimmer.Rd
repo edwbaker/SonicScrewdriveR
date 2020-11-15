@@ -2,22 +2,29 @@
 % Please edit documentation in R/shimmer.R
 \name{shimmer}
 \alias{shimmer}
-\title{Calculate the shimmer in a Wave object}
+\title{Shimmer calculation}
 \usage{
-shimmer(wave)
+shimmer(wave, method = "dB", pulses = NULL, pulse_method = NULL)
 }
 \arguments{
-\item{wave}{A Wave object}
-}
-\value{
-A vector of zero crossing locations
+\item{wave}{The wave object being analysed.}
+
+\item{method}{One of "db".}
+
+\item{pulses}{Precalculated pulses from the pulseDetection function, or a list of onset and offset times (in samples).}
+
+\item{pulse_method}{Shortcut to run pulseDetection from this function.
+
+The "dB" method calculates the variation between  the maximum absolute amplitude
+between successive periods (not the peak-to-peak amplitude).}
 }
 \description{
-Jitter is a measure of the variability of amplitudes within periods in the waveform. Relative
-shimmer is scaled by the shimmer in the analysed waveform.
+Calculation of shimmer (variation of amplitude) between consecutive periods.
 }
 \examples{
 \dontrun{
-shimmer(sheep)
+data(sheep)
+shimmer(sheep, pulse_method="threshold")
 }
+
 }
