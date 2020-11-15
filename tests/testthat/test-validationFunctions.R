@@ -113,3 +113,7 @@ test_that("density is not negative", {
   expect_equal(validateDensity(0), 0)
   expect_equal(validateDensity(1), 1)
 })
+
+test_that("timezone corrections work", {
+  expect_equal(cleanTZ("UTCa"), "Etc/GMTa")
+})
