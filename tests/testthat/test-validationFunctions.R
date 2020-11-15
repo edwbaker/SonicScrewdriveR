@@ -1,6 +1,6 @@
 context("validationFunctions")
 
-test_that("RJ is numeric", {
+test_that("RH is numeric", {
   expect_error(validateRH("string"), "RH must be numeric")
 })
 
@@ -11,6 +11,16 @@ test_that("RH is within limits", {
   expect_equal(validateRH(100), 100)
 })
 
+test_that("Bulk modulus is numeric", {
+  expect_error(validateBulkModulus("string"), "Bulk modulus must be numeric")
+})
+
+test_that("Bulk modulus is not negative", {
+  expect_error(validateBulkModulus(-1), "Bulk modulus must not be negative.")
+  expect_equal(validateBulkModulus(0), 0)
+  expect_equal(validateBulkModulus(1), 1)
+})
+
 test_that("Kelvin is alway non-negative", {
   expect_error(validateKelvin(-1), "Temperatures must be above 0K.")
   expect_equal(validateKelvin(0),0)
@@ -18,6 +28,11 @@ test_that("Kelvin is alway non-negative", {
 
 test_that("Kelvin is numeric" , {
   expect_error(validateKelvin("string"), "Kelvin must be numeric")
+})
+
+test_that("Speed is numeric", {
+  expect_error(validateSpeed("string"), "Speed must be numeric")
+  expect_equal(validateSpeed(1), 1)
 })
 
 test_that("Inputs to validateFreqIsPossible are valid", {
@@ -75,4 +90,26 @@ test_that("validateDutyCycle rejects out of range values", {
   expect_error(validateDutyCycle(-1), "Duty cycle must be greater than or equal to zero.")
   expect_equal(validateDutyCycle(0), 0)
   expect_equal(validateDutyCycle(1), 1)
+})
+
+test_that("wavelength is numeric", {
+  expect_error(validateWavelength("length"), "Wavelength must be numeric")
+  expect_equal(validateWavelength(1), 1)
+})
+
+test_that("wavelength is not negative", {
+  expect_error(validateWavelength(-1), "Wavelength must not be negative.")
+  expect_equal(validateWavelength(0), 0)
+  expect_equal(validateWavelength(1), 1)
+})
+
+test_that("density is numeric", {
+  expect_error(validateDensity("length"), "Density must be numeric")
+  expect_equal(validateDensity(1), 1)
+})
+
+test_that("density is not negative", {
+  expect_error(validateDensity(-1), "Density must not be negative.")
+  expect_equal(validateDensity(0), 0)
+  expect_equal(validateDensity(1), 1)
 })
