@@ -28,5 +28,6 @@ Suggests:
     googleLanguageR,
     knitr,
     rmarkdown,
-    spelling
+    spelling,
+    hardRain
 VignetteBuilder: knitr
