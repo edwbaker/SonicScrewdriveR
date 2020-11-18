@@ -11,16 +11,22 @@ Imports:
   seewave,
   methods,
   ggplot2,
-  jsonlite
+  jsonlite,
+  mime
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Language: en-GB
-Suggests: 
-  testthat,
-  covr,
-  WaveletComp,
-  devtools,
-  googleCloudStorageR,
-  googleLanguageR
+Suggests:
+    av,
+    testthat,
+    covr,
+    WaveletComp,
+    devtools,
+    googleCloudStorageR,
+    googleLanguageR,
+    knitr,
+    rmarkdown,
+    spelling
+VignetteBuilder: knitr

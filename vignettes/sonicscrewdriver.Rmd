@@ -1,0 +1,22 @@
+---
+title: "SonicScrewdriveR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SonicScrewdriveR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sonicscrewdriver)
+```
+
+#SonicScrewdriveR
+SonicScrewdriveR is a set of tools for various tasks faced by bioacoustics researchers (and other users of acoustics). 

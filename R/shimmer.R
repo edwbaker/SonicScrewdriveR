@@ -15,6 +15,7 @@ shimmer <- function(wave) {
 }
 
 shimmer_db <- function(wave) {
+  validateIsWave(wave)
   zc <- zerocross(wave)
   t <- diff(zc)
   n <- length(t)

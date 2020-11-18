@@ -2,7 +2,7 @@
 % Please edit documentation in R/zerocrossing.R
 \name{zerocross}
 \alias{zerocross}
-\title{Identify zero corssings in a Wave object}
+\title{Identify zero crossings in a Wave object}
 \usage{
 zerocross(wave)
 }

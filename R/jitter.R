@@ -22,6 +22,7 @@ jitter <- function(wave, method="absolute") {
 }
 
 jitter_abs <- function(wave)  {
+  validateIsWave(wave)
   zc <- zerocross(wave)
   t <- diff(zc)
   n <- length(t)
@@ -31,6 +32,7 @@ jitter_abs <- function(wave)  {
 }
 
 jitter_rel <- function(wave) {
+  validateIsWave(wave)
   zc <- zerocross(wave)
   t <- diff(zc)
   n <- length(t)
@@ -39,8 +41,4 @@ jitter_rel <- function(wave) {
   j <- j/mean(t)
   return(j)
 }
-
-#jitter_rap
-
-#jitter_ppq5
 

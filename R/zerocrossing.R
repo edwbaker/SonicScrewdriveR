@@ -12,6 +12,7 @@
 #' }
 
 zerocross <- function(wave) {
+  validateIsWave(wave)
   #Get locations of zero-crossings
   az <- which(wave@left == 0) #Actual zeroes
 

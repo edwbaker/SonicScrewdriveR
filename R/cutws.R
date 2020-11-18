@@ -15,6 +15,9 @@
 #' }
 #'
 cutws <- function(wave, from, to, plot=FALSE) {
+  if (is.infinite(to)) {
+    to <- length(wave@left)
+  }
   if (typeof(wave) != "S4" | class(wave) != "Wave") {
     stop("cutws expects a Wave object")
   }

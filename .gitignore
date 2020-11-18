@@ -6,3 +6,6 @@
 CRAN-RELEASE
 cran-comments.md
 revdep/*
+inst/doc
+doc
+Meta
