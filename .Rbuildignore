@@ -3,9 +3,12 @@
 .travis.yml
 ^CRAN-RELEASE$
 ^cran-comments\.md$
+^.remarkrc.js
 CODE-OF-CONDUCT.md
 LICENSE
 ^revdep$
+^node_modules$
+^package-lock.json
 README.md
 ^doc$
 ^Meta$
