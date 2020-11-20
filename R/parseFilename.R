@@ -3,15 +3,35 @@
 #' Attempts to extract meaningful information from a filename.
 #'
 #' @param string A filename
+#' @param format Optionally force a given format - "timestamp"
 #' @return A list of raw results, plus calculated values for date, time and device.
+#' @importFrom tools file_path_sans_ext
 #' @export
 #' @examples
 #' parseFilename("20180605.wav")
 #'
-parseFilename <- function(string) {
+parseFilename <- function(string, format=NULL) {
   date_calculated <- list()
   time_calculated <- list()
   device_calculated <- list()
+
+  if (!is.null(format)) {
+    if (format=="timestamp") {
+      string <- file_path_sans_ext(string)
+      date_calculated <- c(as.Date(as.POSIXct(string, origin="1970-01-01", format="%s")))
+      time_calculated <- c(format(as.POSIXlt(string, origin="1970-01-01", format="%s"), format="%H%M"))
+      return(list(
+        date = list(
+          "Calculated" = date_calculated
+        ),
+        time = list(
+          "Calculated" = time_calculated
+        ),
+        device = list(
+        )
+      ))
+    }
+  }
 
   yyyymmdd <- gregexpr("((19|20)\\d{2})(-|_| - )?(0[1-9]|1[0-2])(-|_| - )?((0|1|2)[1-9]|(3[0|1]))",string)
   if (yyyymmdd[[1]][[1]] != -1) {

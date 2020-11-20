@@ -4,10 +4,12 @@
 \alias{parseFilename}
 \title{Parse a filename}
 \usage{
-parseFilename(string)
+parseFilename(string, format = NULL)
 }
 \arguments{
 \item{string}{A filename}
+
+\item{format}{Optionally force a given format - "timestamp"}
 }
 \value{
 A list of raw results, plus calculated values for date, time and device.
