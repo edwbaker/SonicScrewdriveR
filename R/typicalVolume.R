@@ -11,29 +11,48 @@
 #'
 typicalVolume <- function(thing="") {
   tv <- typicalVolumes()
-  if (thing %in% row.names(tv)) {
-    return(t[match(thing,row.names(t)),][[1]])
+  if (thing %in% tv[,1]) {
+    return(tv[tv$thing==thing,2])
   }
   return(tv)
 }
 
 typicalVolumes <- function() {
   # Source: Murray Schaefer Soundscapes
-  ret <- list(
-    "steam engine" = 85,
-    "printing works" = 87,
-    "diesel electric generator" = 96,
-    "screw-heading machine" = 101,
-    "weaving shed" = 104,
-    "sawmill chipper" = 105,
-    "metalwork grinder" = 106,
-    "wood-planing machine" = 108,
-    "metal saw" = 110,
-    "rock band" = 115,
-    "boiler works" = 118,
-    "metal hammering" = 118,
-    "jet take-off" = 120,
-    "rocket launch" = 160
+  n <- c(
+    "steam engine",
+    "printing works",
+    "diesel electric generator",
+    "screw-heading machine",
+    "weaving shed",
+    "sawmill chipper",
+    "metalwork grinder",
+    "wood-planing machine",
+    "metal saw",
+    "rock band",
+    "boiler works",
+    "metal hammering",
+    "jet take-off",
+    "rocket launch"
   )
-  return(t(as.data.frame(t(ret))))
+  vals <- c(
+    85,
+    87,
+    96,
+    101,
+    104,
+    105,
+    106,
+    108,
+    110,
+    115,
+    118,
+    118,
+    120,
+    160
+  )
+  ret <- as.data.frame(cbind(n, vals))
+  colnames(ret) <- c("thing", "dBA")
+
+  return(ret)
 }
