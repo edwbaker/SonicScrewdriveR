@@ -51,7 +51,7 @@ typicalVolumes <- function() {
     120,
     160
   )
-  ret <- as.data.frame(cbind(n, vals))
+  ret <- as.data.frame(cbind(n, as.numeric(vals)))
   colnames(ret) <- c("thing", "dBA")
 
   return(ret)
