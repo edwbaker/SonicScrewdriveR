@@ -1,25 +1,48 @@
-upsample <- function(wave, upsample.rate, method="linear") {
-  sf <- upsample.rate / wave@sample.rate
+#' Upsample a wave
+#'
+#' Used to upsample a Wave object. The upsampled sample rate must be an natural multiple
+#' of the current sample rate.
+#'
+#' @param wave Wave object to upsample.
+#' @param upsample.rate The sample rate to upsample to.
+#' @param method "basic" for linear, or a function to interpolate NAs in a vector
+#' @export
+#' @return A resampled Wave object
+#'
+upsample <- function(wave, upsample.rate, method="basic") {
+  validateIsWave(wave)
+  sf <- upsample.rate / wave@samp.rate
   if (sf != round(sf)) {
     stop("Scale factor is not an integer")
   }
 
-  newleft <- vector(mode="numeric", length=length(wave@left)*sf)
-  #TODO: Other channels
+  newleft <- rep.int(NA, length(wave@left)*sf)
   for (i in 1:length(wave@left)) {
-      newleft[(sf*i)-1] <- wave@left[i]
+    newleft[sf*(i-1)+1] <- wave@left[i]
+    if (method == "basic") {
+      d <- (wave@left[i+1] - wave@left[i]) / sf
+      for (j in 1:sf-1) {
+        newleft[sf*(i-1)+1+j] <- wave@left[i] + j*d
+      }
+    }
   }
-
-  if (method=="linear") {
-    newleft <- linear.na(newleft)
-  }
-
   wave@left <- newleft
+
+  if (length(wave@right > 0)) {
+    newright <- rep.int(NA, length(wave@right)*sf)
+    for (i in 1:length(wave@right)) {
+      newright[sf*(i-1)+1] <- wave@right[i]
+      if (method == "basic") {
+        d <- (wave@right[i+1] - wave@right[i]) / sf
+        for (j in 1:sf-1) {
+          newright[sf*(i-1)+1+j] <- wave@right[i] + j*d
+        }
+      }
+    }
+    wave@right <- newright
+  }
   wave@samp.rate <- upsample.rate
   return(wave)
 }
 
-linear.na <- function(v) {
-  #TODO: Interpolate
-  return(v)
-}
+
