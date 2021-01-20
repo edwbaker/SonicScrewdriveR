@@ -20,3 +20,8 @@ A resampled Wave object
 Used to upsample a Wave object. The upsampled sample rate must be an natural multiple
 of the current sample rate.
 }
+\examples{
+wave <- tuneR::sine(4000, samp.rate=44100)
+wave2 <- upsample(wave, 88200)
+
+}

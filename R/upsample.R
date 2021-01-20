@@ -8,6 +8,10 @@
 #' @param method "basic" for linear, or a function to interpolate NAs in a vector
 #' @export
 #' @return A resampled Wave object
+#' @importFrom tuneR sine
+#' @examples
+#' wave <- tuneR::sine(4000, samp.rate=44100)
+#' wave2 <- upsample(wave, 88200)
 #'
 upsample <- function(wave, upsample.rate, method="basic") {
   validateIsWave(wave)
