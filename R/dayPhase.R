@@ -1,0 +1,92 @@
+#' Phase of day
+#'
+#' Given a start time and (optionally) a duration returns the phase of day at a given
+#' location. This is primarily used to calculate phase of day information for soundscape
+#' recording projects.
+#'
+#' @param time A time object representing the start time of a recording
+#' @param duration Duration of recording
+#' @param lat Latitude of recording device
+#' @param lon Longitude of recording device
+#' @param tz Timezone of recording device when recording was made
+#' @export
+#' @return Data frame of day phases with absolute timestamps and relative times within file
+#' @examples
+#' dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="UTC")
+#'
+dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="UTC") {
+  dt <- dayPhases(as.Date(time), lat=lat, lon=lon, tz=tz)
+  etime <- time + duration
+  rt <- subset(dt,
+                (time >= dt[,1] & time < dt[,2]) |
+                (time < dt[,1] & etime > dt[,2]) |
+                (time >= dt[,1] & etime < dt[,2])
+              )
+  stime <- time
+  while(max(rt[,2]) < etime) {
+    stime <- stime + 86400
+    dt <- dayPhases(as.Date(stime), lat=lat, lon=lon, tz=tz)
+    rt2 <- subset(dt,
+                 (stime >= dt[,1] & stime < dt[,2]) |
+                   (stime < dt[,1] & etime > dt[,2]) |
+                   (stime >= dt[,1] & etime < dt[,2])
+    )
+    rt <- rbind(rt, rt2)
+  }
+  relstart <- as.numeric(rt[,1]) - as.numeric(time)
+  relstart[relstart<0] <- 0
+  relend <- as.numeric(rt[,2]) - as.numeric(time)
+  relend[relend>etime] <- etime
+  cn <- colnames(rt)
+  rt <- cbind(rt, as.integer(relstart), as.integer(relend))
+  colnames(rt) <- c(cn, "Start.relative", "End.relative")
+  return(rt)
+}
+
+#' Phases of day
+#'
+#' Wrapper for suncalc::getSunlightTimes that formats output for this package.
+#'
+#' @param time A time object representing the start time of a recording
+#' @param lat Latitude of recording device
+#' @param lon Longitude of recording device
+#' @param tz Timezone of recording device when recording was made
+#'
+#' @importFrom suncalc getSunlightTimes
+dayPhases <- function(time, lat, lon, tz) {
+  sc <- getSunlightTimes(as.Date(time), lat=lat, lon=lon, tz=tz)
+  #Also load next day to find out when night ends
+  scn <- getSunlightTimes(as.Date(as.POSIXlt(time) + 86400) , lat=lat, lon=lon, tz=tz)
+  rn <- c("Dawn.Astro", "Dawn.Naut", "Dawn.Civil", "Sunrise", "Day", "Sunset", "Dusk.Civil", "Dusk.Naut", "Dusk.Astro", "Night")
+  cn <- c("Start", "End")
+
+  starts <- c(
+    sc$nightEnd[[1]],
+    sc$nauticalDawn[[1]],
+    sc$dawn[[1]],
+    sc$sunrise[[1]],
+    sc$sunriseEnd[[1]],
+    sc$sunsetStart[[1]],
+    sc$sunset[[1]],
+    sc$dusk[[1]],
+    sc$nauticalDusk[[1]],
+    sc$night[[1]]
+  )
+  ends <- c(
+    sc$nauticalDawn[[1]],
+    sc$dawn[[1]],
+    sc$sunrise[[1]],
+    sc$sunriseEnd[[1]],
+    sc$sunsetStart[[1]],
+    sc$sunset[[1]],
+    sc$dusk[[1]],
+    sc$nauticalDusk[[1]],
+    sc$night[[1]],
+    scn$nightEnd
+
+  )
+  ret <- cbind(starts, ends)
+  colnames(ret) <- cn
+  rownames(ret) <- rn
+  return(ret)
+}

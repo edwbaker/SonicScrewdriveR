@@ -12,7 +12,8 @@ Imports:
   methods,
   ggplot2,
   jsonlite,
-  mime
+  mime,
+  suncalc
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
