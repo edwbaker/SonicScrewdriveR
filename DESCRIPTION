@@ -13,7 +13,8 @@ Imports:
   ggplot2,
   jsonlite,
   mime,
-  suncalc
+  suncalc,
+  hms
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

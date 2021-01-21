@@ -90,3 +90,33 @@ dayPhases <- function(time, lat, lon, tz) {
   rownames(ret) <- rn
   return(ret)
 }
+
+#' Phases of days
+#'
+#' @param date A time object representing the start time of a recording
+#' @param period "month" or "year"
+#' @param plot If true plots the data, default FALSE
+#' @param lat Latitude of recording device
+#' @param lon Longitude of recording device
+#' @param tz Timezone of recording device when recording was made
+#' @export
+#' @importFrom suncalc getSunlightTimes
+#' @importFrom hms as_hms
+#' @importFrom graphics lines
+daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon=1.83, tz="UTC") {
+  if (period == "year") {
+    ret <- getSunlightTimes(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by = 1), lat = 50.1, lon = 1.83, tz = "UTC")
+  }
+  if (period == "month") {
+    ret <- getSunlightTimes(date = seq.Date(Sys.Date()-30, Sys.Date()+30, by = 1), lat = 50.1, lon = 1.83, tz = "UTC")
+  }
+  if (plot) {
+    plot(ret$date, as_hms(ret$nightEnd), type="l", ylim=c(0,86400))
+    lines(ret$date, as_hms(ret$nauticalDawn), type="l", col="red")
+    lines(ret$date, as_hms(ret$dawn), type="l", col="blue")
+    lines(ret$date, as_hms(ret$sunrise), type="l", col="green")
+    lines(ret$date, as_hms(ret$solarNoon), type="l", col="yellow")
+  }
+  #TODO: Rename columns as above
+  return(ret)
+}
