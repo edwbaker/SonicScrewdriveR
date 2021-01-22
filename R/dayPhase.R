@@ -132,6 +132,7 @@ daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon
     lines(ret$date, as_hms(ret$night), type="l")
     axis(2, at = plotHMS.at(), labels=plotHMS.lab(), las=2)
   }
-  #TODO: Rename columns as above
+  cn <- c("Date", "Lat", "Lon", "solarNoon", "nadir", "Sunrise", "Dusk.Civil", "Day", "Sunset", "Dawn.Civil", "Dusk.Civil", "Dawn.Naut", "Dusk.Naut", "Dawn.Astro", "Night", "goldenHourEnd", "GoldenHour")
+  colnames(ret) <- cn
   return(ret)
 }
