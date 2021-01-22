@@ -102,7 +102,7 @@ dayPhases <- function(time, lat, lon, tz) {
 #' @export
 #' @importFrom suncalc getSunlightTimes
 #' @importFrom hms as_hms
-#' @importFrom graphics lines
+#' @importFrom graphics lines axis
 daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon=1.83, tz="UTC") {
   if (period == "year") {
     ret <- getSunlightTimes(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by = 1), lat = 50.1, lon = 1.83, tz = "UTC")
@@ -111,11 +111,26 @@ daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon
     ret <- getSunlightTimes(date = seq.Date(Sys.Date()-30, Sys.Date()+30, by = 1), lat = 50.1, lon = 1.83, tz = "UTC")
   }
   if (plot) {
-    plot(ret$date, as_hms(ret$nightEnd), type="l", ylim=c(0,86400))
+    plot(ret$date,
+         as_hms(ret$nightEnd),
+         type="l",
+         ylim=c(0,86400),
+         xlab="Date",
+         yaxt="n",
+         ylab="Time of Day",
+
+         )
     lines(ret$date, as_hms(ret$nauticalDawn), type="l", col="red")
     lines(ret$date, as_hms(ret$dawn), type="l", col="blue")
     lines(ret$date, as_hms(ret$sunrise), type="l", col="green")
-    lines(ret$date, as_hms(ret$solarNoon), type="l", col="yellow")
+    lines(ret$date, as_hms(ret$sunriseEnd), type="l", col="green")
+    lines(ret$date, as_hms(ret$solarNoon), type="l", col="purple")
+    lines(ret$date, as_hms(ret$sunsetStart), type="l", col="green")
+    lines(ret$date, as_hms(ret$sunset), type="l", col="green")
+    lines(ret$date, as_hms(ret$dusk), type="l", col="blue")
+    lines(ret$date, as_hms(ret$nauticalDusk), type="l", col="red")
+    lines(ret$date, as_hms(ret$night), type="l")
+    axis(2, at = plotHMS.at(), labels=plotHMS.lab(), las=2)
   }
   #TODO: Rename columns as above
   return(ret)
