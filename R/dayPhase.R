@@ -56,6 +56,7 @@ dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="U
 dayPhases <- function(time, lat, lon, tz) {
   sc <- getSunlightTimes(as.Date(time), lat=lat, lon=lon, tz=tz)
   #Also load next day to find out when night ends
+  #TODO: What happens when this is the same day?
   scn <- getSunlightTimes(as.Date(as.POSIXlt(time) + 86400) , lat=lat, lon=lon, tz=tz)
   rn <- c("Dawn.Astro", "Dawn.Naut", "Dawn.Civil", "Sunrise", "Day", "Sunset", "Dusk.Civil", "Dusk.Naut", "Dusk.Astro", "Night")
   cn <- c("Start", "End")
@@ -85,6 +86,7 @@ dayPhases <- function(time, lat, lon, tz) {
     scn$nightEnd
 
   )
+  #TODO: add moon rise
   ret <- cbind(starts, ends)
   colnames(ret) <- cn
   rownames(ret) <- rn
@@ -100,16 +102,23 @@ dayPhases <- function(time, lat, lon, tz) {
 #' @param lon Longitude of recording device
 #' @param tz Timezone of recording device when recording was made
 #' @export
-#' @importFrom suncalc getSunlightTimes
+#' @importFrom suncalc getSunlightTimes getMoonIllumination getMoonTimes
 #' @importFrom hms as_hms
 #' @importFrom graphics lines axis
 daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon=1.83, tz="UTC") {
   if (period == "year") {
-    ret <- getSunlightTimes(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by = 1), lat = 50.1, lon = 1.83, tz = "UTC")
+    ret <- getSunlightTimes(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by = 1), lat = lat, lon = lon, tz = tz)
+    mi <- getMoonIllumination(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by=1))
+    mt <- getMoonTimes(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by = 1), lat = lat, lon = lon, tz = tz)
+    ret <-cbind(ret, mi$fraction, mi$phase, mi$angle, mt$rise, mt$set, mt$alwaysUp, mt$alwaysDown)
   }
   if (period == "month") {
-    ret <- getSunlightTimes(date = seq.Date(Sys.Date()-30, Sys.Date()+30, by = 1), lat = 50.1, lon = 1.83, tz = "UTC")
+    ret <- getSunlightTimes(date = seq.Date(Sys.Date()-15, Sys.Date()+15, by = 1), lat = lat, lon = lon, tz = tz)
+    mi <- getMoonIllumination(date = seq.Date(Sys.Date()-15, Sys.Date()+15, by=1))
+    mt <- getMoonTimes(date = seq.Date(Sys.Date()-180, Sys.Date()+180, by = 1), lat = lat, lon = lon, tz = tz)
+    ret <-cbind(ret, mi$fraction, mi$phase, mi$angle, mt$rise, mt$set, mt$alwaysUp, mt$alwaysDown)
   }
+
   if (plot) {
     plot(ret$date,
          as_hms(ret$nightEnd),
@@ -132,7 +141,10 @@ daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon
     lines(ret$date, as_hms(ret$night), type="l")
     axis(2, at = plotHMS.at(), labels=plotHMS.lab(), las=2)
   }
-  cn <- c("Date", "Lat", "Lon", "solarNoon", "nadir", "Sunrise", "Dusk.Civil", "Day", "Sunset", "Dawn.Civil", "Dusk.Civil", "Dawn.Naut", "Dusk.Naut", "Dawn.Astro", "Night", "goldenHourEnd", "GoldenHour")
+  cn <- c("Date", "Lat", "Lon", "solarNoon", "nadir", "Sunrise", "Dusk.Civil", "Day", "Sunset", "Dawn.Civil", "Dusk.Civil", "Dawn.Naut", "Dusk.Naut", "Dawn.Astro", "Night", "goldenHourEnd", "GoldenHour",
+          "Moon.Fraction", "Moon.Phase", "Moon.Angle",
+          "Moonrise", "Moonset", "Moon.AlwaysUp", "Moon.AlwaysDown"
+          )
   colnames(ret) <- cn
   return(ret)
 }
