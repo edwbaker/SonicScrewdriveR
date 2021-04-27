@@ -2,6 +2,7 @@
 
 export(P_r)
 export(ab_annotations)
+export(ab_seqss_nearestStart)
 export(addSpectra)
 export(audio_filesize)
 export(autoBandPass)
