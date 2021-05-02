@@ -24,7 +24,7 @@ daysPhases(
 
 \item{lon}{Longitude of recording device}
 
-\item{tz}{Timezone of recording device when recording was made}
+\item{tz}{Time-zone of recording device when recording was made}
 }
 \description{
 Phases of days

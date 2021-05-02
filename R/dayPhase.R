@@ -8,7 +8,7 @@
 #' @param duration Duration of recording
 #' @param lat Latitude of recording device
 #' @param lon Longitude of recording device
-#' @param tz Timezone of recording device when recording was made
+#' @param tz Time-zone of recording device when recording was made
 #' @export
 #' @return Data frame of day phases with absolute timestamps and relative times within file
 #' @examples
@@ -50,7 +50,7 @@ dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="U
 #' @param time A time object representing the start time of a recording
 #' @param lat Latitude of recording device
 #' @param lon Longitude of recording device
-#' @param tz Timezone of recording device when recording was made
+#' @param tz Time-zone of recording device when recording was made
 #'
 #' @importFrom suncalc getSunlightTimes
 dayPhases <- function(time, lat, lon, tz) {
@@ -100,7 +100,7 @@ dayPhases <- function(time, lat, lon, tz) {
 #' @param plot If true plots the data, default FALSE
 #' @param lat Latitude of recording device
 #' @param lon Longitude of recording device
-#' @param tz Timezone of recording device when recording was made
+#' @param tz Time-zone of recording device when recording was made
 #' @export
 #' @importFrom suncalc getSunlightTimes getMoonIllumination getMoonTimes
 #' @importFrom hms as_hms
