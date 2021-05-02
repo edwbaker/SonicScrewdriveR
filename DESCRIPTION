@@ -30,6 +30,5 @@ Suggests:
     googleLanguageR,
     knitr,
     rmarkdown,
-    spelling,
-    hardRain
+    spelling
 VignetteBuilder: knitr
