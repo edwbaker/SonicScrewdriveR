@@ -12,6 +12,9 @@ before_install:
 - sudo apt-get install -y libsndfile1-dev
 - sudo apt-get install -y fftw3-dev
 - sudo apt-get install -y libavfilter-dev
+- sudo add-apt-repository -y ppa:cran/ffmpeg-3
+- sudo apt-get update
+- sudo apt-get dist-upgrade
 cache: packages
 r_packages: 
   - testthat
