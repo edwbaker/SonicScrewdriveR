@@ -5,15 +5,12 @@ r:
   - oldrel
   - release
   - devel
-addons:
-  apt:
-    sources:
-      - ppa:cran/ffmpeg-3
+ dist: focal
+ addons:
     packages:
     - libsndfile1-dev
     - fftw3-dev
     - libavfilter-dev
-    - ffmpeg
 sudo: required
 warnings_are_errors: true
 cache: packages
