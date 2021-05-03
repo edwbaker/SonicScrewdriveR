@@ -8,10 +8,11 @@ r:
 dist: focal
 os: linux
 addons:
-  packages:
-    - libsndfile1-dev
-    - fftw3-dev
-    - libavfilter-dev
+  apt:
+    packages:
+      - libsndfile1-dev
+      - fftw3-dev
+      - libavfilter-dev
 warnings_are_errors: true
 cache: packages
 r_packages: 
