@@ -5,10 +5,10 @@ r:
   - oldrel
   - release
   - devel
- dist: focal
- os: linux
- addons:
-    packages:
+dist: focal
+os: linux
+addons:
+  packages:
     - libsndfile1-dev
     - fftw3-dev
     - libavfilter-dev
