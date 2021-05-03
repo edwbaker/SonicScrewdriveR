@@ -1,17 +1,17 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
-language: R
+language: r
 r:
   - oldrel
   - release
   - devel
  dist: focal
+ os: linux
  addons:
     packages:
     - libsndfile1-dev
     - fftw3-dev
     - libavfilter-dev
-sudo: required
 warnings_are_errors: true
 cache: packages
 r_packages: 
