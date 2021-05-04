@@ -33,8 +33,8 @@ audiomoth_config <- function(filename) {
 #' }
 #'
 audiomoth_wave <- function(filename) {
-  f <- readBin(filename, "character", n=15L)
-  raw <- f[15]
+  f <- readBin(filename, "character", n=30L)
+  raw <- f[grep("Recorded", f)]
   if (regexpr("Recorded", raw) != 1) {
     print("No audiomoth comment field found.")
     return(FALSE)
