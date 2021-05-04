@@ -1,3 +1,7 @@
+# sonicscrewdriver 0.0.5
+
+- fix audiomoth_wave (comments not consistently placed in header)
+
 # sonicscrewdriver 0.0.4
 
 - support for reading AudioMoth configuration files
