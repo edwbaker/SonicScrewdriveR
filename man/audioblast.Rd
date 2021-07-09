@@ -4,12 +4,14 @@
 \alias{audioblast}
 \title{Get data or analyses from audioBlast}
 \usage{
-audioblast(type, name, ...)
+audioblast(type, name, endpoint = NULL, ...)
 }
 \arguments{
 \item{type}{One of data, analysis, standalone.}
 
-\item{name}{of data or analysis source.}
+\item{name}{Name of data or analysis source.}
+
+\item{endpoint}{Optionally specify endpoint of an audioBlast module.}
 
 \item{...}{Fields and values to filter on. Any field defined by audioBLAST.}
 }
