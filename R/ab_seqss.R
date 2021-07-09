@@ -14,6 +14,7 @@
 #' }
 #'
 ab_seqss_nearestStart <- function(...) {
+  .Deprecated("audioblast")
   args <- list(...)
   nams <- names(args)
   url <- "https://api.audioblast.org/standalone/seqss/recording_nearest_start_time/?output=nakedJSON"

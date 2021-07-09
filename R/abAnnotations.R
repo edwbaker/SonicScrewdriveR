@@ -14,6 +14,7 @@
 #' }
 #'
 ab_annotations <- function(...) {
+  .Deprecated("audioblast")
   args <- list(...)
   nams <- names(args)
   url <- "https://api.audioblast.org/annotations?agent=sonicscrewdriver"
