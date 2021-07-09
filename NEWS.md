@@ -1,6 +1,7 @@
 # sonicscrewdriver 0.0.5
 
 - fix audiomoth_wave (comments not consistently placed in header)
+- search for recordings and analyses on audioblast.org
 
 # sonicscrewdriver 0.0.4
 
