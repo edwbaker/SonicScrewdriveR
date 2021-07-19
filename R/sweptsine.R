@@ -15,26 +15,18 @@
 #' sweptsine()
 #'
 sweptsine <- function(f0=100, f1=2500, sweep.time=1, A=1, samp.rate=44100, output="wave", ...) {
-  f <- f0
-  phi <- 0 #Phase accumulator
-  delta <- 2 * pi * f / samp.rate
-  f_delta <- (f1 - f0) / (samp.rate * sweep.time)
-  
-  w <- vector(mode="numeric", length=samp.rate*sweep.time)
-  
-  i <- 1
-  while (i < samp.rate*sweep.time) {
-    w[i] <- A * sin(phi)
-    phi <- phi + delta
-    f <- f + f_delta
-    delta <- 2 * pi * f / samp.rate
-    i <- i+1
-  }
+  vector_length = samp.rate*sweep.time
+  delta_f <- (f1 - f0) / vector_length
+
+  f <- seq(from=f0, by=delta_f, length=vector_length)
+  phi <- seq(from=0, by=2*pi*f/samp.rate, length=vector_length)
+  w <- A * sin(phi)
+
   if (output == "vector") {
     return(w)
   }
   if (output == "wave") {
     return(data2Wave(w, samp.rate=samp.rate, ...))
   }
-  
+
 }
