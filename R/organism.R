@@ -19,11 +19,21 @@ o_angle <- function(o1, o2) {
   return(r)
 }
 
-o_bit_angle <- function(angle, bits=2) {
+o_bit_angle <- function(angle, bits=2, seq=FALSE) {
+  buckets <- 2^bits
+  s <- vector(mode="numeric", length=buckets+1)
+  a <- 0
+  ai <- 2*pi/buckets
+  i <- 1
+  s[0] <- 0
+  while (a < 2*pi) {
+    i <- i + 1
+    a <- a+ai
+    s[i] <- min(a, 2*pi)
+  }
+  if (seq==TRUE) {return(s)}
   flag=FALSE
   if (angle < 0) {flag=TRUE}
-  buckets <- 2^bits
-  s <- seq(from=0, to=2*pi, length.out=buckets+1)
   ret <- s[which.min(abs(s - abs(angle)))]
   if (flag==TRUE) { ret <- ret * -1}
   return(ret)
