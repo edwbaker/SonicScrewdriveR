@@ -1,3 +1,10 @@
+# sonicscrewdriver NEXT RELEASE
+
+- citation() information
+- angle conversion
+- refinement of organism class for modelling
+- organism modeling functions
+
 # sonicscrewdriver 0.0.5
 
 - fix audiomoth_wave (comments not consistently placed in header)
