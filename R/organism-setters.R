@@ -3,7 +3,10 @@ organism <- function(position=NULL,
                      speed=0,
                      amplitude=0,
                      strategy=brownian,
-                     arena=arena) {
+                     arena=arena,
+                     dutycycle=1,
+                     dutycycle_offset=0,
+                     directionbits=Inf) {
   o <- new(Class="organism")
   if (is.numeric(position)) {
     o <- o_position(o,arena=arena, x=position[1],y=position[2])
@@ -14,6 +17,9 @@ organism <- function(position=NULL,
   o@speed <- speed
   o@amplitude <- amplitude
   o@strategy <- strategy
+  o@dutycycle <- dutycycle
+  o@dutycycle_offset <- dutycycle_offset
+  o@directionbits <- directionbits
 
   o@is_transmitting <- FALSE
   return(o)

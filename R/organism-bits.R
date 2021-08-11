@@ -1,4 +1,5 @@
 o_bit_angle <- function(angle, bits=2, seq=FALSE) {
+  if (bits==Inf) {return(angle)}
   buckets <- 2^bits
   s <- vector(mode="numeric", length=buckets+1)
   a <- 0

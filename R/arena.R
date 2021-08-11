@@ -24,10 +24,11 @@ arena.run <- function(arena) {
 }
 
 arena.run.organism <- function(o, current_state, t, arena) {
+  o <- o@strategy(current_state, o, t)
   o@x[t] <- o@position[1]
   o@y[t] <- o@position[2]
   o@d[t] <- o@direction
-  o <- o@strategy(current_state, o, t)
+
   return(o)
 }
 

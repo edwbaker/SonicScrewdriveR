@@ -6,6 +6,9 @@ setClass(
     speed="numeric",
     amplitude="numeric",
     strategy="function",
+    dutycycle="numeric",
+    dutycycle_offset="numeric",
+    directionbits="numeric",
 
     #Internals
     is_transmitting="logical",
