@@ -14,7 +14,7 @@ o_nearest <- function(o, state, status="is_transmitting") {
   for (i in 1:length(state)) {
     if (slot(state[[i]], status) == TRUE) {
       d <- o_distance(o, state[[i]])
-      if (d < nearest_value) {
+      if (d != 0 && d < nearest_value) {
         nearest_value <- d
         nearest_i <- i
       }
