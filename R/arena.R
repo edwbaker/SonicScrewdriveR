@@ -57,6 +57,9 @@ arena.finish <- function(arena) {
   for (i in 1:length(arena@members)) {
     arena@members[[i]]@x <- arena@members[[i]]@x[1:arena@t]
     arena@members[[i]]@y <- arena@members[[i]]@y[1:arena@t]
+
+    arena@members[[i]]@path_length <- sum(
+      sqrt(diff(arena@members[[i]]@x)^2 + diff(arena@members[[i]]@y)^2))
   }
   return(arena)
 }

@@ -17,7 +17,10 @@ setClass(
     #Historical data
     x="numeric",
     y="numeric",
-    d="numeric"
+    d="numeric",
+
+    #Final data
+    path_length="numeric"
   )
 )
 
