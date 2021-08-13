@@ -60,3 +60,15 @@ arena.finish <- function(arena) {
   }
   return(arena)
 }
+
+a_extract <- function(arena, s) {
+  sapply(arena@members, a_extract_s, s)
+}
+
+a_extract_s <- function(member, s) {
+  if (.hasSlot(member, s)) {
+    return(slot(member,s))
+  } else {
+    return(NULL)
+  }
+}
