@@ -62,7 +62,7 @@ spacer <- function(state, organism, t) {
   nearest <- o_nearest(organism, state, "is_transmitting")
   if (is.null(nearest$i)) {return(organism)}
   if (nearest$d < 10) {
-    organism@direction <- 180 + o_bit_angle(o_angle(organism, state[[nearest$i]]),organism@directionbits)
+    organism@direction <- pi + o_bit_angle(o_angle(organism, state[[nearest$i]]),organism@directionbits)
     organism <- o_move(organism)
   }
   return(organism)
