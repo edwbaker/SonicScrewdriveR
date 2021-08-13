@@ -3,7 +3,7 @@ organism <- function(position=NULL,
                      speed=0,
                      amplitude=0,
                      strategy=brownian,
-                     arena=arena,
+                     arena=NULL,
                      dutycycle=1,
                      dutycycle_offset=0,
                      directionbits=Inf) {
@@ -11,7 +11,7 @@ organism <- function(position=NULL,
   if (is.numeric(position)) {
     o <- o_position(o,arena=arena, x=position[1],y=position[2])
   } else if (position=="random") {
-    o <- o_position(o, arena=arena, mode="random")
+    o <- o_position(o, arena=arena, x=0,y=0, mode="random")
   }
   o@direction <- direction
   o@speed <- speed
@@ -25,7 +25,7 @@ organism <- function(position=NULL,
   return(o)
 }
 
-o_position <- function(o, arena=NULL, x=0,y=0, mode="absolute") {
+o_position <- function(o, arena=NULL, x, y, mode="absolute") {
   if (mode == "absolute") {
     o@position <- c(x,y)
   }
