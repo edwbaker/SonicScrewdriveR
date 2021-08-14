@@ -1,3 +1,16 @@
+setClass(
+  "arena",
+  representation(
+    max.coord="numeric",
+    max.time="numeric",
+    members="list",
+    overshoot="character",
+
+    #Historical data
+    t="numeric"
+  )
+)
+
 arena <- function(max.coord=10,
                   max.time=10,
                   members=list(NULL),

@@ -23,16 +23,3 @@ setClass(
     path_length="numeric"
   )
 )
-
-setClass(
-  "arena",
-  representation(
-    max.coord="numeric",
-    max.time="numeric",
-    members="list",
-    overshoot="character",
-
-    #Historical data
-    t="numeric"
-  )
-)
