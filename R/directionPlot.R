@@ -1,12 +1,14 @@
+#' @importFrom ggplot2 coord_polar element_line geom_segment ggplot scale_x_continuous scale_y_continuous theme_bw
 directionPlot <- function(angles,
                           speeds,
                           angle.unit="degrees",
                           plot.mean=TRUE) {
   angles <- convert2radians(angles, input=angle.unit)
-  data <- data.frame(Angles = angles, Speeds = speeds)
-  data <- rbind(data, data.frame(Angles = 0, Speeds = 0))
+  data <- data.frame(angles, speeds)
+  data <- rbind(data, data.frame(0, 0))
+  colnames(data) <- c("Angles", "Speeds")
 
-  plot <- ggplot(data, aes(x = Angles, y = Speeds)) +
+  plot <- ggplot(data, aes_string(x = "Angles", y = "Speeds")) +
     coord_polar(start=pi) +
     geom_segment(aes(y = 0, xend = Angles, yend = Speeds)) +
     scale_x_continuous(limits = c(-pi,pi),

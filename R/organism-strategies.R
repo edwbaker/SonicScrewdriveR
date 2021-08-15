@@ -1,3 +1,4 @@
+#' @importFrom stats runif
 brownian <- function(state, organism, t) {
   if (typeof(state)=="character" && state=="info") {
     return(list(

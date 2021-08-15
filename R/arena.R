@@ -11,6 +11,7 @@ setClass(
   )
 )
 
+#' @importFrom methods new
 arena <- function(max.coord=10,
                   max.time=10,
                   members=list(NULL),
@@ -81,6 +82,7 @@ a_extract <- function(arena, s) {
   sapply(arena@members, a_extract_s, s)
 }
 
+#' @importFrom methods slot .hasSlot
 a_extract_s <- function(member, s) {
   if (.hasSlot(member, s)) {
     return(slot(member,s))
