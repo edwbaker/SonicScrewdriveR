@@ -7,7 +7,9 @@ setClass(
     overshoot="character",
 
     #Historical data
-    t="numeric"
+    t="numeric",
+    centroid="matrix",
+    bounding_square="numeric"
   )
 )
 
@@ -21,6 +23,8 @@ arena <- function(max.coord=10,
   a@max.time <- max.time
   a@members <- members
   a@overshoot <- overshoot
+  a@centroid <- matrix(nrow=max.time, ncol=2)
+  a@bounding_square <- vector(mode="numeric", length=a@max.time)
   return(a)
 }
 
@@ -28,10 +32,11 @@ arena.run <- function(arena) {
   arena@members <- lapply(arena@members, arena.init.organism, arena@max.time)
   for (t in 1:arena@max.time) {
     arena@t <- t
-    current_state <- arena@members
-    new_state <- lapply(current_state, arena.run.organism, current_state, t, arena)
-    arena@members <- new_state
-    if (arena.check.terminate(new_state)) {break}
+    arena@members <- lapply(arena@members, arena.run.organism, arena@members, t, arena)
+    bs <- a_bounding_square(arena)
+    arena@bounding_square[t] <- bs$bounding_square
+    arena@centroid[t,] <- bs$centroid
+    if (arena.check.terminate(arena@members)) {break}
   }
   arena <- arena.finish(arena)
   return(arena)
@@ -42,7 +47,6 @@ arena.run.organism <- function(o, current_state, t, arena) {
   o@x[t] <- o@position[1]
   o@y[t] <- o@position[2]
   o@d[t] <- o@direction
-
   return(o)
 }
 
@@ -75,6 +79,7 @@ arena.finish <- function(arena) {
     arena@members[[i]]@path_length <- sum(
       sqrt(diff(arena@members[[i]]@x)^2 + diff(arena@members[[i]]@y)^2))
   }
+  a@bounding_square <- a@bounding_square[1:arena@t]
   return(arena)
 }
 
