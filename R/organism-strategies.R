@@ -58,6 +58,18 @@ receiver <- function(state, organism, t) {
   return(organism)
 }
 
+spacerV <- function(state, organism, t) {
+  #Find nearest transmitter - if none return
+  nearest <- o_nearest(organism, state, "is_transmitting")
+  if (is.null(nearest$i)) {return(organism)}
+  if (nearest$d > 10) {return(organism)}
+
+  v <- o_mean_vector(organism, state, "is_transmitting")
+  organism@direction <- pi + o_bit_angle(v$r, bits=organism@directionbits)
+  organism <- o_move(organism)
+  return(organism)
+}
+
 spacer <- function(state, organism, t) {
   #Find nearest transmitter
   nearest <- o_nearest(organism, state, "is_transmitting")
