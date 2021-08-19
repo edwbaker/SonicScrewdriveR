@@ -14,10 +14,8 @@ a_bounding_square <- function(arena, time=NULL) {
   if (is.null(time)) {
     time <- arena@t
   }
-  v <- max(c(abs(x[time,]),y[time,])) - max(abs(c))
-  ret <- list(
+  return(list(
     "centroid" = c,
-    "bounding_square" = v
-  )
-  return(ret)
+    "bounding_square" = max(c(abs(x[time,]),y[time,])) - max(abs(c))
+  ))
 }

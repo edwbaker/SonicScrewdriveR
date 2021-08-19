@@ -62,13 +62,12 @@ arena.validate.position <- function(o, arena) {
 }
 
 arena.check.terminate <- function(state) {
-  terminate <- FALSE
   for (i in 1:length(state)) {
     if (slot(state[[i]], "do_terminate_run") == TRUE) {
-      terminate <- TRUE
+      return(TRUE)
     }
   }
-  return(terminate)
+  return(FALSE)
 }
 
 arena.finish <- function(arena) {
@@ -91,7 +90,6 @@ a_extract <- function(arena, s) {
 a_extract_s <- function(member, s) {
   if (.hasSlot(member, s)) {
     return(slot(member,s))
-  } else {
-    return(NULL)
   }
+  return(NULL)
 }

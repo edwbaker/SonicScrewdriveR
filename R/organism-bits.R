@@ -15,7 +15,7 @@ o_bit_angle <- function(angle, bits=2, seq=FALSE) {
   flag=FALSE
   if (angle < 0) {flag=TRUE}
   ret <- s[which.min(abs(s - abs(angle)))]
-  if (flag==TRUE) { ret <- ret * -1}
+  if (flag==TRUE) { return(ret * -1)}
   return(ret)
 }
 
@@ -35,6 +35,6 @@ o_bit <- function(n, range=c(0,1), bits=2, model="linear", seq=FALSE) {
   flag=FALSE
   if (n < 0) {flag=TRUE}
   ret <- s[which.min(abs(s - abs(n)))]
-  if (flag==TRUE) { ret <- ret * -1}
+  if (flag==TRUE) { return(ret * -1)}
   return(ret)
 }

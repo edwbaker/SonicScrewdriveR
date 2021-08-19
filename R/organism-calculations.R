@@ -4,8 +4,9 @@ o_distance <- function(o1, o2) {
 }
 
 o_angle <- function(o1, o2) {
-  r <- atan2(o2@position[2]-o1@position[2], o2@position[1]-o1@position[1])
-  return(r)
+  return(atan2(o2@position[2]-o1@position[2],
+               o2@position[1]-o1@position[1])
+)
 }
 
 o_nearest <- function(o, state, status="is_transmitting") {
@@ -38,11 +39,9 @@ o_mean_vector <- function(o, state, status="is_transmitting") {
       y <- y + d*sin(a)
     }
   }
-  r <- atan2(y,x)
-  A <- sqrt(x^2+y^2)
   return(list(
-    "r"=r,
-    "A"=A
+    "r" = atan2(y,x),
+    "A" = sqrt(x^2+y^2)
   ))
 }
 
