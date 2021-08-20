@@ -9,7 +9,7 @@ rainfallDetection(wave, method = "bedoya2017", ...)
 \arguments{
 \item{wave}{A Wave object to detect rainfall in}
 
-\item{method}{Which rainfall detection method to use ("bedoya2017", "hardRain")}
+\item{method}{Which rainfall detection method to use ("bedoya2017")}
 
 \item{...}{Other arguments to pass to rain detection function}
 }
@@ -23,7 +23,6 @@ package can also be accessed via this wrapper.
 \examples{
 \dontrun{
 rainfallDetection(sheep, method="bedoya2017")
-rainfallDetection(sheep, method="hardRain")
 }
 
 }

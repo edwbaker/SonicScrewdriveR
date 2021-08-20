@@ -1,7 +1,8 @@
 #' Automatic Band Pass Filter
 #'
-#' Creates an automatic bandpass filter based on the strongest frequency. The allowed bandwidth can be an
-#' integer multiple of the bandwidth at either -3dB or -10dB.
+#' Creates an automatic bandpass filter based on the strongest frequency. The
+#' allowed bandwidth can be an integer multiple of the bandwidth at either -3dB
+#' or -10dB.
 #'
 #' @param wave A Wave object
 #' @param bw Either -3dB or -10dB. This is calculated by \code{frequencyStats}

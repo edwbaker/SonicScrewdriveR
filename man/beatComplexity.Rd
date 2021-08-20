@@ -15,13 +15,14 @@ beatComplexity(wave, plot = FALSE)
 A list of the complexity, a vector of the peak periods, and the number of peaks.
 }
 \description{
-This function computes a \code{beatSpectrum} and calculates some basic measurements of its complexity.
-The complexity value is calculated as the maximum identified repeating period (in seconds) divided by
-the number of peaks.
+This function computes a \code{beatSpectrum} and calculates some basic
+measurements of its complexity. The complexity value is calculated as the
+maximum identified repeating period (in seconds) divided by the number of
+peaks.
 }
 \examples{
 \dontrun{
-beatComplexity(sheep)
-beatComplexity(sheep, plot=TRUE)
+  beatComplexity(sheep)
+  beatComplexity(sheep, plot=TRUE)
 }
 }

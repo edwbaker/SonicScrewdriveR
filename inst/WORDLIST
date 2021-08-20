@@ -1,5 +1,10 @@
+audioBLAST
+audioRead
+AudioMoth
+av
 bioacoustic
 Codacy
+dBA
 seewave
 tuneR
 ScrewdriveR
@@ -35,3 +40,6 @@ pulseDetection
 sid
 SonicScrewdriveR
 uncalibrated
+getSunlightTimes
+parseFilename
+suncalc

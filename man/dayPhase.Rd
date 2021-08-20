@@ -21,7 +21,7 @@ dayPhase(
 
 \item{lon}{Longitude of recording device}
 
-\item{tz}{Timezone of recording device when recording was made}
+\item{tz}{Time-zone of recording device when recording was made}
 }
 \value{
 Data frame of day phases with absolute timestamps and relative times within file

@@ -13,7 +13,7 @@ dayPhases(time, lat, lon, tz)
 
 \item{lon}{Longitude of recording device}
 
-\item{tz}{Timezone of recording device when recording was made}
+\item{tz}{Time-zone of recording device when recording was made}
 }
 \description{
 Wrapper for suncalc::getSunlightTimes that formats output for this package.

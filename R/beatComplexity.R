@@ -1,16 +1,17 @@
 #' Beat spectrum complexity
 #'
-#' This function computes a \code{beatSpectrum} and calculates some basic measurements of its complexity.
-#' The complexity value is calculated as the maximum identified repeating period (in seconds) divided by
-#' the number of peaks.
+#' This function computes a \code{beatSpectrum} and calculates some basic
+#' measurements of its complexity. The complexity value is calculated as the
+#' maximum identified repeating period (in seconds) divided by the number of
+#' peaks.
 #'
 #' @param wave A Wave object
 #' @param plot If TRUE a spectrogram overlaid with the peaks is plotted.
 #' @return A list of the complexity, a vector of the peak periods, and the number of peaks.
 #' @examples
 #' \dontrun{
-#' beatComplexity(sheep)
-#' beatComplexity(sheep, plot=TRUE)
+#'   beatComplexity(sheep)
+#'   beatComplexity(sheep, plot=TRUE)
 #' }
 #' @export
 #'

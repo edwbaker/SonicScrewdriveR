@@ -19,8 +19,9 @@ autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 A band-pass filtered Wave object
 }
 \description{
-Creates an automatic bandpass filter based on the strongest frequency. The allowed bandwidth can be an
-integer multiple of the bandwidth at either -3dB or -10dB.
+Creates an automatic bandpass filter based on the strongest frequency. The
+allowed bandwidth can be an integer multiple of the bandwidth at either -3dB
+or -10dB.
 }
 \examples{
 \dontrun{

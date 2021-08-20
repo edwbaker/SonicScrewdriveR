@@ -1,17 +1,19 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
-language: R
+language: r
 r:
   - oldrel
   - release
   - devel
-sudo: required
+dist: focal
+os: linux
+addons:
+  apt:
+    packages:
+      - libsndfile1-dev
+      - fftw3-dev
+      - libavfilter-dev
 warnings_are_errors: true
-before_install:
-- sudo apt-get -qq update
-- sudo apt-get install -y libsndfile1-dev
-- sudo apt-get install -y fftw3-dev
-- sudo apt-get install -y libavfilter-dev
 cache: packages
 r_packages: 
   - testthat

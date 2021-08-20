@@ -4,14 +4,13 @@
 #' package can also be accessed via this wrapper.
 #'
 #' @param wave A Wave object to detect rainfall in
-#' @param method Which rainfall detection method to use ("bedoya2017", "hardRain")
+#' @param method Which rainfall detection method to use ("bedoya2017")
 #' @param ... Other arguments to pass to rain detection function
 #' @export
 #' @return Numeric value from the rainfall detection algorithm chosen.
 #' @examples
 #' \dontrun{
 #' rainfallDetection(sheep, method="bedoya2017")
-#' rainfallDetection(sheep, method="hardRain")
 #' }
 #'
 rainfallDetection <- function(
@@ -21,10 +20,6 @@ rainfallDetection <- function(
 ) {
   if (method == "bedoya2017") {
     return(rainfall_bedoya2017(wave,...))
-  }
-  if (method == "hardRain") {
-    package.installed("hardRain", "github", "Cdevenish")
-    return(rainfall_hardRain(wave,...))
   }
   stop("No valid method supplied.")
 }
