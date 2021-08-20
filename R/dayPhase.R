@@ -14,23 +14,27 @@
 #' @examples
 #' dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="UTC")
 #'
-dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="UTC") {
-  dt <- dayPhases(as.Date(time), lat=lat, lon=lon, tz=tz)
+dayPhase <- function(time=Sys.time(), duration=40000, lat=50.1, lon=1.83, tz="UTC") {
+  d <- dayPhases(as.Date(time), lat=lat, lon=lon, tz=tz)
+  dt <- d[1:11,]
   etime <- time + duration
   rt <- subset(dt,
                 (time >= dt[,1] & time < dt[,2]) |
                 (time < dt[,1] & etime > dt[,2]) |
                 (time >= dt[,1] & etime < dt[,2])
               )
+  #TODO: add relevant moon data
   stime <- time
   while(max(rt[,2]) < etime) {
     stime <- stime + 86400
-    dt <- dayPhases(as.Date(stime), lat=lat, lon=lon, tz=tz)
+    d <- dayPhases(as.Date(time), lat=lat, lon=lon, tz=tz)
+    dt <- d[1:11,]
     rt2 <- subset(dt,
                  (stime >= dt[,1] & stime < dt[,2]) |
                    (stime < dt[,1] & etime > dt[,2]) |
                    (stime >= dt[,1] & etime < dt[,2])
     )
+    #TODO: add relevant moon data
     rt <- rbind(rt, rt2)
   }
   relstart <- as.numeric(rt[,1]) - as.numeric(time)
@@ -52,13 +56,19 @@ dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="U
 #' @param lon Longitude of recording device
 #' @param tz Timezone of recording device when recording was made
 #'
-#' @importFrom suncalc getSunlightTimes
-dayPhases <- function(time, lat, lon, tz) {
+#' @importFrom suncalc getSunlightTimes getMoonIllumination getMoonTimes
+dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
   sc <- getSunlightTimes(as.Date(time), lat=lat, lon=lon, tz=tz)
   #Also load next day to find out when night ends
   #TODO: What happens when this is the same day?
+  #Moon rise and set might need to be previous day or next day?
   scn <- getSunlightTimes(as.Date(as.POSIXlt(time) + 86400) , lat=lat, lon=lon, tz=tz)
-  rn <- c("Dawn.Astro", "Dawn.Naut", "Dawn.Civil", "Sunrise", "Day", "Sunset", "Dusk.Civil", "Dusk.Naut", "Dusk.Astro", "Night")
+  mc <- getMoonTimes(as.Date(time), lat=lat, lon=lon, tz=tz)
+  mi <- getMoonIllumination(as.Date(time))
+  rn <- c("Dawn.Astro", "Dawn.Naut", "Dawn.Civil", "Sunrise", "Day", "Sunset", "Dusk.Civil", "Dusk.Naut", "Dusk.Astro", "Night",
+          "Moon", "Moon.AlwaysUp", "Moon.AlwaysDown",
+          "Moon.Fraction", "Moon.Phase", "Moon.Angle"
+          )
   cn <- c("Start", "End")
 
   starts <- c(
@@ -71,7 +81,13 @@ dayPhases <- function(time, lat, lon, tz) {
     sc$sunset[[1]],
     sc$dusk[[1]],
     sc$nauticalDusk[[1]],
-    sc$night[[1]]
+    sc$night[[1]],
+    mc$rise[[1]],
+    mc$alwaysUp[[1]],
+    mc$alwaysDown[[1]],
+    mi$fraction[[1]],
+    mi$phase[[1]],
+    mi$angle[[1]]
   )
   ends <- c(
     sc$nauticalDawn[[1]],
@@ -83,10 +99,15 @@ dayPhases <- function(time, lat, lon, tz) {
     sc$dusk[[1]],
     sc$nauticalDusk[[1]],
     sc$night[[1]],
-    scn$nightEnd
+    scn$nightEnd,
+    mc$set[[1]],
+    mc$alwaysUp[[1]],
+    mc$alwaysDown[[1]],
+    mi$fraction[[1]],
+    mi$phase[[1]],
+    mi$angle[[1]]
 
   )
-  #TODO: add moon rise
   ret <- cbind(starts, ends)
   colnames(ret) <- cn
   rownames(ret) <- rn
