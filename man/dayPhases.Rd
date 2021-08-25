@@ -4,7 +4,7 @@
 \alias{dayPhases}
 \title{Phases of day}
 \usage{
-dayPhases(time, lat, lon, tz)
+dayPhases(time = as.Date(Sys.time()), lat = 50.1, lon = 1.83, tz = "UTC")
 }
 \arguments{
 \item{time}{A time object representing the start time of a recording}

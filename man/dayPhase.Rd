@@ -6,7 +6,7 @@
 \usage{
 dayPhase(
   time = Sys.time(),
-  duration = 2e+05,
+  duration = 40000,
   lat = 50.1,
   lon = 1.83,
   tz = "UTC"
