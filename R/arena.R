@@ -30,7 +30,7 @@ arena <- function(max.coord=10,
 }
 
 arena.run <- function(arena) {
-  arena@members <- lapply(arena@members, arena.init.organism, arena@max.time)
+  arena@members <- lapply(arena@members, arena.init.organism, arena)
   for (t in 1:arena@max.time) {
     arena@t <- t
     arena@members <- lapply(arena@members, arena.run.organism, arena@members, t, arena)
@@ -45,18 +45,17 @@ arena.run <- function(arena) {
 
 arena.run.organism <- function(o, current_state, t, arena) {
   o <- o@strategy(current_state, o, t)
-  if (o@start_pos_random==TRUE) {
-    o <- o_position(o, arena=arena, x=0,y=0, mode="random")
-  }
   o@x[t] <- o@position[1]
   o@y[t] <- o@position[2]
   o@d[t] <- o@direction
   return(o)
 }
 
-arena.init.organism <- function(o, max.time) {
-  o@x <- o@y <- o@d <- vector(mode="numeric", length=max.time)
-  o@do_terminate_run <- FALSE
+arena.init.organism <- function(o, arena) {
+  o@x <- o@y <- o@d <- vector(mode="numeric", length=arena@max.time)
+  if (o@start_pos_random==TRUE) {
+    o <- o_position(o, arena=arena, x=0,y=0, mode="random")
+  }
   return(o)
 }
 

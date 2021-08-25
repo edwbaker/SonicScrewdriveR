@@ -26,7 +26,7 @@ organism <- function(position=NULL,
   o@dutycycle <- dutycycle
   o@dutycycle_offset <- dutycycle_offset
   o@directionbits <- directionbits
-
+  o@do_terminate_run <- FALSE
   o@is_transmitting <- FALSE
   return(o)
 }
