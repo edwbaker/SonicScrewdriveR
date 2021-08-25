@@ -18,9 +18,9 @@
 defaultCluster <- function(fork=TRUE) {
   cores <- max(1, detectCores() - 1)
   if (fork) {
-    cluster <- makeForkCluster(cores)
+    cluster <- makeForkCluster(cores, outfile="")
   } else {
-    cluster <- makeCluster(cores)
+    cluster <- makeCluster(cores, outfile="")
   }
   return(cluster)
 }

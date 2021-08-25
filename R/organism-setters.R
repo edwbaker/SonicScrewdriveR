@@ -10,8 +10,14 @@ organism <- function(position=NULL,
   o <- new(Class="organism")
   if (is.numeric(position)) {
     o <- o_position(o,arena=arena, x=position[1],y=position[2])
+    o@start_pos_random <- FALSE
+    o@start_pos_grid <- FALSE
   } else if (position=="random") {
-    o <- o_position(o, arena=arena, x=0,y=0, mode="random")
+    o@start_pos_random <- TRUE
+    o@start_pos_grid <- FALSE
+  } else if (position=="grid") {
+    o@start_pos_grid <- TRUE
+    o@start_pos_random <- FALSE
   }
   o@direction <- direction
   o@speed <- speed

@@ -5,6 +5,7 @@ setClass(
     max.time="numeric",
     members="list",
     overshoot="character",
+    id="numeric",
 
     #Historical data
     t="numeric",
@@ -44,6 +45,9 @@ arena.run <- function(arena) {
 
 arena.run.organism <- function(o, current_state, t, arena) {
   o <- o@strategy(current_state, o, t)
+  if (o@start_pos_random==TRUE) {
+    o <- o_position(o, arena=arena, x=0,y=0, mode="random")
+  }
   o@x[t] <- o@position[1]
   o@y[t] <- o@position[2]
   o@d[t] <- o@direction
@@ -74,7 +78,7 @@ arena.finish <- function(arena) {
   for (i in 1:length(arena@members)) {
     arena@members[[i]]@x <- arena@members[[i]]@x[1:arena@t]
     arena@members[[i]]@y <- arena@members[[i]]@y[1:arena@t]
-
+    arena@members[[i]]@d <- arena@members[[i]]@d[1:arena@t]
     arena@members[[i]]@path_length <- sum(
       sqrt(diff(arena@members[[i]]@x)^2 + diff(arena@members[[i]]@y)^2))
   }

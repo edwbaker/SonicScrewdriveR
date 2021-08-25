@@ -11,6 +11,8 @@ setClass(
     directionbits="numeric",
 
     #Internals
+    start_pos_random="logical",
+    start_pos_grid="logical",
     is_transmitting="logical",
     do_terminate_run="logical",
 
