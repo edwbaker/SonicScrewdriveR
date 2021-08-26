@@ -36,8 +36,8 @@ arena.plot.movement <- function(a) {
          )
   arrows(a_extract(a, "x")[1,],
          a_extract(a, "y")[1,],
-         a_extract(a, "x")[a@max.time,],
-         a_extract(a, "y")[a@max.time,],
+         a_extract(a, "x")[a@t,],
+         a_extract(a, "y")[a@t,],
          angle=10,
          length=.1
   )

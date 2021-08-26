@@ -7,7 +7,7 @@ brownian <- function(state, organism, t) {
       "mobility" = "mobile"
     ))
   }
-  organism@direction <- runif(1)*360
+  organism@direction <- runif(1)*2*pi
   organism <- o_move(organism)
   return(organism)
 }

@@ -48,5 +48,6 @@ o_mean_vector <- function(o, state, status="is_transmitting") {
 o_move <- function(o) {
   o@position[1] <- o@position[1] + o@speed*cos(o@direction)
   o@position[2] <- o@position[2] + o@speed*sin(o@direction)
+  o@made_move <- TRUE
   return(o)
 }

@@ -6,6 +6,7 @@ setClass(
     members="list",
     overshoot="character",
     id="numeric",
+    terminate_no_moves="logical",
 
     #Historical data
     t="numeric",
@@ -18,7 +19,8 @@ setClass(
 arena <- function(max.coord=10,
                   max.time=10,
                   members=list(NULL),
-                  overshoot="allow") {
+                  overshoot="allow",
+                  no_moves=FALSE) {
   a <- new(Class="arena")
   a@max.coord <- max.coord
   a@max.time <- max.time
@@ -26,6 +28,7 @@ arena <- function(max.coord=10,
   a@overshoot <- overshoot
   a@centroid <- matrix(nrow=max.time, ncol=2)
   a@bounding_square <- vector(mode="numeric", length=a@max.time)
+  a@terminate_no_moves <- no_moves
   return(a)
 }
 
@@ -37,13 +40,14 @@ arena.run <- function(arena) {
     bs <- a_bounding_square(arena)
     arena@bounding_square[t] <- bs$bounding_square
     arena@centroid[t,] <- bs$centroid
-    if (arena.check.terminate(arena@members)) {break}
+    if (arena.check.terminate(arena, t)) {break}
   }
   arena <- arena.finish(arena)
   return(arena)
 }
 
 arena.run.organism <- function(o, current_state, t, arena) {
+  o@made_move <- FALSE
   o <- o@strategy(current_state, o, t)
   o@x[t] <- o@position[1]
   o@y[t] <- o@position[2]
@@ -56,6 +60,7 @@ arena.init.organism <- function(o, arena) {
   if (o@start_pos_random==TRUE) {
     o <- o_position(o, arena=arena, x=0,y=0, mode="random")
   }
+  o@made_move <- TRUE
   return(o)
 }
 
@@ -64,12 +69,17 @@ arena.validate.position <- function(o, arena) {
   return(o)
 }
 
-arena.check.terminate <- function(state) {
-  for (i in 1:length(state)) {
-    if (slot(state[[i]], "do_terminate_run") == TRUE) {
+arena.check.terminate <- function(arena, t) {
+  move_made <- FALSE
+  for (i in 1:length(arena@members)) {
+    if (slot(arena@members[[i]], "do_terminate_run") == TRUE) {
       return(TRUE)
     }
+    if (slot(arena@members[[i]], "made_move") == TRUE) {
+      move_made <- TRUE
+    }
   }
+  if (t>1 && arena@terminate_no_moves == TRUE && move_made == FALSE) {return(TRUE)}
   return(FALSE)
 }
 

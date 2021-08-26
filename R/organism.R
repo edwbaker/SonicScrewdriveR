@@ -15,6 +15,7 @@ setClass(
     start_pos_grid="logical",
     is_transmitting="logical",
     do_terminate_run="logical",
+    made_move="logical",
 
     #Historical data
     x="numeric",
