@@ -91,7 +91,7 @@ arena.finish <- function(arena) {
     arena@members[[i]]@path_length <- sum(
       sqrt(diff(arena@members[[i]]@x)^2 + diff(arena@members[[i]]@y)^2))
   }
-  a@bounding_square <- a@bounding_square[1:arena@t]
+  arena@bounding_square <- arena@bounding_square[1:arena@t]
   return(arena)
 }
 
