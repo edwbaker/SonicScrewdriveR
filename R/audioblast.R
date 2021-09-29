@@ -63,3 +63,27 @@ audioblast_ASITSN <- function(type, name, endpoint=NULL, ...) {
     }
   }
 }
+
+#' Download audio files from audioBlast
+#'
+#' Downloads audio files associated with a search using the audioBlast() function.
+#'
+#' @param d Data returned from a search using audioBlast().
+#' @param metadata If true saves the data in d as a csv file.
+#' @param skip.existing If true will not overwrite existing files.
+#' @export
+#' @importFrom utils download.file write.csv
+audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE) {
+  if (metadata) {
+    write.csv(d, file="metadata.csv")
+  }
+  files <- d[, 'filename']
+  names <- basename(files)
+  if (skip.existing) {
+    files <- files[file.exists(names)==FALSE]
+    names <- names[file.exists(names)==FALSE]
+  }
+  for (i in 1:length(files)) {
+    download.file(files[i], destfile=names[i])
+  }
+}

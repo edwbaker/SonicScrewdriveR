@@ -5,6 +5,7 @@
 - refinement of organism class for modelling
 - organism modeling functions
 - Dolbear's law
+- Download files from audioBlast
 
 # sonicscrewdriver 0.0.5
 
