@@ -18,6 +18,6 @@ audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1
     return (bits)
   }
   if (output.unit == "bytes") {
-    return (convert2bytes(bits, "bits"))
+    return (convert2bytes(bits, "bytes"))
   }
 }
