@@ -1,3 +1,4 @@
+#' @importFrom pbapply pblapply
 arenas.run <- function(arenas, rep=1) {
   cl <- defaultCluster()
   clusterSetRNGStream(cl, iseed=42)

@@ -14,7 +14,8 @@ Imports:
   jsonlite,
   mime,
   suncalc,
-  hms
+  hms,
+  pbapply
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
