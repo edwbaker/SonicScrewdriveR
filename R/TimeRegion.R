@@ -1,3 +1,8 @@
+#' An S4 class to represent a TimeRegion within a Wave object.
+#'
+#' @slot from Start position
+#' @slot to End position
+#' @slot unit Time unit (one of seconds, minutes, hours)
 setClass(
   "TimeRegion",
   slots=list(
@@ -51,7 +56,10 @@ timeRegion2samples <- function(t, samp.rate) {
   }
 }
 
-setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i,j,...,drop=FALSE){
+#' Allow subsetting a Wave object with a TimeRegion
+#' @param x Wave Object
+#' @param i TimeRegion object
+setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
   if (class(i)=="TimeRegion") {
     x@left <- x@left[timeRegion2samples(i, x@samp.rate)]
     if (x@stereo) {

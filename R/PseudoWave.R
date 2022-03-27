@@ -1,3 +1,12 @@
+#' An S4 class to represent a PseudoWave object that is converted to a
+#' Wave object when operated on.
+#'
+#' @slot type Type of PseudoWave (e.g. "noise")
+#' @slot subtype Subtype of PSeudoWave (e.g. "white" if type is "noise")
+#' @slot scale The Wave channels are multiplied by this value
+#' @slot offset This value is added to the  Wave channels
+#' @slot seed Random seed for reproducible output
+#' @slot scale Logical. Whether to use the random seed value.
 setClass(
   "PseudoWave",
   slots=list(
@@ -18,7 +27,6 @@ setClass(
   )
 )
 
-
 depseduoWave <- function(pw, n, stereo, samp.rate, bit, pcm) {
   if (pw@type == "noise") {
     if (pw@use_seed) {set.seed(pw@seed)}
@@ -31,6 +39,8 @@ depseduoWave <- function(pw, n, stereo, samp.rate, bit, pcm) {
   return(w)
 }
 
+#Use non exported function from tuneR
+equalWave <- utils::getFromNamespace("equalWave", "tuneR")
 
 #' @importFrom tuneR noise
 depseudoNoise <- function(type, n, stereo, samp.rate, bit, pcm) {
@@ -51,8 +61,7 @@ setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
     e1
 })
 
-#Use non exported function from tuneR
-equalWave <- utils::getFromNamespace("equalWave", "tuneR")
+
 
 setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   function(e1, e2){
