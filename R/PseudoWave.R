@@ -2,7 +2,7 @@
 #' Wave object when operated on.
 #'
 #' @slot type Type of PseudoWave (e.g. "noise")
-#' @slot subtype Subtype of PSeudoWave (e.g. "white" if type is "noise")
+#' @slot subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
 #' @slot scale The Wave channels are multiplied by this value
 #' @slot offset This value is added to the  Wave channels
 #' @slot seed Random seed for reproducible output

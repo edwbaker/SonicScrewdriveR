@@ -3,7 +3,7 @@
 - citation() information
 - angle conversion
 - refinement of organism class for modelling
-- organism modeling functions
+- organism modelling functions
 - Dolbear's law
 - Download files from audioBlast
 - PseudoWave class (e.g. apply noise to a file of any length)

@@ -51,7 +51,7 @@ filterw <- function(w, filt) {
 #' use with filterw and pipes.
 #'
 #' @param from Bottom of bandpass frequency (Hz)
-#' @param to Tof bandpass frequency (Hz)
+#' @param to Top of bandpass frequency (Hz)
 #' @param ... Further arguments to pass to ffilter
 #' @return A WaveFilter object
 #' @export

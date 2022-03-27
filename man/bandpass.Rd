@@ -9,7 +9,7 @@ bandpass(from, to, ...)
 \arguments{
 \item{from}{Bottom of bandpass frequency (Hz)}
 
-\item{to}{Tof bandpass frequency (Hz)}
+\item{to}{Top of bandpass frequency (Hz)}
 
 \item{...}{Further arguments to pass to ffilter}
 }

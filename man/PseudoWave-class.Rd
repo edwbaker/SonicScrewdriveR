@@ -14,7 +14,7 @@ Wave object when operated on.
 \describe{
 \item{\code{type}}{Type of PseudoWave (e.g. "noise")}
 
-\item{\code{subtype}}{Subtype of PSeudoWave (e.g. "white" if type is "noise")}
+\item{\code{subtype}}{Subtype of PseudoWave (e.g. "white" if type is "noise")}
 
 \item{\code{scale}}{The Wave channels are multiplied by this value}
 
