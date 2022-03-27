@@ -36,12 +36,32 @@ setClass(
 #' @export
 filterw <- function(w, filt) {
   if (filt@module == "seewave") {
+    #seeave functions require the output to be set to Wave to return a Wave object
     filt@params <- c(filt@params, "output"="Wave")
     return(do.call(match.fun(filt@func), c(w, filt@params)))
   }
 }
 
-bandpass <- function(...) {
+
+#' Simple bandpass filter
+#'
+#' Creates a band pass WaveFilter between values specified to a Wave object.
+#'
+#' This is a simple wrapper function to the seewave ffilter function allowing its
+#' use with filterw and pipes.
+#'
+#' @param from Bottom of bandpass frequency (Hz)
+#' @param to Tof bandpass frequency (Hz)
+#' @param ... Further arguments to pass to ffilter
+#' @return A WaveFilter object
+#' @export
+#' @examples
+#' \dontrun{
+#' nwave <- noise("white")
+#' fwave <- filterw(nwave, bandpass(from=1000, to=2000))
+#' nwave |> filterw(bandpass(from=1000, to=2000)) -> fwave
+#' }
+bandpass <- function(from, to, ...) {
   filt <- new("WaveFilter", module="seewave", func="ffilter", params=list(...))
   return(filt)
 }
