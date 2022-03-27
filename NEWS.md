@@ -6,6 +6,8 @@
 - organism modeling functions
 - Dolbear's law
 - Download files from audioBlast
+- PseudoWave class (e.g. apply noise to a file of any length)
+- WaveFilter class (supports applying filters using pipes)
 
 # sonicscrewdriver 0.0.5
 
