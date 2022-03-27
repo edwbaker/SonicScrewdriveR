@@ -1,8 +1,12 @@
-#' @importFrom ggplot2 coord_polar element_line geom_segment ggplot scale_x_continuous scale_y_continuous theme_bw
+#' @importFrom ggplot2 aes_string coord_polar element_line geom_segment ggplot scale_x_continuous scale_y_continuous theme_bw
 directionPlot <- function(angles,
                           speeds,
                           angle.unit="degrees",
                           plot.mean=TRUE) {
+  #Please CRAN
+  Angles <- Speeds <- NULL
+
+
   angles <- convert2radians(angles, input=angle.unit)
   data <- data.frame(angles, speeds)
   data <- rbind(data, data.frame(0, 0))

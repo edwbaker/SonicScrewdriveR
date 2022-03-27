@@ -16,7 +16,7 @@ arenas_grid <- function(arena, xlim, ylim) {
   for (i in min(xlim):max(xlim)) {
     for (j in min(ylim):max(ylim)) {
       c <- c+1
-      for (n in 1:length(a@members)) {
+      for (n in 1:length(arena@members)) {
         if (arenas[[c]]@members[[n]]@start_pos_grid == TRUE) {
           arenas[[c]]@members[[n]]@position <- c(i,j)
         }
