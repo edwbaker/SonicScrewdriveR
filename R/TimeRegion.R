@@ -60,7 +60,7 @@ timeRegion2samples <- function(t, samp.rate) {
 #' @param x Wave Object
 #' @param i TimeRegion object
 setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
-  if (class(i)=="TimeRegion") {
+  if (inherits(i,"TimeRegion")) {
     x@left <- x@left[timeRegion2samples(i, x@samp.rate)]
     if (x@stereo) {
       x@right <- x@right[timeRegion2samples(i, x@samp.rate)]
