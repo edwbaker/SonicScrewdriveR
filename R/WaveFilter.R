@@ -36,7 +36,7 @@ setClass(
 #' @export
 filterw <- function(w, filt) {
   if (filt@module == "seewave") {
-    #seeave functions require the output to be set to Wave to return a Wave object
+    #seewave functions require the output to be set to Wave to return a Wave object
     filt@params <- c(filt@params, "output"="Wave")
     return(do.call(match.fun(filt@func), c(w, filt@params)))
   }
