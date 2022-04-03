@@ -27,6 +27,11 @@ setClass(
   )
 )
 
+pwave <- function(type, subtype, scale=1, offset=0,seed=1,use_seed=TRUE) {
+  p <- new("PseudoWave", type=type, subtype=subtype,scale=scale, offset=offset,seed=seed,use_seed=use_seed)
+  return(p)
+}
+
 depseduoWave <- function(pw, n, stereo, samp.rate, bit, pcm) {
   if (pw@type == "noise") {
     if (pw@use_seed) {set.seed(pw@seed)}

@@ -35,16 +35,6 @@
   return(b)
 }
 
-`%+cat%` <- function(a,b) {
-  validateIsWave(a)
-  validateIsWave(b)
-  a@left <- c(a@left, b@left)
-  if (a@stereo && b@stereo) {
-   a@right <- c(a@right, b@right)
-  }
-  return(a)
-}
-
 `%+rep%` <- function(a,b) {
   validateIsWave(a)
   validateIsWave(b)
