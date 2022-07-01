@@ -1,4 +1,4 @@
-#' An S4 class to represent a filter for a Wave object
+#' A S4 class to represent a filter for a Wave object
 #'
 #' A WaveFilter object is an object containing information necessary for the
 #' filterw function to apply the filter to a Wave object. This is designed to
