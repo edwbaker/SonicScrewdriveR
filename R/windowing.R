@@ -36,7 +36,7 @@ windowing <- function(
     l <- parLapply(cluster, starts, FUN, wave=wave, window.length=window.length, ...)
   }
 
-  if (typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
+  if (bind.wave & typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
     w <- l[[1]]
     for (i in 2:length(l)) {
       w <- tuneR::bind(w, l[[i]])
