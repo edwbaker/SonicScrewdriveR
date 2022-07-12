@@ -130,7 +130,9 @@ dielPlot <- function(date, lat, lon, plot, method="plotrix") {
       if (!is.na(tim$night) & !is.na(tim$nightEnd)){
         if (dielFraction(tim$nightEnd) <= 0) {
           plotrix::drawSectorAnnulus(dielFraction(tim$night), dielFraction(tim$nightEnd),0,pi/2, col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
-        } else {
+        } else if (dielFraction(tim$night) >= 0) {
+          plotrix::drawSectorAnnulus(dielFraction(tim$night), dielFraction(tim$nightEnd),0,pi/2, col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
+        } else{
           plotrix::drawSectorAnnulus(pi, dielFraction(tim$nightEnd),0,pi/2, col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
           plotrix::drawSectorAnnulus(-pi, dielFraction(tim$night),0,pi/2, col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
         }
