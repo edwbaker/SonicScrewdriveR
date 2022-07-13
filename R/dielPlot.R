@@ -34,7 +34,7 @@ dielFraction <- function(t, unit="radians", start=pi, clockwise=FALSE) {
 #' @param plot Logical. Performs sanity check on input before sending to audioBLAST.
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
-dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
+dielPlot <- function(date, lat, lon, limits, plot, method="plotrix", legend=F) {
   times <- seq.POSIXt(from=date, by="min", length.out=60*24)
   attr(times, 'tzone') <- "UTC"
   #Calculate night time from sun altitude above horizon
@@ -60,6 +60,9 @@ dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
     )
 
     alt <- getSunlightPosition(tim$solarNoon, lat=tim$lat, lon=tim$lon, keep=c("altitude"))$altitude
+
+    leg <- c()
+    col <- c()
 
     if ("Sunrise" %in% plot) {
       if (!is.na(tim$sunrise)) {
@@ -92,6 +95,8 @@ dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
     }
 
     if ("Civil Twilight" %in% plot) {
+      leg <- c(leg, "Civil Twilight")
+      col <- c(col, rgb(0.8,0.8,0.8,1))
       if (!is.na(tim$sunrise)) {
         if (dielFraction(tim$sunrise) <= 0) {
           if (dielFraction(tim$sunset) <= 0) {
@@ -114,6 +119,8 @@ dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
       }
     }
     if ("Nautical Twilight" %in% plot) {
+      leg <- c(leg, "Nautical Twilight")
+      col <- c(col, rgb(0.6,0.6,0.6,1))
       if (!is.na(tim$dawn)) {
         if (dielFraction(tim$dawn) <= 0) {
           if (dielFraction(tim$dusk) <= 0) {
@@ -135,6 +142,8 @@ dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
       }
     }
     if ("Astronomical Twilight" %in% plot) {
+      leg <- c(leg, "Astronomical Twilight")
+      col <- c(col, rgb(0.4,0.4,0.4,1))
       if (!is.na(tim$nauticalDawn)) {
         if (dielFraction(tim$nauticalDawn) <= 0) {
           if (dielFraction(tim$nauticalDawn) <= 0) {
@@ -157,6 +166,8 @@ dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
       }
     }
     if ("Night" %in% plot) {
+      leg <- c(leg, "Night")
+      col <- c(col, rgb(0.2,0.2,0.2,1))
       if (!is.na(tim$night) & !is.na(tim$nightEnd)){
         if (dielFraction(tim$nightEnd) <= 0) {
           plotrix::drawSectorAnnulus(dielFraction(tim$night), dielFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
@@ -177,6 +188,17 @@ dielPlot <- function(date, lat, lon, limits, plot, method="plotrix") {
     if ("Nadir" %in% plot) {
       plotrix::drawSectorAnnulus(dielFraction(tim$nadir), dielFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1), angleinc=0.01)
     }
+  }
+
+  if (legend & method=='plotrix') {
+    legend(
+      -3,2.5,
+      leg,
+      col=col,
+      lty=1,
+      lwd=5,
+      bty = "n",
+      cex = 1)
   }
 }
 
