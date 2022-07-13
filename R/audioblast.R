@@ -16,9 +16,10 @@
 #' audioblast("data", "recordings", taxon="Gryllotalpa vineae")
 #' }
 #'
-audioblast <- function(type, name, endpoint=NULL, check=TRUE, ...) {
+audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, page=1, ...) {
   args <- list(...)
   nams <- names(args)
+  ret <- NULL
   if (check) {
     c <- audioblast_ASITSN(type, name, endpoint)
   }
@@ -26,15 +27,38 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, ...) {
   if (!is.null(endpoint)) {
     url <- paste0(url, endpoint, "/")
   }
-  url <- paste0(url, "?agent=sonicscrewdriver")
+  url <- paste0(url, "?page=", page)
   if (length(args) > 0) {
     for (i in 1:length(args)) {
       url <- paste0(url, "&", nams[[i]], "=", args[[i]])
     }
   }
   res <- jsonlite::fromJSON(URLencode(url))
-  ret <- res$data
-  attr(ret, "notes") <- res$notes
+  if (is.null(ret)) {
+    ret <- res$data
+  } else {
+    ret <- rbind(ret, res$data)
+  }
+  mp <- min(res$last_page, max_pages)
+  page <- page + 1
+  pb = txtProgressBar(min = 0, max = mp, initial = page)
+  while (page <= mp) {
+    url <- paste0("https://api.audioblast.org/",type,"/",name,"/")
+    if (!is.null(endpoint)) {
+      url <- paste0(url, endpoint, "/")
+    }
+    url <- paste0(url, "?page=", page)
+    if (length(args) > 0) {
+      for (i in 1:length(args)) {
+        url <- paste0(url, "&", nams[[i]], "=", args[[i]])
+      }
+    }
+    res <- jsonlite::fromJSON(URLencode(url))
+    ret <- rbind(ret, res$data)
+    page <- page + 1
+    setTxtProgressBar(pb,page)
+  }
+  close(pb)
   return(ret)
 }
 

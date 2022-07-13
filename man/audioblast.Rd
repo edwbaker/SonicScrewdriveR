@@ -4,7 +4,15 @@
 \alias{audioblast}
 \title{Get data or analyses from audioBlast}
 \usage{
-audioblast(type, name, endpoint = NULL, check = TRUE, ...)
+audioblast(
+  type,
+  name,
+  endpoint = NULL,
+  check = TRUE,
+  max_pages = NULL,
+  page = 1,
+  ...
+)
 }
 \arguments{
 \item{type}{One of data, analysis, standalone.}
