@@ -222,7 +222,7 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
 
   for (i in 1:length(names)) {
     if (ends[i] <= 0) {
-      plotrix::drawSectorAnnulus(starts[i], ends[i],arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
+      plotrix::drawSectorAnnulus(ends[i],starts[i], arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
     } else if (starts[i] >= 0) {
       plotrix::drawSectorAnnulus(starts[i], ends[i],arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
     } else{
