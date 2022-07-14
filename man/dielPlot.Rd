@@ -4,7 +4,15 @@
 \alias{dielPlot}
 \title{Create a diel plot}
 \usage{
-dielPlot(date, lat, lon, plot, method = "plotrix")
+dielPlot(
+  date,
+  lat,
+  lon,
+  limits = c(0, 2),
+  plot = NULL,
+  method = "plotrix",
+  legend = F
+)
 }
 \arguments{
 \item{date}{Date to plot.}

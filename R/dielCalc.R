@@ -1,3 +1,4 @@
+# @importFrom stringi stri_replace_all_charclass stri_pad
 calcTimesOfDay <- function(times, min, max, date, lat, lon) {
   #Some initial tidying
   times <- tolower(stri_replace_all_charclass(times, "\\p{WHITE_SPACE}", ""))
@@ -5,7 +6,7 @@ calcTimesOfDay <- function(times, min, max, date, lat, lon) {
   max[is.na(max)] <- ""
 
   #Load time data
-  tod <- timesOfDay(date, lon, lon)
+  tod <- timesOfDay(date, lat, lon)
 
   for (i in 1:length(times)) {
     #If min and max already set then skip

@@ -3,7 +3,7 @@
 \docType{class}
 \name{WaveFilter-class}
 \alias{WaveFilter-class}
-\title{An S4 class to represent a filter for a Wave object}
+\title{A S4 class to represent a filter for a Wave object}
 \description{
 A WaveFilter object is an object containing information necessary for the
 filterw function to apply the filter to a Wave object. This is designed to
