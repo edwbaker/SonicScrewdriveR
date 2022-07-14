@@ -207,11 +207,11 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
   cols <- rep_len(cols, length.out = length(names))
   #Convert to fractional circle
   if (format=="HHMM") {
-    starts <- stri_pad(starts, 2, "left", 0)
-    ends <- stri_pad(ends, 2, "left", 0)
+    starts <- stri_pad(starts, 4, "left", 0)
+    ends <- stri_pad(ends, 4, "left", 0)
 
-    starts <- 2*pi*(as.numeric(substr(starts,1,2))*60 + as.numeric(substr(starts,3,4))) / 1440
-    ends <- 2*pi*(as.numeric(substr(ends,1,2))*60 + as.numeric(substr(ends,3,4))) /  1440
+    starts <- pi - 2*pi*(as.numeric(substr(starts,1,2))*60 + as.numeric(substr(starts,3,4))) / 1440
+    ends <- pi - 2*pi*(as.numeric(substr(ends,1,2))*60 + as.numeric(substr(ends,3,4))) /  1440
 
     starts[is.na(starts)] <- 0
     ends[is.na(ends)] <- 0
