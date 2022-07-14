@@ -1,4 +1,5 @@
-# @importFrom stringi stri_replace_all_charclass stri_pad
+#' @importFrom stringi stri_replace_all_charclass stri_pad
+#' @export
 calcTimesOfDay <- function(times, min, max, date, lat, lon) {
   #Some initial tidying
   times <- tolower(stri_replace_all_charclass(times, "\\p{WHITE_SPACE}", ""))

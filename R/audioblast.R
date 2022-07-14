@@ -10,6 +10,7 @@
 #' @export
 #' @importFrom utils URLencode
 #' @importFrom jsonlite fromJSON
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #' @return A data frame
 #' @examples
 #' \dontrun{

@@ -1,4 +1,4 @@
-# @export
+#' @export
 ab_diel_traits <- function(traits, date, lat, lon) {
   cn <- colnames(traits)
   if (!"value_min" %in% cn) {
