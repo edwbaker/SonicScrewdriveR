@@ -202,7 +202,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
   }
 }
 
-# @export
+#' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))
   #Convert to fractional circle
