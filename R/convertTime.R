@@ -25,3 +25,12 @@ convert2seconds <- function(T, input="minutes") {
   }
   stop(paste("Unknown input to convert2seconds: ",input))
 }
+
+convert2fractionalCircle <- function(T, input="HHMM") {
+  if (input == "HHMM") {
+    T<- stri_pad(T, 4, "left", 0)
+    T <- pi - 2*pi*(as.numeric(substr(T,1,2))*60 + as.numeric(substr(T,3,4))) / 1440
+    T[is.na(T)] <- 0
+    return(T)
+  }
+}

@@ -1,6 +1,11 @@
-dielLabels <- function(pos=NULL) {
+dielLabels <- function(format="clock24", pos=NULL) {
   if (is.null(pos)) {
-    ret <- c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100")
+    if (format=="clock24") {
+      ret <- c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100")
+    }
+    if (format=="clock12") {
+      ret <- c("0000", "0300 AM", "0600 AM", "0900 AM", "1200 NOON", "0300 PM", "0600 PM", "0900 PM")
+    }
   }
   else {
     ret <- c(0, 45, 90, 135, 180, 225, 270, 315)
@@ -43,8 +48,9 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
   day <- pos$altitude*2/pi
   day[which(day < 0)] <- 0
 
+
   if (method=="plotrix") {
-    #if (!sonicsrewdriver::package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
+    if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
     plotrix::radial.plot(
       lengths=day,
       radial.pos=2*pi*seq_along(day)/length(day),
@@ -69,12 +75,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         if (is.na(tim$sunriseEnd)) {
           tim$sunriseEnd <- tim$solarNoon
         }
-        if (dielFraction(tim$sunrise) <= 0 & dielFraction(tim$sunriseEnd) >= 0) {
-          plotrix::drawSectorAnnulus(pi,dielFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
-          plotrix::drawSectorAnnulus(-pi, dielFraction(tim$sunrise),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
-        } else {
-          plotrix::drawSectorAnnulus(dielFraction(tim$sunrise), dielFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
-        }
+        plotrixSectorAnnulus(dielFraction(tim$sunrise),dielFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1))
       }
     }
     if (is.null(plot) |"Sunset" %in% plot) {
@@ -82,16 +83,11 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         if (is.na(tim$sunsetStart)) {
           tim$sunsetStart <- tim$solarNoon
         }
-        if (dielFraction(tim$sunsetStart) <= 0 & dielFraction(tim$sunset) >= 0) {
-          plotrix::drawSectorAnnulus(pi, dielFraction(tim$sunset),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
-          plotrix::drawSectorAnnulus(-pi, dielFraction(tim$sunsetStart),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
-        } else {
-          plotrix::drawSectorAnnulus(dielFraction(tim$sunset), dielFraction(tim$sunsetStart),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
-        }
+        plotrixSectorAnnulus(dielFraction(tim$sunsetStart),dielFraction(tim$sunset),limits[1],limits[2], col=rgb(1,0.5,0,1))
       }
     }
     if ("Solar Noon" %in% plot) {
-      plotrix::drawSectorAnnulus(dielFraction(tim$solarNoon), dielFraction(tim$solarNoon),limits[1],limits[2], col=rgb(1,0.5,0,1), angleinc=0.01)
+      plotrixSectorAnnulus(dielFraction(tim$solarNoon), dielFraction(tim$solarNoon),limits[1],limits[2], col=rgb(1,0.5,0,1))
     }
 
     if (is.null(plot) |"Civil Twilight" %in% plot) {
@@ -202,33 +198,31 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
   }
 }
 
+plotrixSectorAnnulus <- function(from,to,radius1,radius2,col,angleinc=0.03) {
+  if (to <= 0) {
+    plotrix::drawSectorAnnulus(to,from,radius1,radius2,col,angleinc=0.01)
+  } else if (from >= 0) {
+    plotrix::drawSectorAnnulus(from,to,radius1,radius2,col,angleinc=0.01)
+  } else{
+    plotrix::drawSectorAnnulus(pi,to,radius1,radius2,col,angleinc=0.01)
+    plotrix::drawSectorAnnulus(-pi,from,radius1,radius2,col,angleinc=0.01)
+  }
+}
+
 #' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))
   #Convert to fractional circle
   if (format=="HHMM") {
-    starts <- stri_pad(starts, 4, "left", 0)
-    ends <- stri_pad(ends, 4, "left", 0)
-
-    starts <- pi - 2*pi*(as.numeric(substr(starts,1,2))*60 + as.numeric(substr(starts,3,4))) / 1440
-    ends <- pi - 2*pi*(as.numeric(substr(ends,1,2))*60 + as.numeric(substr(ends,3,4))) /  1440
-
-    starts[is.na(starts)] <- 0
-    ends[is.na(ends)] <- 0
+    starts <- convert2fractionalCircle(starts, input="HHMM")
+    ends <- convert2fractionalCircle(ends, input="HHMM")
   }
 
   arc_step <- (limits[2] - limits[1]) / length(names)
   arcs <- limits[1] + arc_step * (1:length(names)-1)
 
   for (i in 1:length(names)) {
-    if (ends[i] <= 0) {
-      plotrix::drawSectorAnnulus(ends[i],starts[i], arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
-    } else if (starts[i] >= 0) {
-      plotrix::drawSectorAnnulus(starts[i], ends[i],arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
-    } else{
-      plotrix::drawSectorAnnulus(pi, ends[i],arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
-      plotrix::drawSectorAnnulus(-pi, starts[i],arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
-    }
+    plotrixSectorAnnulus(starts[i],ends[i], arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
   }
 
   if (legend) {

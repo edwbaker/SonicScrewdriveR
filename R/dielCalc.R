@@ -13,7 +13,7 @@ calcTimesOfDay <- function(times, min, max, date, lat, lon) {
     #If min and max already set then skip
     if (min[i] != "" & max[i] != "") {next}
     split <- strsplit(times[i], split="-")[[1]]
-    if (length(split) > 2) {warning("Cannot split onmore than one '-'")}
+    if (length(split) > 2) {warning("Cannot split on more than one '-'")}
     if (length(split) == 1) {
       inf <- tod[tod$times==times[i],]
       if (nrow(inf) == 1) {
