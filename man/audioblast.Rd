@@ -23,13 +23,17 @@ audioblast(
 
 \item{check}{Logical. Performs sanity check on input before sending to audioBLAST.}
 
+\item{max_pages}{Maximum number of data pages to return, by default this is set to NULL and returns all pages.}
+
+\item{page}{First page of results to request, defaults to 1.}
+
 \item{...}{Fields and values to filter on. Any field defined by audioBLAST.}
 }
 \value{
 A data frame
 }
 \description{
-Search for recordings or analyses on audioBlast.
+Search for data or analyses on audioBlast.
 }
 \examples{
 \dontrun{

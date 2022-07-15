@@ -1,11 +1,13 @@
 #' Get data or analyses from audioBlast
 #'
-#' Search for recordings or analyses on audioBlast.
+#' Search for data or analyses on audioBlast.
 #'
 #' @param type One of data, analysis, standalone.
 #' @param name Name of data or analysis source.
 #' @param endpoint Optionally specify endpoint of an audioBlast module.
 #' @param check Logical. Performs sanity check on input before sending to audioBLAST.
+#' @param page First page of results to request, defaults to 1.
+#' @param max_pages Maximum number of data pages to return, by default this is set to NULL and returns all pages.
 #' @param ... Fields and values to filter on. Any field defined by audioBLAST.
 #' @export
 #' @importFrom utils URLencode
