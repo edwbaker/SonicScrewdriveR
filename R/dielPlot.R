@@ -34,9 +34,12 @@ dielFraction <- function(t, unit="radians", start=pi, clockwise=FALSE) {
 #' A diel plot shows the times of night, twilight and the maximum altitude of the sun for a given date.
 #'
 #' @param date Date to plot.
-#' @param lat Name of data or analysis source.
-#' @param lon Optionally specify endpoint of an audioBlast module.
-#' @param plot Logical. Performs sanity check on input before sending to audioBLAST.
+#' @param lat Numeric latitude.
+#' @param lon Numeric longitude.
+#' @param plot Character vector of components to plot
+#' @param limits Plotting limits of the daylight regions, default to c(1,2)
+#' @param method Plotting library to use
+#' @param legend Whether to show a legend
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
 dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=F) {

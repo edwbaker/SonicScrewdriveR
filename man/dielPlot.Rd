@@ -17,11 +17,17 @@ dielPlot(
 \arguments{
 \item{date}{Date to plot.}
 
-\item{lat}{Name of data or analysis source.}
+\item{lat}{Numeric latitude.}
 
-\item{lon}{Optionally specify endpoint of an audioBlast module.}
+\item{lon}{Numeric longitude.}
 
-\item{plot}{Logical. Performs sanity check on input before sending to audioBLAST.}
+\item{limits}{Plotting limits of the daylight regions, default to c(1,2)}
+
+\item{plot}{Character vector of components to plot}
+
+\item{method}{Plotting library to use}
+
+\item{legend}{Whether to show a legend}
 }
 \description{
 A diel plot shows the times of night, twilight and the maximum altitude of the sun for a given date.
