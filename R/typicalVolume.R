@@ -18,7 +18,7 @@ typicalVolume <- function(thing="") {
 }
 
 typicalVolumes <- function() {
-  # Source: Murray Schaefer Soundscapes
+  # Source: Murray Schafer Soundscapes
   n <- c(
     "steam engine",
     "printing works",
