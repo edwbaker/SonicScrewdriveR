@@ -43,6 +43,7 @@ dielFraction <- function(t, unit="radians", start=pi, clockwise=FALSE) {
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
 dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=F) {
+  date <- as.POSIXlt(date)
   times <- seq.POSIXt(from=date, by="min", length.out=60*24)
   attr(times, 'tzone') <- "UTC"
   #Calculate night time from sun altitude above horizon
