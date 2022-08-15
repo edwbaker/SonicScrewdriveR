@@ -15,11 +15,9 @@
 #' }
 #'
 cutws <- function(wave, from, to, plot=FALSE) {
+  validateIsWave(wave)
   if (is.infinite(to)) {
     to <- length(wave@left)
-  }
-  if (typeof(wave) != "S4" | class(wave) != "Wave") {
-    stop("cutws expects a Wave object")
   }
   if (!is.numeric(from) | !is.numeric(to) | !(as.integer(from)==from) | !(as.integer(to) == to)) {
     stop("In cutws both from and to must be integers")

@@ -1,8 +1,8 @@
 context("cutws")
 
 test_that("inputs are correct", {
-  expect_error(cutws("string", from=1, to=2), "cutws expects a Wave object")
-  expect_error(cutws(1, from=1, to=2), "cutws expects a Wave object")
+  expect_error(cutws("string", from=1, to=2), "Expecting a Wave object")
+  expect_error(cutws(1, from=1, to=2), "Expecting a Wave object")
   expect_error(cutws(tuneR::sine(1000, duration=10), from = 1, to ="2"), "In cutws both from and to must be integers")
   expect_error(cutws(tuneR::sine(1000, duration=10), from = "1", to =2), "In cutws both from and to must be integers")
   expect_error(cutws(tuneR::sine(1000, duration=10), from = 1, to =2.5), "In cutws both from and to must be integers")

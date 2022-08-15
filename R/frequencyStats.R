@@ -19,9 +19,7 @@ frequencyStats <- function(
   lowcut=1,
   plot=FALSE
 ) {
-  if (!typeof(wave) == "S4" | !class(wave) == "Wave") {
-    stop("frequencyStats expects a Wave object")
-  }
+  validateIsWave(wave)
   if (is.null(wave_spec)) {
     wave_spec <- seewave::meanspec(wave, norm=FALSE, plot=FALSE)
   }

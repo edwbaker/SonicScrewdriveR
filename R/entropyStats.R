@@ -12,12 +12,8 @@
 #' entropyStats(sheep)
 #' }
 #'
-entropyStats <- function(
-  wave
-) {
-  if (!typeof(wave) == "S4" | !class(wave) == "Wave") {
-    stop("entropyStats expects a Wave object")
-  }
+entropyStats <- function(wave) {
+  validateIsWave(wave)
 
   spec <- meanspec(wave)
 

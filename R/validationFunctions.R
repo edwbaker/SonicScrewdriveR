@@ -60,10 +60,11 @@ validateKelvin <- function(T) {
 #' Helper function to test that the input is a Wave object. Will create an error if not.
 #'
 #' @param wave Object to test
+#' @importFrom methods is
 #' @export
 #'
 validateIsWave <- function(wave) {
-  if (typeof(wave) != "S4" | class(wave) != "Wave") {
+  if (typeof(wave) != "S4" | !is(wave, "Wave")) {
     stop("Expecting a Wave object")
   }
 }
@@ -147,7 +148,7 @@ validateSpectrum <- function(s, coerceNegative=FALSE, coerceNA = TRUE) {
   if (typeof(s) != "double") {
     stop("Spectrum must be double")
   }
-  if (class(s) != "matrix") {
+  if (!is(s, "matrix")) {
     stop("Spectrum must be a matrix.")
   }
   if (ncol(s) != 2) {
