@@ -54,20 +54,49 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
 
 
   if (method=="plotrix") {
-    if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
-    plotrix::radial.plot(
-      lengths=day,
-      radial.pos=2*pi*seq_along(day)/length(day),
-      rp.type="p",
-      radial.lim=c(0,1,2),
-      start=pi,
-      label.pos = dielLabels(pos='pos')*pi/180,
-      labels=dielLabels(),
-      clockwise=T,
-      poly.col=rgb(1,1,0, 0.6),
-      lty=0,
-      show.grid.labels =F
-    )
+    #Scale for limits
+    day <- day * (limits[2]-limits[1])
+
+  if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
+    if (limits[1] == 0) {
+      plotrix::radial.plot(
+        lengths=day,
+        radial.pos=2*pi*seq_along(day)/length(day),
+        rp.type="p",
+        radial.lim=c(0,1,2),
+        start=pi,
+        label.pos = dielLabels(pos='pos')*pi/180,
+        labels=dielLabels(),
+        clockwise=T,
+        poly.col=rgb(1,1,0, 0.6),
+        lty=0,
+        show.grid.labels =F
+      )
+    } else {
+      plotrix::radial.plot(
+        lengths=0,
+        radial.pos=0,
+        rp.type="p",
+        radial.lim=c(0,1,2),
+        start=pi,
+        label.pos = dielLabels(pos='pos')*pi/180,
+        labels=dielLabels(),
+        clockwise=T,
+        poly.col=rgb(1,1,0, 0.6),
+        lty=0,
+        show.grid.labels =F
+      )
+      for (i in 1:length(day)) {
+        if (i==1) {
+          j <- length(day)
+        } else {
+          j <- i-1
+        }
+        i_ang <- i*2*pi/length(day) - pi
+        j_ang <- j*2*pi/length(day) - pi
+        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(day[i]+ day[j])/2, col=rgb(1,1,0, 0.6), angleinc=1)
+      }
+    }
 
     alt <- getSunlightPosition(tim$solarNoon, lat=tim$lat, lon=tim$lon, keep=c("altitude"))$altitude
 
@@ -202,7 +231,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
   }
 }
 
-plotrixSectorAnnulus <- function(from,to,radius1,radius2,col,angleinc=0.03) {
+plotrixSectorAnnulus <- function(from,to,radius1,radius2,col,angleinc=0.01) {
   if (to <= 0) {
     plotrix::drawSectorAnnulus(to,from,radius1,radius2,col,angleinc=0.01)
   } else if (from >= 0) {
