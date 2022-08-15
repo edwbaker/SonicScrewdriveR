@@ -94,7 +94,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         }
         i_ang <- i*2*pi/length(day) - pi
         j_ang <- j*2*pi/length(day) - pi
-        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(day[i]+ day[j])/2, col=rgb(1,1,0, 0.6), angleinc=1)
+        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(day[i]+ day[j])/2, col=rgb(1,1,0, 0.6), angleinc=0.05)
       }
     }
 
