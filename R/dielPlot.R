@@ -242,6 +242,7 @@ plotrixSectorAnnulus <- function(from,to,radius1,radius2,col,angleinc=0.01) {
   }
 }
 
+
 #' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))
