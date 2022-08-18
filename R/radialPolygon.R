@@ -17,8 +17,8 @@ radialPolygon <- function(
     angle1 <- -angle1
     angle2 <- -angle2
   }
-  min_a <- min(c(angle1, angle2))
-  max_a <- max(c(angle1, angle2))
+  min_a <- min(c(angle1, angle2), na.rm=T)
+  max_a <- max(c(angle1, angle2), na.rm=T)
 
   angles<-seq(min_a,max_a,by=angleinc)
   angles[length(angles)]<-max_a
@@ -50,8 +50,11 @@ radialPolygon <- function(
     }
   }
 
-  xpos<-c(inner_x,rev(outer_x))
-  ypos<-c(inner_y,rev(outer_y))
+  outer_x <- rev(outer_x)
+  outer_y <- rev(outer_y)
+
+  xpos<-c(inner_x,outer_x)
+  ypos<-c(inner_y,outer_y)
   if (rot != 0) {
     xrot <- xpos*cos(rot) + ypos*sin(rot)
     yrot <- -xpos*sin(rot) + ypos*cos(rot)

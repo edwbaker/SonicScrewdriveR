@@ -80,7 +80,9 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         lty=0,
         show.grid.labels =F
       )
-      radialPolygon(0,2*pi*seq_along(day)/length(day),limits[1], limits[1]+day,col=rgb(1,1,0, 0.6))
+      dayl <- which(day != 0)
+      angles <- 2*pi*seq_along(day)/length(day)
+      radialPolygon(NA,rev(angles[dayl]),limits[1], limits[1]+rev(day[dayl]),col=rgb(1,1,0, 0.6))
     }
 
     alt <- getSunlightPosition(tim$solarNoon, lat=tim$lat, lon=tim$lon, keep=c("altitude"))$altitude
