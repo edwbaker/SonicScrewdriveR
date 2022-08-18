@@ -13,21 +13,15 @@ dielLabels <- function(format="clock24", pos=NULL) {
   return(ret)
 }
 
-dielFraction <- function(t, unit="radians", start=pi, clockwise=FALSE) {
+dailyFraction <- function(t, unit="radians") {
   t <- unclass(as.POSIXlt(t))
   f <- (t$sec + 60*t$min + 3600*t$hour)/86400
-  if (unit == "radians") {
-    f <- start + f*2*pi
-    if (clockwise) {
-
-    } else {
-      return(2*pi - f)
-    }
+  if (unit=="radians") {
+    return(2*pi*f)
   }
-  if (unit == "unit") {
-    return(f)
-  }
+  return(f)
 }
+
 
 #' Create a diel plot
 #'
@@ -86,16 +80,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         lty=0,
         show.grid.labels =F
       )
-      for (i in 1:length(day)) {
-        if (i==1) {
-          j <- length(day)
-        } else {
-          j <- i-1
-        }
-        i_ang <- i*2*pi/length(day) - pi
-        j_ang <- j*2*pi/length(day) - pi
-        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(day[i]+ day[j])/2, col=rgb(1,1,0, 0.6), angleinc=0.05)
-      }
+      radialPolygon(0,2*pi*seq_along(day)/length(day),limits[1], limits[1]+day,col=rgb(1,1,0, 0.6))
     }
 
     alt <- getSunlightPosition(tim$solarNoon, lat=tim$lat, lon=tim$lon, keep=c("altitude"))$altitude
@@ -103,12 +88,58 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
     leg <- c()
     col <- c()
 
+    if (is.null(plot) | "Civil Twilight" %in% plot) {
+      leg <- c(leg, "Civil Twilight")
+      col <- c(col, rgb(0.8,0.8,0.8,1))
+      if (!is.na(tim$sunrise)) {
+        radialPolygon(dailyFraction(tim$sunset), dailyFraction(tim$sunrise), limits[1],limits[2], col=rgb(0.8,0.8,0.8,1))
+      }
+      if (is.na(tim$sunrise) & !is.na(tim$dawn)) {
+        radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.8,0.8,0.8,1))
+      }
+    }
+    if (is.null(plot) | "Nautical Twilight" %in% plot) {
+      leg <- c(leg, "Nautical Twilight")
+      col <- c(col, rgb(0.6,0.6,0.6,1))
+      if (!is.na(tim$dawn)) {
+        radialPolygon(dailyFraction(tim$dusk), dailyFraction(tim$dawn),limits[1], limits[2], col=rgb(0.6,0.6,0.6,1))
+      }
+      if (is.na(tim$dawn) & !is.na(tim$nauticalDawn)) {
+        radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.6,0.6,0.6,1))
+      }
+    }
+    if (is.null(plot) |"Astronomical Twilight" %in% plot) {
+      leg <- c(leg, "Astronomical Twilight")
+      col <- c(col, rgb(0.4,0.4,0.4,1))
+      if (!is.na(tim$nauticalDawn)) {
+        radialPolygon(dailyFraction(tim$nauticalDusk), dailyFraction(tim$nauticalDawn), limits[1],limits[2], col=rgb(0.4,0.4,0.4,1))
+      }
+      if (is.na(tim$nauticalDawn) & !is.na(tim$night)) {
+        radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.4,0.4,0.4,1))
+      }
+    }
+    if (is.null(plot) |"Night" %in% plot) {
+      leg <- c(leg, "Night")
+      col <- c(col, rgb(0.2,0.2,0.2,1))
+      if (!is.na(tim$night) & !is.na(tim$nightEnd)){
+        radialPolygon(dailyFraction(tim$night), dailyFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1))
+      }
+      if(alt <= -0.314159) {
+        if (is.na(tim$night)) {
+          radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.2,0.2,0.2,1))
+        }
+      }
+    }
+    if ("Nadir" %in% plot) {
+      radialPolygon(dailyFraction(tim$nadir), dailyFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1))
+    }
+
     if (is.null(plot) | "Sunrise" %in% plot) {
       if (!is.na(tim$sunrise)) {
         if (is.na(tim$sunriseEnd)) {
           tim$sunriseEnd <- tim$solarNoon
         }
-        plotrixSectorAnnulus(dielFraction(tim$sunrise),dielFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1))
+        radialPolygon(dailyFraction(tim$sunrise),dailyFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1))
       }
     }
     if (is.null(plot) |"Sunset" %in% plot) {
@@ -116,106 +147,11 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         if (is.na(tim$sunsetStart)) {
           tim$sunsetStart <- tim$solarNoon
         }
-        plotrixSectorAnnulus(dielFraction(tim$sunsetStart),dielFraction(tim$sunset),limits[1],limits[2], col=rgb(1,0.5,0,1))
+        radialPolygon(dailyFraction(tim$sunsetStart),dailyFraction(tim$sunset),limits[1],limits[2], col=rgb(1,0.5,0,1))
       }
     }
     if ("Solar Noon" %in% plot) {
-      plotrixSectorAnnulus(dielFraction(tim$solarNoon), dielFraction(tim$solarNoon),limits[1],limits[2], col=rgb(1,0.5,0,1))
-    }
-
-    if (is.null(plot) |"Civil Twilight" %in% plot) {
-      leg <- c(leg, "Civil Twilight")
-      col <- c(col, rgb(0.8,0.8,0.8,1))
-      if (!is.na(tim$sunrise)) {
-        if (dielFraction(tim$sunrise) <= 0) {
-          if (dielFraction(tim$sunset) <= 0) {
-            plotrix::drawSectorAnnulus(dielFraction(tim$sunrise),pi, limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-            plotrix::drawSectorAnnulus(dielFraction(tim$sunset),-pi, limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-          } else {
-            plotrix::drawSectorAnnulus(dielFraction(tim$sunset), dielFraction(tim$sunrise),limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-          }
-        } else {
-          if (dielFraction(tim$sunrise) > 0 & dielFraction(tim$sunset) > 0) {
-            plotrix::drawSectorAnnulus(dielFraction(tim$sunset), dielFraction(tim$sunrise),limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-          } else {
-            plotrix::drawSectorAnnulus(pi, dielFraction(tim$sunrise), limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-            plotrix::drawSectorAnnulus(-pi, dielFraction(tim$sunset),  limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-          }
-        }
-      }
-      if (is.na(tim$sunrise) & !is.na(tim$dawn)) {
-        plotrix::drawSectorAnnulus(pi, -pi,limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), angleinc=0.01)
-      }
-    }
-    if (is.null(plot) |"Nautical Twilight" %in% plot) {
-      leg <- c(leg, "Nautical Twilight")
-      col <- c(col, rgb(0.6,0.6,0.6,1))
-      if (!is.na(tim$dawn)) {
-        if (dielFraction(tim$dawn) <= 0) {
-          if (dielFraction(tim$dusk) <= 0) {
-            plotrix::drawSectorAnnulus(dielFraction(tim$dawn), -dielFraction(tim$dusk),limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), angleinc=0.01)
-          } else {
-            plotrix::drawSectorAnnulus(dielFraction(tim$dusk), dielFraction(tim$dawn),limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), angleinc=0.01)
-          }
-        } else {
-          if (dielFraction(tim$dawn) > 0  & dielFraction(tim$dusk) > 0) {
-            plotrix::drawSectorAnnulus(dielFraction(tim$dusk), dielFraction(tim$dawn),limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), angleinc=0.01)
-          } else {
-            plotrix::drawSectorAnnulus(pi, dielFraction(tim$dawn),limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), angleinc=0.01)
-            plotrix::drawSectorAnnulus(-pi, dielFraction(tim$dusk),limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), angleinc=0.01)
-          }
-        }
-      }
-      if (is.na(tim$dawn) & !is.na(tim$nauticalDawn)) {
-        plotrix::drawSectorAnnulus(pi, -pi,limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), angleinc=0.01)
-      }
-    }
-    if (is.null(plot) |"Astronomical Twilight" %in% plot) {
-      leg <- c(leg, "Astronomical Twilight")
-      col <- c(col, rgb(0.4,0.4,0.4,1))
-      if (!is.na(tim$nauticalDawn)) {
-        if (dielFraction(tim$nauticalDawn) <= 0) {
-          if (dielFraction(tim$nauticalDawn) <= 0) {
-            plotrix::drawSectorAnnulus(dielFraction(tim$nauticalDusk), dielFraction(tim$nauticalDawn),limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), angleinc=0.01)
-          } else {
-            plotrix::drawSectorAnnulus(dielFraction(tim$nauticalDusk), dielFraction(tim$nauticalDawn),limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), angleinc=0.01)
-          }
-        } else {
-          if (dielFraction(tim$nauticalDawn) > 0 & dielFraction(tim$nauticalDusk) > 0) {
-            plotrix::drawSectorAnnulus(dielFraction(tim$nauticalDusk), dielFraction(tim$nauticalDawn),limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), angleinc=0.01)
-          } else {
-            plotrix::drawSectorAnnulus(pi, dielFraction(tim$nauticalDawn),limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), angleinc=0.01)
-            plotrix::drawSectorAnnulus(-pi, dielFraction(tim$nauticalDusk),limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), angleinc=0.01)
-
-          }
-        }
-      }
-      if (is.na(tim$nauticalDawn) & !is.na(tim$night)) {
-        plotrix::drawSectorAnnulus(pi, -pi,limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), angleinc=0.01)
-      }
-    }
-    if (is.null(plot) |"Night" %in% plot) {
-      leg <- c(leg, "Night")
-      col <- c(col, rgb(0.2,0.2,0.2,1))
-      if (!is.na(tim$night) & !is.na(tim$nightEnd)){
-        if (dielFraction(tim$nightEnd) <= 0) {
-          plotrix::drawSectorAnnulus(dielFraction(tim$night), dielFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
-        } else if (dielFraction(tim$night) >= 0) {
-          plotrix::drawSectorAnnulus(dielFraction(tim$night), dielFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
-        } else{
-          plotrix::drawSectorAnnulus(pi, dielFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
-          plotrix::drawSectorAnnulus(-pi, dielFraction(tim$night),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
-        }
-
-      }
-      if(alt <= -0.314159) {
-        if (is.na(tim$night)) {
-          plotrix::drawSectorAnnulus(pi, -pi,limits[1],limits[2], col=rgb(0.2,0.2,0.2,1), angleinc=0.01)
-        }
-      }
-    }
-    if ("Nadir" %in% plot) {
-      plotrix::drawSectorAnnulus(dielFraction(tim$nadir), dielFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1), angleinc=0.01)
+      radialPolygon(dailyFraction(tim$solarNoon), dailyFraction(tim$solarNoon),limits[1],limits[2], col=rgb(1,0.5,0,1))
     }
 
     if (legend) {
@@ -231,18 +167,6 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
   }
 }
 
-plotrixSectorAnnulus <- function(from,to,radius1,radius2,col,angleinc=0.01) {
-  if (to <= 0) {
-    plotrix::drawSectorAnnulus(to,from,radius1,radius2,col,angleinc=0.01)
-  } else if (from >= 0) {
-    plotrix::drawSectorAnnulus(from,to,radius1,radius2,col,angleinc=0.01)
-  } else{
-    plotrix::drawSectorAnnulus(pi,to,radius1,radius2,col,angleinc=0.01)
-    plotrix::drawSectorAnnulus(-pi,from,radius1,radius2,col,angleinc=0.01)
-  }
-}
-
-
 #' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))
@@ -256,7 +180,7 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
   arcs <- limits[1] + arc_step * (1:length(names)-1)
 
   for (i in 1:length(names)) {
-    plotrixSectorAnnulus(starts[i],ends[i], arcs[i],arcs[i]+0.1, col=cols[i], angleinc=0.01)
+    radialPolygon(starts[i],ends[i], arcs[i],arcs[i]+0.1, col=cols[i])
   }
 
   if (legend) {

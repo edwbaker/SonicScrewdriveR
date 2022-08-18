@@ -76,19 +76,22 @@ yearlyPlot <- function(year, lat, lon, limits=c(0,2), plot=NULL, method="plotrix
         label.pos = yearlyLabels(pos='pos')*pi/180,
         labels=yearlyLabels(),
         clockwise=T,
-        poly.col=rgb(0.2,0.2,0.2,0.5),
+        poly.col=rgb(0.2,0.2,0.2,1),
         lty=0,
         show.grid.labels =F
       )
-      for (i in 1:length(day)) {
+      plotrix::drawSectorAnnulus(-pi, pi, limits[1], limits[2], col=rgb(0.6,0.6,0.6,0.6), angleinc=0.01)
+      for (i in 1:length(suntime)) {
         if (i==1) {
-          j <- length(day)
+          j <- length(suntime)
+          i_ang <- i*2*pi/length(suntime) - pi
+          j_ang <--pi
         } else {
           j <- i-1
+          i_ang <- i*2*pi/length(suntime) - pi
+          j_ang <- j*2*pi/length(suntime) - pi
         }
-        i_ang <- i*2*pi/length(day) - pi
-        j_ang <- j*2*pi/length(day) - pi
-        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(day[i]+ day[j])/2, col=rgb(1,1,0, 0.6), angleinc=0.05)
+        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(suntime[i]+ suntime[j])/2, col=rgb(1,1,0.6, 0.6), angleinc=0.005)
       }
     }
   }
