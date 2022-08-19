@@ -67,3 +67,8 @@ radialPolygon <- function(
 
   polygon(xpos,ypos,col=col,border=col)
 }
+
+#' @export
+circularise <- function(values) {
+  return(c(values, values[1]))
+}

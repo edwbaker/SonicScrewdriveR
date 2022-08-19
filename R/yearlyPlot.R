@@ -17,7 +17,14 @@ yearlyLabels <- function(year, format="months", pos=NULL) {
     days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
               FebDays+123, FebDays+153, FebDays+184, FebDays+215,
               FebDays+245, FebDays+276, FebDays+306)
-    ret <- 360 * days / YearDays
+    if (format == "months") {
+      ret <- 360 * days / YearDays
+    }
+    if (format == "mid-months") {
+      diffs <- diff(c(days, 360))
+      days <- days + 0.5*diffs
+      ret <- 360 * days / YearDays
+    }
   }
   return(ret)
 }
