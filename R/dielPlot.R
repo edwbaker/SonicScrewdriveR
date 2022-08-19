@@ -50,8 +50,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
   if (method=="plotrix") {
     #Scale for limits
     day <- day * (limits[2]-limits[1])
-
-  if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
+    if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
     if (limits[1] == 0) {
       plotrix::radial.plot(
         lengths=day,
@@ -80,9 +79,8 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         lty=0,
         show.grid.labels =F
       )
-      dayl <- which(day != 0)
       angles <- 2*pi*seq_along(day)/length(day)
-      radialPolygon(NA,rev(angles[dayl]),limits[1], limits[1]+rev(day[dayl]),col=rgb(1,1,0, 0.6))
+      radialPolygon(NA,angles, limits[1], limits[1]+day,col=rgb(1,1,0, 0.6))
     }
 
     alt <- getSunlightPosition(tim$solarNoon, lat=tim$lat, lon=tim$lon, keep=c("altitude"))$altitude

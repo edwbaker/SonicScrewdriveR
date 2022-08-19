@@ -22,6 +22,9 @@ radialPolygon <- function(
 
   angles<-seq(min_a,max_a,by=angleinc)
   angles[length(angles)]<-max_a
+  if (min_a < 0) {
+    angles <- rev(angles)
+  }
 
   if (length(radius1) == 1 & length(radius2) == 1) {
     inner_x <- cos(angles)*radius1
