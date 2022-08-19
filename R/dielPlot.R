@@ -9,7 +9,7 @@ dielLabels <- function(format="clock24", pos=NULL) {
     }
   }
   else {
-    ret <- c(0, 45, 90, 135, 180, 225, 270, 315)
+    ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
   }
   return(ret)
 }
@@ -33,7 +33,7 @@ emptyDiel <- function(method="plotrix") {
       rp.type="p",
       radial.lim=c(0,1,2),
       start=pi,
-      label.pos = dielLabels(pos='pos')*pi/180,
+      label.pos = dielLabels(pos='pos'),
       labels=dielLabels(),
       clockwise=T,
       poly.col=rgb(1,1,0, 0.6),
@@ -77,7 +77,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         rp.type="p",
         radial.lim=c(0,1,2),
         start=pi,
-        label.pos = dielLabels(pos='pos')*pi/180,
+        label.pos = dielLabels(pos='pos'),
         labels=dielLabels(),
         clockwise=T,
         poly.col=rgb(1,1,0, 0.6),

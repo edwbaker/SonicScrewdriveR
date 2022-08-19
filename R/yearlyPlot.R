@@ -18,12 +18,12 @@ yearlyLabels <- function(year, format="months", pos=NULL) {
               FebDays+123, FebDays+153, FebDays+184, FebDays+215,
               FebDays+245, FebDays+276, FebDays+306)
     if (format == "months") {
-      ret <- 360 * days / YearDays
+      ret <- 2*pi * days / YearDays
     }
     if (format == "mid-months") {
       diffs <- diff(c(days, 360))
       days <- days + 0.5*diffs
-      ret <- 360 * days / YearDays
+      ret <- 2*pi * days / YearDays
     }
   }
   return(ret)
@@ -83,7 +83,7 @@ yearlyPlot <- function(year, lat, lon, limits=c(0,2), plot=NULL, method="plotrix
       rp.type="p",
       radial.lim=c(0,1,2),
       start=pi,
-      label.pos = yearlyLabels(year=year, pos='pos')*pi/180,
+      label.pos = yearlyLabels(year=year, pos='pos'),
       labels=yearlyLabels(),
       clockwise=T,
       poly.col=rgb(0.2,0.2,0.2,1),
