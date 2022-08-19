@@ -46,6 +46,23 @@ isLeapYear <- function(year) {
   }
 }
 
+#' @export
+emptyYearly <- function() {
+  plotrix::radial.plot(
+    lengths=0,
+    radial.pos=0,
+    rp.type="p",
+    radial.lim=c(0,1,2),
+    start=pi,
+    label.pos = yearlyLabels(year=year, pos='pos'),
+    labels=yearlyLabels(),
+    clockwise=T,
+    poly.col=rgb(0.2,0.2,0.2,1),
+    lty=0,
+    show.grid.labels =F
+  )
+}
+
 #' Create a yearly plot
 #'
 #' ToDO......
@@ -77,19 +94,7 @@ yearlyPlot <- function(year, lat, lon, limits=c(0,2), plot=NULL, method="plotrix
     suntime <- suntime * (limits[2]-limits[1])
 
     if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
-    plotrix::radial.plot(
-      lengths=0,
-      radial.pos=0,
-      rp.type="p",
-      radial.lim=c(0,1,2),
-      start=pi,
-      label.pos = yearlyLabels(year=year, pos='pos'),
-      labels=yearlyLabels(),
-      clockwise=T,
-      poly.col=rgb(0.2,0.2,0.2,1),
-      lty=0,
-      show.grid.labels =F
-    )
+    emptyYearly()
     angs <- (1:length(suntime))*2*pi/length(suntime)
     angs[length(angs)] <- 2*pi
     angs[1] <- 0
