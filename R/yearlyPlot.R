@@ -1,4 +1,5 @@
-yearlyLabels <- function(format="months", pos=NULL) {
+#' @export
+yearlyLabels <- function(year, format="months", pos=NULL) {
   if (is.null(pos)) {
     if (format=="months") {
       ret <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -6,9 +7,36 @@ yearlyLabels <- function(format="months", pos=NULL) {
     }
   }
   else {
-    ret <- c(0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)
+    if (isLeapYear(year)) {
+      FebDays <- 29
+      YearDays <- 366
+    } else {
+      FebDays <- 28
+      YearDays <- 365
+    }
+    days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
+              FebDays+123, FebDays+153, FebDays+184, FebDays+215,
+              FebDays+245, FebDays+276, FebDays+306)
+    ret <- 360 * days / YearDays
   }
   return(ret)
+}
+
+isLeapYear <- function(year) {
+  year <- as.numeric(year)
+  if((year %% 4) == 0) {
+    if((year %% 100) == 0) {
+      if((year %% 400) == 0) {
+        return(TRUE)
+      } else {
+        return(FALSE)
+      }
+    } else {
+      return(TRUE)
+    }
+  } else {
+    return(FALSE)
+  }
 }
 
 #' Create a yearly plot
@@ -42,58 +70,24 @@ yearlyPlot <- function(year, lat, lon, limits=c(0,2), plot=NULL, method="plotrix
     suntime <- suntime * (limits[2]-limits[1])
 
     if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
-    if (limits[1] == 0) {
-      plotrix::radial.plot(
-        lengths=night,
-        radial.pos=2*pi*seq_along(dates)/length(dates),
-        rp.type="p",
-        radial.lim=c(0,1,2),
-        start=pi,
-        label.pos = yearlyLabels(pos='pos')*pi/180,
-        labels=yearlyLabels(),
-        clockwise=T,
-        poly.col=rgb(0.6,0.6,0.6,0.5),
-        lty=0,
-        show.grid.labels =F
-      )
-      plotrix::radial.plot(
-        lengths=suntime,
-        radial.pos=2*pi*seq_along(dates)/length(dates),
-        rp.type="p",
-        radial.lim=c(0,1,2),
-        start=pi,
-        poly.col=rgb(1,1,0.6,0.6),
-        lty=0,
-        add=TRUE
-      )
-    } else {
-      plotrix::radial.plot(
-        lengths=0,
-        radial.pos=0,
-        rp.type="p",
-        radial.lim=c(0,1,2),
-        start=pi,
-        label.pos = yearlyLabels(pos='pos')*pi/180,
-        labels=yearlyLabels(),
-        clockwise=T,
-        poly.col=rgb(0.2,0.2,0.2,1),
-        lty=0,
-        show.grid.labels =F
-      )
-      plotrix::drawSectorAnnulus(-pi, pi, limits[1], limits[2], col=rgb(0.6,0.6,0.6,0.6), angleinc=0.01)
-      for (i in 1:length(suntime)) {
-        if (i==1) {
-          j <- length(suntime)
-          i_ang <- i*2*pi/length(suntime) - pi
-          j_ang <--pi
-        } else {
-          j <- i-1
-          i_ang <- i*2*pi/length(suntime) - pi
-          j_ang <- j*2*pi/length(suntime) - pi
-        }
-        plotrix::drawSectorAnnulus(j_ang, i_ang, limits[1], limits[1]+(suntime[i]+ suntime[j])/2, col=rgb(1,1,0.6, 0.6), angleinc=0.005)
-      }
-    }
+    plotrix::radial.plot(
+      lengths=0,
+      radial.pos=0,
+      rp.type="p",
+      radial.lim=c(0,1,2),
+      start=pi,
+      label.pos = yearlyLabels(year=year, pos='pos')*pi/180,
+      labels=yearlyLabels(),
+      clockwise=T,
+      poly.col=rgb(0.2,0.2,0.2,1),
+      lty=0,
+      show.grid.labels =F
+    )
+    angs <- (1:length(suntime))*2*pi/length(suntime)
+    angs[length(angs)] <- 2*pi
+    angs[1] <- 0
+    radialPolygon(NA,angs,limits[1],limits[1]+suntime,col=rgb(1,1,0.6, 0.6))
+    radialPolygon(angs,NA,limits[1]+suntime, limits[2], col=rgb(0.8,0.8,0.8,0.8))
   }
 }
 
