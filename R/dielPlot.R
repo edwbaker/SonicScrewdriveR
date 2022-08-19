@@ -1,3 +1,4 @@
+#' @export
 dielLabels <- function(format="clock24", pos=NULL) {
   if (is.null(pos)) {
     if (format=="clock24") {
@@ -13,6 +14,7 @@ dielLabels <- function(format="clock24", pos=NULL) {
   return(ret)
 }
 
+#' @export
 dailyFraction <- function(t, unit="radians") {
   t <- unclass(as.POSIXlt(t))
   f <- (t$sec + 60*t$min + 3600*t$hour)/86400
