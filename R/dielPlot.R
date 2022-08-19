@@ -24,6 +24,23 @@ dailyFraction <- function(t, unit="radians") {
   return(f)
 }
 
+#'@export
+emptyDiel <- function(method="plotrix") {
+  if (method == "plotrix") {
+    plotrix::radial.plot(
+      lengths=0,
+      radial.pos=0,
+      rp.type="p",
+      radial.lim=c(0,1,2),
+      start=pi,
+      label.pos = dielLabels(pos='pos')*pi/180,
+      labels=dielLabels(),
+      clockwise=T,
+      poly.col=rgb(1,1,0, 0.6),
+      lty=0,
+      show.grid.labels = F)
+  }
+}
 
 #' Create a diel plot
 #'
@@ -68,19 +85,8 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         show.grid.labels =F
       )
     } else {
-      plotrix::radial.plot(
-        lengths=0,
-        radial.pos=0,
-        rp.type="p",
-        radial.lim=c(0,1,2),
-        start=pi,
-        label.pos = dielLabels(pos='pos')*pi/180,
-        labels=dielLabels(),
-        clockwise=T,
-        poly.col=rgb(1,1,0, 0.6),
-        lty=0,
-        show.grid.labels =F
-      )
+      emptyDiel()
+
       angles <- 2*pi*seq_along(day)/length(day)
       radialPolygon(NA,angles, limits[1], limits[1]+day,col=rgb(1,1,0, 0.6))
     }

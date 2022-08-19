@@ -55,9 +55,9 @@ radialPolygon <- function(
 
   outer_x <- rev(outer_x)
   outer_y <- rev(outer_y)
-
   xpos<-c(inner_x,outer_x)
   ypos<-c(inner_y,outer_y)
+
   if (rot != 0) {
     xrot <- xpos*cos(rot) + ypos*sin(rot)
     yrot <- -xpos*sin(rot) + ypos*cos(rot)
