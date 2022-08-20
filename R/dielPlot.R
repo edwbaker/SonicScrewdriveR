@@ -38,14 +38,14 @@ dielFraction <- function(t, input="POSIXlt", unit="radians") {
 }
 
 #'@export
-emptyDiel <- function(method="plotrix") {
+emptyDiel <- function(method="plotrix", rot=pi) {
   if (method == "plotrix") {
     plotrix::radial.plot(
       lengths=0,
       radial.pos=0,
       rp.type="p",
       radial.lim=c(0,1,2),
-      start=pi,
+      start=rot,
       label.pos = dielPositions(),
       labels=dielLabels(),
       clockwise=T,
@@ -101,7 +101,7 @@ dielPlot <- function(
     #Scale for limits
     day <- day * (limits[2]-limits[1])
     if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
-    emptyDiel()
+    emptyDiel(rot=rot)
 
     angles <- dielFraction(pos$date)
     radialPolygon(NA,angles, limits[1], limits[1]+day,col=rgb(1,1,0, 0.6), rot=rot)
