@@ -1,30 +1,30 @@
 #' @export
-yearlyLabels <- function(year, format="months", pos=NULL) {
-  if (is.null(pos)) {
-    if (format=="months") {
-      ret <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-    }
+yearlyLabels <- function(format="months") {
+  if (format=="months") {
+    ret <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   }
-  else {
-    if (isLeapYear(year)) {
-      FebDays <- 29
-      YearDays <- 366
-    } else {
-      FebDays <- 28
-      YearDays <- 365
-    }
-    days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
-              FebDays+123, FebDays+153, FebDays+184, FebDays+215,
-              FebDays+245, FebDays+276, FebDays+306)
-    if (format == "months") {
-      ret <- 2*pi * days / YearDays
-    }
-    if (format == "mid-months") {
-      diffs <- diff(c(days, 360))
-      days <- days + 0.5*diffs
-      ret <- 2*pi * days / YearDays
-    }
+}
+
+#' @export
+yearlyPositions <- function(year=2022, format="months") {
+  if (isLeapYear(year)) {
+    FebDays <- 29
+    YearDays <- 366
+  } else {
+    FebDays <- 28
+    YearDays <- 365
+  }
+  days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
+            FebDays+123, FebDays+153, FebDays+184, FebDays+215,
+            FebDays+245, FebDays+276, FebDays+306)
+  if (format == "months") {
+    ret <- 2*pi * days / YearDays
+  }
+  if (format == "mid-months") {
+    diffs <- diff(c(days, 360))
+    days <- days + 0.5*diffs
+    ret <- 2*pi * days / YearDays
   }
   return(ret)
 }
@@ -47,14 +47,14 @@ isLeapYear <- function(year) {
 }
 
 #' @export
-emptyYearly <- function() {
+emptyYearly <- function(year=2022) {
   plotrix::radial.plot(
     lengths=0,
     radial.pos=0,
     rp.type="p",
     radial.lim=c(0,1,2),
     start=pi,
-    label.pos = yearlyLabels(year=year, pos='pos'),
+    label.pos = yearlyPositions(year=year),
     labels=yearlyLabels(),
     clockwise=T,
     poly.col=rgb(0.2,0.2,0.2,1),
@@ -76,7 +76,7 @@ emptyYearly <- function() {
 #' @param legend Whether to show a legend
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
-yearlyPlot <- function(year, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=F) {
+yearlyPlot <- function(year=2022, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=F) {
   start <- as.POSIXlt(paste0(year,"-01-01"))
   end <- as.POSIXlt(paste0(year,"-12-31"))
   dates <- seq.POSIXt(from=start, to=end, by="day")

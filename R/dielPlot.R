@@ -1,15 +1,20 @@
 #' @export
-dielLabels <- function(format="clock24", pos=NULL) {
-  if (is.null(pos)) {
-    if (format=="clock24") {
-      ret <- c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100")
-    }
-    if (format=="clock12") {
-      ret <- c("0000", "0300 AM", "0600 AM", "0900 AM", "1200 NOON", "0300 PM", "0600 PM", "0900 PM")
-    }
+dielLabels <- function(format="clock24") {
+  if (format=="clock24") {
+    ret <- c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100")
   }
-  else {
+  else if (format=="clock12") {
+    ret <- c("0000", "0300 AM", "0600 AM", "0900 AM", "1200 NOON", "0300 PM", "0600 PM", "0900 PM")
+  }
+  return(ret)
+}
+
+#' @export
+dielPositions <- function(format="clock") {
+  if (format=="clock") {
     ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
+  } else if (format=="hours") {
+
   }
   return(ret)
 }
@@ -33,7 +38,7 @@ emptyDiel <- function(method="plotrix") {
       rp.type="p",
       radial.lim=c(0,1,2),
       start=pi,
-      label.pos = dielLabels(pos='pos'),
+      label.pos = dielPositions(),
       labels=dielLabels(),
       clockwise=T,
       poly.col=rgb(1,1,0, 0.6),
@@ -77,7 +82,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         rp.type="p",
         radial.lim=c(0,1,2),
         start=pi,
-        label.pos = dielLabels(pos='pos'),
+        label.pos = dielPositions(),
         labels=dielLabels(),
         clockwise=T,
         poly.col=rgb(1,1,0, 0.6),

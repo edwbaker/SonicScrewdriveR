@@ -8,6 +8,7 @@ radialPolygon <- function(
     angleinc=0.01,
     reverse=TRUE
 ) {
+
   if (length(angle1) == 1 & length(angle2) == 1) {
     while (angle1 > angle2) {
       angle2 <- angle2 + 2*pi

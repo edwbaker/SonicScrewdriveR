@@ -5,7 +5,7 @@
 \title{Create a yearly plot}
 \usage{
 yearlyPlot(
-  year,
+  year = 2022,
   lat,
   lon,
   limits = c(0, 2),
