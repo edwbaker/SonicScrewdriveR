@@ -20,14 +20,22 @@ dielPositions <- function(format="clock") {
 }
 
 #' @export
-dailyFraction <- function(t, unit="radians") {
-  t <- unclass(as.POSIXlt(t))
-  f <- (t$sec + 60*t$min + 3600*t$hour)/86400
+dailyFraction <- function(t, input="POSIXlt", unit="radians") {
+  if (input=="POSIXlt") {
+    t <- unclass(as.POSIXlt(t))
+    f <- (t$sec + 60*t$min + 3600*t$hour)/86400
+  } else if (input=="HHMM") {
+    f<- stri_pad(T, 4, "left", 0)
+    f <- (as.numeric(substr(T,1,2))*60 + as.numeric(substr(T,3,4))) / 1440
+    f[is.na(f)] <- 0
+  }
+
   if (unit=="radians") {
     return(2*pi*f)
   }
   return(f)
 }
+
 
 #'@export
 emptyDiel <- function(method="plotrix") {
@@ -185,8 +193,8 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
   cols <- rep_len(cols, length.out = length(names))
   #Convert to fractional circle
   if (format=="HHMM") {
-    starts <- convert2fractionalCircle(starts, input="HHMM")
-    ends <- convert2fractionalCircle(ends, input="HHMM")
+    starts <- dielFraction(starts, input="HHMM")
+    ends <- dielFraction(ends, input="HHMM")
   }
 
   arc_step <- (limits[2] - limits[1]) / length(names)
