@@ -25,8 +25,8 @@ dielFraction <- function(t, input="POSIXlt", unit="radians") {
     t <- unclass(as.POSIXlt(t))
     f <- (t$sec + 60*t$min + 3600*t$hour)/86400
   } else if (input=="HHMM") {
-    f<- stri_pad(T, 4, "left", 0)
-    f <- (as.numeric(substr(T,1,2))*60 + as.numeric(substr(T,3,4))) / 1440
+    t<- stri_pad(t, 4, "left", 0)
+    f <- (as.numeric(substr(t,1,2))*60 + as.numeric(substr(t,3,4))) / 1440
     f[is.na(f)] <- 0
   }
 
