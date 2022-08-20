@@ -10,6 +10,7 @@ dielPlot(
   lon,
   limits = c(0, 2),
   plot = NULL,
+  rot = tz(0),
   method = "plotrix",
   legend = F
 )
@@ -24,6 +25,8 @@ dielPlot(
 \item{limits}{Plotting limits of the daylight regions, default to c(1,2)}
 
 \item{plot}{Character vector of components to plot}
+
+\item{rot}{Either "Solar Noon" or an offset calculated by tz}
 
 \item{method}{Plotting library to use}
 
