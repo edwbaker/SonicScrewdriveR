@@ -20,7 +20,7 @@ dielPositions <- function(format="clock") {
 }
 
 #' @export
-dailyFraction <- function(t, input="POSIXlt", unit="radians") {
+dielFraction <- function(t, input="POSIXlt", unit="radians") {
   if (input=="POSIXlt") {
     t <- unclass(as.POSIXlt(t))
     f <- (t$sec + 60*t$min + 3600*t$hour)/86400
@@ -113,7 +113,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
       leg <- c(leg, "Civil Twilight")
       col <- c(col, rgb(0.8,0.8,0.8,1))
       if (!is.na(tim$sunrise)) {
-        radialPolygon(dailyFraction(tim$sunset), dailyFraction(tim$sunrise), limits[1],limits[2], col=rgb(0.8,0.8,0.8,1))
+        radialPolygon(dielFraction(tim$sunset), dielFraction(tim$sunrise), limits[1],limits[2], col=rgb(0.8,0.8,0.8,1))
       }
       if (is.na(tim$sunrise) & !is.na(tim$dawn)) {
         radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.8,0.8,0.8,1))
@@ -123,7 +123,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
       leg <- c(leg, "Nautical Twilight")
       col <- c(col, rgb(0.6,0.6,0.6,1))
       if (!is.na(tim$dawn)) {
-        radialPolygon(dailyFraction(tim$dusk), dailyFraction(tim$dawn),limits[1], limits[2], col=rgb(0.6,0.6,0.6,1))
+        radialPolygon(dielFraction(tim$dusk), dielFraction(tim$dawn),limits[1], limits[2], col=rgb(0.6,0.6,0.6,1))
       }
       if (is.na(tim$dawn) & !is.na(tim$nauticalDawn)) {
         radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.6,0.6,0.6,1))
@@ -133,7 +133,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
       leg <- c(leg, "Astronomical Twilight")
       col <- c(col, rgb(0.4,0.4,0.4,1))
       if (!is.na(tim$nauticalDawn)) {
-        radialPolygon(dailyFraction(tim$nauticalDusk), dailyFraction(tim$nauticalDawn), limits[1],limits[2], col=rgb(0.4,0.4,0.4,1))
+        radialPolygon(dielFraction(tim$nauticalDusk), dielFraction(tim$nauticalDawn), limits[1],limits[2], col=rgb(0.4,0.4,0.4,1))
       }
       if (is.na(tim$nauticalDawn) & !is.na(tim$night)) {
         radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.4,0.4,0.4,1))
@@ -143,7 +143,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
       leg <- c(leg, "Night")
       col <- c(col, rgb(0.2,0.2,0.2,1))
       if (!is.na(tim$night) & !is.na(tim$nightEnd)){
-        radialPolygon(dailyFraction(tim$night), dailyFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1))
+        radialPolygon(dielFraction(tim$night), dielFraction(tim$nightEnd),limits[1],limits[2], col=rgb(0.2,0.2,0.2,1))
       }
       if(alt <= -0.314159) {
         if (is.na(tim$night)) {
@@ -152,7 +152,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
       }
     }
     if ("Nadir" %in% plot) {
-      radialPolygon(dailyFraction(tim$nadir), dailyFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1))
+      radialPolygon(dielFraction(tim$nadir), dielFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1))
     }
 
     if (is.null(plot) | "Sunrise" %in% plot) {
@@ -160,7 +160,7 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         if (is.na(tim$sunriseEnd)) {
           tim$sunriseEnd <- tim$solarNoon
         }
-        radialPolygon(dailyFraction(tim$sunrise),dailyFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1))
+        radialPolygon(dielFraction(tim$sunrise),dielFraction(tim$sunriseEnd),limits[1],limits[2], col=rgb(1,0.5,0,1))
       }
     }
     if (is.null(plot) |"Sunset" %in% plot) {
@@ -168,11 +168,11 @@ dielPlot <- function(date, lat, lon, limits=c(0,2), plot=NULL, method="plotrix",
         if (is.na(tim$sunsetStart)) {
           tim$sunsetStart <- tim$solarNoon
         }
-        radialPolygon(dailyFraction(tim$sunsetStart),dailyFraction(tim$sunset),limits[1],limits[2], col=rgb(1,0.5,0,1))
+        radialPolygon(dielFraction(tim$sunsetStart),dielFraction(tim$sunset),limits[1],limits[2], col=rgb(1,0.5,0,1))
       }
     }
     if ("Solar Noon" %in% plot) {
-      radialPolygon(dailyFraction(tim$solarNoon), dailyFraction(tim$solarNoon),limits[1],limits[2], col=rgb(1,0.5,0,1))
+      radialPolygon(dielFraction(tim$solarNoon), dielFraction(tim$solarNoon),limits[1],limits[2], col=rgb(1,0.5,0,1))
     }
 
     if (legend) {
