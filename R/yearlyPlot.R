@@ -46,6 +46,27 @@ isLeapYear <- function(year) {
   }
 }
 
+#' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @export
+yearlyFraction <- function(t, year=2022, input="POSIXlt", unit="radians") {
+  if (isLeapYear(year)) {
+    dc <- 366
+  } else {
+    dc <- 365
+  }
+  if (input=="POSIXlt") {
+    t <- unclass(as.POSIXlt(t))
+    f <- t$yday/dc
+  } else if (input=="day") {
+    f <- day/dc
+  }
+
+  if (unit=="radians") {
+    return(2*pi*f)
+  }
+  return(f)
+}
+
 #' @export
 emptyYearly <- function(year=2022) {
   plotrix::radial.plot(
