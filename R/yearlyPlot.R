@@ -58,7 +58,7 @@ yearlyFraction <- function(t, year=2022, input="POSIXlt", unit="radians") {
     t <- unclass(as.POSIXlt(t))
     f <- t$yday/dc
   } else if (input=="day") {
-    f <- day/dc
+    f <- t/dc
   }
 
   if (unit=="radians") {
