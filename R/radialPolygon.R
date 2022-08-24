@@ -69,6 +69,13 @@ radialPolygon <- function(
   polygon(xpos,ypos,col=col,border=col)
 }
 
+#' Circularise a dataset
+#'
+#' When plotting rings or horizons that are meant to cover the entirety of the time period in a
+#' dielPlot() or yearlyPlot() this function append the beginning values to the end to ensure an entire
+#' loop is created.
+#'
+#' @param values A vector if values
 #' @export
 circularise <- function(values) {
   return(c(values, values[1]))
