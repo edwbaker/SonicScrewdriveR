@@ -2,7 +2,7 @@
 % Please edit documentation in R/dielPlot.R
 \name{dielFraction}
 \alias{dielFraction}
-\title{Calculate the fraction of a day iven by a value}
+\title{Calculate the fraction of a day given by a value}
 \usage{
 dielFraction(t, input = "POSIXlt", unit = "radians")
 }
