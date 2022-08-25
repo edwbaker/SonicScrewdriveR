@@ -15,8 +15,7 @@ library(sonicscrewdriver)
 ### Latest master
 ````R
 install.packages("devtools")
-library(devtools)
-install_github("edwbaker/SonicScrewdriveR")
+devtools::install_github("edwbaker/SonicScrewdriveR")
 library(sonicscrewdriver)
 ````
 
