@@ -49,7 +49,12 @@ dielFraction <- function(t, input="POSIXlt", unit="radians") {
   return(f)
 }
 
-#'@export
+#' Create an empty diel plot
+#'
+#' Create a diel plot with labels but without sun altitude or times of day plotted.
+#' @param method Plotting package to use
+#' @param rot Rotation of the origin (defaults to pi)
+#' @export
 emptyDiel <- function(method="plotrix", rot=pi) {
   if (method == "plotrix") {
     plotrix::radial.plot(
