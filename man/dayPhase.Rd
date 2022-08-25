@@ -31,7 +31,3 @@ Given a start time and (optionally) a duration returns the phase of day at a giv
 location. This is primarily used to calculate phase of day information for soundscape
 recording projects.
 }
-\examples{
-dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="UTC")
-
-}

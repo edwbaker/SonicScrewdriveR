@@ -11,8 +11,6 @@
 #' @param tz Time-zone of recording device when recording was made
 #' @export
 #' @return Data frame of day phases with absolute timestamps and relative times within file
-#' @examples
-#' dayPhase <- function(time=Sys.time(), duration=200000, lat=50.1, lon=1.83, tz="UTC")
 #'
 dayPhase <- function(time=Sys.time(), duration=40000, lat=50.1, lon=1.83, tz="UTC") {
   d <- dayPhases(as.Date(time), lat=lat, lon=lon, tz=tz)
