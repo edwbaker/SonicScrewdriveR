@@ -72,6 +72,11 @@ emptyDiel <- function(method="plotrix", rot=pi) {
   }
 }
 
+#' Converts a timezone offset into a rotation
+#'
+#' Given a timezone offset in hours returns a rotation in radians to apply to values for a diel plot.
+#' @param tz Timezone numeric
+#' @param init Initial rotation. Defaults to pi.
 #' @export
 tz <- function(tz, init=pi) {
   return(init + -tz*2*pi/24)
@@ -233,4 +238,3 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
       cex = 0.75)
   }
 }
-
