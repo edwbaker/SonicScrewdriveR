@@ -1,3 +1,16 @@
+#' Plot a radial polygon
+#'
+#' Used to plot sectors, annuli and horizons on a dielPlot() or yearlyPlot(). The polygon
+#' has an inner and outer horizon - which can be set to a fixed radius or a vector.
+#'
+#' @param angle1 Angles for the inner line
+#' @param angle2 ANgles for the outer line
+#' @param radius1 Radii fof the inner line
+#' @param radius2 Radii for the outer line
+#' @param col Colour of the polygon
+#' @param rot Rotation of the plot, defaults to pi to match dielPlot() and yearlyPlot()
+#' @param angleinc The angular increment in radians for calculating circular lines
+#' @param reverse If FALSE plots in an anti-clockwise direction
 #' @importFrom graphics polygon
 #' @export
 radialPolygon <- function(
