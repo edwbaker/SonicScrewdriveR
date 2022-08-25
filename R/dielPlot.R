@@ -1,3 +1,9 @@
+#' Generate labels for a diel plot
+#'
+#' Generates labels for a dielPlot() in 12- or 24-hour format. Labels are generated
+#' at three hourly intervals.
+#'
+#' @param format One of clock24 (default) or clock12
 #' @export
 dielLabels <- function(format="clock24") {
   if (format=="clock24") {
@@ -9,13 +15,12 @@ dielLabels <- function(format="clock24") {
   return(ret)
 }
 
+#' Generate positions of labels for a diel plot
+#'
+#' Generates positions for three-hourly labels of a dielPlot() in radians.
 #' @export
-dielPositions <- function(format="clock") {
-  if (format=="clock") {
-    ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
-  } else if (format=="hours") {
-
-  }
+dielPositions <- function() {
+  ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
   return(ret)
 }
 
