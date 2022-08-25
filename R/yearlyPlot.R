@@ -1,9 +1,11 @@
+#' Generate labels for a yearly plot
+#'
+#' Generates monthly labels for a yearlyPlot()..
 #' @export
-yearlyLabels <- function(format="months") {
-  if (format=="months") {
-    ret <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-  }
+yearlyLabels <- function() {
+  ret <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  return(ret)
 }
 
 #' @export
