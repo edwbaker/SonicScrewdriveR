@@ -24,6 +24,14 @@ dielPositions <- function() {
   return(ret)
 }
 
+#' Calculate the fraction of a day iven by a value
+#'
+#' Given an object that can be coerced to POSIXlt or is in a supported string
+#' format, return the fraction of a day represented by the object.
+#'
+#'
+#' @param t Object to be converted to a fraction
+#' @param input One of POSIXlt (default) or HHMM
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @export
 dielFraction <- function(t, input="POSIXlt", unit="radians") {
