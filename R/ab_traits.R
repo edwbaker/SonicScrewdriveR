@@ -1,3 +1,11 @@
+#' Convert text times of day in audioblast traits to numeric values
+#'
+#' This function takes a traits dataset retrieved from audioblast and converts
+#' values such as "dawn" into a numeric time of day based on the date and location.
+#' @param traits Traits dataset retrieved using audioblast()
+#' @param date The date used for conversion for time
+#' @param lat Latitude of location
+#' @param lon Longitude of location
 #' @export
 ab_diel_traits <- function(traits, date, lat, lon) {
   cn <- colnames(traits)
