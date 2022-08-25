@@ -35,4 +35,4 @@ Suggests:
     rmarkdown,
     spelling
 VignetteBuilder: knitr
-URL: http://ebaker.me.uk/SonicScrewdriveR/
+URL: https://sonicscrewdriver.ebaker.me.uk
