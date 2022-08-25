@@ -8,6 +8,14 @@ yearlyLabels <- function() {
   return(ret)
 }
 
+#' Generate positions of labels for a yearly plot
+#'
+#' Generates positions for monthly labels of a dielPlot() in radians. The positions can either be for the
+#' start of the month, or middle of the month.
+#'
+#' The function allows for leap years if the year parameter is provided.
+#' @param year Year to calculate
+#' @param format One of months, mid-months
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
   if (isLeapYear(year)) {
