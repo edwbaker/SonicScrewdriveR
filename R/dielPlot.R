@@ -211,6 +211,16 @@ dielPlot <- function(
   }
 }
 
+#' Plot rings on a diel plot
+#'
+#' Plot rings on a diel plot.
+#' @param names Labels for the rings
+#' @param starts Start times for rings in HHMM string format
+#' @param ends End times for rings in HHMM string format
+#' @param cols Colours of the rings
+#' @param format Defaults to HHMM
+#' @param limits Region of a dielPlot() to plot rings. Defaults to c(1,2)
+#' @param legend Boolean. Whether to plot a legend.
 #' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))
