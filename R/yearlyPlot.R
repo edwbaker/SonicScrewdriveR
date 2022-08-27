@@ -56,6 +56,13 @@ isLeapYear <- function(year) {
   }
 }
 
+#' Calculate the fraction of a year given by a value
+#'
+#' Given an object that can be coerced to POSIXlt, return the fraction of a year represented by the object.
+#'
+#' @param t Object to be converted to a fraction
+#' @param year Year to calculate fractions of (allows for leap years)
+#' @param input One of POSIXlt (default)
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @export
 yearlyFraction <- function(t, year=2022, input="POSIXlt", unit="radians") {
