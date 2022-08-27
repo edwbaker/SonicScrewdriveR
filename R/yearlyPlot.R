@@ -77,14 +77,20 @@ yearlyFraction <- function(t, year=2022, input="POSIXlt", unit="radians") {
   return(f)
 }
 
+#' Create an empty yearly plot
+#'
+#' Create a yearly plot with labels but without sun or night duration plotted.
+#' @param year Year to plot (allows for leap years)
+#' @param method Plotting package to use
+#' @param rot Rotation of the origin (defaults to pi)
 #' @export
-emptyYearly <- function(year=2022) {
+emptyYearly <- function(year=2022, method="plotrix", rot=pi) {
   plotrix::radial.plot(
     lengths=0,
     radial.pos=0,
     rp.type="p",
     radial.lim=c(0,1,2),
-    start=pi,
+    start=rot,
     label.pos = yearlyPositions(year=year),
     labels=yearlyLabels(),
     clockwise=T,
