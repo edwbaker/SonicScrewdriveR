@@ -18,9 +18,17 @@ dielLabels <- function(format="clock24") {
 #' Generate positions of labels for a diel plot
 #'
 #' Generates positions for three-hourly labels of a dielPlot() in radians.
+#' @param format One of "3hours" (default), "hours", or "minutes"
 #' @export
-dielPositions <- function() {
-  ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
+dielPositions <- function(format="3hourly") {
+  if (format == "3hours") {
+    ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
+  } else if (format == "hours") {
+    ret <- 2*pi * (1:24)/24
+  } else if (format == "minutes") {
+    mpd <- 24*60
+    ret <- 2*pi * (1:mph)/mpd
+  }
   return(ret)
 }
 

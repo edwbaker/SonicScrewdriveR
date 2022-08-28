@@ -4,7 +4,10 @@
 \alias{dielPositions}
 \title{Generate positions of labels for a diel plot}
 \usage{
-dielPositions()
+dielPositions(format = "3hourly")
+}
+\arguments{
+\item{format}{One of "3hours" (default), "hours", or "minutes"}
 }
 \description{
 Generates positions for three-hourly labels of a dielPlot() in radians.
