@@ -10,9 +10,11 @@ radialPolygon(
   radius1,
   radius2,
   col = "grey",
+  border = NA,
   rot = -pi,
   angleinc = 0.01,
-  reverse = TRUE
+  reverse = TRUE,
+  ...
 )
 }
 \arguments{
@@ -26,11 +28,15 @@ radialPolygon(
 
 \item{col}{Colour of the polygon}
 
+\item{border}{Border colour (see polygon() for details)}
+
 \item{rot}{Rotation of the plot, defaults to pi to match dielPlot() and yearlyPlot()}
 
 \item{angleinc}{The angular increment in radians for calculating circular lines}
 
 \item{reverse}{If FALSE plots in an anti-clockwise direction}
+
+\item{...}{Other parameters passed to polygon()}
 }
 \description{
 Used to plot sectors, annuli and horizons on a dielPlot() or yearlyPlot(). The polygon

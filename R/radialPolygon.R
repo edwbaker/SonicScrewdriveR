@@ -8,18 +8,22 @@
 #' @param radius1 Radii fof the inner line
 #' @param radius2 Radii for the outer line
 #' @param col Colour of the polygon
+#' @param border Border colour (see polygon() for details)
 #' @param rot Rotation of the plot, defaults to pi to match dielPlot() and yearlyPlot()
 #' @param angleinc The angular increment in radians for calculating circular lines
 #' @param reverse If FALSE plots in an anti-clockwise direction
+#' @param ... Other parameters passed to polygon()
 #' @importFrom graphics polygon
 #' @export
 radialPolygon <- function(
     angle1,angle2,
     radius1,radius2,
     col="grey",
+    border=NA,
     rot=-pi,
     angleinc=0.01,
-    reverse=TRUE
+    reverse=TRUE,
+    ...
 ) {
 
   if (length(angle1) == 1 & length(angle2) == 1) {
@@ -79,7 +83,7 @@ radialPolygon <- function(
     ypos <- yrot
   }
 
-  polygon(xpos,ypos,col=col,border=col)
+  polygon(xpos,ypos,col=col,border=border,...)
 }
 
 #' Circularise a dataset
