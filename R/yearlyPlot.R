@@ -15,7 +15,7 @@ yearlyLabels <- function() {
 #'
 #' The function allows for leap years if the year parameter is provided.
 #' @param year Year to calculate
-#' @param format One of months, mid-months
+#' @param format One of months, mid-months, days
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
   if (isLeapYear(year)) {
@@ -25,16 +25,20 @@ yearlyPositions <- function(year=2022, format="months") {
     FebDays <- 28
     YearDays <- 365
   }
-  days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
-            FebDays+123, FebDays+153, FebDays+184, FebDays+215,
-            FebDays+245, FebDays+276, FebDays+306)
-  if (format == "months") {
-    ret <- 2*pi * days / YearDays
-  }
-  if (format == "mid-months") {
-    diffs <- diff(c(days, 360))
-    days <- days + 0.5*diffs
-    ret <- 2*pi * days / YearDays
+  if (format=="days") {
+    ret <- 2*pi * (1:YearDays)/YearDays
+  } else {
+    days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
+              FebDays+123, FebDays+153, FebDays+184, FebDays+215,
+              FebDays+245, FebDays+276, FebDays+306)
+    if (format == "months") {
+      ret <- 2*pi * days / YearDays
+    }
+    if (format == "mid-months") {
+      diffs <- diff(c(days, 360))
+      days <- days + 0.5*diffs
+      ret <- 2*pi * days / YearDays
+    }
   }
   return(ret)
 }

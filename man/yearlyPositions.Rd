@@ -9,7 +9,7 @@ yearlyPositions(year = 2022, format = "months")
 \arguments{
 \item{year}{Year to calculate}
 
-\item{format}{One of months, mid-months}
+\item{format}{One of months, mid-months, days}
 }
 \description{
 Generates positions for monthly labels of a dielPlot() in radians. The positions can either be for the
