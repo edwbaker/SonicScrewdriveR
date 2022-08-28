@@ -27,7 +27,7 @@ dielPositions <- function(format="3hourly") {
     ret <- 2*pi * (1:24)/24
   } else if (format == "minutes") {
     mpd <- 24*60
-    ret <- 2*pi * (1:mph)/mpd
+    ret <- 2*pi * (1:mpd)/mpd
   }
   return(ret)
 }
