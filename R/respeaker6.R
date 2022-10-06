@@ -1,7 +1,7 @@
 #' Read a file from Seeed Studio Respeaker 6 mic array
 #'
 #' The Seeed Studio Respeaker-6 when used as described in the documentation saves an eight
-#' channel audio file with channels 3 and 4 not containing input audio. This function reads
+#' channel audio file with channels 7 and 8 not containing input audio. This function reads
 #' such a file and saves it as a six channel file.
 #'
 #' @param filename file to read
