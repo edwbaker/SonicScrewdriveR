@@ -4,16 +4,18 @@
 \alias{corWaveMC}
 \title{Correlate channels in a WaveMC object}
 \usage{
-corWaveMC(wave, times, window, temp = 25)
+corWaveMC(wave, times, window, temp = 25, cluster = NULL)
 }
 \arguments{
 \item{wave}{A WaveMC object}
 
 \item{times}{One or more times of events to correlate}
 
-\item{window}{Width of the window to correlate in seconds (centered on times)}
+\item{window}{Width of the window to correlate in seconds (centred on times)}
 
 \item{temp}{Air temperature in Celsius}
+
+\item{cluster}{A cluster for parallel execution}
 }
 \value{
 List of corenv lists for events, and a list of the time differences between channels
