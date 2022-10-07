@@ -10,7 +10,7 @@
 #' @export
 #' @importFrom seewave corenv
 corWaveMC <- function(wave, times, window, temp=25) {
-  #TODO: validate is waveMC
+  validateIsWaveMC(wave)
 
   for (i in 1:length(times)) {
     offsets <- vector(mode="list", length=wave@dim[2])
