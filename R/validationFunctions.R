@@ -69,6 +69,12 @@ validateIsWave <- function(wave) {
   }
 }
 
+validateIsWaveMC <- function(wave) {
+  if (!is(wave, "WaveMC")) {
+    stop("Expecting a WaveMC object")
+  }
+}
+
 validateFreq <- function(f) {
   for (i in 1:length(f)) {
     if (!is.numeric(f[[i]])) {
