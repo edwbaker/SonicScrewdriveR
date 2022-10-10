@@ -17,37 +17,38 @@ convert2bytes <- function(S, input="bits") {
   stop(paste("Unknown input to convert2bytes:",input))
 }
 
-#' Prints bytes in human readable form
+#' Converts bytes in human readable form
 #'
 #' Given an input of bytes calculates the result in a sensible output unit (e.g.
-#' MB, GB, PB) and prints the output.
+#' MB, GB, PB).
 #'
 #' @param S Number of bytes
+#' @return String in human readable format
 #' @export
 #'
-printHumanBytes <- function(S) {
+humanBytes <- function(S) {
   if (S > 1e+18) {
     S <- S/1e+18
-    print(paste(S,"EB"))
+    return(paste(S,"EB"))
   }
   if (S > 1e+15) {
     S <- S/1e+15
-    print(paste(S, "PB"))
+    return(paste(S, "PB"))
   }
   if (S > 1e+12) {
     S <- S/1e+12
-    print(paste(S, "TB"))
+    return(paste(S, "TB"))
   }
   if (S > 1e+9) {
     S <- S/1e+9
-    print(paste(S, "GB"))
+    return(paste(S, "GB"))
   }
   if (S > 1e+6) {
     S <- S/1e+6
-    print(paste(S, "MB"))
+    return(paste(S, "MB"))
   }
   if (S > 1e+3) {
     S <- S/1e+3
-    print(paste(S, "kB"))
+    return(paste(S, "kB"))
   }
 }
