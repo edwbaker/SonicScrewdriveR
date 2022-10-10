@@ -57,9 +57,11 @@ has an inner and outer horizon - which can be set to a fixed radius or a vector.
 <span>  <span class="va">radius1</span>,</span>
 <span>  <span class="va">radius2</span>,</span>
 <span>  col <span class="op">=</span> <span class="st">"grey"</span>,</span>
+<span>  border <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  rot <span class="op">=</span> <span class="op">-</span><span class="va">pi</span>,</span>
 <span>  angleinc <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>  reverse <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  reverse <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,6 +87,10 @@ has an inner and outer horizon - which can be set to a fixed radius or a vector.
 <dd><p>Colour of the polygon</p></dd>
 
 
+<dt>border</dt>
+<dd><p>Border colour (see polygon() for details)</p></dd>
+
+
 <dt>rot</dt>
 <dd><p>Rotation of the plot, defaults to pi to match dielPlot() and yearlyPlot()</p></dd>
 
@@ -95,6 +101,10 @@ has an inner and outer horizon - which can be set to a fixed radius or a vector.
 
 <dt>reverse</dt>
 <dd><p>If FALSE plots in an anti-clockwise direction</p></dd>
+
+
+<dt>...</dt>
+<dd><p>Other parameters passed to polygon()</p></dd>
 
 </dl></div>
 

@@ -52,6 +52,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/addSpectra.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/allChannels.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/audio_filesize.html</loc>
   </url>
   <url>
@@ -112,6 +115,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/convert2seconds.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/corWaveMC.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/cutws.html</loc>
   </url>
   <url>
@@ -154,6 +160,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/emptyDiel.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/emptyYearly.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/entropyStats.html</loc>
   </url>
   <url>
@@ -170,6 +179,9 @@
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/gs_transcribe.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/humanBytes.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/index.html</loc>
@@ -221,6 +233,9 @@
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/readAudio.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/readRespeaker6.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/referenceIntensity.html</loc>
@@ -293,6 +308,9 @@
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/windowing.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/yearlyFraction.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/yearlyLabels.html</loc>
