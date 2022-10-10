@@ -3,7 +3,7 @@ citHeader("To cite sonicscrewdriver in publications use:")
 citEntry(
   entry    = "Manual",
   title    = "SonicScrewdriveR",
-  author   = "Baker, E.",
+  author   = "Ed Baker",
   year     = "2021",
   url      = "https://cran.r-project.org/package=sonicscrewdriver",
   textVersion = paste(
