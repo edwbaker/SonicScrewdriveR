@@ -13,7 +13,7 @@
 
 audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1, duration.unit="seconds", output.unit="bits") {
   duration <- convert2seconds(duration, duration.unit)
-  bits <- samp.rate * bit.depth * duration
+  bits <- samp.rate * bit.depth * duration * channels
   if (output.unit == "bits") {
     return (bits)
   }
