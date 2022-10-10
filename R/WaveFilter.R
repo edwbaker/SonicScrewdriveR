@@ -12,13 +12,11 @@
 setClass(
   "WaveFilter",
   slots=list(
-    module="character",
     func="character",
     allChannels="logical",
     params="list"
   ),
   prototype = list(
-    module = NA_character_,
     func = NA_character_,
     allChannels= TRUE,
     params = list()
@@ -39,15 +37,12 @@ setClass(
 #' @param filt Wave object with the selected filter applied
 #' @export
 filterw <- function(w, filt) {
-  if (filt@module == "seewave") {
-    #seewave functions require the output to be set to Wave to return a Wave object
-    filt@params <- c(filt@params, "output"="Wave")
     if (filt@allChannels==TRUE) {
       return(do.call(allChannels, c(list(w), list(match.fun(filt@func)), filt@params)))
     } else {
       return(do.call(match.fun(filt@func), c(list(w), filt@params)))
     }
-  }
+
 }
 
 
@@ -70,6 +65,6 @@ filterw <- function(w, filt) {
 #' nwave |> filterw(bandpass(from=1000, to=2000)) -> fwave
 #' }
 bandpass <- function( from, to, ...) {
-  filt <- new("WaveFilter", module="seewave", func="ffilter", allChannels=TRUE, params=list(from=from,to=to,...))
+  filt <- new("WaveFilter", func="ffilter", allChannels=TRUE, params=list(from=from,to=to,output="Wave",...))
   return(filt)
 }
