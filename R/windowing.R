@@ -15,7 +15,6 @@
 #' \dontrun{
 #' windowing(wave, window.length=1000, window.overlap=0, bind.wave=TRUE, FUN=noChange)
 #' }
-
 windowing <- function(
   wave,
   window.length,
@@ -57,7 +56,6 @@ windowing <- function(
 #' \dontrun{
 #' windowing.functions()
 #' }
-
 windowing.functions <- function() {
   ip <- installed.packages()[,1]
   for (i in 1:length(ip)) {

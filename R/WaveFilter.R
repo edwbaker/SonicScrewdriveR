@@ -20,7 +20,6 @@ setClass(
     func = NA_character_,
     allChannels= TRUE,
     params = list()
-
   )
 )
 
@@ -42,9 +41,7 @@ filterw <- function(w, filt) {
     } else {
       return(do.call(match.fun(filt@func), c(list(w), filt@params)))
     }
-
 }
-
 
 #' Simple bandpass filter
 #'
