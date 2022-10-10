@@ -7,18 +7,18 @@
 readRespeaker6(filename, from = 1, to = Inf, units = "samples", header = FALSE)
 }
 \arguments{
-\item{filename}{file to read}
+\item{filename}{file to read.}
 
-\item{from}{See readWave}
+\item{from}{Where to start reading the wave in units.}
 
-\item{to}{See readWave}
+\item{to}{Where to stop reading the wave in units.}
 
-\item{units}{See readWave}
+\item{units}{Units in which from and to is given, the default is "samples", but can be set to time intervals such as "seconds".}
 
-\item{header}{See readWave}
+\item{header}{If TRUE, just header information of the Wave file are returned, otherwise (the default) the whole Wave object.}
 }
 \value{
-Missing value of n or t
+A WaveMC object.
 }
 \description{
 The Seeed Studio Respeaker-6 when used as described in the documentation saves an eight
