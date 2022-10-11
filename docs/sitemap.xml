@@ -37,6 +37,12 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/STP.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/TaggedWave-class.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/TaggedWaveMC-class.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/TimeRegion-class.html</loc>
   </url>
   <url>
@@ -284,6 +290,12 @@
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/tSamples.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/tagSlots.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/tagWave.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/times-PseudoWave-numeric-method.html</loc>
