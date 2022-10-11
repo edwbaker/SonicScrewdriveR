@@ -7,9 +7,9 @@
 filterw(w, filt)
 }
 \arguments{
-\item{w}{A Wave object}
+\item{w}{A Wave object.}
 
-\item{filt}{Wave object with the selected filter applied}
+\item{filt}{Wave object with the selected filter applied.}
 }
 \description{
 A WaveFilter object is an object containing information necessary for the

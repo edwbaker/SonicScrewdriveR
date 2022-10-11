@@ -13,12 +13,12 @@ to a Wave in a pipeline.
 \section{Slots}{
 
 \describe{
-\item{\code{module}}{Module the filter function is found in}
+\item{\code{module}}{Module the filter function is found in.}
 
-\item{\code{func}}{Name of function}
+\item{\code{func}}{Name of function.}
 
-\item{\code{allChannels}}{Whether to apply filter to all channels in the wave}
+\item{\code{allChannels}}{Whether to apply filter to all channels in the wave.}
 
-\item{\code{params}}{List of additional parameters to pass to the function}
+\item{\code{params}}{List of additional parameters to pass to the function.}
 }}
 

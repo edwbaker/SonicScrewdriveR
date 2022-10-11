@@ -7,14 +7,14 @@
 bandpass(from, to, ...)
 }
 \arguments{
-\item{from}{Bottom of bandpass frequency (Hz)}
+\item{from}{Bottom of bandpass frequency (Hz).}
 
-\item{to}{Top of bandpass frequency (Hz)}
+\item{to}{Top of bandpass frequency (Hz).}
 
-\item{...}{Further arguments to pass to ffilter}
+\item{...}{Further arguments to pass to ffilter.}
 }
 \value{
-A WaveFilter object
+A WaveFilter object.
 }
 \description{
 Creates a band pass WaveFilter between values specified to a Wave object.
