@@ -8,6 +8,8 @@
 - Download files from audioBlast
 - PseudoWave class (e.g. apply noise to a file of any length)
 - WaveFilter class (supports applying filters using pipes)
+- allChannels for analysing multi-channel audio
+- read Respeaker6 formatted files
 
 # sonicscrewdriver 0.0.5
 
