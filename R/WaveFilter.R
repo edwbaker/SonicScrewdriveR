@@ -5,10 +5,10 @@
 #' allow a pipe operator (either magrittr or base R) to be used to apply filters
 #' to a Wave in a pipeline.
 #'
-#' @slot module Module the filter function is found in
-#' @slot func Name of function
-#' @slot allChannels Whether to apply filter to all channels in the wave
-#' @slot params List of additional parameters to pass to the function
+#' @slot module Module the filter function is found in.
+#' @slot func Name of function.
+#' @slot allChannels Whether to apply filter to all channels in the wave.
+#' @slot params List of additional parameters to pass to the function.
 setClass(
   "WaveFilter",
   slots=list(
@@ -32,8 +32,8 @@ setClass(
 #'
 #' Supported filters include those from the seewave package.
 #'
-#' @param w A Wave object
-#' @param filt Wave object with the selected filter applied
+#' @param w A Wave object.
+#' @param filt Wave object with the selected filter applied.
 #' @export
 filterw <- function(w, filt) {
     if (filt@allChannels==TRUE) {
@@ -50,10 +50,10 @@ filterw <- function(w, filt) {
 #' This is a simple wrapper function to the seewave ffilter function allowing its
 #' use with filterw and pipes.
 #'
-#' @param from Bottom of bandpass frequency (Hz)
-#' @param to Top of bandpass frequency (Hz)
-#' @param ... Further arguments to pass to ffilter
-#' @return A WaveFilter object
+#' @param from Bottom of bandpass frequency (Hz).
+#' @param to Top of bandpass frequency (Hz).
+#' @param ... Further arguments to pass to ffilter.
+#' @return A WaveFilter object.
 #' @export
 #' @examples
 #' \dontrun{
