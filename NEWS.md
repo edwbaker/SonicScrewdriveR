@@ -10,6 +10,7 @@
 - WaveFilter class (supports applying filters using pipes)
 - allChannels for analysing multi-channel audio
 - read Respeaker6 formatted files
+- TaggedWaves - store metadata and analyses
 
 # sonicscrewdriver 0.0.5
 
