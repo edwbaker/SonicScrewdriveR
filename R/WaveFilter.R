@@ -36,11 +36,11 @@ setClass(
 #' @param filt Wave object with the selected filter applied.
 #' @export
 filterw <- function(w, filt) {
-    if (filt@allChannels==TRUE) {
-      return(do.call(allChannels, c(list(w), list(match.fun(filt@func)), filt@params)))
-    } else {
-      return(do.call(match.fun(filt@func), c(list(w), filt@params)))
-    }
+  if (filt@allChannels==TRUE) {
+    return(do.call(allChannels, c(list(w), list(match.fun(filt@func)), filt@params)))
+  } else {
+    return(do.call(match.fun(filt@func), c(list(w), filt@params)))
+  }
 }
 
 #' Simple bandpass filter
