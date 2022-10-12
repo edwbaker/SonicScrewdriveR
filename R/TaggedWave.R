@@ -52,3 +52,10 @@ tagWave <- function(w) {
     return(w)
   }
 }
+
+isTagged <- function(w) {
+  if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
+    return(TRUE)
+  }
+  return(FALSE)
+}
