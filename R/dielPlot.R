@@ -21,7 +21,7 @@ dielLabels <- function(format="clock24") {
 #' @param format One of "3hours" (default), "hours", or "minutes"
 #' @export
 dielPositions <- function(format="3hourly") {
-  if (format == "3hours") {
+  if (format == "3hourly") {
     ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
   } else if (format == "hours") {
     ret <- 2*pi * (1:24)/24
