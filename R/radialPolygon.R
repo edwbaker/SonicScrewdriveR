@@ -4,8 +4,8 @@
 #' has an inner and outer horizon - which can be set to a fixed radius or a vector.
 #'
 #' @param angle1 Angles for the inner line
-#' @param angle2 ANgles for the outer line
-#' @param radius1 Radii fof the inner line
+#' @param angle2 Angles for the outer line
+#' @param radius1 Radii for the inner line
 #' @param radius2 Radii for the outer line
 #' @param col Colour of the polygon
 #' @param border Border colour (see polygon() for details)

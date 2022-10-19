@@ -20,9 +20,9 @@ radialPolygon(
 \arguments{
 \item{angle1}{Angles for the inner line}
 
-\item{angle2}{ANgles for the outer line}
+\item{angle2}{Angles for the outer line}
 
-\item{radius1}{Radii fof the inner line}
+\item{radius1}{Radii for the inner line}
 
 \item{radius2}{Radii for the outer line}
 
