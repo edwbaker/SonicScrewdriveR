@@ -2,7 +2,6 @@
 #'
 #' Used to plot sectors, annuli and horizons on a dielPlot() or yearlyPlot(). The polygon
 #' has an inner and outer horizon - which can be set to a fixed radius or a vector.
-#'
 #' @param angle1 Angles for the inner line
 #' @param angle2 Angles for the outer line
 #' @param radius1 Radii for the inner line
