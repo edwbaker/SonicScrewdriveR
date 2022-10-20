@@ -26,3 +26,25 @@ convert2seconds <- function(T, input="minutes") {
   stop(paste("Unknown input to convert2seconds: ",input))
 }
 
+#' Converts seconds in human readable form
+#'
+#' Given an input of bytes calculates the result in a sensible output unit (e.g.
+#' minutes, hours).
+#'
+#' @param S Number of seconds
+#' @return String in human readable format
+#' @export
+#'
+humanTime <- function(S) {
+  if (S < 60) {
+    return(paste(S, "seconds"))
+  }
+  if (S < 60*60) {
+    return (paste(S/60, "minutes"))
+  }
+  if (S < 60*60*24) {
+    return (paste(S/(60*60), "hours"))
+  }
+
+  return (paste(S/(60*60*24), "days"))
+}
