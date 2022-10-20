@@ -9,7 +9,7 @@ convert2bytes(S, input = "bits")
 \arguments{
 \item{S}{The value to convert}
 
-\item{input}{The unit  to convert, allowed values are "bits"}
+\item{input}{The unit  to convert, allowed values are "bits", "kB", "MB", "GB"}
 }
 \value{
 The numeric value in seconds
