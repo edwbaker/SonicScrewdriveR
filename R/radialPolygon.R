@@ -96,3 +96,22 @@ radialPolygon <- function(
 circularise <- function(values) {
   return(c(values, values[1]))
 }
+
+#' @export
+dielHistogram <- function(times, by="hour", col="grey", maxval=NA, limits=c(1,2)) {
+  if (by=="hour") {
+    breaks <- seq(from=0,to=2*pi,by=(pi/12))
+  }
+  angles <- cbind(breaks[-length(breaks)], breaks[-1])
+  h <- hist(dielFraction(times), breaks=breaks, plot=F)
+  if (is.na(maxval)) {
+    maxval <- max(h$counts)
+  }
+  data <- as.data.frame(cbind(angles, h$counts*diff(limits)/maxval))
+  colnames(data) <- c("from", "to", "value")
+  for (i in 1:nrow(data)) {
+    radialPolygon(data$from[i],data$to[i], 1,1+data$value[i], col=col)
+  }
+  return(data)
+}
+
