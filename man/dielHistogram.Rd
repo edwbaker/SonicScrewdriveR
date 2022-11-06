@@ -4,18 +4,27 @@
 \alias{dielHistogram}
 \title{Diel Histogram}
 \usage{
-dielHistogram(times, by = "hour", col = "grey", maxval = NA, limits = c(1, 2))
+dielHistogram(
+  times,
+  by = "hour",
+  col = "grey",
+  maxval = NA,
+  presence.only = FALSE,
+  limits = c(1, 2)
+)
 }
 \arguments{
 \item{times}{A vector of times that can be pocessed by dielFraction().}
 
-\item{by}{Controls the size of histogram bins, one of "hour", "15minute", "30minute"}
+\item{by}{Controls the size of histogram bins, one of "hour", "15minute", "30minute".}
 
-\item{col}{Colour of the plot}
+\item{col}{Colour of the plot.}
 
-\item{maxval}{By default scales histogram within limits, specifying a maximum value here allows comparison between plots}
+\item{maxval}{By default scales histogram within limits, specifying a maximum value here allows comparison between plots.}
 
-\item{limits}{Limits of the plotting (see dielPlot())}
+\item{presence.only}{Only show presence/absence not values.}
+
+\item{limits}{Limits of the plotting (see dielPlot()).}
 }
 \value{
 A data frame of start and end points of bins.
