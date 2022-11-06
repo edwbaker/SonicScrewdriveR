@@ -25,7 +25,7 @@ readBirdNet <- function(file, filename_parsing="none") {
       colnames(ret) <- c(cn, "Start", "End")
     }
   } else {
-    l <- list.files("~/mac22BirdNet", full.names=T)
+    l <- list.files(file, full.names=T)
     ret <- do.call(rbind, lapply(l, readBirdNet, filename_parsing=filename_parsing))
   }
   return(ret)
