@@ -42,6 +42,9 @@ dielPositions <- function(format="3hourly") {
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @export
 dielFraction <- function(t, input="POSIXlt", unit="radians") {
+  if (input=="POSIXct") {
+    input <- "POSIXlt"
+  }
   if (input=="POSIXlt") {
     t <- unclass(as.POSIXlt(t))
     f <- (t$sec + 60*t$min + 3600*t$hour)/86400
@@ -232,11 +235,10 @@ dielPlot <- function(
 #' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))
+
   #Convert to fractional circle
-  if (format=="HHMM") {
-    starts <- dielFraction(starts, input="HHMM")
-    ends <- dielFraction(ends, input="HHMM")
-  }
+  starts <- dielFraction(starts, input=format)
+  ends <- dielFraction(ends, input=format)
 
   arc_step <- (limits[2] - limits[1]) / length(names)
   arcs <- limits[1] + arc_step * (1:length(names)-1)
