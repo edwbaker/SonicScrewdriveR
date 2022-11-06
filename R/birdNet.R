@@ -18,10 +18,10 @@ readBirdNet <- function(file, filename_parsing="none") {
       fn_parts <- strsplit(filename, "_")[[1]]
       start <- as.POSIXct(paste(fn_parts[[1]], fn_parts[[2]]), format="%Y%m%d %H%M%OS")
 
-      start <- start + ret$`Begin.Time..s.`
-      end <- start + ret$`End.Time..s.`
+      starts <- start + ret$`Begin.Time..s.`
+      ends <- start + ret$`End.Time..s.`
       cn <-colnames(ret)
-      ret <- cbind(ret, start, end)
+      ret <- cbind(ret, starts, ends)
       colnames(ret) <- c(cn, "Start", "End")
     }
   } else {
