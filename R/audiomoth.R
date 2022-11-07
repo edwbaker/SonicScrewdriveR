@@ -65,6 +65,13 @@ audiomoth_wave <- function(filename) {
     voltage <- substr(raw, r, r+2)
   }
 
+  r <- regexpr("[-+]?[0-9]+[\\.]+[0-9]+[C]", raw)
+  if (r != -1) {
+    temp <- substr(raw, r, r+attr(r, "match.length")-2)
+  } else {
+    temp <- NA
+  }
+
   r <- regexpr("using external microphone", raw)
   external_mic <- if (r == -1) FALSE else TRUE
 
@@ -115,6 +122,7 @@ audiomoth_wave <- function(filename) {
     "serial" = serial,
     "gain" = gain,
     "voltage" = voltage,
+    "temperature" = temp,
     "external_mic" = external_mic,
     "filter" = filter,
     "filter.limit" = filter_limit,
