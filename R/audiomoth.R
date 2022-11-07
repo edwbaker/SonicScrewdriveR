@@ -35,14 +35,19 @@ audiomoth_config <- function(filename) {
 audiomoth_wave <- function(filename) {
   f <- readBin(filename, "character", n=30L)
   raw <- f[grep("Recorded", f)]
-  if (regexpr("Recorded", raw) != 1) {
+
+  if (length(raw)==0) {
+    return(list())
+  }
+
+  if (regexpr("Recorded", raw) == -1) {
     print("No audiomoth comment field found.")
     return(FALSE)
   }
   r <- regexpr("[0-2][0-9]:[0-6][0-9]:[0-6][0-9]", raw)
   start_time <- substr(raw, r, r+attr(r, "match.length")-1)
 
-  r <- regexpr("[0-3][1-9]/[0-1][0-9]/[0-9]{4}", raw)
+  r <- regexpr("[0-3][0-9]/[0-1][0-9]/[0-9]{4}", raw)
   start_date <- substr(raw, r, r+attr(r, "match.length")-1)
 
   r <- regexpr("\\(", raw)
