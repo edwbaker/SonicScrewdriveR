@@ -3,7 +3,7 @@
 #' Reads a single file, or directory of files, output by BirdNet Analyser.
 #'
 #' @param file Filename or directory
-#' @param filename_parsing Allows for filename parsing, accepted values are one of none, audiomoth.
+#' @param filename_parsing Allows for filename parsing, accepted values are one of none, audiomoth, timestamp.
 #' @export
 #' @return A data frame.
 readBirdNet <- function(file, filename_parsing="none") {
@@ -17,6 +17,18 @@ readBirdNet <- function(file, filename_parsing="none") {
 
       fn_parts <- strsplit(filename, "_")[[1]]
       start <- as.POSIXct(paste(fn_parts[[1]], fn_parts[[2]]), format="%Y%m%d %H%M%OS")
+
+      starts <- start + ret$`Begin.Time..s.`
+      ends <- start + ret$`End.Time..s.`
+      cn <-colnames(ret)
+      ret <- cbind(ret, starts, ends)
+      colnames(ret) <- c(cn, "Start", "End")
+    } else if (filename_parsing == "timestamp") {
+      parts <- strsplit(file, '/')
+      filename <- parts[[1]][[length(parts[[1]])]]
+
+      fn_parts <- strsplit(filename, "\\.")[[1]]
+      start <- as.POSIXct(as.numeric(fn_parts[[1]]), origin="1970-01-01")
 
       starts <- start + ret$`Begin.Time..s.`
       ends <- start + ret$`End.Time..s.`

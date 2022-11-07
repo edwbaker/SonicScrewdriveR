@@ -9,7 +9,7 @@ readBirdNet(file, filename_parsing = "none")
 \arguments{
 \item{file}{Filename or directory}
 
-\item{filename_parsing}{Allows for filename parsing, accepted values are one of none, audiomoth.}
+\item{filename_parsing}{Allows for filename parsing, accepted values are one of none, audiomoth, timestamp.}
 }
 \value{
 A data frame.
