@@ -22,7 +22,6 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
 
   if (mime == "audio/x-wav") {
     wave <- readWave(file, from=from, to=to, units=units)
-    return(wave)
   }
 
   if (mime=="audio/mpeg") {
@@ -54,35 +53,27 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
     stop("channel count greater than 2 is not supported")
   }
 
-  if (from==1 && to==Inf) {
-    wave <- av::read_audio_bin(file, channels=channels)
-  } else {
-    if (units != "samples") {
-      from <- convert2seconds(from, input=units)
-      to <- convert2seconds(to, input=units)
-      wave <- av::read_audio_bin(file, channels=1, start_time=from, end_time=to)
-    }
-  }
-
+  wave <- av::read_audio_bin(file, channels=channels)
   wave[which(is.na(wave))] <- 0
   bit <- bitdepth(wave)
 
   if (channels == 1) {
     wave <- Wave(left=wave, samp.rate=attr(wave, "sample_rate"), bit=bit)
-    return(wave)
   }
   if (channels == 2) {
     left <- wave[seq(1, length(wave), by = 2)]
     right <- wave[seq(2, length(wave), by = 2)]
     wave <- Wave(left=left, right=right, samp.rate=attr(wave, "sample_rate"), bit=bit)
     d <- 2
-    return(wave)
   }
 
+  if (from==1 & to == Inf) {
+    return(wave)
+  }
   if (units == "samples") {
     return(cutws(wave,from=from, to=to))
   } else {
-    return(wave)
+    return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
   }
 
   stop("File could not be processed")
