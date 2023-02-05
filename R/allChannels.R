@@ -16,7 +16,7 @@
 allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NULL, ...) {
   if (is(w, "Wave")) {
     if (w@stereo == FALSE) {
-      ret <- doChannel(1, w, channel.param=channel.param, FUN, ...)
+      ret <- doChannel(1, w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
       return(ret)
     } else {
       if (is.null(cl)) {
