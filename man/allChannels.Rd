@@ -4,7 +4,14 @@
 \alias{allChannels}
 \title{Apply a function to all channels of a Wave or WaveMC object}
 \usage{
-allChannels(w, FUN, cl = NULL, channel.param = "channel", ...)
+allChannels(
+  w,
+  FUN,
+  cl = NULL,
+  channel.param = "channel",
+  output.FUN = NULL,
+  ...
+)
 }
 \arguments{
 \item{w}{A Wave or WaveMC object}
@@ -13,7 +20,11 @@ allChannels(w, FUN, cl = NULL, channel.param = "channel", ...)
 
 \item{cl}{Optionally a cluster for parallel calculation.}
 
-\item{channel.param}{Optional. Name of the channel paramater to FUN.}
+\item{channel.param}{Optional. Name of the channel parameter to FUN.}
+
+\item{output.FUN}{Optional. Function that processes the output of FUN.
+The "channels_se" function provides standard functionality for the
+soundecology package.}
 
 \item{...}{Optional. Additional paramaters to pass to FUN.}
 }
