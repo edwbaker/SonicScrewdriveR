@@ -59,7 +59,7 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
   } else {
     if (units != "samples") {
       from <- convert2seconds(from, input=units)
-      to <- convert2seconds(from, input=units)
+      to <- convert2seconds(to, input=units)
       wave <- av::read_audio_bin(file, channels=1, start_time=from, end_time=to)
     }
   }
