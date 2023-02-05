@@ -30,7 +30,7 @@ soundSpeed_cramer1993(
 Numeric value of the speed of sound in m/s
 }
 \description{
-Calculate the speed of sound in air using the method described in Cramer (1993) <doi:10.1121/1.405827>
+Calculate the speed of sound in air using the method described in Cramer (1993) \url{doi:10.1121/1.405827}
 }
 \examples{
 soundSpeed_cramer1993(14, pressure=3, RH=10)

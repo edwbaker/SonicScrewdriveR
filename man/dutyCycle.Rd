@@ -16,7 +16,7 @@ dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
 \item{normalise}{If TRUE the Wave is normalised using tuneR}
 }
 \value{
-A numerical value for the duty cycle between 0 and 1 (or 0 and 100% if percentage output).
+A numerical value for the duty cycle between 0 and 1 (or 0 and 100\% if percentage output).
 }
 \description{
 Proportion of a wave with signal above the limit

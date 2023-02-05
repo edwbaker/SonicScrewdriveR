@@ -33,5 +33,5 @@ pd_dietrich2004(
 A list of input values plus the onset and offset times of pulses
 }
 \description{
-Detects pulses in a Wave using the method described in Dietrich et al (2004) <doi:10.1016/j.patcog.2004.04.004>.
+Detects pulses in a Wave using the method described in Dietrich et al (2004) \url{doi:10.1016/j.patcog.2004.04.004}.
 }
