@@ -62,6 +62,15 @@ doChannel <- function(channel, w, channel.param, output.FUN, FUN, ...) {
 }
 
 #' @export
-channels_se <- function(left_area, ...) {
-  return(left_area)
+channels_se <- function(...) {
+  params = list(...)
+  if ("left_area" %in% names(params)) {
+    return(params$left_area)
+  }
+  if ("adi_left" %in% names(params)) {
+    return(params$adi_left)
+  }
+  if ("aei_left" %in% names(params)) {
+    return(params$aei_left)
+  }
 }
