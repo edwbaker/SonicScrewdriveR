@@ -21,8 +21,13 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
   }
 
   if (mime == "audio/x-wav") {
-    wave <- readWave(file, from=from, to=to, units=units)
-    return(wave)
+    tryCatch({
+      wave <- readWave(file, from=from, to=to, units=units)
+      return(wave)
+    },
+    error=function(cond){
+      return(FALSE)
+    })
   }
 
   if (mime=="audio/mpeg") {
