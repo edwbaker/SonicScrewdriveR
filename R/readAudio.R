@@ -22,12 +22,12 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
 
   if (mime == "audio/x-wav") {
     wave <- readWave(file, from=from, to=to, units=units)
+    return(wave)
   }
 
   if (mime=="audio/mpeg") {
     #Check if av package available
     if (package.installed("av", askInstall=FALSE)==FALSE) {
-
       wave <- readMP3(file)
       if (from==1 && to==Inf) {
         return(wave)
