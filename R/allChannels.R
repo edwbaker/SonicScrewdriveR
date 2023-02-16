@@ -56,6 +56,12 @@ doChannel <- function(channel, w, channel.param, output.FUN, FUN, ...) {
   ret <- eval(as.call(l))
 
   if (!is.null(output.FUN)) {
+    #Handle when ret is not a list
+    if (typeof(ret) != "list") {
+      l <- list()
+      l[[1]] <- ret
+      ret <- l
+    }
     ret <- do.call(output.FUN, ret)
   }
   return(ret)
