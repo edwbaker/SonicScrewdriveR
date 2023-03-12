@@ -10,7 +10,7 @@
 #' @param output.FUN Optional. Function that processes the output of FUN.
 #'   The "channels_se" function provides standard functionality for the
 #'   soundecology package.
-#' @param ... Optional. Additional paramaters to pass to FUN.
+#' @param ... Optional. Additional parameters to pass to FUN.
 #' @return A list of outputs.
 #' @export
 allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NULL, ...) {

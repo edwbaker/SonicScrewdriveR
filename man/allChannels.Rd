@@ -26,7 +26,7 @@ allChannels(
 The "channels_se" function provides standard functionality for the
 soundecology package.}
 
-\item{...}{Optional. Additional paramaters to pass to FUN.}
+\item{...}{Optional. Additional parameters to pass to FUN.}
 }
 \value{
 A list of outputs.
