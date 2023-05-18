@@ -2,13 +2,14 @@
 % Please edit documentation in R/allChannels.R
 \name{channels_se}
 \alias{channels_se}
-\title{Helper function for processing channel data in bioacoustic indices}
+\title{Channels for sound ecology}
 \usage{
 channels_se(...)
 }
 \arguments{
-\item{...}{Export form a bioaocustoc index function.}
+\item{...}{Export from a bioacoustic index function from the soundecology package}
 }
 \description{
-Used to provide allChannels with relevant parameters.
+Used to process the output of acoustic index functions from the soundecology
+package when using allChannels.
 }

@@ -67,10 +67,12 @@ doChannel <- function(channel, w, channel.param, output.FUN, FUN, ...) {
   return(ret)
 }
 
-#' Helper function for processing channel data in bioacoustic indices
+#' Channels for sound ecology
 #'
-#' Used to provide allChannels with relevant parameters.
-#' @param ... Export form a bioaocustoc index function.
+#' Used to process the output of acoustic index functions from the soundecology
+#' package when using allChannels.
+#'
+#' @param ... Export from a bioacoustic index function from the soundecology package
 #' @export
 channels_se <- function(...) {
   params = list(...)
