@@ -6,6 +6,9 @@
 \usage{
 channels_se(...)
 }
+\arguments{
+\item{...}{Export form a bioaocustoc index function.}
+}
 \description{
 Used to provide allChannels with relevant parameters.
 }

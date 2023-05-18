@@ -70,7 +70,7 @@ doChannel <- function(channel, w, channel.param, output.FUN, FUN, ...) {
 #' Helper function for processing channel data in bioacoustic indices
 #'
 #' Used to provide allChannels with relevant parameters.
-#'
+#' @param ... Export form a bioaocustoc index function.
 #' @export
 channels_se <- function(...) {
   params = list(...)
