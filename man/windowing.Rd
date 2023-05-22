@@ -7,34 +7,40 @@
 windowing(
   wave,
   window.length,
-  window.overlap = 0,
-  bind.wave = TRUE,
   FUN,
   ...,
+  window.overlap = 0,
+  bind.wave = TRUE,
+  complete.windows = TRUE,
   cluster = NULL
 )
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object or filename. Using filenames may save loading an entire large file into memory.}
 
-\item{window.length}{The lag used to create the A-matrix}
+\item{window.length}{The length of the analysis window (in samples).}
 
-\item{window.overlap}{A matrix used to code the Duration-Shape pairs}
-
-\item{bind.wave}{If TRUE and FUN returns wave objects these are combined into a single object}
-
-\item{FUN}{If TRUE plots the workings of the coding algorithm}
+\item{FUN}{FUN to be applied to windows.}
 
 \item{...}{Additional parameters to FUN}
+
+\item{window.overlap}{The overlap between successive windows (in samples).}
+
+\item{bind.wave}{If TRUE and FUN returns wave objects, then these are combined into a single object}
+
+\item{complete.windows}{If TRUE (default) the final window will not be processed unless it has a length equal to window.length.}
 
 \item{cluster}{A cluster form the 'parallel' package for multicore computation}
 }
 \description{
-Separates a Wave object into windows of a defined length and runs a function on the window section. Windows may overlap, and the function can make use of 'parallel' package for multicore processing.
+Separates a Wave object into windows of a defined length and runs a function
+on the window section. Windows may overlap, and the function can make use of
+'parallel' package for multicore processing. It will also show a progress bar
+if the 'pbapply' package is installed.
 }
 \examples{
 \dontrun{
-windowing(wave, window.length=1000, window.overlap=0, bind.wave=TRUE, FUN=noChange)
+windowing(wave, window.length=1000, FUN=duration, window.overlap=0, bind.wave=TRUE)
 }
 }
 \keyword{wave}
