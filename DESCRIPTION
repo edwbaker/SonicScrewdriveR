@@ -1,0 +1,39 @@
+Package: sonicscrewdriver
+Title: Bioacoustic Analysis and Publication Tools
+Version: 0.0.5
+Authors@R: c(
+  person("Ed", "Baker", email = "ed@ebaker.me.uk", role = c("aut", "cre"), comment=c(ORCID="0000-0002-5887-9543")),
+  person ("Quentin", "Geissman", role="ctb"))
+Description: Provides basic tools for manipulating sound files for bioacoustic analysis, and preparing analyses these for publication. The package validates that values are physically possible wherever feasible. 
+Depends: R (>= 3.4.0)
+Imports:
+  tuneR,
+  seewave,
+  methods,
+  ggplot2,
+  jsonlite,
+  mime,
+  suncalc,
+  hms,
+  pbapply,
+  stringi
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Language: en-GB
+Suggests:
+    av,
+    testthat,
+    covr,
+    WaveletComp,
+    devtools,
+    googleCloudStorageR,
+    googleLanguageR,
+    knitr,
+    plotrix,
+    rmarkdown,
+    spelling
+VignetteBuilder: knitr
+URL: https://sonicscrewdriver.ebaker.me.uk
+Roxygen: list(markdown = TRUE)
