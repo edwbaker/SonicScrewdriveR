@@ -17,6 +17,3 @@ install.packages("devtools")
 devtools::install_github("edwbaker/SonicScrewdriveR")
 library(sonicscrewdriver)
 ````
-
-## Extending
-[Writing windowing functions](https://github.com/edwbaker/SonicScrewdriveR/wiki/Extending-SonicScrewdriveR)
