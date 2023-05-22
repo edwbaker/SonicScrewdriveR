@@ -5,6 +5,8 @@ This package provides basic tools for manipulating sound files for analysis.
 
 ## Installation
 
+NB: The current development version is well ahead of the version available on CRAN due to the pace of current research work.
+
 ### CRAN
 ````R
 install.packages("sonicscrewdriver")
