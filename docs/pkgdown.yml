@@ -1,0 +1,14 @@
+pandoc: '3.1'
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  sonicscrewdriver: sonicscrewdriver.html
+<<<<<<<< HEAD:docs/pkgdown.yml
+last_built: 2023-05-22T20:23Z
+========
+last_built: 2023-05-22T20:45Z
+>>>>>>>> parent of 2c74ca3 (Deploying to master from @ edwbaker/SonicScrewdriveR@8f805a810133ce5876207014fb81496dfab9744f 🚀):pkgdown.yml
+urls:
+  reference: http://sonicscrewdriver.ebaker.me.uk/reference
+  article: http://sonicscrewdriver.ebaker.me.uk/articles
+
