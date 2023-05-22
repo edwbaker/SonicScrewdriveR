@@ -1,7 +1,7 @@
 [![CRAN Version](https://www.r-pkg.org/badges/version/sonicscrewdriver)](https://cran.r-project.org/package=sonicscrewdriver) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/sonicscrewdriver)]()
 
 # Sonic ScrewdriveR
-This package provides basic tools for manipulating sound files for analysis. 
+This package provides basic tools for manipulating sound files for analysis and visualisation.
 
 ## Installation
 
