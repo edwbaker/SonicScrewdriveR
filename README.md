@@ -5,7 +5,7 @@ This package provides basic tools for manipulating sound files for analysis.
 
 ## Installation
 
-NB: The current development version is well ahead of the version available on CRAN due to the pace of current research work.
+NB: The current development version is well ahead of the version available on CRAN due to the pace of current research work as part of the Urban Nature Project.
 
 ### CRAN
 ````R
