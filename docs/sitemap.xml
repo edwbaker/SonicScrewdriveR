@@ -91,6 +91,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/beatSpectrum.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/channels_se.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/circularise.html</loc>
   </url>
   <url>
@@ -145,6 +148,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/dielFraction.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/dielHistogram.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/dielLabels.html</loc>
   </url>
   <url>
@@ -188,6 +194,9 @@
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/humanBytes.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/humanTime.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/index.html</loc>
@@ -239,6 +248,9 @@
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/readAudio.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/readBirdNet.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/readRespeaker6.html</loc>
