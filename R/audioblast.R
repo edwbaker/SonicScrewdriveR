@@ -114,3 +114,18 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE) {
     download.file(files[i], destfile=names[i])
   }
 }
+
+#' Download recording from audioBlast as a PseudoWave
+#'
+#' Downloads a single recording metadata from audioBlast as a PseudoWave object.
+#'
+#' @param source source field from audioblast.
+#' @param id id field from audioblast.
+#' @returns A PseudoWave object
+#' @export
+readAudioBlast <- function(source, id) {
+  info <- audioblast("data", "recordings", source=source, id=id)
+  url <- info$filename
+  wave <- pwave("web", "audioblast", scale=1, url=url)
+  return(wave)
+}
