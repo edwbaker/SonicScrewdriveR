@@ -15,7 +15,8 @@ setClass(
     scale="numeric",
     offset="numeric",
     seed="numeric",
-    use_seed="logical"
+    use_seed="logical",
+    url="character"
   ),
   prototype = list(
     type = NA_character_,
@@ -23,19 +24,25 @@ setClass(
     scale = 1,
     offset = 0,
     seed = 1,
-    use_seed = TRUE
+    use_seed = TRUE,
+    url = NA_character_
   )
 )
 
-pwave <- function(type, subtype, scale=1, offset=0,seed=1,use_seed=TRUE) {
-  p <- new("PseudoWave", type=type, subtype=subtype,scale=scale, offset=offset,seed=seed,use_seed=use_seed)
+pwave <- function(type, subtype, scale=1, offset=0,seed=1,use_seed=TRUE,url=NA_character_) {
+  p <- new("PseudoWave", type=type, subtype=subtype,scale=scale, offset=offset,seed=seed,use_seed=use_seed,url=url)
   return(p)
 }
 
-depseduoWave <- function(pw, n, stereo, samp.rate, bit, pcm) {
+depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
   if (pw@type == "noise") {
     if (pw@use_seed) {set.seed(pw@seed)}
     w <- depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
+  } else if (pw@type == "web") {
+    download.file(pw@url, basename(pw@url))
+    w <- readAudio(basename(pw@url))
+    stereo <- if (w@stereo)  TRUE else FALSE
+    unlink(basename(pw@url))
   }
   w@left <- (w@left * pw@scale) + pw@offset
   if (stereo) {
