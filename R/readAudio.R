@@ -8,7 +8,7 @@
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
 #' @param from Start point in file to return
 #' @param to End point in file to return
-#' @param units One of "samples", "seconds", "minutes", "hours"
+#' @param units One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 #' @return A Wave object
 #' @export
 #' @importFrom tuneR readMP3 readWave Wave
