@@ -15,7 +15,7 @@
 #' @importFrom seewave cutw
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
-readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
+readAudio <- function(file, mime="auto", from=1, to=Inf, units="seconds") {
   if (mime == "auto") {
     mime <- guess_type(file)
   }
