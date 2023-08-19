@@ -43,7 +43,7 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="seconds") {
       }
 
       from <- convert2seconds(from, input=units)
-      to <- convert2seconds(from, input=units)
+      to <- convert2seconds(to, input=units)
       return(cutw(wave,from=from, to=to, output="Wave"))
     },
     error=function(cond){
