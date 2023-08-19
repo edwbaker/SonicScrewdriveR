@@ -3,7 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   sonicscrewdriver: sonicscrewdriver.html
-last_built: 2023-05-24T15:34Z
+last_built: 2023-08-19T14:37Z
 urls:
   reference: http://sonicscrewdriver.ebaker.me.uk/reference
   article: http://sonicscrewdriver.ebaker.me.uk/articles
