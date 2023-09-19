@@ -43,7 +43,7 @@ windowing <- function(
     n.samples <- length(wave@left)
     FUN2 <- function(start, wave, window.length, ....){
       section <- cutws(wave, from=start, to=start+window.length)
-      return(FUN(wave, ...))
+      return(FUN(section, ...))
     }
   }
   if (complete.windows) {
