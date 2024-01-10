@@ -8,11 +8,11 @@ windowing(
   wave,
   window.length,
   FUN,
-  ...,
   window.overlap = 0,
   bind.wave = TRUE,
   complete.windows = TRUE,
-  cluster = NULL
+  cluster = NULL,
+  ...
 )
 }
 \arguments{
@@ -22,8 +22,6 @@ windowing(
 
 \item{FUN}{FUN to be applied to windows.}
 
-\item{...}{Additional parameters to FUN}
-
 \item{window.overlap}{The overlap between successive windows (in samples).}
 
 \item{bind.wave}{If TRUE and FUN returns wave objects, then these are combined into a single object}
@@ -31,6 +29,8 @@ windowing(
 \item{complete.windows}{If TRUE (default) the final window will not be processed unless it has a length equal to window.length.}
 
 \item{cluster}{A cluster form the 'parallel' package for multicore computation}
+
+\item{...}{Additional parameters to FUN}
 }
 \description{
 Separates a Wave object into windows of a defined length and runs a function

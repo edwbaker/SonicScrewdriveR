@@ -14,9 +14,9 @@ map2RGB(red, green, blue)
 \item{blue}{The blue channel vector}
 }
 \value{
-A vecotr of RGB values
+A vector of RGB values
 }
 \description{
-Maps three vectors of equal length to RGB for use in flase colour index
+Maps three vectors of equal length to RGB for use in false-colour index
 spectrograms
 }
