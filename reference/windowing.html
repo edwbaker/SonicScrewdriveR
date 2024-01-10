@@ -61,11 +61,11 @@ if the 'pbapply' package is installed.</p>
 <span>  <span class="va">wave</span>,</span>
 <span>  <span class="va">window.length</span>,</span>
 <span>  <span class="va">FUN</span>,</span>
-<span>  <span class="va">...</span>,</span>
 <span>  window.overlap <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  bind.wave <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  complete.windows <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  cluster <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  cluster <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,10 +83,6 @@ if the 'pbapply' package is installed.</p>
 <dd><p>FUN to be applied to windows.</p></dd>
 
 
-<dt>...</dt>
-<dd><p>Additional parameters to FUN</p></dd>
-
-
 <dt>window.overlap</dt>
 <dd><p>The overlap between successive windows (in samples).</p></dd>
 
@@ -101,6 +97,10 @@ if the 'pbapply' package is installed.</p>
 
 <dt>cluster</dt>
 <dd><p>A cluster form the 'parallel' package for multicore computation</p></dd>
+
+
+<dt>...</dt>
+<dd><p>Additional parameters to FUN</p></dd>
 
 </dl></div>
 
