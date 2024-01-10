@@ -8,14 +8,14 @@
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
 #' @param from Start point in file to return
 #' @param to End point in file to return
-#' @param units One of "samples", "seconds", "minutes", "hours"
+#' @param units One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 #' @return A Wave object
 #' @export
 #' @importFrom tuneR readMP3 readWave Wave
 #' @importFrom seewave cutw
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
-readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
+readAudio <- function(file, mime="auto", from=1, to=Inf, units="seconds") {
   if (mime == "auto") {
     mime <- guess_type(file)
   }
@@ -43,7 +43,7 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="samples") {
       }
 
       from <- convert2seconds(from, input=units)
-      to <- convert2seconds(from, input=units)
+      to <- convert2seconds(to, input=units)
       return(cutw(wave,from=from, to=to, output="Wave"))
     },
     error=function(cond){

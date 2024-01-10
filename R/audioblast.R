@@ -30,10 +30,24 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
   if (!is.null(endpoint)) {
     url <- paste0(url, endpoint, "/")
   }
-  url <- paste0(url, "?page=", page)
-  if (length(args) > 0) {
-    for (i in 1:length(args)) {
-      url <- paste0(url, "&", nams[[i]], "=", args[[i]])
+  if (type=="standalone") {
+    max_pages <- 1
+    if (length(args) > 0) {
+      for (i in 1:length(args)) {
+        if (i==1) {
+          url <- paste0(url, "?")
+        } else {
+          url <- paste0(url, "&")
+        }
+        url <- paste0(url, nams[[i]], "=", args[[i]])
+      }
+    }
+  } else {
+    url <- paste0(url, "?page=", page)
+    if (length(args) > 0) {
+      for (i in 1:length(args)) {
+        url <- paste0(url, "&", nams[[i]], "=", args[[i]])
+      }
     }
   }
   res <- jsonlite::fromJSON(URLencode(url))

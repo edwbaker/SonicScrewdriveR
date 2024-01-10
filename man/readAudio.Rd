@@ -4,7 +4,7 @@
 \alias{readAudio}
 \title{Read an audio file}
 \usage{
-readAudio(file, mime = "auto", from = 1, to = Inf, units = "samples")
+readAudio(file, mime = "auto", from = 1, to = Inf, units = "seconds")
 }
 \arguments{
 \item{file}{File to read}
@@ -15,7 +15,7 @@ readAudio(file, mime = "auto", from = 1, to = Inf, units = "samples")
 
 \item{to}{End point in file to return}
 
-\item{units}{One of "samples", "seconds", "minutes", "hours"}
+\item{units}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
 }
 \value{
 A Wave object

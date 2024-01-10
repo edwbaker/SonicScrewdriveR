@@ -9,6 +9,10 @@
 readBirdNet <- function(file, filename_parsing="none") {
   if (file.exists(file) && !dir.exists(file)) {
     ret <- read.csv(file, sep='\t')
+    fn <- rep_len(file, nrow(ret))
+    cn <- colnames(ret)
+    ret <- cbind(fn, ret)
+    colnames(ret) <- c("filename", cn)
     ret$`Begin.Time..s.` <- as.numeric(ret$`Begin.Time..s.`)
     ret$`End.Time..s.` <- as.numeric(ret$`End.Time..s.`)
     if (filename_parsing == "audiomoth") {

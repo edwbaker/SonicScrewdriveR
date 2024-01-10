@@ -9,7 +9,7 @@
 #'
 convert2seconds <- function(T, input="minutes") {
   if (input == "seconds") {
-    return(T)
+    return(as.numeric(T))
   }
   if (input == "minutes") {
     return(T*60)
