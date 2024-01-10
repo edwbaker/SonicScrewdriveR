@@ -9,7 +9,8 @@ convert2seconds(T, input = "minutes")
 \arguments{
 \item{T}{The time value to convert}
 
-\item{input}{The unit of time to convert, allowed values are "minutes", "hours", "days", "years".}
+\item{input}{The unit of time to convert, allowed values are "minutes",
+"hours", "days", "years", "HHMM".}
 }
 \value{
 The numeric value in seconds
