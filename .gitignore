@@ -11,4 +11,5 @@ Meta
 node_modules/*
 package-lock.json
 docs
+/doc/
 /Meta/
