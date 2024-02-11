@@ -117,3 +117,13 @@ test_that("density is not negative", {
 test_that("timezone corrections work", {
   expect_equal(cleanTZ("UTCa"), "Etc/GMTa")
 })
+
+test_that("validateIsWave works", {
+  expect_error(validateIsWave("string"), "Expecting a Wave object")
+  expect_equal(validateIsWave(tuneR::sine(1)), tuneR::sine(1))
+})
+
+test_that("validateIsWaveMC works", {
+  expect_error(validateIsWaveMC("string"), "Expecting a WaveMC object")
+  expect_error(validateIsWaveMC(tuneR::sine(1)), "Expecting a WaveMC object")
+})
