@@ -20,7 +20,7 @@ Wave object when operated on.
 
 \item{\code{offset}}{This value is added to the  Wave channels}
 
-\item{\code{seed}}{Random seed for reproducible output}
+\item{\code{seed}}{Random seed for reproducible output, NA for no seed}
 
 \item{\code{scale}}{Logical. Whether to use the random seed value.}
 }}

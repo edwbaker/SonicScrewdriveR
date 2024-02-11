@@ -5,7 +5,7 @@
 #' @slot subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
 #' @slot scale The Wave channels are multiplied by this value
 #' @slot offset This value is added to the  Wave channels
-#' @slot seed Random seed for reproducible output
+#' @slot seed Random seed for reproducible output, NA for no seed
 #' @slot scale Logical. Whether to use the random seed value.
 setClass(
   "PseudoWave",
@@ -15,7 +15,6 @@ setClass(
     scale="numeric",
     offset="numeric",
     seed="numeric",
-    use_seed="logical",
     url="character"
   ),
   prototype = list(
@@ -23,8 +22,7 @@ setClass(
     subtype = NA_character_,
     scale = 1,
     offset = 0,
-    seed = 1,
-    use_seed = TRUE,
+    seed = NA_integer_,
     url = NA_character_
   )
 )
@@ -38,8 +36,7 @@ setClass(
 #' @param subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
 #' @param scale The Wave channels are multiplied by this value
 #' @param offset This value is added to the  Wave channels
-#' @param seed Random seed for reproducible output
-#' @param use_seed Logical. Whether to use the random seed value.
+#' @param seed Random seed for reproducible output. NA for no seed.
 #' @param url URL to download audio from
 #' @return A PseudoWave object.
 #' @export
@@ -48,15 +45,10 @@ pseudoWave <- function(
     subtype=NA_character_,
     scale=1,
     offset=0,
-    seed=1,
-    use_seed=TRUE,
-    url=NA_character_
+    seed=1
 ) {
-  if (is.na(type) & is.na(url)) {
-    stop("Either type or url must be specified")
-  }
-  if (is.na(type) & !is.na(url)) {
-    type <- "web"
+  if (is.na(type)) {
+    stop("Type must be specified")
   }
   p <-
   return(
@@ -66,9 +58,7 @@ pseudoWave <- function(
       subtype=subtype,
       scale=scale,
       offset=offset,
-      seed=seed,
-      use_seed=use_seed,
-      url=url
+      seed=seed
     )
   )
 }
@@ -77,11 +67,6 @@ depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
   if (pw@type == "noise") {
     if (pw@use_seed) {set.seed(pw@seed)}
     w <- depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
-  } else if (pw@type == "web") {
-    download.file(pw@url, basename(pw@url))
-    w <- readAudio(basename(pw@url))
-    stereo <- if (w@stereo)  TRUE else FALSE
-    unlink(basename(pw@url))
   }
   w@left <- (w@left * pw@scale) + pw@offset
   if (stereo) {
@@ -96,7 +81,9 @@ equalWave <- utils::getFromNamespace("equalWave", "tuneR")
 #' @importFrom tuneR noise
 depseudoNoise <- function(type, n, stereo, samp.rate, bit, pcm) {
   #This wrapper function is here in case alternative noise functions will be added.
-  return(noise(kind=type, duration=n, stereo=stereo, samp.rate=samp.rate, bit=bit, pcm=pcm))
+  return(
+    noise(kind=type, duration=n, stereo=stereo, samp.rate=samp.rate, bit=bit, pcm=pcm)
+  )
 }
 
 setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
@@ -108,8 +95,9 @@ setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
     e1@left <- callGeneric(e1@left, e2@left)
     if(e1@stereo)
       e1@right <- callGeneric(e1@right, e2@right)
-    e1
-})
+    return(e1)
+  }
+)
 
 setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   function(e1, e2){
@@ -120,8 +108,9 @@ setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
     e1@left <- callGeneric(e1@left, e2@left)
     if(e1@stereo)
       e1@right <- callGeneric(e1@right, e2@right)
-    e1
-})
+    return(e1)
+  }
+)
 
 
 #' PseudoWave scalar manipulation
@@ -134,8 +123,9 @@ setMethod("*", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
     e1@scale <- e1@scale*e2
-    e1
-})
+    return(e1)
+  }
+)
 
 #' PseudoWave scalar division
 #'
@@ -143,11 +133,12 @@ setMethod("*", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @param e1 Input 1
 #' @param e2 Input 2
 setMethod("/", signature(e1 = "PseudoWave", e2 = "numeric"),
-          function(e1, e2){
-            validObject(e1)
-            e1@scale <- e1@scale/e2
-            e1
-          })
+  function(e1, e2){
+    validObject(e1)
+    e1@scale <- e1@scale/e2
+    return(e1)
+  }
+)
 
 #' PseudoWave scalar addition
 #'
@@ -155,11 +146,12 @@ setMethod("/", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @param e1 Input 1
 #' @param e2 Input 2
 setMethod("+", signature(e1 = "PseudoWave", e2 = "numeric"),
-          function(e1, e2){
-            validObject(e1)
-            e1@offset <- e1@offset+e2
-            e1
-          })
+  function(e1, e2){
+    validObject(e1)
+    e1@offset <- e1@offset+e2
+    return(e1)
+  }
+)
 
 #' PseudoWave scalar subtraction
 #'
@@ -167,11 +159,12 @@ setMethod("+", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @param e1 Input 1
 #' @param e2 Input 2
 setMethod("-", signature(e1 = "PseudoWave", e2 = "numeric"),
-          function(e1, e2){
-            validObject(e1)
-            e1@offset <- e1@offset-e2
-            e1
-          })
+  function(e1, e2){
+    validObject(e1)
+    e1@offset <- e1@offset-e2
+    return(e1)
+  }
+)
 
 #' Numeric multiplication by PseudoWave
 #'
@@ -179,11 +172,11 @@ setMethod("-", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @param e1 Input 1
 #' @param e2 Input 2
 setMethod("*", signature(e1 = "numeric", e2 = "PseudoWave"),
-          function(e1, e2){
-            validObject(e2)
-            e2@scale <- e2@scale*e1
-            return(e2)
-          }
+  function(e1, e2){
+    validObject(e2)
+    e2@scale <- e2@scale*e1
+    return(e2)
+  }
 )
 
 #' Numeric addition by PseudoWave
@@ -192,11 +185,11 @@ setMethod("*", signature(e1 = "numeric", e2 = "PseudoWave"),
 #' @param e1 Input 1
 #' @param e2 Input 2
 setMethod("+", signature(e1 = "numeric", e2 = "PseudoWave"),
-          function(e1, e2){
-            validObject(e2)
-            e2@offset <- e2@offset+e1
-            return(e2)
-          }
+  function(e1, e2){
+    validObject(e2)
+    e2@offset <- e2@offset+e1
+    return(e2)
+  }
 )
 
 
