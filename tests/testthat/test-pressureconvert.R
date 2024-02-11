@@ -1,5 +1,3 @@
-context("pressureconvert")
-
 test_that("convert kPa to Pa", {
   expect_equal(convert2Pascals(1, input="kPa"), 1000)
 })

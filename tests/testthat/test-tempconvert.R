@@ -1,5 +1,3 @@
-context("test-tempconvert")
-
 test_that("convert C to K", {
   expect_equal(convert2Kelvin(0, input="C"), 273.15)
 })

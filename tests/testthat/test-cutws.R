@@ -1,5 +1,3 @@
-context("cutws")
-
 test_that("inputs are correct", {
   expect_error(cutws("string", from=1, to=2), "Expecting a Wave object")
   expect_error(cutws(1, from=1, to=2), "Expecting a Wave object")

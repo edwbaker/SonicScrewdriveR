@@ -1,5 +1,3 @@
-context("wavelength")
-
 test_that("default to air with good known value", {
   suppressWarnings(expect_equal(wavelength(1), 343))
 })

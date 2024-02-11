@@ -1,5 +1,3 @@
-context("sDuration")
-
 test_that("error if insufficient parameters", {
   expect_error(sDuration())
 })

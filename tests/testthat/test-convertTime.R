@@ -1,5 +1,3 @@
-context("convertTime")
-
 test_that("Reject invalid input", {
   expect_error(convert2seconds(1, "dog"))
 })

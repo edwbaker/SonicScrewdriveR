@@ -1,5 +1,3 @@
-context("convertFileSizes")
-
 test_that("Reject invalid input", {
   expect_error(convert2bytes(1, "dog"))
 })

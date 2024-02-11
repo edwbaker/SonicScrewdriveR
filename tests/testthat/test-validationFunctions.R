@@ -1,5 +1,3 @@
-context("validationFunctions")
-
 test_that("RH is numeric", {
   expect_error(validateRH("string"), "RH must be numeric")
 })

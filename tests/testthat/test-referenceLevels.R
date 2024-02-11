@@ -1,5 +1,3 @@
-context("reference levels")
-
 test_that("reference pressure", {
   expect_equal(referencePressure(unit="dyne_cm2"), 0.0002)
 })
