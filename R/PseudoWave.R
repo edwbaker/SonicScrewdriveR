@@ -29,9 +29,48 @@ setClass(
   )
 )
 
-pwave <- function(type, subtype, scale=1, offset=0,seed=1,use_seed=TRUE,url=NA_character_) {
-  p <- new("PseudoWave", type=type, subtype=subtype,scale=scale, offset=offset,seed=seed,use_seed=use_seed,url=url)
-  return(p)
+#' Create a PseudoWave object
+#'
+#' This function is used to create a PseudoWave object that can be used to
+#' generate a Wave object when operated on.
+#'
+#' @param type Type of PseudoWave (e.g. "noise")
+#' @param subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
+#' @param scale The Wave channels are multiplied by this value
+#' @param offset This value is added to the  Wave channels
+#' @param seed Random seed for reproducible output
+#' @param use_seed Logical. Whether to use the random seed value.
+#' @param url URL to download audio from
+#' @return A PseudoWave object.
+#' @export
+pseudoWave <- function(
+    type=NA_character_,
+    subtype=NA_character_,
+    scale=1,
+    offset=0,
+    seed=1,
+    use_seed=TRUE,
+    url=NA_character_
+) {
+  if (is.na(type) & is.na(url)) {
+    stop("Either type or url must be specified")
+  }
+  if (is.na(type) & !is.na(url)) {
+    type <- "web"
+  }
+  p <-
+  return(
+    new(
+      "PseudoWave",
+      type=type,
+      subtype=subtype,
+      scale=scale,
+      offset=offset,
+      seed=seed,
+      use_seed=use_seed,
+      url=url
+    )
+  )
 }
 
 depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
