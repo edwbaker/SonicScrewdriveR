@@ -34,16 +34,16 @@ windowing <- function(
     }
     FUN2 <- function(start, wave, window.length, ....){
       wave <- readAudio(wave, from=start,to=start+window.length)
-      return(FUN(wave, start, ...))
+      return(FUN(wave, start, window.length, ...))
     }
     info <- av::av_media_info(wave)
     n.samples <- info$duration * info$audio[,"sample_rate"]
 
   } else {
     n.samples <- length(wave@left)
-    FUN2 <- function(start, wave, window.length, ....){
+    FUN2 <- function(start, wave, window.length, ...){
       section <- cutws(wave, from=start, to=start+window.length)
-      return(FUN(section, start,  ...))
+      return(FUN(section, start, window.length, ...))
     }
   }
   if (complete.windows) {
