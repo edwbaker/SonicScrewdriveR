@@ -10,6 +10,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/LICENSE-text.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/articles/audioblast.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/articles/index.html</loc>
   </url>
   <url>
@@ -298,7 +301,7 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/ste.html</loc>
   </url>
   <url>
-    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/sub-Wave-TimeRegion-method.html</loc>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/sub-Wave-TimeRegion-ANY-ANY-method.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/subtractSpectra.html</loc>
