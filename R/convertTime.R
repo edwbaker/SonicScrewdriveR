@@ -28,15 +28,6 @@ convert2seconds <- function(T, input="minutes") {
     if (!all(grepl("[[:digit:]]", T))) {
       stop("HHMM input must be numeric")
     }
-    if (nchar(T) != 4) {
-      stop("HHMM input must be 4 characters long")
-    }
-    if (substr(T,3,4) > 59) {
-      stop("Minutes must be less than 60")
-    }
-    if (substr(T,1,2) > 23) {
-      stop("Hours must be less than 24")
-    }
     return(as.numeric(substr(T,1,2))*60*60 + as.numeric(substr(T,3,4))*60)
   }
   stop(paste("Unknown input to convert2seconds: ",input))
