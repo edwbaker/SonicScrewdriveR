@@ -10,10 +10,10 @@ LICENSE
 ^node_modules$
 ^package-lock.json
 README.md
-^doc$
 ^Meta$
 .github
 ^_pkgdown\.yml$
+^doc$
 ^docs$
 ^pkgdown$
 ^\.github$

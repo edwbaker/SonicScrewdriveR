@@ -7,8 +7,9 @@ CRAN-RELEASE
 cran-comments.md
 revdep/*
 inst/doc
-doc
 Meta
 node_modules/*
 package-lock.json
 docs
+/doc/
+/Meta/
