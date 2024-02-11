@@ -64,15 +64,17 @@ validateKelvin <- function(T) {
 #' @export
 #'
 validateIsWave <- function(wave) {
-  if (typeof(wave) != "S4" | !is(wave, "Wave")) {
+  if (!inherits(wave, "Wave") | !is(wave, "Wave")) {
     stop("Expecting a Wave object")
   }
+  return(wave)
 }
 
 validateIsWaveMC <- function(wave) {
-  if (!is(wave, "WaveMC")) {
+  if (!inherits(wave, "WaveMC") | !is(wave, "WaveMC")) {
     stop("Expecting a WaveMC object")
   }
+  return(wave)
 }
 
 validateFreq <- function(f) {
