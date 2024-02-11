@@ -32,7 +32,7 @@ windowing <- function(
     if (!package.installed("av")) {
       stop("av package must be installed to use windowing with filename.")
     }
-    FUN2 <- function(start, wave, window.length, ....){
+    FUN2 <- function(start, wave, window.length, ...){
       wave <- readAudio(wave, from=start,to=start+window.length)
       return(FUN(wave, start, window.length, ...))
     }
