@@ -1,0 +1,21 @@
+---
+title: "Managing audio in R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Managing audio in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sonicscrewdriver)
+```
+
+## Managing audio in R with SonicScrewdriveR

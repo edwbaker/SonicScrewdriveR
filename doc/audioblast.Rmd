@@ -1,0 +1,24 @@
+---
+title: "audioblast"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{audioblast}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sonicscrewdriver)
+```
+
+# Using sonicscrewdriver with audioblast
+
+## What is audioblast?
+Audioblast is a discovery tool for bioacoustic and ecoacoustic recordings.
