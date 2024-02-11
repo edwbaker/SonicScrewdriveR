@@ -14,16 +14,14 @@ setClass(
     subtype="character",
     scale="numeric",
     offset="numeric",
-    seed="numeric",
-    url="character"
+    seed="numeric"
   ),
   prototype = list(
     type = NA_character_,
     subtype = NA_character_,
     scale = 1,
     offset = 0,
-    seed = NA_integer_,
-    url = NA_character_
+    seed = NA_integer_
   )
 )
 
@@ -65,7 +63,7 @@ pseudoWave <- function(
 
 depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
   if (pw@type == "noise") {
-    if (pw@use_seed) {set.seed(pw@seed)}
+    if (!is.na(pw@seed)) {set.seed(pw@seed)}
     w <- depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
   }
   w@left <- (w@left * pw@scale) + pw@offset
