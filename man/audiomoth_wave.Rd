@@ -18,7 +18,7 @@ AudioMoth devices.
 }
 \examples{
 \dontrun{
-audiomoth_wavew("./FILENAME.WAV")
+audiomoth_wave("./FILENAME.WAV")
 }
 
 }

@@ -29,21 +29,17 @@ audiomoth_config <- function(filename) {
 #' @export
 #' @examples
 #' \dontrun{
-#' audiomoth_wavew("./FILENAME.WAV")
+#' audiomoth_wave("./FILENAME.WAV")
 #' }
 #'
 audiomoth_wave <- function(filename) {
-  f <- readBin(filename, "character", n=30L)
-  raw <- f[grep("Recorded", f)]
+  f <- readBin(filename, "character", n=60L)
+  raw <- f[grep("Recorded", f, useBytes = TRUE)]
 
   if (length(raw)==0) {
     return(list())
   }
 
-  if (regexpr("Recorded", raw) == -1) {
-    print("No audiomoth comment field found.")
-    return(FALSE)
-  }
   r <- regexpr("[0-2][0-9]:[0-6][0-9]:[0-6][0-9]", raw)
   start_time <- substr(raw, r, r+attr(r, "match.length")-1)
 
