@@ -43,16 +43,16 @@ hours <- function(from, to) {
 
 timeRegion2samples <- function(t, samp.rate) {
   if (t@unit == "samples") {
-    return(t@from:t@to)
+    return(c(t@from,t@to))
   }
   if (t@unit =="seconds") {
-    return(max(1,(t@from*samp.rate)):(t@to*samp.rate))
+    return(c(max(1,(t@from*samp.rate)),(t@to*samp.rate)))
   }
   if (t@unit =="minutes") {
-    return((max(1,(t@from*samp.rate)):(t@to*samp.rate))*60)
-  }
+    return(c(max(1,(t@from*samp.rate)),(t@to*samp.rate)*60))
+}
   if (t@unit =="hours") {
-    return((max(1,(t@from*samp.rate)):(t@to*samp.rate))*3600)
+    return(c(max(1,(t@from*samp.rate)),(t@to*samp.rate)*3600))
   }
 }
 
@@ -61,9 +61,10 @@ timeRegion2samples <- function(t, samp.rate) {
 #' @param i TimeRegion object
 setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
   if (inherits(i,"TimeRegion")) {
-    x@left <- x@left[timeRegion2samples(i, x@samp.rate)]
+    tr <- timeRegion2samples(i, x@samp.rate)
+    x@left <- x@left[tr[1]:tr[2]]
     if (x@stereo) {
-      x@right <- x@right[timeRegion2samples(i, x@samp.rate)]
+      x@right <- x@right[tr[1]:tr[2]]
     }
     return(x)
   }
