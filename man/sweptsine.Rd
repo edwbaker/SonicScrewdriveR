@@ -8,6 +8,7 @@ sweptsine(
   f0 = 100,
   f1 = 2500,
   sweep.time = 1,
+  time.unit = "seconds",
   A = 1,
   samp.rate = 44100,
   output = "wave",
@@ -20,6 +21,8 @@ sweptsine(
 \item{f1}{End frequency}
 
 \item{sweep.time}{Duration of swept wave}
+
+\item{time.unit}{One of "seconds", "samples"}
 
 \item{A}{Amplitude of wave}
 
