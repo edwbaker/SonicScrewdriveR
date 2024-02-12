@@ -23,5 +23,6 @@ For isothermal compression, the bulk modulus is equal to the pressure. The defau
 standard pressure.
 }
 \examples{
-f <- naturalFrequency(L=1, C=140, R=12)
+naturalFrequency(L=20,R=0.5)
+naturalFrequency(L=20,C=1/4,R=0.5)
 }

@@ -28,7 +28,8 @@ frequencySound <- function(wl, s=soundSpeedMedium("air")) {
 #' @param R Resistance
 #' @importFrom utils data
 #' @examples
-#' f <- naturalFrequency(L=1, C=140, R=12)
+#' naturalFrequency(L=20,R=0.5)
+#' naturalFrequency(L=20,C=1/4,R=0.5)
 #' @export
 #'
 naturalFrequency <- function(L, C="default", R) {
