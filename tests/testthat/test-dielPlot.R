@@ -67,3 +67,8 @@ test_that("dielPlot gives no warnings", {
   expect_silent(dielPlot("2024-02-12", lat=54, lon=0, plot=c("Solar Noon", "Nadir")))
   expect_silent(dielPlot("2024-02-12", lat=54, lon=0, legend=TRUE))
 })
+
+test_that("dielRings gives no warnings", {
+  expect_silent(dielPlot(Sys.time(), lat=54, lon=0))
+  expect_silent(dielRings("tom", "0000", "1200"))
+})
