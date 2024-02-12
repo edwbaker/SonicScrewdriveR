@@ -15,7 +15,6 @@ Imports:
   mime,
   suncalc,
   hms,
-  pbapply,
   stringi
 License: GPL-3
 Encoding: UTF-8
