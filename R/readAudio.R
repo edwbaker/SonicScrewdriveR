@@ -15,18 +15,24 @@
 #' @importFrom seewave cutw
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
-readAudio <- function(file, mime="auto", from=1, to=Inf, units="seconds") {
+readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
   if (mime == "auto") {
     mime <- guess_type(file)
+  }
+  if (units=="samples" & from == 0) {
+    fromS <- 1
+  } else{
+    fromS <- from
   }
 
   if (mime == "audio/x-wav") {
     tryCatch({
-      wave <- readWave(file, from=from, to=to, units=units)
+
+      wave <- readWave(file, from=fromS, to=to, units=units)
       return(wave)
     },
     error=function(cond){
-      return(FALSE)
+
     })
   }
 
@@ -34,12 +40,12 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="seconds") {
     wave <- NULL
     wave <- tryCatch({
       wave <- readMP3(file)
-      if (from==1 && to==Inf) {
+      if (from==0 && to==Inf) {
         return(wave)
       }
 
       if (units=="samples") {
-        return(cutws(wave, from, to))
+        return(cutws(wave, fromS, to))
       }
 
       from <- convert2seconds(from, input=units)
@@ -47,42 +53,42 @@ readAudio <- function(file, mime="auto", from=1, to=Inf, units="seconds") {
       return(cutw(wave,from=from, to=to, output="Wave"))
     },
     error=function(cond){
-      return(FALSE)
     })
     if (!is.null(wave)) return(wave)
-    #Check if av package available
-    if (package.installed("av", askInstall=TRUE)) {
-      #Using av package
-      channels <- av::av_media_info(file)$audio[['channels']]
-      if (channels > 2) {
-        stop("channel count greater than 2 is not supported")
-      }
+  }
 
-      wave <- av::read_audio_bin(file, channels=channels)
-      wave[which(is.na(wave))] <- 0
-      bit <- bitdepth(wave)
-
-      if (channels == 1) {
-        wave <- Wave(left=wave, samp.rate=attr(wave, "sample_rate"), bit=bit)
-      }
-      if (channels == 2) {
-        left <- wave[seq(1, length(wave), by = 2)]
-        right <- wave[seq(2, length(wave), by = 2)]
-        wave <- Wave(left=left, right=right, samp.rate=attr(wave, "sample_rate"), bit=bit)
-        d <- 2
-      }
-
-      if (from==1 & to == Inf) {
-        return(wave)
-      }
-      if (units == "samples") {
-        return(cutws(wave,from=from, to=to))
-      } else {
-        return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
-      }
-
-    stop("File could not be processed")
+  #Check if av package available
+  if (package.installed("av", askInstall=TRUE)) {
+    #Using av package
+    channels <- av::av_media_info(file)$audio[['channels']]
+    if (channels > 2) {
+      stop("channel count greater than 2 is not supported")
     }
+
+    wave <- av::read_audio_bin(file, channels=channels)
+    wave[which(is.na(wave))] <- 0
+    bit <- bitdepth(wave)
+
+    if (channels == 1) {
+      wave <- Wave(left=wave, samp.rate=attr(wave, "sample_rate"), bit=bit)
+    }
+    if (channels == 2) {
+      left <- wave[seq(1, length(wave), by = 2)]
+      right <- wave[seq(2, length(wave), by = 2)]
+      wave <- Wave(left=left, right=right, samp.rate=attr(wave, "sample_rate"), bit=bit)
+      d <- 2
+    }
+
+    if (from==0 & to == Inf) {
+      return(wave)
+    }
+    if (units == "samples") {
+      return(cutws(wave,from=from, to=to))
+    } else {
+      return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
+    }
+
+  stop("File could not be processed")
   }
 }
 
