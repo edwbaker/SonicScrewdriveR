@@ -45,21 +45,21 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       if (from==0 && to==Inf) {
         return(wave)
       }
-
-
       from <- convert2seconds(from, input=units)
       to <- convert2seconds(to, input=units)
       return(cutw(wave,from=from, to=to, output="Wave"))
     },
     error=function(cond){
     })
-    if (!is.null(wave)) return(wave)
   }
 
   #Check if av package available
   if (package.installed("av", askInstall=TRUE)) {
     #Using av package
     channels <- av::av_media_info(file)$audio[['channels']]
+    if (is.null(channels)) {
+      stop("Could not determine number of channels.")
+    }
     if (channels > 2) {
       stop("channel count greater than 2 is not supported")
     }
@@ -86,9 +86,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     } else {
       return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
     }
-
-  stop("File could not be processed")
   }
+  stop("File could not be processed")
 }
 
 bitdepth <- function(v) {

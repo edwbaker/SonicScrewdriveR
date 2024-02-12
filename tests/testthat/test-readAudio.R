@@ -65,3 +65,7 @@ test_that("Reading files works", {
 
   # TODO: reading sections of file
 })
+
+test_that("readAudio rejects bad files", {
+  expect_error(readAudio(system.file("extdata/CONFIG.TXT", package="sonicscrewdriver")), "Could not determine number of channels.")
+})
