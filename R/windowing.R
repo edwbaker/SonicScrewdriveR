@@ -58,13 +58,13 @@ windowing <- function(
 
   if (is.null(cluster)){
     if (package.installed("pbapply", askInstall = FALSE)) {
-      l <- pblapply(starts, FUN2, wave=wave, window.length=window.length, ...)
+      l <- pbapply::pblapply(starts, FUN2, wave=wave, window.length=window.length, ...)
     } else {
       l <- lapply(starts, FUN2, wave=wave, window.length=window.length, ...)
     }
   } else {
     if (package.installed("pbapply", askInstall = FALSE)) {
-      l <- pblapply(starts, FUN2, cl=cluster, wave=wave, window.length=window.length, ...)
+      l <- pbapply::pblapply(starts, FUN2, cl=cluster, wave=wave, window.length=window.length, ...)
     } else {
       l <- parLapply(cluster, starts, FUN2, wave=wave, window.length=window.length, ...)
     }
