@@ -39,12 +39,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     wave <- NULL
     wave <- tryCatch({
       wave <- readMP3(file)
-      if (from==0 && to==Inf) {
-        return(wave)
-      }
       if (units=="samples") {
         return(cutws(wave, fromS, to))
       }
+      if (from==0 && to==Inf) {
+        return(wave)
+      }
+
 
       from <- convert2seconds(from, input=units)
       to <- convert2seconds(to, input=units)
