@@ -4,12 +4,12 @@
 \alias{dielFraction}
 \title{Calculate the fraction of a day given by a value}
 \usage{
-dielFraction(t, input = "POSIXlt", unit = "radians")
+dielFraction(t, input = "POSIX", unit = "radians")
 }
 \arguments{
 \item{t}{Object to be converted to a fraction}
 
-\item{input}{One of POSIXlt (default) or HHMM}
+\item{input}{One of POSIX (default) or HHMM}
 
 \item{unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
 }

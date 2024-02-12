@@ -51,26 +51,26 @@ dielPositions <- function(format="3hourly") {
 #' format, return the fraction of a day represented by the object.
 #'
 #' @param t Object to be converted to a fraction
-#' @param input One of POSIXlt (default) or HHMM
+#' @param input One of POSIX (default) or HHMM
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @export
-dielFraction <- function(t, input="POSIXlt", unit="radians") {
-  if (input=="POSIXct") {
-    input <- "POSIXlt"
+dielFraction <- function(t, input="POSIX", unit="radians") {
+  if (!input %in% .convertable2seconds()) {
+    stop(paste("Unknown input for dielFraction:",input))
   }
-  if (input=="POSIXlt") {
-    t <- unclass(as.POSIXlt(t))
-    f <- (t$sec + 60*t$min + 3600*t$hour)/86400
-  } else if (input=="HHMM") {
-    t<- stri_pad(t, 4, "left", 0)
-    f <- (as.numeric(substr(t,1,2))*60 + as.numeric(substr(t,3,4))) / 1440
-    f[is.na(f)] <- 0
+  if (!unit %in% c("radians", "fraction")) {
+    stop(paste("Unknown output for dielFraction:",unit))
   }
-
+  s <- convert2seconds(t, input=input, origin="day")
+  f <- s/(24*60*60)
   if (unit=="radians") {
     return(2*pi*f)
   }
   return(f)
+}
+
+.dielPlotMethods <- function() {
+  return(c("plotrix"))
 }
 
 #' Create an empty diel plot
@@ -80,6 +80,9 @@ dielFraction <- function(t, input="POSIXlt", unit="radians") {
 #' @param rot Rotation of the origin (defaults to pi)
 #' @export
 emptyDiel <- function(method="plotrix", rot=pi) {
+  if (!method %in% .dielPlotMethods()) {
+    stop(paste("Unknown method for emptyDiel:",method))
+  }
   if (method == "plotrix") {
     plotrix::radial.plot(
       lengths=0,
@@ -102,7 +105,7 @@ emptyDiel <- function(method="plotrix", rot=pi) {
 #' @param tz Timezone numeric
 #' @param init Initial rotation. Defaults to pi.
 #' @export
-tz <- function(tz, init=pi) {
+tzRot <- function(tz, init=pi) {
   return(init + -tz*2*pi/24)
 }
 
@@ -126,7 +129,7 @@ dielPlot <- function(
     lon,
     limits=c(0,2),
     plot=NULL,
-    rot=tz(0),
+    rot=tzRot(0),
     method="plotrix",
     legend=F
 ){

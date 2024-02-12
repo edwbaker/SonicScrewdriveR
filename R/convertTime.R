@@ -5,11 +5,12 @@
 #' @param T The time value to convert
 #' @param input The unit of time to convert, allowed values are "minutes",
 #'   "hours", "days", "years", "HHMM".
+#' @param origin For POSIX whether to return relative to start of day ("day") or Unix epoch ("unix")
 #' @export
 #' @return The numeric value in seconds
 #'
-convert2seconds <- function(T, input="minutes") {
-  if (!input %in% c("seconds", "minutes", "hours", "days", "years", "HHMM")) {
+convert2seconds <- function(T, input="minutes", origin="day") {
+  if (!input %in% .convertable2seconds()) {
     stop(paste("Unknown input to convert2seconds:",input))
   }
   if (input == "seconds") {
@@ -34,7 +35,20 @@ convert2seconds <- function(T, input="minutes") {
     }
     s <- as.numeric(substr(T,1,2))*60*60 + as.numeric(substr(T,3,4))*60
   }
+  if (input == "POSIX") {
+    if (origin == "day") {
+      t <- unclass(as.POSIXlt(T))
+      s <- (t$sec + 60*t$min + 3600*t$hour)
+    }
+    if (origin == "unix") {
+      s <- as.numeric(T)
+    }
+  }
   return(validateTimeInSeconds(s))
+}
+
+.convertable2seconds <- function() {
+  return(c("seconds", "minutes", "hours", "days", "years", "HHMM", "POSIX"))
 }
 
 #' Converts time to human readable form

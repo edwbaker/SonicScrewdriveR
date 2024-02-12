@@ -10,7 +10,7 @@ dielPlot(
   lon,
   limits = c(0, 2),
   plot = NULL,
-  rot = tz(0),
+  rot = tzRot(0),
   method = "plotrix",
   legend = F
 )

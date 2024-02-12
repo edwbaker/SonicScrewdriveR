@@ -4,13 +4,15 @@
 \alias{convert2seconds}
 \title{Convert time to seconds}
 \usage{
-convert2seconds(T, input = "minutes")
+convert2seconds(T, input = "minutes", origin = "day")
 }
 \arguments{
 \item{T}{The time value to convert}
 
 \item{input}{The unit of time to convert, allowed values are "minutes",
 "hours", "days", "years", "HHMM".}
+
+\item{origin}{For POSIX whether to return relative to start of day ("day") or Unix epoch ("unix")}
 }
 \value{
 The numeric value in seconds

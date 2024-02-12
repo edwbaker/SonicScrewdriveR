@@ -11,6 +11,8 @@ test_that("Test conversions", {
   expect_error(convert2seconds("croc", "HHMM"), "HHMM input must be numeric")
   expect_equal(convert2seconds("1200", input="HHMM"), 60*60*12)
   expect_equal(convert2seconds(1200, input="HHMM"), 60*60*12)
+  expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00"), "POSIX", origin="day"), 60*60*12)
+  expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00"), "POSIX", origin="unix"), 1707652800)
   expect_equal(convert2seconds("0000", input="HHMM"), 0)
   expect_equal(convert2seconds(2400, input="HHMM"), 60*60*24)
 })

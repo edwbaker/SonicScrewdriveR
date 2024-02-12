@@ -29,3 +29,31 @@ test_that("dielPositions gives expected output", {
   expect_true(is.numeric(l))
   expect_equal(length(l), 1440)
 })
+
+test_that("dielFraction rejects unknown formats", {
+  expect_error(dielFraction(2, "wombat"), "Unknown input for dielFraction: wombat")
+  expect_error(dielFraction(2, "hours", "worms"), "Unknown output for dielFraction: worms")
+})
+
+test_that("dielFraction gives expected output", {
+  expect_equal(dielFraction(0, "minutes", "fraction"), 0)
+  expect_equal(dielFraction(0, "minutes", "radians"), 0)
+  expect_equal(dielFraction(12, "hours", "fraction"), 0.5)
+  expect_equal(dielFraction(12, "hours", "radians"), pi)
+  expect_equal(dielFraction(as.POSIXct("1985-02-11 12:00"), "POSIX", "fraction"), 0.5)
+  expect_equal(dielFraction(24, "hours", "fraction"), 1)
+  expect_equal(dielFraction(24, "hours", "radians"), 2*pi)
+})
+
+test_that("emptyDiel rejects unknown formats", {
+  expect_error(emptyDiel(method="horse"), "Unknown method for emptyDiel: horse")
+})
+
+test_that("emptyDiel gives no warnings", {
+  expect_silent(emptyDiel())
+  expect_silent(emptyDiel(rot=0))
+})
+
+test_that("dielPlot gives no warnings", {
+  expect_silent(dielPlot("2024-02-12", lat=54, lon=0))
+})
