@@ -9,49 +9,69 @@
 #' @return The numeric value in seconds
 #'
 convert2seconds <- function(T, input="minutes") {
+  if (!input %in% c("seconds", "minutes", "hours", "days", "years", "HHMM")) {
+    stop(paste("Unknown input to convert2seconds:",input))
+  }
   if (input == "seconds") {
-    return(as.numeric(T))
+    s <- as.numeric(T)
   }
   if (input == "minutes") {
-    return(T*60)
+    s <- as.numeric(T)*60
   }
   if (input == "hours") {
-    return(T*60*60)
+    s <- as.numeric(T)*60*60
   }
   if (input == "days") {
-    return(T*60*60*24)
+    s <- as.numeric(T)*60*60*24
   }
   if (input == "years") {
-    return(T*60*60*24*365)
+    s <- as.numeric(T)*60*60*24*365
   }
   if (input == "HHMM") {
+    # TODO: Validate hours and minutes
     if (!all(grepl("[[:digit:]]", T))) {
       stop("HHMM input must be numeric")
     }
-    return(as.numeric(substr(T,1,2))*60*60 + as.numeric(substr(T,3,4))*60)
+    s <- as.numeric(substr(T,1,2))*60*60 + as.numeric(substr(T,3,4))*60
   }
-  stop(paste("Unknown input to convert2seconds: ",input))
+  return(validateTimeInSeconds(s))
 }
 
-#' Converts seconds in human readable form
+#' Converts time to human readable form
 #'
 #' Given an input of bytes calculates the result in a sensible output unit (e.g.
 #' minutes, hours).
 #'
-#' @param S Number of seconds
+#' @param S Number of
+#' @param unit The unit of time to convert
 #' @return String in human readable format
 #' @export
 #'
-humanTime <- function(S) {
+humanTime <- function(S, unit="seconds") {
+  S <- convert2seconds(S, unit)
   if (S < 60) {
-    return(paste(S, "seconds"))
+    if (S == 1) {
+      return("1 second")
+    } else {
+      return(paste(S, "seconds"))
+    }
   }
   if (S < 60*60) {
-    return (paste(S/60, "minutes"))
+    if (S/60 == 1) {
+      return(paste(S/60, "minute"))
+    } else {
+      return(paste(S/60, "minutes"))
+    }
   }
   if (S < 60*60*24) {
-    return (paste(S/(60*60), "hours"))
+    if (S/(60*60) == 1) {
+      return(paste(S/(60*60), "hour"))
+    } else {
+      return(paste(S/(60*60), "hours"))
+    }
   }
-
-  return (paste(S/(60*60*24), "days"))
+  if (S/(60*60*24) == 1) {
+    return(paste(S/(60*60*24), "day"))
+  }
+  return(paste(S/(60*60*24), "days"))
 }
