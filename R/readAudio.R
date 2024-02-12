@@ -27,7 +27,6 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 
   if (mime == "audio/x-wav") {
     tryCatch({
-
       wave <- readWave(file, from=fromS, to=to, units=units)
       return(wave)
     },
@@ -43,7 +42,6 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       if (from==0 && to==Inf) {
         return(wave)
       }
-
       if (units=="samples") {
         return(cutws(wave, fromS, to))
       }
