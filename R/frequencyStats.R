@@ -66,10 +66,10 @@ frequencyStats <- function(
 
   if(warn) {
     if (min_3 >= max_3) {
-      warning("-3dB: calculated max greater than min")
+      warning("-3dB: calculated max greater than or equal to min")
     }
     if (min_10 >= max_10) {
-      warning("-10dB: calculated max greater than min")
+      warning("-10dB: calculated max greater than or equal to min")
     }
   }
 
