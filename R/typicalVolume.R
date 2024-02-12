@@ -9,15 +9,19 @@
 #' typicalVolume()
 #' typicalVolume("rocket")
 #'
-typicalVolume <- function(thing="") {
-  tv <- typicalVolumes()
-  if (thing %in% tv[,1]) {
-    return(tv[tv$thing==thing,2])
+typicalVolume <- function(thing=NA_character_) {
+  tv <- .typicalVolumes()
+  if (is.na(thing)) {
+    return(tv)
   }
-  return(tv)
+  if (thing %in% tv[,1]) {
+    return(as.numeric(tv[tv$thing==thing,2]))
+  } else {
+    stop("Thing not found.")
+  }
 }
 
-typicalVolumes <- function() {
+.typicalVolumes <- function() {
   # Source: Murray Schafer Soundscapes
   n <- c(
     "steam engine",
