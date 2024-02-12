@@ -14,7 +14,7 @@
 #' cutws(sheep, 1, 20, plot=TRUE)
 #' }
 #'
-cutws <- function(wave, from, to, plot=FALSE) {
+cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   validateIsWave(wave)
   if (is.infinite(to)) {
     to <- length(wave@left)
