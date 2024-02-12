@@ -22,8 +22,6 @@ pseudoWave(
 \item{offset}{This value is added to the  Wave channels}
 
 \item{seed}{Random seed for reproducible output. NA for no seed.}
-
-\item{url}{URL to download audio from}
 }
 \value{
 A PseudoWave object.

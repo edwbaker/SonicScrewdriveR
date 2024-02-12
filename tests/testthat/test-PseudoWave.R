@@ -20,12 +20,19 @@ test_that("depseduoWave tests", {
   mpw <- m + pw
   spw <- s + pw
 
+  rmpw <- pw + m
+  rspw <- pw + s
+
   # Should return a Wave object
   expect_true(inherits(mpw, "Wave"))
   expect_true(inherits(spw, "Wave"))
+  expect_true(inherits(rmpw, "Wave"))
+  expect_true(inherits(rspw, "Wave"))
   expect_equal(length(mpw@left), 44100)
   expect_equal(length(spw@left), 44100)
+  expect_equal(length(rmpw@left), 44100)
   expect_equal(length(spw@right), 44100)
+  expect_equal(length(rspw@right), 44100)
 
   # Generate mono and stereo silence
   mq <- tuneR::silence(44100, samp.rate=44100)

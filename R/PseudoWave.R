@@ -35,8 +35,8 @@ setClass(
 #' @param scale The Wave channels are multiplied by this value
 #' @param offset This value is added to the  Wave channels
 #' @param seed Random seed for reproducible output. NA for no seed.
-#' @param url URL to download audio from
 #' @return A PseudoWave object.
+#' @importFrom methods new
 #' @export
 pseudoWave <- function(
     type=NA_character_,
@@ -88,8 +88,6 @@ setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
   function(e1, e2){
     e2 <- depseduoWave(e2, n=length(e1@left), stereo=e1@stereo, samp.rate=e1@samp.rate, bit=e1@bit, pcm=e1@pcm)
     equalWave(e1, e2)
-    if(length(e1@left) != length(e2@left))
-      stop("Waves must be of equal length for Arithmetics")
     e1@left <- callGeneric(e1@left, e2@left)
     if(e1@stereo)
       e1@right <- callGeneric(e1@right, e2@right)
@@ -101,8 +99,6 @@ setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   function(e1, e2){
     e1 <- depseduoWave(e1, n=length(e2@left), stereo=e2@stereo, samp.rate=e2@samp.rate, bit=e2@bit, pcm=e2@pcm)
     equalWave(e1, e2)
-    if(length(e1@left) != length(e2@left))
-      stop("Waves must be of equal length for Arithmetics")
     e1@left <- callGeneric(e1@left, e2@left)
     if(e1@stereo)
       e1@right <- callGeneric(e1@right, e2@right)
