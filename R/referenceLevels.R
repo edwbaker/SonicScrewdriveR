@@ -9,6 +9,9 @@
 #' @export
 #'
 referencePressure <- function(unit="Pa") {
+  if (!unit %in% c("Pa", "dyne_cm2")) {
+    stop(paste("Unknown unit to referencePressure:",unit))
+  }
   if (unit=="Pa") {
     return(convert2Pascals(0.0002, input="dyne_cm2"))
   }
@@ -27,6 +30,9 @@ referencePressure <- function(unit="Pa") {
 #' @export
 #'
 referenceIntensity <- function(unit="watt_cm2") {
+  if (!unit %in% c("watt_cm2")) {
+    stop(paste("Unknown unit to referenceIntensity:",unit))
+  }
   if (unit=="watt_cm2") {
     return(10^-16)
   }
