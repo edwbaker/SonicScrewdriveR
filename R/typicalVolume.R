@@ -7,7 +7,7 @@
 #' @return Typical volume of thing in dBA, or if no thing parameter a data frame of all volumes
 #' @examples
 #' typicalVolume()
-#' typicalVolume("rocket")
+#' typicalVolume("rocket launch")
 #'
 typicalVolume <- function(thing=NA_character_) {
   tv <- .typicalVolumes()

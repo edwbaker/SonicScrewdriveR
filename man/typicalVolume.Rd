@@ -17,6 +17,6 @@ Typical volumes of everyday things.
 }
 \examples{
 typicalVolume()
-typicalVolume("rocket")
+typicalVolume("rocket launch")
 
 }
