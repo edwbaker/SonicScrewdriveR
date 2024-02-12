@@ -61,6 +61,7 @@ test_that("emptyDiel gives no warnings", {
 
 test_that("dielPlot gives no warnings", {
   expect_silent(dielPlot("2024-12-21", lat=54, lon=66))
+  expect_silent(dielPlot("2024-06-21", lat=54, lon=66))
   expect_silent(dielPlot("2024-02-12", lat=54, lon=0))
   expect_silent(dielPlot("2024-02-12", lat=54, lon=0, rot="Solar Noon"))
   expect_silent(dielPlot("2024-02-12", lat=54, lon=0, plot=c("Solar Noon", "Nadir")))
