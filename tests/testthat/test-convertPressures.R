@@ -23,3 +23,7 @@ test_that("convert dyne/cm2 to dyne/cm2 no change", {
 test_that("convert2dyne_cm2 error on incorrect input", {
   expect_error(convert2dyne_cm2(1, input="J"))
 })
+test_that("Convert 2 kPa", {
+  expect_equal(convert2kPascals(1, input="kPa"), 1)
+  expect_equal(convert2kPascals(1000, input="Pa"), 1)
+})
