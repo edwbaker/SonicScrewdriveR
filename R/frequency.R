@@ -36,7 +36,7 @@ naturalFrequency <- function(L, C="default", R) {
     C <- 100
   }
   F_nat <- sqrt((1/(L*C)) - R^2/(4*L^2)) / (2 * pi)
-  return(F_nat)
+  return(validateFreq(F_nat))
 }
 
 #' Calculate the resonant frequency
@@ -57,5 +57,5 @@ naturalFrequency <- function(L, C="default", R) {
 #'
 resonantFrequency <- function(L, C="default") {
   F_res <- naturalFrequency(L,C,0)
-  return(F_res)
+  return(validateFreq(F_res))
 }
