@@ -17,6 +17,7 @@ test_that("Test conversions", {
 
 test_that("Human time", {
   expect_equal(humanTime(1), "1 second")
+  expect_equal(humanTime(2), "2 seconds")
   expect_equal(humanTime(60), "1 minute")
   expect_equal(humanTime(60*2), "2 minutes")
   expect_equal(humanTime(60*60), "1 hour")
