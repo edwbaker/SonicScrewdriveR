@@ -14,7 +14,7 @@ convert2degrees <- function(A, input="radians") {
   if (input == "degrees"){
     return(A)
   }
-  stop(paste("Unknown input to convert2degrees: ",input))
+  stop(paste("Unknown input to convert2degrees:",input))
 }
 
 #' Convert angle to radians
@@ -33,5 +33,5 @@ convert2radians <- function(A, input="degrees") {
   if (input == "radians"){
     return(A)
   }
-  stop(paste("Unknown input to convert2degrees: ",input))
+  stop(paste("Unknown input to convert2radians:",input))
 }
