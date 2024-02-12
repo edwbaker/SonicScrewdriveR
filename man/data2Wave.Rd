@@ -13,7 +13,7 @@ data2Wave(
 )
 }
 \arguments{
-\item{left}{Data for  audio channel}
+\item{left}{Data for mono audio channel}
 
 \item{samp.rate}{Sampling rate for Wave object}
 
@@ -21,7 +21,7 @@ data2Wave(
 
 \item{remove.offset}{If TRUE any DC offset is removed}
 
-\item{normalise}{IF TRUE the output Wave is normalised using tuneR}
+\item{normalise}{IF TRUE the output Wave is normalised to -1:1}
 }
 \value{
 A mono Wave object.
