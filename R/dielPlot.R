@@ -5,14 +5,19 @@
 #'
 #' @param format One of clock24 (default) or clock12
 #' @export
+#' @examples
+#' dielLabels()
+#' dielLabels("clock12")
 dielLabels <- function(format="clock24") {
+  if (!format %in% c("clock24", "clock12")) {
+    stop(paste("Unknown format for dielLabels:",format))
+  }
   if (format=="clock24") {
-    ret <- c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100")
+    return(c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100"))
   }
-  else if (format=="clock12") {
-    ret <- c("0000", "0300 AM", "0600 AM", "0900 AM", "1200 NOON", "0300 PM", "0600 PM", "0900 PM")
+  if (format=="clock12") {
+    return(c("0000", "0300 AM", "0600 AM", "0900 AM", "1200 NOON", "0300 PM", "0600 PM", "0900 PM"))
   }
-  return(ret)
 }
 
 #' Generate positions of labels for a diel plot
@@ -20,16 +25,24 @@ dielLabels <- function(format="clock24") {
 #' Generates positions for three-hourly labels of a dielPlot() in radians.
 #' @param format One of "3hours" (default), "hours", or "minutes"
 #' @export
+#' @examples
+#' dielPositions()
+#' dielPositions("hours")
+#' dielPositions("minutes")
 dielPositions <- function(format="3hourly") {
-  if (format == "3hourly") {
-    ret <- 2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360
-  } else if (format == "hours") {
-    ret <- 2*pi * (1:24)/24
-  } else if (format == "minutes") {
-    mpd <- 24*60
-    ret <- 2*pi * (1:mpd)/mpd
+  if (!format %in% c("3hourly", "hours", "minutes")) {
+    stop(paste("Unknown format for dielPositions:",format))
   }
-  return(ret)
+  if (format == "3hourly") {
+    return(2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360)
+  }
+  if (format == "hours") {
+    return(2*pi * (1:24)/24)
+  }
+  if (format == "minutes") {
+    mpd <- 24*60
+    return(2*pi * (1:mpd)/mpd)
+  }
 }
 
 #' Calculate the fraction of a day given by a value

@@ -12,3 +12,8 @@ dielPositions(format = "3hourly")
 \description{
 Generates positions for three-hourly labels of a dielPlot() in radians.
 }
+\examples{
+dielPositions()
+dielPositions("hours")
+dielPositions("minutes")
+}

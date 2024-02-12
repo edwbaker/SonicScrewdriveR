@@ -13,3 +13,7 @@ dielLabels(format = "clock24")
 Generates labels for a dielPlot() in 12- or 24-hour format. Labels are generated
 at three hourly intervals.
 }
+\examples{
+dielLabels()
+dielLabels("clock12")
+}
