@@ -19,8 +19,8 @@ Calculates the distance of an object based on the round trip time of an
 echolocation pulse
 }
 \examples{
-radar.range(2)
-radar.range(2, c=343)
-radar.range(2, c=soundSpeedMedium("sea water"))
+radarRange(2)
+radarRange(2, c=343)
+radarRange(2, c=soundSpeedMedium("sea water"))
 
 }

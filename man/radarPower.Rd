@@ -26,7 +26,7 @@ The received power
 Calculates the power returned from an echolocation pulse
 }
 \examples{
-P_r(12, 20, 0.05)
-P_r(12, 20, 0.05, G_t=1.2, G_r=1.5, wl=0.045)
+radarPower(12, 20, 0.05)
+radarPower(12, 20, 0.05, G_t=1.2, G_r=1.5, wl=0.045)
 
 }

@@ -11,8 +11,8 @@
 #' @export
 #' @return The received power
 #' @examples
-#' P_r(12, 20, 0.05)
-#' P_r(12, 20, 0.05, G_t=1.2, G_r=1.5, wl=0.045)
+#' radarPower(12, 20, 0.05)
+#' radarPower(12, 20, 0.05, G_t=1.2, G_r=1.5, wl=0.045)
 #'
 radarPower <- function(P_t, r, area, G_t=1, G_r=1, wl=1) {
   P_r <- (P_t * area * G_t * G_r * wl^2) / ( (4*pi)^3 * r^4)
@@ -29,9 +29,9 @@ radarPower <- function(P_t, r, area, G_t=1, G_r=1, wl=1) {
 #' @export
 #' @return Distance to object
 #' @examples
-#' radar.range(2)
-#' radar.range(2, c=343)
-#' radar.range(2, c=soundSpeedMedium("sea water"))
+#' radarRange(2)
+#' radarRange(2, c=343)
+#' radarRange(2, c=soundSpeedMedium("sea water"))
 #'
 radarRange <- function(t, c=soundSpeedMedium(medium="air")) {
   range <- t * c /2
