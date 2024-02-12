@@ -42,7 +42,7 @@ convert2seconds <- function(T, input="minutes") {
 #' Given an input of bytes calculates the result in a sensible output unit (e.g.
 #' minutes, hours).
 #'
-#' @param S Number of
+#' @param S Time to convert in unit
 #' @param unit The unit of time to convert
 #' @return String in human readable format
 #' @export

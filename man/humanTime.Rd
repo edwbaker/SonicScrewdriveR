@@ -2,12 +2,14 @@
 % Please edit documentation in R/convertTime.R
 \name{humanTime}
 \alias{humanTime}
-\title{Converts seconds in human readable form}
+\title{Converts time to human readable form}
 \usage{
-humanTime(S)
+humanTime(S, unit = "seconds")
 }
 \arguments{
-\item{S}{Number of seconds}
+\item{S}{Time to convert in unit}
+
+\item{unit}{The unit of time to convert}
 }
 \value{
 String in human readable format
