@@ -17,7 +17,41 @@ setClass(
   )
 )
 
-seconds <- function(from, to) {
+#' Specify a region with a file to analyse
+#'
+#' Specifies a time-bounded region to analyse.
+#' @param unit Unit of time (one of samples, seconds, minutes, hours)
+#' @param from Start time
+#' @param to End time
+#' @return A TimeRegion object.
+#' @export
+region <- function(unit, from=0, to=Inf) {
+  if (!unit %in% c("samples", "seconds", "minutes", "hours")) {
+    stop("Unit must be one of samples, seconds, minutes, hours")
+  }
+  if (unit == "samples") {
+    return(.samples(from, to))
+  }
+  if (unit == "seconds") {
+    return(.seconds(from, to))
+  }
+  if (unit == "minutes") {
+    return(.minutes(from, to))
+  }
+  if (unit == "hours") {
+    return(.hours(from, to))
+  }
+}
+
+.samples <- function(from, to) {
+  t <- new("TimeRegion")
+  t@from <- from
+  t@to <- to
+  t@unit <- "samples"
+  return(t)
+}
+
+.seconds <- function(from, to) {
   t <- new("TimeRegion")
   t@from <- from
   t@to <- to
@@ -25,7 +59,7 @@ seconds <- function(from, to) {
   return(t)
 }
 
-minutes <- function(from, to) {
+.minutes <- function(from, to) {
   t <- new("TimeRegion")
   t@from <- from
   t@to <- to
@@ -33,7 +67,7 @@ minutes <- function(from, to) {
   return(t)
 }
 
-hours <- function(from, to) {
+.hours <- function(from, to) {
   t <- new("TimeRegion")
   t@from <- from
   t@to <- to
@@ -41,7 +75,7 @@ hours <- function(from, to) {
   return(t)
 }
 
-timeRegion2samples <- function(t, samp.rate) {
+.timeRegion2samples <- function(t, samp.rate) {
   if (t@unit == "samples") {
     return(c(t@from,t@to))
   }
@@ -61,7 +95,10 @@ timeRegion2samples <- function(t, samp.rate) {
 #' @param i TimeRegion object
 setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
   if (inherits(i,"TimeRegion")) {
-    tr <- timeRegion2samples(i, x@samp.rate)
+    tr <- .timeRegion2samples(i, x@samp.rate)
+    if (is.infinite(tr[2])) {
+      tr[2] <- length(x@left)
+    }
     x@left <- x@left[tr[1]:tr[2]]
     if (x@stereo) {
       x@right <- x@right[tr[1]:tr[2]]
