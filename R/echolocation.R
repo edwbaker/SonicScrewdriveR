@@ -14,7 +14,7 @@
 #' P_r(12, 20, 0.05)
 #' P_r(12, 20, 0.05, G_t=1.2, G_r=1.5, wl=0.045)
 #'
-P_r <- function(P_t, r, area, G_t=1, G_r=1, wl=1) {
+radarPower <- function(P_t, r, area, G_t=1, G_r=1, wl=1) {
   P_r <- (P_t * area * G_t * G_r * wl^2) / ( (4*pi)^3 * r^4)
   return (P_r)
 }
@@ -33,7 +33,7 @@ P_r <- function(P_t, r, area, G_t=1, G_r=1, wl=1) {
 #' radar.range(2, c=343)
 #' radar.range(2, c=soundSpeedMedium("sea water"))
 #'
-radar.range <- function(t, c=soundSpeedMedium(medium="air")) {
+radarRange <- function(t, c=soundSpeedMedium(medium="air")) {
   range <- t * c /2
   return(range)
 }
