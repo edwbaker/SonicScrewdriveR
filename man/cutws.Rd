@@ -4,7 +4,7 @@
 \alias{cutws}
 \title{Cut wave by samples}
 \usage{
-cutws(wave, from, to, plot = FALSE)
+cutws(wave, from = 1, to = Inf, plot = FALSE)
 }
 \arguments{
 \item{wave}{A Wave object}
