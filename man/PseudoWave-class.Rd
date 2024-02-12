@@ -22,6 +22,8 @@ Wave object when operated on.
 
 \item{\code{seed}}{Random seed for reproducible output, NA for no seed}
 
-\item{\code{scale}}{Logical. Whether to use the random seed value.}
+\item{\code{scale}}{Logical. Whether to use the random seed value}
+
+\item{\code{params}}{List of additional parameters to pass to generating function}
 }}
 

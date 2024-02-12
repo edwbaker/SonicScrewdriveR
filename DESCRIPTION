@@ -30,6 +30,7 @@ Suggests:
     googleCloudStorageR,
     googleLanguageR,
     knitr,
+    pbapply,
     plotrix,
     reticulate,
     rmarkdown,

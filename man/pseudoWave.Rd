@@ -9,11 +9,12 @@ pseudoWave(
   subtype = NA_character_,
   scale = 1,
   offset = 0,
-  seed = 1
+  seed = 1,
+  params = list()
 )
 }
 \arguments{
-\item{type}{Type of PseudoWave (e.g. "noise")}
+\item{type}{Type of PseudoWave (e.g. "noise", "sine")}
 
 \item{subtype}{Subtype of PseudoWave (e.g. "white" if type is "noise")}
 
@@ -21,7 +22,9 @@ pseudoWave(
 
 \item{offset}{This value is added to the  Wave channels}
 
-\item{seed}{Random seed for reproducible output. NA for no seed.}
+\item{seed}{Random seed for reproducible output. NA for no}
+
+\item{params}{List of additional parameters to pass to generating function}
 }
 \value{
 A PseudoWave object.
@@ -29,4 +32,10 @@ A PseudoWave object.
 \description{
 This function is used to create a PseudoWave object that can be used to
 generate a Wave object when operated on.
+}
+\examples{
+pw <- pseudoWave("noise", "white")
+
+pw <- pseudoWave("sine", params=list("f0"=440))
+
 }

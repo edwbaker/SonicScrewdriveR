@@ -6,7 +6,8 @@
 #' @slot scale The Wave channels are multiplied by this value
 #' @slot offset This value is added to the  Wave channels
 #' @slot seed Random seed for reproducible output, NA for no seed
-#' @slot scale Logical. Whether to use the random seed value.
+#' @slot scale Logical. Whether to use the random seed value
+#' @slot params List of additional parameters to pass to generating function
 setClass(
   "PseudoWave",
   slots=list(
@@ -14,14 +15,16 @@ setClass(
     subtype="character",
     scale="numeric",
     offset="numeric",
-    seed="numeric"
+    seed="numeric",
+    params="list"
   ),
   prototype = list(
     type = NA_character_,
     subtype = NA_character_,
     scale = 1,
     offset = 0,
-    seed = NA_integer_
+    seed = NA_integer_,
+    params = list()
   )
 )
 
@@ -30,20 +33,27 @@ setClass(
 #' This function is used to create a PseudoWave object that can be used to
 #' generate a Wave object when operated on.
 #'
-#' @param type Type of PseudoWave (e.g. "noise")
+#' @param type Type of PseudoWave (e.g. "noise", "sine")
 #' @param subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
 #' @param scale The Wave channels are multiplied by this value
 #' @param offset This value is added to the  Wave channels
-#' @param seed Random seed for reproducible output. NA for no seed.
+#' @param seed Random seed for reproducible output. NA for no
+#' @param params List of additional parameters to pass to generating function
 #' @return A PseudoWave object.
 #' @importFrom methods new
 #' @export
+#' @examples
+#' pw <- pseudoWave("noise", "white")
+#'
+#' pw <- pseudoWave("sine", params=list("f0"=440))
+#'
 pseudoWave <- function(
     type=NA_character_,
     subtype=NA_character_,
     scale=1,
     offset=0,
-    seed=1
+    seed=1,
+    params=list()
 ) {
   if (is.na(type)) {
     stop("Type must be specified")
@@ -56,7 +66,8 @@ pseudoWave <- function(
       subtype=subtype,
       scale=scale,
       offset=offset,
-      seed=seed
+      seed=seed,
+      params=params
     )
   )
 }
@@ -64,7 +75,10 @@ pseudoWave <- function(
 depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
   if (pw@type == "noise") {
     if (!is.na(pw@seed)) {set.seed(pw@seed)}
-    w <- depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
+    w <- .depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
+  }
+  if (pw@type == "sine") {
+    w <- .depseudoSine(pw@params$f0, n, stereo, samp.rate, bit, pcm)
   }
   w@left <- (w@left * pw@scale) + pw@offset
   if (stereo) {
@@ -77,10 +91,17 @@ depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
 equalWave <- utils::getFromNamespace("equalWave", "tuneR")
 
 #' @importFrom tuneR noise
-depseudoNoise <- function(type, n, stereo, samp.rate, bit, pcm) {
+.depseudoNoise <- function(type, n, stereo, samp.rate, bit, pcm) {
   #This wrapper function is here in case alternative noise functions will be added.
   return(
     noise(kind=type, duration=n, stereo=stereo, samp.rate=samp.rate, bit=bit, pcm=pcm)
+  )
+}
+
+.depseudoSine <- function(freq, duration, stereo, samp.rate, bit, pcm) {
+  #This wrapper function is here in case alternative sine functions will be added.
+  return(
+    sine(freq=freq, duration=duration, stereo=stereo, samp.rate=samp.rate, bit=bit, pcm=pcm)
   )
 }
 

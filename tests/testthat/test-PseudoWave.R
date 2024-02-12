@@ -47,4 +47,41 @@ test_that("depseduoWave tests", {
   expect_true(inherits(sqw, "Wave"))
   expect_equal(sum(mqw@left), 0)
   expect_equal(sum(sqw@right), 0)
+
+  # Generate sum of silence and sine PseudoWave
+  spw1 <- tuneR::silence(duration=44100) + pseudoWave("sine", params=list(f0=440))
+  expect_lte(max(spw1@left), 1)
+  expect_lte(mean(spw1@left), 0.001)
+
+  # Test scale parameter
+  spw2 <- tuneR::silence(duration=44100) + pseudoWave("sine", scale=0.5, params=list(f0=440))
+  expect_lte(max(spw2@left), 0.5)
+  expect_lte(mean(spw2@left), 0.001)
+
+  spw4 <- tuneR::silence(duration=44100) + pseudoWave("sine", params=list(f0=440)) * 0.5
+  expect_lte(max(spw4@left), 0.5)
+  expect_lte(mean(spw4@left), 0.001)
+
+  spw6 <- tuneR::silence(duration=44100) + 0.5 * pseudoWave("sine", params=list(f0=440))
+  expect_lte(max(spw4@left), 0.5)
+  expect_lte(mean(spw4@left), 0.001)
+
+  # Test offset parameter
+  spw3 <- tuneR::silence(duration=44100) + pseudoWave("sine", offset=1, params=list(f0=440))
+  expect_lte(max(spw3@left), 2)
+  expect_gte(min(spw3@left), 0)
+  expect_lte(mean(spw3@left), 1.001)
+  expect_gte(mean(spw3@left), 0.999)
+
+  spw5 <- tuneR::silence(duration=44100) + (pseudoWave("sine", params=list(f0=440)) + 1)
+  expect_lte(max(spw5@left), 2)
+  expect_gte(min(spw5@left), 0)
+  expect_lte(mean(spw5@left), 1.001)
+  expect_gte(mean(spw5@left), 0.999)
+
+  spw7 <- tuneR::silence(duration=44100) + (1 + pseudoWave("sine", params=list(f0=440)))
+  expect_lte(max(spw7@left), 2)
+  expect_gte(min(spw7@left), 0)
+  expect_lte(mean(spw7@left), 1.001)
+  expect_gte(mean(spw7@left), 0.999)
 })
