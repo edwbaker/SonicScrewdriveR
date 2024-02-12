@@ -4,7 +4,7 @@
 \alias{readAudio}
 \title{Read an audio file}
 \usage{
-readAudio(file, mime = "auto", from = 1, to = Inf, units = "seconds")
+readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
 }
 \arguments{
 \item{file}{File to read}
