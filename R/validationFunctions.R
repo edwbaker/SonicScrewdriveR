@@ -154,7 +154,7 @@ validateDutyCycle <- function(dc) {
 
 validateSpectrum <- function(s, coerceNegative=FALSE, coerceNA = TRUE) {
   if (typeof(s) != "double") {
-    stop("Spectrum must be double")
+    stop("Spectrum must be double.")
   }
   if (!is(s, "matrix")) {
     stop("Spectrum must be a matrix.")
@@ -167,9 +167,6 @@ validateSpectrum <- function(s, coerceNegative=FALSE, coerceNA = TRUE) {
   }
   for (i in 1:nrow(s)) {
     for (j in 1:2) {
-      if (!is.numeric(s[i,j])) {
-        stop("All values in sepctrum must be numeric.")
-      }
       if (is.na(s[[i,j]])) {
         if (coerceNA) {
           if (j==2) {
@@ -192,6 +189,8 @@ validateSpectrum <- function(s, coerceNegative=FALSE, coerceNA = TRUE) {
 }
 
 validateComparableSpectra <- function(s1, s2) {
+  validateSpectrum(s1)
+  validateSpectrum(s2)
   if (nrow(s1) != nrow(s2)) {
     stop("Spectra must have equal number of rows.")
   }

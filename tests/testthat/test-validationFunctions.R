@@ -124,4 +124,55 @@ test_that("validateIsWave works", {
 test_that("validateIsWaveMC works", {
   expect_error(validateIsWaveMC("string"), "Expecting a WaveMC object")
   expect_error(validateIsWaveMC(tuneR::sine(1)), "Expecting a WaveMC object")
+
+  # Generate a WaveMC object
+  x <- seq(0, 2*pi, length = 44100)
+  channel <- round(32000 * sin(440 * x))
+  mc <- tuneR::WaveMC(data = channel, samp.rate = 44100, bit = 16, pcm = TRUE)
+  expect_true(inherits(validateIsWaveMC(mc), "WaveMC"))
+})
+
+test_that("Spectrum validation", {
+  data(sheep, package="seewave")
+  s <- seewave::spec(sheep, plot=FALSE)
+  expect_equal(validateSpectrum(s), s)
+
+  expect_error(validateSpectrum("string"), "Spectrum must be double.")
+  expect_error(validateSpectrum(2.3), "Spectrum must be a matrix.")
+
+  m <- matrix(c(1,2,3, 11,12,13), nrow = 2, ncol = 3, byrow = TRUE)
+  expect_error(validateSpectrum(m), "Spectrum must have two columns.")
+
+  m <- matrix(NA_real_, nrow = 0, ncol = 2)
+  expect_error(validateSpectrum(m), "Spectrum must have one or more rows.")
+
+  m <- matrix(c(1,2,3,NA), nrow = 2, ncol = 2)
+  expect_error(validateSpectrum(m, coerceNA=FALSE), "No NA allowedin spectra.")
+  expect_silent(validateSpectrum(m, coerceNA=TRUE))
+
+  m <- matrix(c(1,2,3,-4), nrow = 2, ncol = 2)
+  expect_error(validateSpectrum(m, coerceNegative =FALSE), "No negative values in spectrum.")
+  expect_silent(validateSpectrum(m, coerceNegative =TRUE))
+})
+
+test_that("validate comparable spectra", {
+  m <- matrix(c(1,2,3,4), nrow = 2, ncol = 2)
+  n <- matrix(c(1,2,3,4), nrow = 2, ncol = 2)
+  expect_silent(validateComparableSpectra(m,n))
+
+  n <- matrix(c(1,3,3,4), nrow = 2, ncol = 2)
+  expect_error(validateComparableSpectra(m,n), "Spectra must have same frequency bins.")
+
+  n <- matrix(c(1,2,3,4,5,6), nrow = 3, ncol = 2)
+  expect_error(validateComparableSpectra(m,n), "Spectra must have equal number of rows.")
+})
+
+test_that("validate time in seconds", {
+  expect_error(validateTimeInSeconds("string"), "Time in Seconds must be numeric.")
+  expect_error(validateTimeInSeconds(-1), "Time in Seconds cannot be negative")
+  expect_silent(validateTimeInSeconds(-1, coerceNegative=TRUE))
+  expect_equal(validateTimeInSeconds(0), 0)
+  expect_equal(validateTimeInSeconds(1), 1)
+  expect_error(validateTimeInSeconds(c(1,500), max_t = 400), "Time in Seconds cannot be longer than max_t")
+  expect_equal(validateTimeInSeconds(c(1,500), max_t = 400, coerceMaximum=TRUE), c(1,400))
 })
