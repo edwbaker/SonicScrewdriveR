@@ -127,7 +127,6 @@ setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   }
 )
 
-
 #' PseudoWave scalar manipulation
 #'
 #' @docType methods
@@ -206,6 +205,3 @@ setMethod("+", signature(e1 = "numeric", e2 = "PseudoWave"),
     return(e2)
   }
 )
-
-
-

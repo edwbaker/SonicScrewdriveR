@@ -53,7 +53,7 @@ test_that("depseduoWave tests", {
   expect_lte(max(spw1@left), 1)
   expect_lte(mean(spw1@left), 0.001)
 
-  # Test scale parameter
+  # Test scale parameter and multiplication / division
   spw2 <- tuneR::silence(duration=44100) + pseudoWave("sine", scale=0.5, params=list(f0=440))
   expect_lte(max(spw2@left), 0.5)
   expect_lte(mean(spw2@left), 0.001)
@@ -66,7 +66,11 @@ test_that("depseduoWave tests", {
   expect_lte(max(spw4@left), 0.5)
   expect_lte(mean(spw4@left), 0.001)
 
-  # Test offset parameter
+  spw8 <- tuneR::silence(duration=44100) + pseudoWave("sine", params=list(f0=440)) / 2
+  expect_lte(max(spw8@left), 0.5)
+  expect_lte(mean(spw8@left), 0.001)
+
+  # Test offset parameter and addition / subtraction
   spw3 <- tuneR::silence(duration=44100) + pseudoWave("sine", offset=1, params=list(f0=440))
   expect_lte(max(spw3@left), 2)
   expect_gte(min(spw3@left), 0)
@@ -84,4 +88,8 @@ test_that("depseduoWave tests", {
   expect_gte(min(spw7@left), 0)
   expect_lte(mean(spw7@left), 1.001)
   expect_gte(mean(spw7@left), 0.999)
+
+  spw9 <- tuneR::silence(duration=44100) + (pseudoWave("sine", params=list(f0=440)) - 0.50)
+  expect_lte(max(spw9@left), 0.5)
+  expect_lte(mean(spw9@left), 0.001)
 })
