@@ -31,9 +31,6 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/news/index.html</loc>
   </url>
   <url>
-    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/P_r.html</loc>
-  </url>
-  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/PseudoWave-class.html</loc>
   </url>
   <url>
@@ -250,7 +247,10 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/pulseIntervals.html</loc>
   </url>
   <url>
-    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/radar.range.html</loc>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/radarPower.html</loc>
+  </url>
+  <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/radarRange.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/radialPolygon.html</loc>
