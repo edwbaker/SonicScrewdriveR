@@ -18,7 +18,7 @@ yearlyLabels <- function() {
 #' @param format One of months, mid-months, days
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
-  if (isLeapYear(year)) {
+  if (.isLeapYear(year)) {
     FebDays <- 29
     YearDays <- 366
   } else {
@@ -43,7 +43,7 @@ yearlyPositions <- function(year=2022, format="months") {
   return(ret)
 }
 
-isLeapYear <- function(year) {
+.isLeapYear <- function(year) {
   year <- as.numeric(year)
   if((year %% 4) == 0) {
     if((year %% 100) == 0) {
@@ -70,7 +70,7 @@ isLeapYear <- function(year) {
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @export
 yearlyFraction <- function(t, year=2022, input="POSIXlt", unit="radians") {
-  if (isLeapYear(year)) {
+  if (.isLeapYear(year)) {
     dc <- 366
   } else {
     dc <- 365
@@ -116,9 +116,9 @@ emptyYearly <- function(year=2022, method="plotix", rot=pi) {
 #'
 #' ToDO......
 #'
-#' @param year Year to
+#' @param year Year to plot (allows for leap years).
 #' @param lat Numeric latitude.
-#' @param lon Numeric longitude.plot.
+#' @param lon Numeric longitude.
 #' @param plot Character vector of components to plot
 #' @param limits Plotting limits of the daylight regions, default to c(1,2)
 #' @param method Plotting library to use

@@ -15,11 +15,11 @@ yearlyPlot(
 )
 }
 \arguments{
-\item{year}{Year to}
+\item{year}{Year to plot (allows for leap years).}
 
 \item{lat}{Numeric latitude.}
 
-\item{lon}{Numeric longitude.plot.}
+\item{lon}{Numeric longitude.}
 
 \item{limits}{Plotting limits of the daylight regions, default to c(1,2)}
 
