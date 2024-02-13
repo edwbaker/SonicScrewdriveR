@@ -1,9 +1,8 @@
 # sonicscrewdriver NEXT RELEASE
 
+- readAudio() generic function to read audio files
 - citation() information
 - angle conversion
-- refinement of organism class for modelling
-- organism modelling functions
 - Dolbear's law
 - Download files from audioBlast
 - PseudoWave class (e.g. apply noise to a file of any length)
@@ -11,9 +10,6 @@
 - allChannels for analysing multi-channel audio
 - read Respeaker6 formatted files
 - TaggedWaves - store metadata and analyses
-
-# sonicscrewdriver 0.0.5
-
 - fix audiomoth_wave (comments not consistently placed in header)
 - search for recordings and analyses on audioblast.org
 
