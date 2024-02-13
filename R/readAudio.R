@@ -11,7 +11,7 @@
 #' @param units One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 #' @return A Wave object
 #' @export
-#' @importFrom tuneR readMP3 readWave Wave
+#' @importFrom tuneR readMP3 readWave stereo Wave
 #' @importFrom seewave cutw
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
@@ -75,7 +75,6 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       left <- wave[seq(1, length(wave), by = 2)]
       right <- wave[seq(2, length(wave), by = 2)]
       wave <- Wave(left=left, right=right, samp.rate=attr(wave, "sample_rate"), bit=bit)
-      d <- 2
     }
 
     if (units == "samples") {
@@ -84,7 +83,14 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       if (from==0 & to == Inf) {
         return(wave)
       }
-      return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
+      if (channels == 1) {
+        return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
+      }
+      if (channels == 2) {
+        left <- cutw(wave, channel=1, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave")
+        right <- cutw(wave, channel=2, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave")
+        return(stereo(left, right))
+      }
     }
   }
   stop("File could not be processed")
@@ -94,6 +100,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
   m <- ceiling(max(abs(v), na.rm=TRUE))
   if (m <= 128) { return(8) }
   if (m <= 32768) { return(16) }
+  if (m <= 8388608) { return(24) }
   if (m <= 2147483648) { return(32) }
   stop("Bit depths above 32bit are not supported.")
 }

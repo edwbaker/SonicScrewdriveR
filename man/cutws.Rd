@@ -19,7 +19,8 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 A Wave object
 }
 \description{
-Extract a section of a Wave object based on sample positions
+Extract a section of a Wave object based on sample positions. This function
+will automatically detect if a Wave object is stereo.
 }
 \examples{
 \dontrun{

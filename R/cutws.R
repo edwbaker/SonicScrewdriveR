@@ -1,6 +1,7 @@
 #' Cut wave by samples
 #'
-#' Extract a section of a Wave object based on sample positions
+#' Extract a section of a Wave object based on sample positions. This function
+#' will automatically detect if a Wave object is stereo.
 #'
 #' @param wave A Wave object
 #' @param from First sample to return
@@ -25,7 +26,12 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   if (from > to){
     stop("In cutws to must be greater than from")
   }
-  cutwave <- tuneR::Wave(wave@left[from:to], samp.rate=wave@samp.rate, bit=wave@bit)
+  if (wave@stereo) {
+    cutwave <- tuneR::Wave(wave@left[from:to], right=wave@right[from:to], samp.rate=wave@samp.rate, bit=wave@bit)
+  } else {
+    cutwave <- tuneR::Wave(wave@left[from:to], samp.rate=wave@samp.rate, bit=wave@bit)
+  }
+
   if (plot) {
     seewave::oscillo(wave)
     graphics::abline(v=sDuration(c(from,to), wave=wave), col="red", lty=2)
