@@ -95,6 +95,14 @@ test_that("Reading files works", {
   expect_equal(length(w@left), w@samp.rate)
   rm(w)
 
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=1, to=2, units="seconds")
+  expect_equal(length(w@left), 48000)
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@pcm, TRUE)
+  expect_equal(w@stereo, FALSE)
+  expect_equal(length(w@left), w@samp.rate)
+  rm(w)
+
   # TODO: empty.wav
 
 })
