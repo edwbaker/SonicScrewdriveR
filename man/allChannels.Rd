@@ -20,7 +20,7 @@ allChannels(
 
 \item{cl}{Optionally a cluster for parallel calculation.}
 
-\item{channel.param}{Optional. Name of the channel parameter to FUN.}
+\item{channel.param}{Name of the channel parameter to FUN. Can be NULL.}
 
 \item{output.FUN}{Optional. Function that processes the output of FUN.
 The "channels_se" function provides standard functionality for the
