@@ -77,7 +77,7 @@ test_that("stereo channel file works", {
   f1 <- function(w, channel) {
     return(list("channel" = channel))
   }
-  expect_equal(allChannels(w, f1), list(list("channel" = 1, cl=cl), list("channel" = 2)))
+  expect_equal(allChannels(w, f1, cl=cl), list(list("channel" = 1), list("channel" = 2)))
 
   # Function with non-standard channel.param
   f2 <- function(w, octopus) {
