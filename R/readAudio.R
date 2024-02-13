@@ -66,7 +66,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 
     wave <- av::read_audio_bin(file, channels=channels)
     wave[which(is.na(wave))] <- 0
-    bit <- bitdepth(wave)
+    bit <- .bitdepth(wave)
 
     if (channels == 1) {
       wave <- Wave(left=wave, samp.rate=attr(wave, "sample_rate"), bit=bit)
@@ -90,11 +90,10 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
   stop("File could not be processed")
 }
 
-bitdepth <- function(v) {
-  m <- max(abs(v), na.rm=TRUE)
+.bitdepth <- function(v) {
+  m <- ceiling(max(abs(v), na.rm=TRUE))
   if (m <= 128) { return(8) }
   if (m <= 32768) { return(16) }
   if (m <= 2147483648) { return(32) }
-  if (m <= 9223372036854775808) { return(64) }
-  stop("Bit depths above 64bit are not supported")
+  stop("Bit depths above 32bit are not supported.")
 }

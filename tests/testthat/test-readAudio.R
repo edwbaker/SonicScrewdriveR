@@ -110,3 +110,12 @@ test_that("Reading files works", {
 test_that("readAudio rejects bad files", {
   expect_error(readAudio(system.file("extdata/CONFIG.TXT", package="sonicscrewdriver")), "Could not determine number of channels.")
 })
+
+test_that(".bitdepth gives correct output", {
+  expect_equal(.bitdepth(2^8/2), 8)
+  expect_equal(.bitdepth(2^8/2+1), 16)
+  expect_equal(.bitdepth(2^16/2), 16)
+  expect_equal(.bitdepth(2^16/2+1), 32)
+  expect_equal(.bitdepth(2^32/2), 32)
+  expect_error(.bitdepth(2^64/2+1), "Bit depths above 32bit are not supported.")
+})
