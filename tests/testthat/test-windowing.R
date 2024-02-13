@@ -35,7 +35,7 @@ test_that("test windowing using filename", {
   expect_silent(validateIsWave(ws))
   expect_equal(length(ws@left), 24)
 
-  stopCluster(cl)
+  parallel::stopCluster(cl)
 })
 
 test_that("test windowing using Wave object", {
@@ -75,7 +75,7 @@ test_that("test windowing using Wave object", {
   expect_silent(validateIsWave(ws))
   expect_equal(length(ws@left), 24)
 
-  stopCluster(cl)
+  parallel::stopCluster(cl)
 })
 
 test_that("Overlap gives expected results", {
