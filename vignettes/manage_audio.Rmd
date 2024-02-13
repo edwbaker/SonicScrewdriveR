@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, echo=FALSE}
+```{r setup, eval=FALSE}
 library(sonicscrewdriver)
 ```
 
@@ -31,5 +31,3 @@ w <- readAudio(filename)
 ### Performing analyses on channels
 
 Some existing functions only operate on a single channel at a time. This may cause unnecessarily complex workflows when bulk analysing files with different numbers of channels. The `allChannels()` function applies a function to each channel and returns a list of analyses. This technique allows for the same analysis to be performed on each channel, without reference to the number of channels in the audio file. Optionally, a cluster can be specified to process channels on separate processor cores to increase analysis speed.
-
-```{r}
