@@ -78,12 +78,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       d <- 2
     }
 
-    if (from==0 & to == Inf) {
-      return(wave)
-    }
     if (units == "samples") {
-      return(cutws(wave,from=from, to=to))
+      return(cutws(wave,from=fromS, to=to))
     } else {
+      if (from==0 & to == Inf) {
+        return(wave)
+      }
       return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
     }
   }

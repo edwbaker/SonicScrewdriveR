@@ -23,6 +23,23 @@ test_that("Reading files works", {
   expect_equal
   rm(w)
 
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, units="samples")
+  expect_equal(length(w@left), 48000)
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@pcm, TRUE)
+  expect_equal(w@stereo, FALSE)
+  expect_equal(length(w@left), w@samp.rate)
+  rm(w)
+
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from = 1, to = 2, units = "seconds")
+  expect_equal(length(w@left), 48000)
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@bit, 16)
+  expect_equal(w@pcm, TRUE)
+  expect_equal(w@stereo, FALSE)
+  expect_equal(length(w@left), w@samp.rate)
+  rm(w)
+
   w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"))
   expect_equal(length(w@left), 241920)
   expect_equal(w@samp.rate, 48000)
@@ -47,6 +64,15 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
+  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), mime="audio/mpeg", from = 1, to = 2, units = "seconds")
+  expect_equal(length(w@left), 48000)
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@bit, 16)
+  expect_equal(w@pcm, TRUE)
+  expect_equal(w@stereo, FALSE)
+  expect_equal(length(w@left), w@samp.rate)
+  rm(w)
+
   w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"))
   expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
@@ -61,9 +87,16 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=48001, to=48000*2, units="samples")
+  expect_equal(length(w@left), 48000)
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@pcm, TRUE)
+  expect_equal(w@stereo, FALSE)
+  expect_equal(length(w@left), w@samp.rate)
+  rm(w)
+
   # TODO: empty.wav
 
-  # TODO: reading sections of file
 })
 
 test_that("readAudio rejects bad files", {
