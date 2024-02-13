@@ -100,6 +100,14 @@ test_that("output.FUN param works with soundecology example", {
   t <- allChannels(w, soundecology::bioacoustic_index, channel.param=NULL, output.FUN = channels_se)
   expect_equal(t, list(list(10.9717422), list(10.9717422)))
 
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
+  t <- allChannels(w, soundecology::acoustic_evenness, channel.param=NULL, output.FUN = channels_se)
+  expect_equal(t, list(list(0.9), list(0.9)))
+
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
+  t <- allChannels(w, soundecology::acoustic_diversity, channel.param=NULL, output.FUN = channels_se)
+  expect_equal(t, list(list(0), list(0)))
+
   # Don't run on Windoze
   if (.Platform$OS.type == "windows") {
     return()
@@ -109,6 +117,14 @@ test_that("output.FUN param works with soundecology example", {
   w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
   t <- allChannels(w, soundecology::bioacoustic_index, channel.param=NULL, output.FUN = channels_se, cl=cl)
   expect_equal(t, list(list(10.9717422), list(10.9717422)))
+
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
+  t <- allChannels(w, soundecology::acoustic_evenness, channel.param=NULL, output.FUN = channels_se, cl=cl)
+  expect_equal(t, list(list(0.9), list(0.9)))
+
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
+  t <- allChannels(w, soundecology::acoustic_diversity, channel.param=NULL, output.FUN = channels_se, cl=cl)
+  expect_equal(t, list(list(0), list(0)))
 
   parallel::stopCluster(cl)
 })
