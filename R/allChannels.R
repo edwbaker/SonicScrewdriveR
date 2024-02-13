@@ -22,7 +22,7 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
       if (is.null(cl)) {
         ret <- lapply(1:2, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
       } else {
-        ret <- parLapply(cl, 1:2, .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
+        ret <- parallel::parLapply(cl, 1:2, .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
       }
       return(ret)
     }
@@ -30,7 +30,7 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
     if (is.null(cl)) {
       ret <- lapply(1:w@dim[2], .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
     } else {
-      ret <- parLapply(cl, 1:w@dim[2], .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
+      ret <- parallel::parLapply(cl, 1:w@dim[2], .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
     }
     return(ret)
   }

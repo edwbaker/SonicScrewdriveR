@@ -66,7 +66,7 @@ windowing <- function(
     if (package.installed("pbapply", askInstall = FALSE)) {
       l <- pbapply::pblapply(starts, FUN2, cl=cluster, wave=wave, window.length=window.length, ...)
     } else {
-      l <- parLapply(cluster, starts, FUN2, wave=wave, window.length=window.length, ...)
+      l <- parallel::parLapply(cluster, starts, FUN2, wave=wave, window.length=window.length, ...)
     }
   }
 

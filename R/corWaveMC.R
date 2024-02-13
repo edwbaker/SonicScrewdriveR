@@ -21,7 +21,7 @@ corWaveMC <- function(wave, times, window, temp=25, cluster=NULL) {
     if (is.null(cluster)) {
       offsets <- lapply(1:wave@dim[2], corWaveMCchannel, wave=wave, from=start, to=end)
     } else {
-      offsets <- parLapply(cluster, 1:wave@dim[2], corWaveMCchannel, wave=wave, from=start, to=end)
+      offsets <- parallel::parLapply(cluster, 1:wave@dim[2], corWaveMCchannel, wave=wave, from=start, to=end)
     }
     outtimes[[i]] <- offsets
   }
