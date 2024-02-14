@@ -3,6 +3,7 @@ Audioblast
 Bedoya
 Bioacoustic
 BirdNet
+CMD
 Diel
 Dolbear's
 Geissmann
@@ -11,7 +12,6 @@ IUPAC
 Oecanthus
 POSIXlt
 PseudoWave
-readAudio
 Respeaker
 STP
 Sarlis
@@ -67,6 +67,7 @@ parseFilename
 pbapply
 pocessed
 pulseDetection
+readAudio
 rythmicity
 sd
 se
