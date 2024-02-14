@@ -1,4 +1,4 @@
-[![CRAN Version](https://www.r-pkg.org/badges/version/sonicscrewdriver)](https://cran.r-project.org/package=sonicscrewdriver) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/sonicscrewdriver)]() [![codecov](https://codecov.io/gh/edwbaker/SonicScrewdriveR/graph/badge.svg?token=pQq9E428KB)](https://codecov.io/gh/edwbaker/SonicScrewdriveR)
+[![CRAN Version](https://www.r-pkg.org/badges/version/sonicscrewdriver)](https://cran.r-project.org/package=sonicscrewdriver) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/sonicscrewdriver)]() [![codecov](https://codecov.io/gh/edwbaker/SonicScrewdriveR/graph/badge.svg?token=pQq9E428KB)](https://codecov.io/gh/edwbaker/SonicScrewdriveR) [![R-CMD-check](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml)
 
 # Sonic ScrewdriveR
 
