@@ -33,17 +33,14 @@ windowing <- function(
   cluster=NULL,
   ...){
   if (typeof(wave) == "character") {
-    if (!package.installed("av")) {
-      stop("av package must be installed to use windowing with filename.")
-    }
     FUN2 <- function(start, wave, window.length, ...){
       wave <- readAudio(wave, from=start,to=start+window.length,units="samples")
       return(FUN(wave, start, window.length, ...))
     }
     info <- av::av_media_info(wave)
     n.samples <- info$duration * info$audio[,"sample_rate"]
-
   } else {
+    validateIsWave(wave)
     n.samples <- length(wave@left)
     FUN2 <- function(start, wave, window.length, ...){
       section <- cutws(wave, from=start, to=start+window.length)

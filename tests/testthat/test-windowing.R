@@ -95,3 +95,7 @@ test_that("Overlap gives expected results", {
   ws <- windowing(f, window.length=500, window.overlap=250, complete.windows=F, FUN=f1)
   expect_equal(length(ws), 8)
 })
+
+test_that("windowing() rejects incorrect input", {
+  expect_error(windowing(123, 4, {print("Oh")}), "Expecting a Wave object")
+})
