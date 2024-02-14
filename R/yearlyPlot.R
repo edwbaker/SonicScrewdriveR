@@ -18,6 +18,9 @@ yearlyLabels <- function() {
 #' @param format One of months, mid-months, days
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
+  if (!format %in% c("months", "mid-months", "days")) {
+    stop(paste("Unknown format:",format))
+  }
   if (.isLeapYear(year)) {
     FebDays <- 29
     YearDays <- 366
@@ -69,13 +72,16 @@ yearlyPositions <- function(year=2022, format="months") {
 #' @param input One of POSIXlt (default)
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @export
-yearlyFraction <- function(t, year=2022, input="POSIXlt", unit="radians") {
+yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
+  if(!input %in% c("POSIX", "day")) {
+    stop(paste("Unknown input:",input))
+  }
   if (.isLeapYear(year)) {
     dc <- 366
   } else {
     dc <- 365
   }
-  if (input=="POSIXlt") {
+  if (input=="POSIX") {
     t <- unclass(as.POSIXlt(t))
     f <- t$yday/dc
   } else if (input=="day") {

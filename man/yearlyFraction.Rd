@@ -4,7 +4,7 @@
 \alias{yearlyFraction}
 \title{Calculate the fraction of a year given by a value}
 \usage{
-yearlyFraction(t, year = 2022, input = "POSIXlt", unit = "radians")
+yearlyFraction(t, year = 2022, input = "POSIX", unit = "radians")
 }
 \arguments{
 \item{t}{Object to be converted to a fraction}
