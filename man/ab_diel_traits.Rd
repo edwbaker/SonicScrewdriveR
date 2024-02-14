@@ -4,16 +4,18 @@
 \alias{ab_diel_traits}
 \title{Convert text times of day in audioblast traits to numeric values}
 \usage{
-ab_diel_traits(traits, date, lat, lon)
+ab_diel_traits(traits, date, lat, lon, overwrite = FALSE)
 }
 \arguments{
-\item{traits}{Traits dataset retrieved using audioblast()}
+\item{traits}{Traits dataset retrieved using audioblast().}
 
-\item{date}{The date used for conversion for time}
+\item{date}{The date used for conversion for time.}
 
-\item{lat}{Latitude of location}
+\item{lat}{Latitude of location.}
 
-\item{lon}{Longitude of location}
+\item{lon}{Longitude of location.}
+
+\item{overwrite}{If TRUE then the function will overwrite any existing min/max.}
 }
 \description{
 This function takes a traits dataset retrieved from audioblast and converts

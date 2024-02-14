@@ -2,12 +2,13 @@
 #'
 #' This function takes a traits dataset retrieved from audioblast and converts
 #' values such as "day" into a numeric time of day based on the date and location.
-#' @param traits Traits dataset retrieved using audioblast()
-#' @param date The date used for conversion for time
-#' @param lat Latitude of location
-#' @param lon Longitude of location
+#' @param traits Traits dataset retrieved using audioblast().
+#' @param date The date used for conversion for time.
+#' @param lat Latitude of location.
+#' @param lon Longitude of location.
+#' @param overwrite If TRUE then the function will overwrite any existing min/max.
 #' @export
-ab_diel_traits <- function(traits, date, lat, lon) {
+ab_diel_traits <- function(traits, date, lat, lon, overwrite=FALSE) {
   cn <- colnames(traits)
   if (!"value_min" %in% cn) {
     value_min <- vector(mode="character", length=nrow(traits))
@@ -18,7 +19,7 @@ ab_diel_traits <- function(traits, date, lat, lon) {
     traits <- cbind(traits, value_max)
   }
 
-  update <- .calcTimesOfDay(traits$value, traits$value_min, traits$value_max, date,lat,lon)
+  update <- .calcTimesOfDay(traits$value, traits$value_min, traits$value_max, date,lat,lon, overwrite=overwrite)
   traits$value_min <- update$min
   traits$value_max <- update$max
 
@@ -35,16 +36,17 @@ ab_diel_traits <- function(traits, date, lat, lon) {
 #' these into HHMM values. If min/max are provided already then these are used
 #' and the function will not attempt to calculate values
 #'
-#' @param times The times of day to convert
-#' @param min The minimum value (vector same length as times)
-#' @param max The maximum value (vector same length as times)
-#' @param date The date to use for conversion (a Date object)
-#' @param lat Latitude of location
-#' @param lon Longitude of location
+#' @param times The times of day to convert.
+#' @param min The minimum value (vector same length as times).
+#' @param max The maximum value (vector same length as times).
+#' @param date The date to use for conversion (a Date object).
+#' @param lat Latitude of location.
+#' @param lon Longitude of location.
+#' @param overwrite If TRUE then the function will overwrite any existing min/max.
 #' @keywords internal
 #' @noRd
 #' @importFrom stringi stri_replace_all_charclass stri_pad
-.calcTimesOfDay <- function(times, min, max, date, lat, lon) {
+.calcTimesOfDay <- function(times, min, max, date, lat, lon, overwrite=FALSE) {
   #Some initial tidying
   times <- tolower(stri_replace_all_charclass(times, "\\p{WHITE_SPACE}", ""))
   min[is.na(min)] <- ""
@@ -55,16 +57,18 @@ ab_diel_traits <- function(traits, date, lat, lon) {
 
   for (i in 1:length(times)) {
     #If min and max already set then skip
-    if (min[i] != "" & max[i] != "") {next}
+    if (!overwrite & min[i] != "" & max[i] != "") {next}
     split <- strsplit(times[i], split="-")[[1]]
-    if (length(split) > 2) {warning("Cannot split on more than one '-'")}
+    if (length(split) > 2) {warning("Cannot split on more than one '-'.")}
     if (length(split) == 1) {
       inf <- tod[tod$times==times[i],]
       if (nrow(inf) == 1) {
-        min[i] <- inf$starts
-        max[i] <- inf$ends
-      } else {
-        print(times[i])
+        if (overwrite | min[i] == "") {
+          min[i] <- inf$starts
+        }
+        if (overwrite  | max[i] == "") {
+          max[i] <- inf$ends
+        }
       }
     }
     if (length(split) == 2) {
@@ -73,8 +77,6 @@ ab_diel_traits <- function(traits, date, lat, lon) {
       if (nrow(inf1) == 1 & nrow(inf2) == 1) {
         min[i] <- inf1$starts
         max[i] <- inf2$ends
-      } else {
-        print(times[i])
       }
     }
   }
