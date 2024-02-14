@@ -1,3 +1,14 @@
+test_that("ab_diel_traits with real data", {
+  data <- audioblast(
+    "data",
+    "traits",
+    "id" = 33170,
+    max_pages = 1)
+  data <- ab_diel_traits(data, "2024-12-12", 54, 0)
+  expect_equal(data$value_min[1], 1538)
+  expect_equal(data$value_max[1], 1751)
+})
+
 test_that(".timesOfDay() rejects incorrect input", {
   expect_silent(.timesOfDay(date=as.Date(Sys.time()), lat=54, lon=0))
   expect_error(.timesOfDay(date=as.Date(Sys.time())))

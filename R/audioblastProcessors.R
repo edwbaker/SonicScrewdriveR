@@ -9,6 +9,7 @@
 #' @param overwrite If TRUE then the function will overwrite any existing min/max.
 #' @export
 ab_diel_traits <- function(traits, date, lat, lon, overwrite=FALSE) {
+  date <- as.Date(date)
   cn <- colnames(traits)
   if (!"value_min" %in% cn) {
     value_min <- vector(mode="character", length=nrow(traits))
