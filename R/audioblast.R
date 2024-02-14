@@ -24,7 +24,7 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
   nams <- names(args)
   ret <- NULL
   if (check) {
-    c <- audioblast_ASITSN(type, name, endpoint)
+    c <- .audioblast_ASITSN(type, name, endpoint)
   }
   url <- paste0("https://api.audioblast.org/",type,"/",name,"/")
   if (!is.null(endpoint)) {
@@ -89,7 +89,9 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
 #' @param ... Fields and values to filter on. Any field defined by audioBLAST.
 #' @importFrom utils URLencode
 #' @importFrom jsonlite fromJSON
-audioblast_ASITSN <- function(type, name, endpoint=NULL, ...) {
+#' @keywords internal
+#' @noRd
+.audioblast_ASITSN <- function(type, name, endpoint=NULL, ...) {
   args <- list(...)
   nams <- names(args)
   url <- paste0("https://api.audioblast.org/standalone/modules/module_info/?module=",name)
@@ -100,7 +102,7 @@ audioblast_ASITSN <- function(type, name, endpoint=NULL, ...) {
 
   if (!is.null(endpoint)) {
     if (!(endpoint %in% names(res$data$endpoints))) {
-      stop(paste(endpoint, "is not a valid endpoint"))
+      stop(paste(endpoint, "is not a valid endpoint."))
     }
   }
 }
