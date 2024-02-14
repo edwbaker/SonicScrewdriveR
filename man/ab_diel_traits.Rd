@@ -17,5 +17,5 @@ ab_diel_traits(traits, date, lat, lon)
 }
 \description{
 This function takes a traits dataset retrieved from audioblast and converts
-values such as "dawn" into a numeric time of day based on the date and location.
+values such as "day" into a numeric time of day based on the date and location.
 }

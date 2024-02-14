@@ -1,7 +1,7 @@
 #' Convert text times of day in audioblast traits to numeric values
 #'
 #' This function takes a traits dataset retrieved from audioblast and converts
-#' values such as "dawn" into a numeric time of day based on the date and location.
+#' values such as "day" into a numeric time of day based on the date and location.
 #' @param traits Traits dataset retrieved using audioblast()
 #' @param date The date used for conversion for time
 #' @param lat Latitude of location
@@ -28,6 +28,21 @@ ab_diel_traits <- function(traits, date, lat, lon) {
   return(traits)
 }
 
+#' Helper function for ab_diel_traits
+#'
+#' This function takes time data from audioblast traits (e.g. "day", "evening"),
+#' along with any min/max information and uses a Date and lat/lon to convert
+#' these into HHMM values. If min/max are provided already then these are used
+#' and the function will not attempt to calculate values
+#'
+#' @param times The times of day to convert
+#' @param min The minimum value (vector same length as times)
+#' @param max The maximum value (vector same length as times)
+#' @param date The date to use for conversion (a Date object)
+#' @param lat Latitude of location
+#' @param lon Longitude of location
+#' @keywords internal
+#' @noRd
 #' @importFrom stringi stri_replace_all_charclass stri_pad
 .calcTimesOfDay <- function(times, min, max, date, lat, lon) {
   #Some initial tidying
@@ -66,6 +81,16 @@ ab_diel_traits <- function(traits, date, lat, lon) {
   return(as.data.frame(cbind(min,max)))
 }
 
+#' Calculate times of day based on date and location
+#'
+#' This function calculates times of day based on a Date and lat/lon location.
+#' If no date, lat or lon are provided then the function will return a list of
+#' times of day that it can process.
+#' @param date The date to use for conversion (a Date object)
+#' @param lat Latitude of location
+#' @param lon Longitude of location
+#' @keywords internal
+#' @noRd
 .timesOfDay <- function(date=NULL, lat=NULL, lon=NULL) {
   times <- c(
     "day",
@@ -74,7 +99,11 @@ ab_diel_traits <- function(traits, date, lat, lon) {
     "afternoon",
     "evening"
   )
-  if (is.null(date)) {return(times)}
+  if (is.null(date) & is.null(lat) & is.null(lon)) {
+    return(times)
+  } else if (is.null(date) | is.null(lat) | is.null(lon)) {
+    stop("date, lat and lon must all be set (or none).")
+  }
 
   d <- getSunlightTimes(date=date, lat=lat, lon=lon)
   starts <- c(
@@ -118,4 +147,3 @@ ab_diel_traits <- function(traits, date, lat, lon) {
   ret <- as.data.frame(cbind(times,starts,ends))
   return(ret)
 }
-
