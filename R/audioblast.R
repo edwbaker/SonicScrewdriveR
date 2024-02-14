@@ -22,7 +22,6 @@
 audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, page=1, ...) {
   args <- list(...)
   nams <- names(args)
-  ret <- NULL
   if (check) {
     c <- .audioblast_ASITSN(type, name, endpoint)
   }
@@ -54,11 +53,7 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
   if (is.null(res$data)) {
     return(NULL)
   }
-  if (is.null(ret)) {
-    ret <- res$data
-  } else {
-    ret <- rbind(ret, res$data)
-  }
+  ret <- res$data
   mp <- min(res$last_page, max_pages)
   page <- page + 1
   pb = txtProgressBar(min = 0, max = mp, initial = page)
