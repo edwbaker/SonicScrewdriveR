@@ -46,6 +46,9 @@ test_that("yearlyFraction gives expected results", {
 
   expect_equal(yearlyFraction(as.POSIXlt("2018-01-01 00:00:00"), unit="fraction"), 0)
   expect_lte(abs(1 - yearlyFraction(as.POSIXlt("2018-12-31 23:59:59"), unit="fraction")), 0.1)
+
+  expect_equal(yearlyFraction(as.POSIXlt("2018-01-01 00:00:00"), unit="days"), 0)
+  expect_lte(abs(1 - yearlyFraction(as.POSIXlt("2018-12-31 23:59:59"), unit="days")), 0.1)
 })
 
 test_that("Plotting does not throw errors", {
