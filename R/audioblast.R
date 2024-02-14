@@ -51,6 +51,9 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
     }
   }
   res <- jsonlite::fromJSON(URLencode(url))
+  if (is.null(res$data)) {
+    return(NULL)
+  }
   if (is.null(ret)) {
     ret <- res$data
   } else {
@@ -114,11 +117,15 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
 #' @param d Data returned from a search using audioBlast().
 #' @param metadata If true saves the data in d as a csv file.
 #' @param skip.existing If true will not overwrite existing files.
+#' @param dir Directory to save files to.
 #' @export
 #' @importFrom utils download.file write.csv
-audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE) {
+audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".") {
+  if (!dir.exists(dir)) {
+    dir.create(dir, recursive = TRUE)
+  }
   if (metadata) {
-    write.csv(d, file="metadata.csv")
+    write.csv(d, file=paste(dir, "metadata.csv", sep="/"))
   }
   files <- d[, 'filename']
   names <- basename(files)
@@ -127,7 +134,7 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE) {
     names <- names[file.exists(names)==FALSE]
   }
   for (i in 1:length(files)) {
-    download.file(files[i], destfile=names[i])
+    download.file(files[i], destfile=paste(dir, names[i], sep="/"))
   }
 }
 

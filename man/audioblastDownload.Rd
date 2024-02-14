@@ -4,7 +4,7 @@
 \alias{audioblastDownload}
 \title{Download audio files from audioBlast}
 \usage{
-audioblastDownload(d, metadata = TRUE, skip.existing = TRUE)
+audioblastDownload(d, metadata = TRUE, skip.existing = TRUE, dir = ".")
 }
 \arguments{
 \item{d}{Data returned from a search using audioBlast().}
@@ -12,6 +12,8 @@ audioblastDownload(d, metadata = TRUE, skip.existing = TRUE)
 \item{metadata}{If true saves the data in d as a csv file.}
 
 \item{skip.existing}{If true will not overwrite existing files.}
+
+\item{dir}{Directory to save files to.}
 }
 \description{
 Downloads audio files associated with a search using the audioBlast() function.

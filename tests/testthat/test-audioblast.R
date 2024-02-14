@@ -15,5 +15,26 @@ test_that("audioblast works with real data", {
 
   data <- audioblast("standalone", "analysis", "fetch_analysis_counts", source="unp", id="nhm-unp-1-1588606870")
   expect_equal(names(data), c("counts", "total"))
+
+  expect_true(is.null(audioblast("data", "recordings", source="unp", deployment="horsefly")))
 })
 
+test_that("audioblastDownload works as expected", {
+  if (dir.exists("ab_dl_test")) {
+    unlink("ab_dl_test", recursive=TRUE)
+  }
+  recs <- audioblast("data", "recordings", max_pages = 1, source="bio.acousti.ca", id="11096")
+
+  audioblastDownload(recs, dir="ab_dl_test", metadata = FALSE)
+  expect_true(dir.exists("ab_dl_test"))
+  expect_equal(length(list.files("ab_dl_test", pattern="*.wav")), 1)
+  expect_equal(length(list.files("ab_dl_test", pattern="*.csv")), 0)
+
+  audioblastDownload(recs, dir="ab_dl_test", metadata = TRUE)
+  expect_equal(length(list.files("ab_dl_test", pattern="*.wav")), 1)
+  expect_equal(length(list.files("ab_dl_test", pattern="*.csv")), 1)
+
+  if (dir.exists("ab_dl_test")) {
+    unlink("ab_dl_test", recursive=TRUE)
+  }
+})
