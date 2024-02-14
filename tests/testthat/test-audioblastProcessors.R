@@ -2,11 +2,22 @@ test_that("ab_diel_traits with real data", {
   data <- audioblast(
     "data",
     "traits",
+    "source" = "bio.acousti.ca",
     "id" = 33170,
     max_pages = 1)
-  data <- ab_diel_traits(data, "2024-12-12", 54, 0)
-  expect_equal(data$value_min[1], 1538)
-  expect_equal(data$value_max[1], 1751)
+  data2 <- ab_diel_traits(data, "2024-12-12", 54, 0)
+  expect_equal(data2$value_min[1], 1538)
+  expect_equal(data2$value_max[1], 1751)
+
+  data2 <- data[, c("value", "value_min")]
+  data2 <- ab_diel_traits(data2, "2024-12-12", 54, 0)
+  expect_equal(data2$value_min[1], 1538)
+  expect_equal(data2$value_max[1], 1751)
+
+  data2 <- data[, c("value", "value_max")]
+  data2 <- ab_diel_traits(data2, "2024-12-12", 54, 0)
+  expect_equal(data2$value_min[1], 1538)
+  expect_equal(data2$value_max[1], 1751)
 })
 
 test_that(".timesOfDay() rejects incorrect input", {
