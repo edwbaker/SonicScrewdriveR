@@ -58,25 +58,29 @@ values such as "day" into a numeric time of day based on the date and location.<
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ab_diel_traits</span><span class="op">(</span><span class="va">traits</span>, <span class="va">date</span>, <span class="va">lat</span>, <span class="va">lon</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ab_diel_traits</span><span class="op">(</span><span class="va">traits</span>, <span class="va">date</span>, <span class="va">lat</span>, <span class="va">lon</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>traits</dt>
-<dd><p>Traits dataset retrieved using audioblast()</p></dd>
+<dd><p>Traits dataset retrieved using audioblast().</p></dd>
 
 
 <dt>date</dt>
-<dd><p>The date used for conversion for time</p></dd>
+<dd><p>The date used for conversion for time.</p></dd>
 
 
 <dt>lat</dt>
-<dd><p>Latitude of location</p></dd>
+<dd><p>Latitude of location.</p></dd>
 
 
 <dt>lon</dt>
-<dd><p>Longitude of location</p></dd>
+<dd><p>Longitude of location.</p></dd>
+
+
+<dt>overwrite</dt>
+<dd><p>If TRUE then the function will overwrite any existing min/max.</p></dd>
 
 </dl></div>
 
