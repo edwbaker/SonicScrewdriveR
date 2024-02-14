@@ -4,7 +4,7 @@
 
 This package provides tools for manipulating sound files for analysis and visualisation.
 
-The need for `SonicScredriveR` arose initially in the [Automated Acoustic Observatories](https://ebaker.me.uk/aoo) project at the [University of York](https://www.york.ac.uk), and later in the development of [audioBlast](https://audioblast.org). Both of these projects required the ability to read, and manipulate audio files in a variety of formats, and to visualise and analyse the data contained within them. The package is designed to be as flexible as possible, and to be able to handle audio file formats with differing encoding, channel numbers, and sample rates. In one sense it can be seen as a wrapper around existing packages to provide a unified interface, but it also provides a number of new functions and visualisations.
+The need for `SonicScrewdriveR` arose initially in the [Automated Acoustic Observatories](https://ebaker.me.uk/aoo) project at the [University of York](https://www.york.ac.uk), and later in the development of [audioBlast](https://audioblast.org). Both of these projects required the ability to read and manipulate audio files in a variety of formats and to visualise and analyse the data contained within them. The package is designed to be as flexible as possible and to be able to handle audio file formats with differing encoding, channel numbers, and sample rates. In one sense, it can be seen as a wrapper around existing packages to provide a unified interface, but it also offers many new functions and visualisations.
 
 ## Installation
 
