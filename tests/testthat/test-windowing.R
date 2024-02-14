@@ -99,3 +99,36 @@ test_that("Overlap gives expected results", {
 test_that("windowing() rejects incorrect input", {
   expect_error(windowing(123, 4, {print("Oh")}), "Expecting a Wave object")
 })
+
+test_that("works as expected without pbapply installed single core", {
+  local_mocked_bindings(
+    package.installed = function(...) { return(FALSE)}
+  )
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+
+  f1 <- function(start, wave, window.length) {
+    return(1)
+  }
+  ws <- windowing(f, window.length=10000, FUN=f1)
+  expect_equal(length(ws), 24)
+  expect_equal(sum(as.numeric(ws)), 24)
+})
+
+test_that("works as expected without pbapply installed multi-core", {
+  local_mocked_bindings(
+    package.installed = function(...) { return(FALSE)}
+  )
+
+  cl <- defaultCluster()
+
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+
+  f1 <- function(start, wave, window.length) {
+    return(1)
+  }
+  ws <- windowing(f, window.length=10000, FUN=f1, cl=cl)
+  expect_equal(length(ws), 24)
+  expect_equal(sum(as.numeric(ws)), 24)
+
+  parallel::stopCluster(cl)
+})
