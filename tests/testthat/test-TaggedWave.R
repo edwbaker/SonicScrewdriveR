@@ -48,6 +48,13 @@ test_that("converting WaveMC to TaggedWaveMC works", {
   expect_false(inherits(utw, "TaggedWaveMC"))
   expect_equal(dim(w@`.Data`), dim(utw@`.Data`))
   expect_equal(w@`.Data`, utw@`.Data`)
+
+  utw <- untagWave(tw)
+  expect_true(inherits(utw, "WaveMC"))
+  expect_false(is(utw, "TaggedWaveMC"))
+  expect_false(inherits(utw, "TaggedWaveMC"))
+  expect_equal(dim(w@`.Data`), dim(utw@`.Data`))
+  expect_equal(w@`.Data`, utw@`.Data`)
 })
 
 test_that("setting origin works", {
