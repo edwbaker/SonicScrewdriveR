@@ -5,7 +5,7 @@
 #' allow a pipe operator (either magrittr or base R) to be used to apply filters
 #' to a Wave in a pipeline.
 #'
-#' @slot module Module the filter function is found in.
+#' @slot description Description of the filter.
 #' @slot func Name of function.
 #' @slot params List of additional parameters to pass to the function.
 setClass(
@@ -50,7 +50,7 @@ filterWave <- function(w, filt) {
   if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
     return(lapply(w, filterWave, filt))
   }
-  stop("w must be a Wave or WaveMC object")
+  stop("Can only filter a Wave or WaveMC object.")
 }
 
 #' Simple bandpass filter

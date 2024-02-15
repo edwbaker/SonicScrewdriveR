@@ -13,7 +13,7 @@ to a Wave in a pipeline.
 \section{Slots}{
 
 \describe{
-\item{\code{module}}{Module the filter function is found in.}
+\item{\code{description}}{Description of the filter.}
 
 \item{\code{func}}{Name of function.}
 
