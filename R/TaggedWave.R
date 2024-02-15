@@ -34,10 +34,12 @@ setClass(
   return(object)
 }
 
+#' @export
 setGeneric("addProcess", function(object, process, output=NULL)
   standardGeneric("addProcess") )
-setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 
+#' @export
+setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 
 
 #' A S4 class for tagged multi-channel waves

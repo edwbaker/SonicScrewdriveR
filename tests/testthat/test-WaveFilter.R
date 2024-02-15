@@ -67,3 +67,35 @@ test_that("bandpass filter works as expected", {
   expect_true(all(ss[ss[,1] < 0.9, 2] < 0.01))
   expect_true(all(ss[ss[,1] >= 2.1, 2] < 0.01))
 })
+
+test_that("filterWave() works with cluster", {
+  cl <- defaultCluster()
+
+  parallel::clusterEvalQ(cl, {
+    library(sonicscrewdriver)
+  })
+  # Generate list of Wave objects
+  waves <- list(
+    tuneR::silence(duration=44100, samp.rate=44100),
+    tuneR::noise(kind="white", duration=44100, samp.rate=44100),
+    tuneR::sine(440, duration=44100, samp.rate=44100)
+  )
+  # Tag the Wave objects
+  waves <- tagWave(waves)
+
+  filter <- new(
+    "WaveFilter",
+    description="Do absolutely nowt"
+  )
+  # Apply the filter to the Wave objects
+  filtered <- filterWave(waves, filter, cl=cl)
+  expect_equal(length(waves), length(filtered))
+  expect_true(all(sapply(filtered, inherits, what=c("TaggedWave"))))
+
+  # Check description is added
+  expect_equal(typeof(filtered[[1]]@processing), "list")
+  expect_equal(length(filtered[[1]]@processing), 2)
+  expect_equal(filtered[[1]]@processing[[1]], "Do absolutely nowt")
+
+  parallel::stopCluster(cl)
+})

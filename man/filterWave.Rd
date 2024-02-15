@@ -4,12 +4,14 @@
 \alias{filterWave}
 \title{Apply a WaveFilter object to a Wave object}
 \usage{
-filterWave(w, filt)
+filterWave(w, filt, cl = NULL)
 }
 \arguments{
 \item{w}{A Wave object.}
 
 \item{filt}{Wave object with the selected filter applied.}
+
+\item{cl}{Optional. If a cluster is specified, the filter will be applied in parallel.}
 }
 \description{
 A WaveFilter object is an object containing information necessary for the

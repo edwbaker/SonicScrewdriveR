@@ -3,12 +3,14 @@
 \docType{class}
 \name{WaveFilter-class}
 \alias{WaveFilter-class}
-\title{A S4 class to represent a filter for a Wave object}
+\title{WaveFilter object for audio filters}
 \description{
-A WaveFilter object is an object containing information necessary for the
-filterw function to apply the filter to a Wave object. This is designed to
-allow a pipe operator (either magrittr or base R) to be used to apply filters
-to a Wave in a pipeline.
+A \code{WaveFilter} object is an object containing information necessary for the
+\code{filterWave()} function to apply the filter to a \code{Wave} or \code{TaggedWave}
+object. This is designed to allow a pipe operator (either magrittr or base R)
+to be used to apply filters to a Wave in a pipeline. If used with a
+\code{TaggedWave} object the function adds information to the \code{processing} slot
+documenting its action.
 }
 \section{Slots}{
 
