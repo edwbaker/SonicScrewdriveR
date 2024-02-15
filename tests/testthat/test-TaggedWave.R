@@ -13,6 +13,12 @@ test_that("converting Wave to TaggedWave works", {
   expect_true(is(tw, "TaggedWave"))
   expect_false(inherits(tw, "WaveMC"))
 
+  # Check converting already tagged
+  tw <- tagWave(tw)
+  expect_true(inherits(tw, "Wave"))
+  expect_true(is(tw, "TaggedWave"))
+  expect_false(inherits(tw, "WaveMC"))
+
   utw <- untagWave(tw)
   expect_true(inherits(utw, "Wave"))
   expect_false(is(utw, "TaggedWave"))
@@ -26,6 +32,12 @@ test_that("converting WaveMC to TaggedWaveMC works", {
   channel <- round(32000 * sin(440 * x))
   w <- tuneR::WaveMC(data = channel, samp.rate = 44100, bit = 16)
   tw <- tagWave(w)
+  expect_true(inherits(tw, "WaveMC"))
+  expect_true(is(tw, "TaggedWaveMC"))
+  expect_false(inherits(tw, "Wave"))
+
+  # Check converting already tagged
+  tw <- tagWave(tw)
   expect_true(inherits(tw, "WaveMC"))
   expect_true(is(tw, "TaggedWaveMC"))
   expect_false(inherits(tw, "Wave"))
