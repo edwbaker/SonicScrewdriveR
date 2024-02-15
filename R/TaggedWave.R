@@ -25,16 +25,16 @@ setClass(
   slots=.tagSlots()
 )
 
-.addProcess <- function(object, process) {
+.addProcess <- function(object, process, output) {
   if (length(object@processing) == 0) {
-    object@processing <- list(process)
+    object@processing <- list("process" = process, "output" = output)
   } else {
-    object@processing <- list(object@processing, process)
+    object@processing <- list(object@processing, list("process" = process, "output" = output))
   }
   return(object)
 }
 
-setGeneric("addProcess", function(object, process)
+setGeneric("addProcess", function(object, process, output=NULL)
   standardGeneric("addProcess") )
 setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 

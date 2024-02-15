@@ -36,7 +36,7 @@ test_that("output is the same when filter is nothing (TaggedWave)", {
 
   # Check description is added
   expect_equal(typeof(filtered[[1]]@processing), "list")
-  expect_equal(length(filtered[[1]]@processing), 1)
+  expect_equal(length(filtered[[1]]@processing), 2)
   expect_equal(filtered[[1]]@processing[[1]], "Do absolutely nowt")
 })
 

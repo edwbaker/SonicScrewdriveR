@@ -77,3 +77,13 @@ test_that("list of waves works", {
   )
   expect_error(tagWave(waves), "All items in list must be Wave or WaveMC objects.")
 })
+
+test_that("addProcess works as expected", {
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100)
+  tw <- tagWave(w)
+  tw <- addProcess(tw, "Aslan")
+  tw <- addProcess(tw, "AsCran", "the pedantic lion")
+  expect_equal(typeof(tw@processing), "list")
+  expect_equal(tw@processing[[1]], list("process" = "Aslan", "output" = NULL))
+  expect_equal(tw@processing[[2]], list("process" = "AsCran", "output" = "the pedantic lion"))
+})
