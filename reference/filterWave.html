@@ -64,7 +64,7 @@ to a Wave in a pipeline.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filterWave</span><span class="op">(</span><span class="va">w</span>, <span class="va">filt</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filterWave</span><span class="op">(</span><span class="va">w</span>, <span class="va">filt</span>, cl <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,6 +75,10 @@ to a Wave in a pipeline.</p>
 
 <dt>filt</dt>
 <dd><p>Wave object with the selected filter applied.</p></dd>
+
+
+<dt>cl</dt>
+<dd><p>Optional. If a cluster is specified, the filter will be applied in parallel.</p></dd>
 
 </dl></div>
     <div class="section level2">
