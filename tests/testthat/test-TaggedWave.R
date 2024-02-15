@@ -60,3 +60,20 @@ test_that("setting origin works", {
   expect_equal(tw@origin, "test")
 })
 
+test_that("list of waves works", {
+  waves <- list(
+    tuneR::silence(duration=44100, samp.rate=44100),
+    tuneR::noise(kind="white", duration=44100, samp.rate=44100),
+    tuneR::sine(440, duration=44100, samp.rate=44100)
+  )
+
+  tws <- tagWave(waves)
+  expect_true(all(sapply(tws, inherits, what=c("TaggedWave"))))
+
+  waves <- list(
+    tuneR::silence(duration=44100, samp.rate=44100),
+    14,
+    tuneR::sine(440, duration=44100, samp.rate=44100)
+  )
+  expect_error(tagWave(waves), "All items in list must be Wave or WaveMC objects.")
+})

@@ -40,11 +40,11 @@ setClass(
 
 #' Tag a Wave or WaveMC object
 #'
-#' This function takes a Wave/WaveMC object and returns a corresponding
-#' TaggedWave/TaggedWaveMC object.
-#' @param w A Wave or WaveMC object.
+#' This function takes a `Wave`/`WaveMC` object (or a list of such objects) and
+#' returns a corresponding tagged version (`TaggedWave` or `TaggedWaveMC`).
+#' @param w A `Wave` or `WaveMC` object (or list of such objects).
 #' @param origin The origin of the object (default "user").
-#' @return A TaggedWave or TaggedWaveMC object.
+#' @return A `TaggedWave` or `TaggedWaveMC` object (or list of such objects).
 #' @importFrom methods as
 #' @export
 tagWave <- function(w, origin="user") {
@@ -60,9 +60,14 @@ tagWave <- function(w, origin="user") {
     return(tw)
   } else if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
     return(w)
-  } else {
-    stop("Attempting to tag object that is not of type Wave or WaveMC.")
+  } else if (is(w, "list")) {
+    if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
+      return(lapply(w, tagWave))
+    } else {
+      stop("All items in list must be Wave or WaveMC objects.")
+    }
   }
+  stop("Attempting to tag object that is not of type Wave or WaveMC.")
 }
 
 #' Untag a TaggedWave or TaggedWaveMC object
