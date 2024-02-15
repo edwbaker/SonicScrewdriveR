@@ -7,18 +7,17 @@
 #'
 #' @slot module Module the filter function is found in.
 #' @slot func Name of function.
-#' @slot allChannels Whether to apply filter to all channels in the wave.
 #' @slot params List of additional parameters to pass to the function.
 setClass(
   "WaveFilter",
   slots=list(
     func="character",
-    allChannels="logical",
+    description="character",
     params="list"
   ),
   prototype = list(
     func = NA_character_,
-    allChannels= TRUE,
+    description=NA_character_,
     params = list()
   )
 )
@@ -35,12 +34,23 @@ setClass(
 #' @param w A Wave object.
 #' @param filt Wave object with the selected filter applied.
 #' @export
-filterw <- function(w, filt) {
-  if (filt@allChannels==TRUE) {
-    return(do.call(allChannels, c(list(w), list(match.fun(filt@func)), filt@params)))
-  } else {
+filterWave <- function(w, filt) {
+  if(filt@func == "") {
+    message("No function supplied to filterWave, will do nothing.")
+    filt@func <- "doNowt"
+  }
+  if (inherits(w, c("TaggedWave", "TaggedWaveMC"))) {
+    fw <- do.call(match.fun(filt@func), c(list(w), filt@params))
+    fw <- addProcess(fw, filt@description)
+    return(fw)
+  }
+  if (inherits(w, c("Wave", "WaveMC"))) {
     return(do.call(match.fun(filt@func), c(list(w), filt@params)))
   }
+  if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
+    return(lapply(w, filterWave, filt))
+  }
+  stop("w must be a Wave or WaveMC object")
 }
 
 #' Simple bandpass filter
@@ -65,3 +75,12 @@ bandpass <- function( from, to, ...) {
   filt <- new("WaveFilter", func="ffilter", allChannels=TRUE, params=list(from=from,to=to,output="Wave",...))
   return(filt)
 }
+
+#' Do nothing
+#'
+#' This function does nothing to the Wave (or any object).
+#' @param x A thing.
+#' @return The same thing.
+#' @keywords internal
+#' @export
+doNowt <- function(x) {return(x)}

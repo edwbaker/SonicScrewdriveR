@@ -8,7 +8,7 @@
   return(list(
     origin="character",
     metadata="list",
-    analyses="list"
+    processing="list"
   ))
 }
 
@@ -24,6 +24,21 @@ setClass(
   contains="Wave",
   slots=.tagSlots()
 )
+
+.addProcess <- function(object, process) {
+  if (length(object@processing) == 0) {
+    object@processing <- list(process)
+  } else {
+    object@processing <- list(object@processing, process)
+  }
+  return(object)
+}
+
+setGeneric("addProcess", function(object, process)
+  standardGeneric("addProcess") )
+setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
+
+
 
 #' A S4 class for tagged multi-channel waves
 #'
@@ -95,5 +110,3 @@ untagWave <- function(w) {
     stop("Attempting to untag object that is not of type TaggedWave or TaggedWaveMC.")
   }
 }
-
-
