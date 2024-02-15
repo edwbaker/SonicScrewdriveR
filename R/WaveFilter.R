@@ -11,12 +11,12 @@
 setClass(
   "WaveFilter",
   slots=list(
-    func="character",
+    func="function",
     description="character",
     params="list"
   ),
   prototype = list(
-    func = NA_character_,
+    func = function(x) {return(x)},
     description=NA_character_,
     params = list()
   )
@@ -35,10 +35,6 @@ setClass(
 #' @param filt Wave object with the selected filter applied.
 #' @export
 filterWave <- function(w, filt) {
-  if(filt@func == "") {
-    message("No function supplied to filterWave, will do nothing.")
-    filt@func <- "doNowt"
-  }
   if (inherits(w, c("TaggedWave", "TaggedWaveMC"))) {
     fw <- do.call(match.fun(filt@func), c(list(w), filt@params))
     fw <- addProcess(fw, filt@description)
@@ -67,20 +63,15 @@ filterWave <- function(w, filt) {
 #' @export
 #' @examples
 #' \dontrun{
-#' nwave <- noise("white")
-#' fwave <- filterw(nwave, bandpass(from=1000, to=2000))
-#' nwave |> filterw(bandpass(from=1000, to=2000)) -> fwave
+#' nwave <- noise("white", duration=44100, samp.rate=44100)
+#'
+#' fwave <- filterWave(nwave, bandpass(from=1000, to=2000))
+#' nwave |> filterWave(bandpass(from=1000, to=2000)) -> fwave
 #' }
 bandpass <- function( from, to, ...) {
-  filt <- new("WaveFilter", func="ffilter", allChannels=TRUE, params=list(from=from,to=to,output="Wave",...))
+  if (!package.installed("seewave")) {
+    stop("seewave package is required for the bandpass WaveFilter.")
+  }
+  filt <- new("WaveFilter", func=seewave::ffilter, params=list(from=from,to=to,output="Wave",...))
   return(filt)
 }
-
-#' Do nothing
-#'
-#' This function does nothing to the Wave (or any object).
-#' @param x A thing.
-#' @return The same thing.
-#' @keywords internal
-#' @export
-doNowt <- function(x) {return(x)}

@@ -9,8 +9,7 @@ test_that("filterWave rejects unknown inputs", {
   # Use return() to make no change
   filter <- new(
     "WaveFilter",
-    description="Do absolutely nowt",
-    func="doNowt"
+    description="Do absolutely nowt"
   )
   # Apply the filter to the Wave objects
   expect_error(filterWave(waves, filter), "Can only filter a Wave or WaveMC object.")
@@ -28,8 +27,7 @@ test_that("output is the same when filter is nothing (TaggedWave)", {
 
   filter <- new(
     "WaveFilter",
-    description="Do absolutely nowt",
-    func="doNowt"
+    description="Do absolutely nowt"
   )
   # Apply the filter to the Wave objects
   filtered <- filterWave(waves, filter)
@@ -52,12 +50,20 @@ test_that("output is the same when filter is nothing (Wave)", {
 
   filter <- new(
     "WaveFilter",
-    description="Do absolutely nowt",
-    func=""
+    description="Do absolutely nowt"
   )
   # Apply the filter to the Wave objects
   filtered <- filterWave(waves, filter)
   expect_equal(length(waves), length(filtered))
   expect_true(all(sapply(filtered, inherits, what=c("Wave"))))
   expect_true(all(sapply(filtered, is, "Wave")))
+})
+
+test_that("bandpass filter works as expected", {
+  expect_true(is(bandpass(1000,2000), "WaveFilter"))
+
+  fw <- noise("white", duration=44100, samp.rate=44100) |> filterWave(bandpass(1000,2000))
+  ss <- seewave::spec(fw, plot=FALSE)
+  expect_true(all(ss[ss[,1] < 0.9, 2] < 0.01))
+  expect_true(all(ss[ss[,1] >= 2.1, 2] < 0.01))
 })

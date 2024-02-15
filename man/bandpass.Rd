@@ -25,8 +25,9 @@ use with filterw and pipes.
 }
 \examples{
 \dontrun{
-nwave <- noise("white")
-fwave <- filterw(nwave, bandpass(from=1000, to=2000))
-nwave |> filterw(bandpass(from=1000, to=2000)) -> fwave
+nwave <- noise("white", duration=44100, samp.rate=44100)
+
+fwave <- filterWave(nwave, bandpass(from=1000, to=2000))
+nwave |> filterWave(bandpass(from=1000, to=2000)) -> fwave
 }
 }
