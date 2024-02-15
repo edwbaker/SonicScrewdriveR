@@ -50,3 +50,13 @@ test_that("converting WaveMC to TaggedWaveMC works", {
   expect_equal(w@`.Data`, utw@`.Data`)
 })
 
+test_that("setting origin works", {
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100)
+
+  tw <- tagWave(w)
+  expect_equal(tw@origin, "user")
+
+  tw <- tagWave(w, origin="test")
+  expect_equal(tw@origin, "test")
+})
+

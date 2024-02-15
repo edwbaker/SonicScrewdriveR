@@ -4,10 +4,12 @@
 \alias{tagWave}
 \title{Tag a Wave or WaveMC object}
 \usage{
-tagWave(w)
+tagWave(w, origin = "user")
 }
 \arguments{
 \item{w}{A Wave or WaveMC object.}
+
+\item{origin}{The origin of the object (default "user").}
 }
 \value{
 A TaggedWave or TaggedWaveMC object.

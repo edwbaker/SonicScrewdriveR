@@ -6,6 +6,7 @@
 #' @noRd
 .tagSlots <- function(){
   return(list(
+    origin="character",
     metadata="list",
     analyses="list"
   ))
@@ -42,16 +43,21 @@ setClass(
 #' This function takes a Wave/WaveMC object and returns a corresponding
 #' TaggedWave/TaggedWaveMC object.
 #' @param w A Wave or WaveMC object.
+#' @param origin The origin of the object (default "user").
 #' @return A TaggedWave or TaggedWaveMC object.
 #' @importFrom methods as
 #' @export
-tagWave <- function(w) {
+tagWave <- function(w, origin="user") {
   if (is(w, "Wave")) {
     validateIsWave(w)
-    return(as(w, "TaggedWave"))
+    tw <- as(w, "TaggedWave")
+    tw@origin <- origin
+    return(tw)
   } else if (is(w, "WaveMC")) {
     validateIsWaveMC(w)
-    return(as(w, "TaggedWaveMC"))
+    tw <- as(w, "TaggedWaveMC")
+    tw@origin <- origin
+    return(tw)
   } else if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
     return(w)
   } else {
