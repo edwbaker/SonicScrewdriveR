@@ -34,11 +34,23 @@ setClass(
   return(object)
 }
 
+#' Add a process to a Tagged Wave or WaveMC object
+#'
+#' This function takes a `TaggedWave` or `TaggedWaveMC` object and adds a process
+#' to the `processing` slot. This is used to keep a record of the processes that
+#' have been applied to the object.
+#' @param object An object.
+#' @param process A description of the process.
+#' @param output The output of the process.
+#' @return The object with the process added.
+#' @docType methods
+#' @rdname addProcess-methods
 #' @export
 setGeneric("addProcess", function(object, process, output=NULL)
   standardGeneric("addProcess") )
 
-#' @export
+#' @rdname addProcess-methods
+#' @aliases addProcess,TaggedWave-method
 setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 
 
