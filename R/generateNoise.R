@@ -21,13 +21,10 @@ generateNoise <- function(
   output = "list"
 ){
   if (inherits(wave, c("Wave", "WaveMC"))) {
-    if (output == "list") {
-      return(wave)
-    }
+    return(wave)
   }
   if (all(sapply(wave, inherits, c("Wave", "WaveMC")))) {
-    data <- lapply(wave, generateNoise, noise, noiseAdd, noiseRatio, output)
-    return(data)
+    return(lapply(wave, generateNoise, noise, noiseAdd, noiseRatio, output))
   }
   stop("wave must be a Wave like object, or a list of such objects.")
 }
