@@ -12,3 +12,19 @@ test_that(".equalWave gives correct output", {
 
   # ToDo: WaveMC, & Tagged
 })
+
+test_that(".setPCM gives correct output", {
+  expect_true(.setPCM(1, TRUE))
+  expect_false(.setPCM(1, FALSE))
+  expect_true(.setPCM(8, TRUE))
+  expect_warning(.setPCM(8, FALSE))
+  expect_true(.setPCM(16, TRUE))
+  expect_warning(.setPCM(16, FALSE))
+  expect_true(.setPCM(24, TRUE))
+  expect_warning(.setPCM(24, FALSE))
+  expect_true(.setPCM(32, TRUE))
+  expect_false(.setPCM(32, FALSE))
+  expect_warning(.setPCM(64, TRUE))
+  expect_false(.setPCM(64, FALSE))
+  expect_error(.setPCM(7, TRUE), "bit must be one of 8, 16, 24, 32, or 64.")
+})
