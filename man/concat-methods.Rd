@@ -24,7 +24,7 @@ concat(object, ..., method = "bind")
 
 \item{...}{Wave like objects to concatenate to object.}
 
-\item{method}{One of "bind".}
+\item{method}{One of "bind", "noClick". Default is "bind".}
 }
 \value{
 A concatenated Wave like object, with type of \code{object}.
@@ -32,5 +32,8 @@ A concatenated Wave like object, with type of \code{object}.
 \description{
 The \code{concat()} method is a more flexible version of the \code{bind()} method
 from \code{tuneR} package, that allows specifying more advanced types of
-concatenation.
+concatenation. Setting \code{method} to "noClick" will remove any click between
+Wave objects caused by sudden jumps in amplitude by applying \code{tuneR::prepComb()}
+appropriately with default value of zero (this is only effective for the left
+channel or stereo or multi-channel recordings).
 }
