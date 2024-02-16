@@ -87,9 +87,6 @@ depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
   return(w)
 }
 
-#Use non exported function from tuneR
-equalWave <- utils::getFromNamespace("equalWave", "tuneR")
-
 #' @importFrom tuneR noise
 .depseudoNoise <- function(type, n, stereo, samp.rate, bit, pcm) {
   #This wrapper function is here in case alternative noise functions will be added.
@@ -108,7 +105,7 @@ equalWave <- utils::getFromNamespace("equalWave", "tuneR")
 setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
   function(e1, e2){
     e2 <- depseduoWave(e2, n=length(e1@left), stereo=e1@stereo, samp.rate=e1@samp.rate, bit=e1@bit, pcm=e1@pcm)
-    equalWave(e1, e2)
+    .equalWave(e1, e2)
     e1@left <- callGeneric(e1@left, e2@left)
     if(e1@stereo)
       e1@right <- callGeneric(e1@right, e2@right)
@@ -119,7 +116,7 @@ setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
 setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   function(e1, e2){
     e1 <- depseduoWave(e1, n=length(e2@left), stereo=e2@stereo, samp.rate=e2@samp.rate, bit=e2@bit, pcm=e2@pcm)
-    equalWave(e1, e2)
+    .equalWave(e1, e2)
     e1@left <- callGeneric(e1@left, e2@left)
     if(e1@stereo)
       e1@right <- callGeneric(e1@right, e2@right)

@@ -27,7 +27,7 @@ setClass(
 
 .addProcess <- function(object, process, output) {
   if (length(object@processing) == 0) {
-    object@processing <- list("process" = process, "output" = output)
+    object@processing <- list(list("process" = process, "output" = output))
   } else {
     object@processing <- list(object@processing, list("process" = process, "output" = output))
   }
@@ -53,7 +53,6 @@ setGeneric("addProcess", function(object, process, output=NULL)
 #' @aliases addProcess,TaggedWave-method
 setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 
-
 #' A S4 class for tagged multi-channel waves
 #'
 #' The TaggedWaveMC class extended the WaveMC class from the tuneR package so
@@ -66,6 +65,10 @@ setClass(
   contains="WaveMC",
   slots=.tagSlots()
 )
+
+#' @rdname addProcess-methods
+#' @aliases addProcess,TaggedWave-method
+setMethod("addProcess", signature(object = "TaggedWaveMC"), .addProcess)
 
 #' Tag a Wave or WaveMC object
 #'
@@ -128,4 +131,41 @@ untagWave <- function(w) {
     return(lapply(w, untagWave))
   }
   stop("Attempting to untag object that is not of type TaggedWave or TaggedWaveMC.")
+}
+
+#' Helper function to check if a Wave-like object is tagged
+#' @param w A Wave-like object
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.isTagged <- function(w) {
+  if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
+    return(TRUE)
+  }
+  if (is(w, "Wave") | is(w, "WaveMC")) {
+    return(FALSE)
+  }
+  if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
+    return(sapply(w, .isTagged))
+  }
+  stop("Attempting to check object that is not Wave like.")
+}
+
+#' Helper function to get tags from a TaggedWave or TaggedWaveMC object
+#' @param w A TaggedWave or TaggedWaveMC object
+#' @return A list of tags
+#' @keywords internal
+#' @noRd
+.getTags <- function(w) {
+  if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
+    return(list("origin"=w@origin, "metadata"=w@metadata, "processing"=w@processing))
+  }
+  if (!is(w, "list")) {
+    stop("Attempting to get tags from object that is not TaggedWave or TaggedWaveMC.")
+  }
+  if (all(sapply(w, inherits, what=c("TaggedWave", "TaggedWaveMC")))) {
+    tags <- sapply(w, .getTags, simplify=FALSE)
+    return(tags)
+  }
+  stop("Attempting to get tags from object that is not TaggedWave or TaggedWaveMC.")
 }

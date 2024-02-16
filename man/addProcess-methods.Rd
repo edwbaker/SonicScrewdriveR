@@ -4,11 +4,14 @@
 \name{addProcess}
 \alias{addProcess}
 \alias{addProcess,TaggedWave-method}
+\alias{addProcess,TaggedWaveMC-method}
 \title{Add a process to a Tagged Wave or WaveMC object}
 \usage{
 addProcess(object, process, output = NULL)
 
 \S4method{addProcess}{TaggedWave}(object, process, output = NULL)
+
+\S4method{addProcess}{TaggedWaveMC}(object, process, output = NULL)
 }
 \arguments{
 \item{object}{An object.}

@@ -35,9 +35,9 @@ test_that("output is the same when filter is nothing (TaggedWave)", {
   expect_true(all(sapply(filtered, inherits, what=c("TaggedWave"))))
 
   # Check description is added
-  expect_equal(typeof(filtered[[1]]@processing), "list")
-  expect_equal(length(filtered[[1]]@processing), 2)
-  expect_equal(filtered[[1]]@processing[[1]], "Do absolutely nowt")
+  expect_equal(typeof(filtered[[1]]@processing[[1]]), "list")
+  expect_equal(length(filtered[[1]]@processing[[1]]), 2)
+  expect_equal(filtered[[1]]@processing[[1]]$process, "Do absolutely nowt")
 })
 
 test_that("output is the same when filter is nothing (Wave)", {
@@ -71,9 +71,6 @@ test_that("bandpass filter works as expected", {
 test_that("filterWave() works with cluster", {
   cl <- defaultCluster()
 
-  parallel::clusterEvalQ(cl, {
-    library(sonicscrewdriver)
-  })
   # Generate list of Wave objects
   waves <- list(
     tuneR::silence(duration=44100, samp.rate=44100),
@@ -93,9 +90,9 @@ test_that("filterWave() works with cluster", {
   expect_true(all(sapply(filtered, inherits, what=c("TaggedWave"))))
 
   # Check description is added
-  expect_equal(typeof(filtered[[1]]@processing), "list")
-  expect_equal(length(filtered[[1]]@processing), 2)
-  expect_equal(filtered[[1]]@processing[[1]], "Do absolutely nowt")
+  expect_equal(typeof(filtered[[1]]@processing[[1]]), "list")
+  expect_equal(length(filtered[[1]]@processing[[1]]), 2)
+  expect_equal(filtered[[1]]@processing[[1]]$process, "Do absolutely nowt")
 
   parallel::stopCluster(cl)
 })
