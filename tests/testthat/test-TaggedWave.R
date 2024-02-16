@@ -76,6 +76,11 @@ test_that("list of waves works", {
 
   tws <- tagWave(waves)
   expect_true(all(sapply(tws, inherits, what=c("TaggedWave"))))
+  expect_equal(length(tws), length(waves))
+
+  utws <- untagWave(tws)
+  expect_true(all(sapply(utws, is, "Wave")))
+  expect_equal(length(utws), length(waves))
 
   waves <- list(
     tuneR::silence(duration=44100, samp.rate=44100),

@@ -101,9 +101,10 @@ tagWave <- function(w, origin="user") {
 
 #' Untag a TaggedWave or TaggedWaveMC object
 #'
-#' This function takes a TaggedWave/TaggedWaveMC object and returns a corresponding
-#' Wave/WaveMC object.
-#' @param w A TaggedWave or TaggedWaveMC object.
+#' This function takes a TaggedWave/TaggedWaveMC object (or a list of such
+#' objects) and returns a corresponding Wave/WaveMC object (or list of such
+#' objects).
+#' @param w A TaggedWave or TaggedWaveMC object (or list of such objects).
 #' @return A Wave or WaveMC object.
 #' @importFrom methods as
 #' @export
@@ -116,11 +117,15 @@ tagWave <- function(w, origin="user") {
 untagWave <- function(w) {
   if (is(w, "TaggedWave")) {
     return(as(w, "Wave"))
-  } else if (is(w, "TaggedWaveMC")) {
-    return(as(w, "WaveMC"))
-  } else if (is(w, "Wave") | is(w, "WaveMC")) {
-    return(w)
-  } else {
-    stop("Attempting to untag object that is not of type TaggedWave or TaggedWaveMC.")
   }
+  if (is(w, "TaggedWaveMC")) {
+    return(as(w, "WaveMC"))
+  }
+  if (is(w, "Wave") | is(w, "WaveMC")) {
+    return(w)
+  }
+  if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
+    return(lapply(w, untagWave))
+  }
+  stop("Attempting to untag object that is not of type TaggedWave or TaggedWaveMC.")
 }

@@ -7,14 +7,15 @@
 untagWave(w)
 }
 \arguments{
-\item{w}{A TaggedWave or TaggedWaveMC object.}
+\item{w}{A TaggedWave or TaggedWaveMC object (or list of such objects).}
 }
 \value{
 A Wave or WaveMC object.
 }
 \description{
-This function takes a TaggedWave/TaggedWaveMC object and returns a corresponding
-Wave/WaveMC object.
+This function takes a TaggedWave/TaggedWaveMC object (or a list of such
+objects) and returns a corresponding Wave/WaveMC object (or list of such
+objects).
 }
 \examples{
 \dontrun{
