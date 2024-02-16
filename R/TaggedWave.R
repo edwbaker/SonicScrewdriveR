@@ -25,7 +25,7 @@ setClass(
   slots=.tagSlots()
 )
 
-.addProcess <- function(object, process, output) {
+.addProcess <- function(object, process, output, duration) {
   if (length(object@processing) == 0) {
     object@processing <- list(list("process" = process, "output" = output))
   } else {
@@ -42,11 +42,12 @@ setClass(
 #' @param object An object.
 #' @param process A description of the process.
 #' @param output The output of the process.
+#' @param duration The duration of the process in seconds.
 #' @return The object with the process added.
 #' @docType methods
 #' @rdname addProcess-methods
 #' @export
-setGeneric("addProcess", function(object, process, output=NULL)
+setGeneric("addProcess", function(object, process, output=NULL, duration=NULL)
   standardGeneric("addProcess") )
 
 #' @rdname addProcess-methods

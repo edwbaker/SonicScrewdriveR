@@ -7,11 +7,11 @@
 \alias{addProcess,TaggedWaveMC-method}
 \title{Add a process to a Tagged Wave or WaveMC object}
 \usage{
-addProcess(object, process, output = NULL)
+addProcess(object, process, output = NULL, duration = NULL)
 
-\S4method{addProcess}{TaggedWave}(object, process, output = NULL)
+\S4method{addProcess}{TaggedWave}(object, process, output = NULL, duration = NULL)
 
-\S4method{addProcess}{TaggedWaveMC}(object, process, output = NULL)
+\S4method{addProcess}{TaggedWaveMC}(object, process, output = NULL, duration = NULL)
 }
 \arguments{
 \item{object}{An object.}
@@ -19,6 +19,8 @@ addProcess(object, process, output = NULL)
 \item{process}{A description of the process.}
 
 \item{output}{The output of the process.}
+
+\item{duration}{The duration of the process in seconds.}
 }
 \value{
 The object with the process added.
