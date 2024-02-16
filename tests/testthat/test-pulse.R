@@ -4,7 +4,7 @@ test_that("pulse rejects unknown types", {
 })
 
 test_that("pulse is correct length", {
-  expect_error(pulse(duration=24, samp.rate=230), "leading cannot be greater than duration.")
+  expect_error(pulse(duration=24, samp.rate=230), "sum of leading and pulse.length cannot be greater than duration.")
   expect_equal(length(pulse(duration=23, leading=0)), 23)
   expect_equal(pulse(duration=23, leading=1, samp.rate=5)@samp.rate, 5)
 })
@@ -30,6 +30,31 @@ test_that("dirac pulse works as expected", {
 
   p <- pulse("dirac", leading=1)
   expect_equal(p@left[1], 0)
-  expect_equal(p@left[2], 2^p@bit - 1)
+  expect_equal(p@left[2], 2^p@bit)
   expect_true(all(p@left[3:length(p@left)] == 0))
+
+  p <- pulse("dirac", leading=1, stereo=TRUE)
+  expect_equal(p@right[1], 0)
+  expect_equal(p@right[2], 2^p@bit)
+  expect_true(all(p@right[3:length(p@right)] == 0))
+})
+
+test_that("square pulse works as expected", {
+  p <- pulse("square", leading=0)
+  expect_equal(p@left[1], 2^p@bit - 1)
+  expect_true(all(p@left[2:length(p@left)] == 0))
+
+  p <- pulse("square", leading=1, pulse.length=2, stereo=TRUE)
+  expect_equal(p@left[1], 0)
+  expect_true(all(p@left[2:3] == 2^p@bit))
+  expect_true(all(p@left[4:length(p@left)] == 0))
+  expect_equal(p@right[1], 0)
+  expect_true(all(p@right[2:3] == 2^p@bit))
+  expect_true(all(p@right[4:length(p@left)] == 0))
+})
+
+test_that("invert pulse works as expected", {
+  p <- pulse(leading=0, invert=TRUE)
+  expect_equal(p@left[1], -2^p@bit - 1)
+  expect_true(all(p@left[2:length(p@left)] == 0))
 })
