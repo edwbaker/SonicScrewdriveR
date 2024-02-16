@@ -2,34 +2,33 @@
 % Please edit documentation in R/generateNoise.R
 \name{generateNoise}
 \alias{generateNoise}
-\title{Add noise to a soundwave}
+\title{Add noise to a Wave like object}
 \usage{
 generateNoise(
   wave,
   noise = c("white"),
   noiseAdd = FALSE,
   noiseRatio = 0.5,
-  output = "file",
-  plot = FALSE
+  output = "list"
 )
 }
 \arguments{
-\item{wave}{Wave file to add noise to}
+\item{wave}{Object to add noise to (\code{Wave}, \code{WaveMC}, or Tagged versions), or
+a list of such objects.}
 
-\item{noise}{Vector of noise to add (unif, gaussian, white, pink, power, red, frequency of a sine wave in Hz, or filename)}
+\item{noise}{Vector of noise to add (unif, gaussian, white, pink, power, red)}
 
-\item{noiseAdd}{If TRUE all noise sources are added to wave. If FALSE separate outputs are created for each noise source.}
+\item{noiseAdd}{If TRUE all noise sources are added to wave. If FALSE
+separate outputs are created for each noise source.}
 
-\item{noiseRatio}{Ratio of maximum noise amplitude to the maximum amplitude in wave}
+\item{noiseRatio}{Ratio of maximum noise amplitude to the maximum amplitude in wave.}
 
 \item{output}{TODO: Is this implemented?}
-
-\item{plot}{If TRUE various plots are made to show how noise is added.}
 }
 \value{
 A list of Wave objects with the required noise added.
 }
 \description{
-Adding noise to a soundwave allows for testing of the robustness of automated identification algorithms
-to noise.
+Adding noise to a Wave like object allows for testing of the robustness of
+automated identification algorithms to noise.
 }
