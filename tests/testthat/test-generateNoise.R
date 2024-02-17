@@ -8,6 +8,8 @@ test_that("generateNoise rejects unknown input to wave", {
   w <- tagWave(w)
   expect_silent(generateNoise(w, "white", FALSE, 0.5, output="list"))
 
+  expect_error(generateNoise(1, "white", FALSE, 0.5, output="list"), "wave must be a Wave like object, or a list of such objects.")
+
   w <- list(
     tuneR::sine(440, duration=44100, samp.rate=44100),
     tuneR::WaveMC(tuneR::sine(440, duration=44100, samp.rate=44100)),
