@@ -1,0 +1,28 @@
+---
+title: "Interacting with other tools"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, results=FALSE}
+library(sonicscrewdriver)
+```
+
+# Audacity
+
+Label files exported from [Audacity](https://www.audacityteam.org/) can be read into R using the `readAudacityLabels()` function. This function takes a path to a label file and returns a list of `Annotation` objects or a data frame with the start and end times of each label and the label text.
+
+# AudioBlast
+
+The [audioBlast API](https://api.audioblast.org) can be accessed using the `audioBlast()` function. Files can be downloaded from the API using the `audioBlastDownload()` function.
+
+# AudioMoth
+
+[AudioMoth](https://www.openacousticdevices.info/audiomoth) configuration files and wave files can be read into R using the `audiomothConfig()` and `audiomothWave()` functions, respectively. The `audiomothConfig()` function takes a path to a configuration file and returns a data frame of the configuration settings. The `audiomothWave()` function takes a path to a wave file and returns a list of extracted parameters.
+
+# BirdNet

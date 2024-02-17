@@ -8,10 +8,10 @@
 #' @importFrom utils read.csv
 #' @examples
 #' \dontrun{
-#' audiomoth_config("./CONFIG.TXT")
+#' audiomothConfig("./CONFIG.TXT")
 #' }
 #'
-audiomoth_config <- function(filename) {
+audiomothConfig <- function(filename) {
   f <- readLines(filename)
   c <- read.csv(textConnection(sub(":", "|", f)), header=FALSE, sep="|")
   c[,1] <- trimws(c[,1])
@@ -29,10 +29,10 @@ audiomoth_config <- function(filename) {
 #' @export
 #' @examples
 #' \dontrun{
-#' audiomoth_wave("./FILENAME.WAV")
+#' audiomothWave("./FILENAME.WAV")
 #' }
 #'
-audiomoth_wave <- function(filename) {
+audiomothWave <- function(filename) {
   f <- readBin(filename, "character", n=60L)
   raw <- f[grep("Recorded", f, useBytes = TRUE)]
 

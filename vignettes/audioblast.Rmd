@@ -1,5 +1,5 @@
 ---
-title: "audioblast"
+title: "Using audioBlast with R"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{audioblast}

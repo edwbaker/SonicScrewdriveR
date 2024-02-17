@@ -18,7 +18,7 @@
 - WaveFilter class (supports applying filters using pipes)
 
 ## Fixes
-- audiomoth_wave() fix (comments not consistently placed in header)
+- audiomothWave() fix (comments not consistently placed in header)
 
 
 # sonicscrewdriver 0.0.4

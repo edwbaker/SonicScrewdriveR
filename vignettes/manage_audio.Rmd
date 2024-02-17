@@ -34,4 +34,14 @@ Some existing functions only operate on a single channel at a time. This may cau
 
 ### Windowing
 
-It is often desirable to process a long audio file in chunks. The `windowing()` function can be used to split an audio file into overlapping or non-overlapping windows.
+It is often desirable to process a long audio file in chunks. The `windowing()` function can be used to split an audio file into overlapping or non-overlapping windows. This function may be particularly useful for processing long Wave files in a memory-efficient manner. Optionally, a cluster can be specified to process windows on separate processor cores to increase processing speed.
+
+### PseudoWave objects
+
+## TaggedWave workflow
+
+The techniques above can be applied to the generic `Wave` and `WaveMC` objects from the `tuneR` package.
+
+The `TaggedWave` class extends the `Wave` class from the `tuneR` package so that it can include extended metadata and the results of analyses. This allows for the storage of additional information about the audio file, such as the location and time of recording, and the results of analyses. The `tagWave()` function can be used to tag a `Wave` or `WaveMC` object with additional metadata. 
+
+In addition, combined with new classes `WaveAugment`, `WaveFilter`, and `WaveAnalyse` it is possible to create a self-documenting pipeline for audio processing and analysis (that is also compatible with the R pipe).
