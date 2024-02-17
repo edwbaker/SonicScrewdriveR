@@ -29,15 +29,17 @@ library(sonicscrewdriver)
 
 Usage of the package is described in the following vignettes:
 
-- [Managing audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/manage_audio.html) covers the basics of reading audio files with `readAudio()`, performing analyses over all audio channels using `allChannels()` and performing analysis on sections of audio with `windowing()`.
+-   [Managing audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/manage_audio.html) covers the basics of reading audio files with `readAudio()`, performing analyses over all audio channels using `allChannels()` and performing analysis on sections of audio with `windowing()`.
 
-- [Using SonicScrewriveR with audioBlast](https://sonicscrewdriver.ebaker.me.uk/articles/audioblast.html) covers the use of `audioblast()` to find recordings, annotations, traits and analyses. `audioblastDownload()` can be used to download files you find using [audioBlast](https://audioblast.org).
+-   [Using other apps and tools in R using SOnicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html)
+
+    -   [Using SonicScrewriveR with audioBlast](https://sonicscrewdriver.ebaker.me.uk/articles/audioblast.html) covers the use of `audioblast()` to find recordings, annotations, traits and analyses. `audioblastDownload()` can be used to download files you find using [audioBlast](https://audioblast.org).
 
 The book [Visualisation for bioacoustics and ecoacoustics in R](https://av.ebaker.me.uk) provides details of the various visualisation tools available in this and other packages.
 
 ## Contributing
 
-We welcome contributions from anyone who would like to help improve the package. If you want to talk to us before submitting a pull request feel free to email Ed at edward.baker@nhm.ac.uk.
+We welcome contributions from anyone who would like to help improve the package. If you want to talk to us before submitting a pull request feel free to email Ed at [edward.baker\@nhm.ac.uk](mailto:edward.baker@nhm.ac.uk){.email}.
 
 Please note that the 'SonicScrewdriveR' project is released with a [Contributor Code of Conduct](https://github.com/edwbaker/SonicScrewdriveR/blob/master/CODE-OF-CONDUCT.md).
 
@@ -49,6 +51,6 @@ If the package fails and does not give you a useful error message, this is a bug
 
 ## Credits
 
-Initial development of [SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk) was supported by the Leverhulme Trust funded [Automated Acoustic Observatories](https://ebaker.me.uk/aao) project at the [University of York](https://york.ac.uk).
+Initial development of [SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk) was done by [Ed Baker](https://ebaker.me.uk) supported by the Leverhulme Trust funded [Automated Acoustic Observatories](https://ebaker.me.uk/aao) project at the [University of York](https://york.ac.uk).
 
-The project is currently developed by the [Natural History Museum](https://www.nhm.ac.uk), London.
+The project is currently being developed at the [Natural History Museum](https://www.nhm.ac.uk), London.
