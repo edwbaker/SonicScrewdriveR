@@ -2,6 +2,7 @@
 
 ## New functions
 - readAudio() generic function to read audio files
+- readAudacityLabels() to read Audacity label files
 - citation() information
 - angle conversion
 - Dolbear's law
@@ -11,9 +12,10 @@
 - read Respeaker6 formatted files
 
 ## New classes
+- Annotation class (recording and manipulating annotations)
 - PseudoWave class (e.g. apply noise to a file of any length)
+- TaggedWaves class (document metadata and processing)
 - WaveFilter class (supports applying filters using pipes)
-- TaggedWaves - store metadata and analyses
 
 ## Fixes
 - audiomoth_wave() fix (comments not consistently placed in header)

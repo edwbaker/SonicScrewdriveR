@@ -1,5 +1,15 @@
+#' Read an Audacity label file
+#'
+#' Reads an Audacity label file and returns either a list of `Annotation` objects
+#' or a data frame.
+#' @param file Path to the Audacity label file.
+#' @param output One of "annotations" or "data.frame".
 #' @importFrom utils read.csv2
-readAudacityLabelFile <- function(file, output="annotations") {
+#' @export
+readAudacityLabels <- function(file, output="annotations") {
+  if (!output %in% c("annotations", "data.frame")) {
+    stop("Unknown output format.")
+  }
   labels <- read.csv2(file,header=F,sep='\t')
   colnames(labels) <- c("from", "to", "label")
 
@@ -12,12 +22,13 @@ readAudacityLabelFile <- function(file, output="annotations") {
   if (output=="annotations") {
     ret <- vector("list", length=nrow(labels))
     for (i in 1:nrow(labels)) {
-      obj <- list(new("Annotation",
-                    start=labels$from[i],
-                    end=labels$to[i],
-                    source=file,
-                    value=labels$label[i]))
-      ret[i] <- obj
+      ret[[i]] <- annotation(
+        start=labels$from[i],
+        end=labels$to[i],
+        source="readAudacityLabels",
+        file=file,
+        value=labels$label[i]
+      )
     }
     return(ret)
   }
