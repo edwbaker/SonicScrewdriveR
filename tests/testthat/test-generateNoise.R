@@ -16,7 +16,7 @@ test_that("generateNoise rejects unknown input to wave", {
   expect_error(generateNoise(w, "white", FALSE, 0.5, output="list"), "wave must be a Wave like object, or a list of such objects.")
 })
 
-test_that("generateNoise outputs somethign Wave-like", {
+test_that("generateNoise outputs something Wave-like", {
   w <- tuneR::sine(440, duration=44100, samp.rate=44100)
   expect_s4_class(generateNoise(w, "white", FALSE, 0.5, output="list"), "Wave")
 
@@ -76,4 +76,46 @@ test_that("noise amplitude is correct on TaggedWave", {
   expect_equal(which(n@left > max(abs(n@left))/2), 1)
   expect_equal(which(n@right > max(abs(n@left))/2), 1)
   expect_gt(mean(abs(n@left[2:length(n@left)])), 0.1)
+})
+
+test_that("noise amplitude is correct on WaveMC", {
+  w <- tuneR::WaveMC(pulse("dirac", leading=0))
+  n <- generateNoise(w, "white", FALSE, 0.25, output="list")
+
+  expect_equal(nrow(w@.Data), nrow(n@.Data))
+  expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
+})
+
+test_that("noise amplitude is correct on TaggedWaveMC", {
+  w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave")))
+  n <- generateNoise(w, "white", FALSE, 0.25, output="list")
+  expect_equal(nrow(w@.Data), nrow(n@.Data))
+  expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
+  expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.1)
+
+  w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave")))
+  n <- generateNoise(w, "white", FALSE, 0.25, noise.ref="max", output="list")
+  expect_equal(nrow(w@.Data), nrow(n@.Data))
+  expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
+  expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.1)
+
+  w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave", stereo=TRUE)))
+  n <- generateNoise(w, "white", FALSE, 0.25, output="list")
+  expect_equal(nrow(w@.Data), nrow(n@.Data))
+  expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
+  expect_equal(which(n@.Data[,2] > max(abs(n@.Data[,2]))/2), 1)
+  expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.1)
+
+  w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave")))
+  n <- generateNoise(w, c("white", "white"), FALSE, 0.25, output="list")
+  expect_equal(nrow(w@.Data), nrow(n@.Data))
+  expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
+  expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.1)
+
+  w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave", stereo=TRUE)))
+  n <- generateNoise(w, c("white", "white"), FALSE, 0.25, output="list")
+  expect_equal(nrow(w@.Data), nrow(n@.Data))
+  expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
+  expect_equal(which(n@.Data[,2] > max(abs(n@.Data[,2]))/2), 1)
+  expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.1)
 })
