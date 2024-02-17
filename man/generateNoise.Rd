@@ -7,8 +7,9 @@
 generateNoise(
   wave,
   noise = c("white"),
-  noiseAdd = FALSE,
-  noiseRatio = 0.5,
+  noise.add = FALSE,
+  noise.ratio = 0.5,
+  noise.ref = "file",
   output = "list"
 )
 }
@@ -18,10 +19,13 @@ a list of such objects.}
 
 \item{noise}{Vector of noise to add (unif, gaussian, white, pink, power, red)}
 
-\item{noiseAdd}{If TRUE all noise sources are added to wave. If FALSE
+\item{noise.add}{If TRUE all noise sources are added to wave. If FALSE
 separate outputs are created for each noise source.}
 
-\item{noiseRatio}{Ratio of maximum noise amplitude to the maximum amplitude in wave.}
+\item{noise.ratio}{Ratio of maximum noise amplitude to the maximum amplitude in wave.}
+
+\item{noise.ref}{Reference maximum for noise.ratio. If "max" then the maximum
+amplitude, if "file" then the maximum amplitude of wave.}
 
 \item{output}{TODO: Is this implemented?}
 }
