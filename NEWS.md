@@ -1,17 +1,23 @@
 # sonicscrewdriver NEXT RELEASE
 
+## New functions
 - readAudio() generic function to read audio files
 - citation() information
 - angle conversion
 - Dolbear's law
-- Download files from audioBlast
-- PseudoWave class (e.g. apply noise to a file of any length)
-- WaveFilter class (supports applying filters using pipes)
+- audioblast() - search for recordings and analyses on audioblast.org
+- audioblastDownload() - Download files from audioBlast
 - allChannels for analysing multi-channel audio
 - read Respeaker6 formatted files
+
+## New classes
+- PseudoWave class (e.g. apply noise to a file of any length)
+- WaveFilter class (supports applying filters using pipes)
 - TaggedWaves - store metadata and analyses
-- fix audiomoth_wave (comments not consistently placed in header)
-- search for recordings and analyses on audioblast.org
+
+## Fixes
+- audiomoth_wave() fix (comments not consistently placed in header)
+
 
 # sonicscrewdriver 0.0.4
 
