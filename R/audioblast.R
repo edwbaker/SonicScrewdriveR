@@ -8,6 +8,7 @@
 #' @param check Logical. Performs sanity check on input before sending to audioBLAST.
 #' @param page First page of results to request, defaults to 1.
 #' @param max_pages Maximum number of data pages to return, by default this is set to NULL and returns all pages.
+#' @param quiet If true will not print progress.
 #' @param ... Fields and values to filter on. Any field defined by audioBLAST.
 #' @export
 #' @importFrom utils URLencode
@@ -19,7 +20,7 @@
 #' audioblast("data", "recordings", taxon="Gryllotalpa vineae")
 #' }
 #'
-audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, page=1, ...) {
+audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, page=1, quiet=FALSE, ...) {
   args <- list(...)
   nams <- names(args)
   if (check) {
@@ -56,7 +57,9 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
   ret <- res$data
   mp <- min(res$last_page, max_pages)
   page <- page + 1
-  pb = txtProgressBar(min = 0, max = mp, initial = page)
+  if (!quiet) {
+    pb <- txtProgressBar(min = 0, max = mp, initial = page)
+  }
   while (page <= mp) {
     url <- paste0("https://api.audioblast.org/",type,"/",name,"/")
     if (!is.null(endpoint)) {
@@ -71,9 +74,13 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
     res <- jsonlite::fromJSON(URLencode(url))
     ret <- rbind(ret, res$data)
     page <- page + 1
-    setTxtProgressBar(pb,page)
+    if (!quiet) {
+      setTxtProgressBar(pb,page)
+    }
   }
-  close(pb)
+  if (!quiet) {
+    close(pb)
+  }
   return(ret)
 }
 
@@ -113,9 +120,10 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
 #' @param metadata If true saves the data in d as a csv file.
 #' @param skip.existing If true will not overwrite existing files.
 #' @param dir Directory to save files to.
+#' @prarm quiet If true will not print progress.
 #' @export
 #' @importFrom utils download.file write.csv
-audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".") {
+audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", quiet=FALSE) {
   if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
   }
@@ -129,7 +137,7 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".") {
     names <- names[file.exists(names)==FALSE]
   }
   for (i in 1:length(files)) {
-    download.file(files[i], destfile=paste(dir, names[i], sep="/"))
+    download.file(files[i], destfile=paste(dir, names[i], sep="/"), quiet=quiet)
   }
 }
 
