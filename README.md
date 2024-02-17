@@ -39,7 +39,7 @@ The book [Visualisation for bioacoustics and ecoacoustics in R](https://av.ebake
 
 ## Contributing
 
-We welcome contributions from anyone who would like to help improve the package. If you want to talk to us before submitting a pull request feel free to email Ed at [edward.baker\@nhm.ac.uk](mailto:edward.baker@nhm.ac.uk){.email}.
+We welcome contributions from anyone who would like to help improve the package. If you want to talk to us before submitting a pull request feel free to email Ed at [edward.baker\@nhm.ac.uk](mailto:edward.baker@nhm.ac.uk).
 
 Please note that the 'SonicScrewdriveR' project is released with a [Contributor Code of Conduct](https://github.com/edwbaker/SonicScrewdriveR/blob/master/CODE-OF-CONDUCT.md).
 
