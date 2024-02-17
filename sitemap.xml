@@ -19,6 +19,9 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/articles/manage_audio.html</loc>
   </url>
   <url>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html</loc>
+  </url>
+  <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/articles/sonicscrewdriver.html</loc>
   </url>
   <url>
@@ -82,10 +85,10 @@
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/audioblastDownload.html</loc>
   </url>
   <url>
-    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/audiomoth_config.html</loc>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/audiomothConfig.html</loc>
   </url>
   <url>
-    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/audiomoth_wave.html</loc>
+    <loc>http://sonicscrewdriver.ebaker.me.uk/reference/audiomothWave.html</loc>
   </url>
   <url>
     <loc>http://sonicscrewdriver.ebaker.me.uk/reference/autoBandPass.html</loc>

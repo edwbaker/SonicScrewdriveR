@@ -44,7 +44,8 @@
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/audioblast.html">audioblast</a>
+    <a class="dropdown-item" href="../articles/other-apps.html">Interacting with other tools</a>
+    <a class="dropdown-item" href="../articles/audioblast.html">Using audioBlast with R</a>
     <a class="dropdown-item" href="../articles/manage_audio.html">Managing audio in R</a>
   </div>
 </li>
@@ -125,8 +126,32 @@ separate processor cores to increase analysis speed.</p>
 </h3>
 <p>It is often desirable to process a long audio file in chunks. The
 <code><a href="../reference/windowing.html">windowing()</a></code> function can be used to split an audio file
-into overlapping or non-overlapping windows.</p>
+into overlapping or non-overlapping windows. This function may be
+particularly useful for processing long Wave files in a memory-efficient
+manner. Optionally, a cluster can be specified to process windows on
+separate processor cores to increase processing speed.</p>
 </div>
+<div class="section level3">
+<h3 id="pseudowave-objects">PseudoWave objects<a class="anchor" aria-label="anchor" href="#pseudowave-objects"></a>
+</h3>
+</div>
+</div>
+<div class="section level2">
+<h2 id="taggedwave-workflow">TaggedWave workflow<a class="anchor" aria-label="anchor" href="#taggedwave-workflow"></a>
+</h2>
+<p>The techniques above can be applied to the generic <code>Wave</code>
+and <code>WaveMC</code> objects from the <code>tuneR</code> package.</p>
+<p>The <code>TaggedWave</code> class extends the <code>Wave</code> class
+from the <code>tuneR</code> package so that it can include extended
+metadata and the results of analyses. This allows for the storage of
+additional information about the audio file, such as the location and
+time of recording, and the results of analyses. The
+<code><a href="../reference/tagWave.html">tagWave()</a></code> function can be used to tag a <code>Wave</code>
+or <code>WaveMC</code> object with additional metadata.</p>
+<p>In addition, combined with new classes <code>WaveAugment</code>,
+<code>WaveFilter</code>, and <code>WaveAnalyse</code> it is possible to
+create a self-documenting pipeline for audio processing and analysis
+(that is also compatible with the R pipe).</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
