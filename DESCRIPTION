@@ -38,6 +38,9 @@ Suggests:
     soundecology,
     spelling
 VignetteBuilder: knitr
-URL: https://sonicscrewdriver.ebaker.me.uk
+URL: 
+  https://sonicscrewdriver.ebaker.me.uk, 
+  https://github.com/edwbaker/SonicScrewdriveR
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
+BugReports: https://github.com/edwbaker/SonicScrewdriveR/issues
