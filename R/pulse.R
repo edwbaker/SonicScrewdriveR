@@ -32,6 +32,9 @@ pulse <- function(
   if (leading + pulse.length > duration) {
     stop("sum of leading and pulse.length cannot be greater than duration.")
   }
+  if (!output %in% c("Wave", "TaggedWave")) {
+    stop("output format not recognised.")
+  }
   pcm <- .setPCM(bit, pcm)
   w <- tuneR::silence(duration=duration, samp.rate=samp.rate, bit=bit, pcm=pcm, stereo=stereo)
   if (w@bit==8) {
@@ -67,5 +70,10 @@ pulse <- function(
       w@right[(leading + 1):(leading + pulse.length)] <- max
     }
   }
-  return(w)
+  if (output=="Wave") {
+    return(w)
+  }
+  if (output=="TaggedWave") {
+    return(tagWave(w, paste("pulse", type, sep="-")))
+  }
 }

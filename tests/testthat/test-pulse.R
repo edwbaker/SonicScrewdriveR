@@ -1,6 +1,8 @@
 test_that("pulse rejects unknown types", {
   expect_error(pulse("nightshade"), "pulse type not recognised.")
   expect_silent(pulse("dirac"))
+
+  expect_error(pulse(output="nile crocodile"), "output format not recognised.")
 })
 
 test_that("pulse is correct length", {
@@ -57,4 +59,13 @@ test_that("invert pulse works as expected", {
   p <- pulse(leading=0, invert=TRUE)
   expect_equal(p@left[1], -2^p@bit - 1)
   expect_true(all(p@left[2:length(p@left)] == 0))
+})
+
+test_that("output types are correct for TaggedWave", {
+  p <- pulse(output="TaggedWave")
+  expect_s4_class(p, "TaggedWave")
+  expect_equal(p@origin, "pulse-dirac")
+
+  p <- pulse("square", output="TaggedWave")
+  expect_equal(p@origin, "pulse-square")
 })
