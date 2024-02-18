@@ -41,7 +41,7 @@ The audio file of interest (id: [10754](https://bio.acousti.ca/node/10754)) is a
 
 First we will download the audio file and annotations from audioBlast.
 
-```{r}
+```{r, results=FALSE}
 # Find the file on audioblast
 data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
 
@@ -53,9 +53,9 @@ This has downloaded the audio file to the `mole_cricket` directory. It has also 
 
 Next we will download the annotations for this file from audioBlast.
 
-```{r}
+```{r, results=FALSE}
 # Fetch annotations from audioBlast as `Annotation` objects
-a <- audioblast("data", "annotations", source="bio.acousti.ca", id=10754, output="Annotations")"))
+a <- audioblast("data", "annomate", source="bio.acousti.ca", id=10754, output="Annotations")
 ```
 
 This has downloaded the annotations from audioBlast and converted them to a list of `Annotation` objects. Once annotation data are converted to `Annotation` objects that can be easily manipulated into a number of other useful formats.
