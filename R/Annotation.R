@@ -3,6 +3,7 @@
 #' The `Annotation` class is used to store annotations on `Wave`-like objects.
 #'
 #' @slot file File being annotated.
+#' @slot metadata A list for storing metadata.
 #' @slot start Start time of annotation.
 #' @slot end End time of annotation.
 #' @slot low Low frequency of annotation.
@@ -14,6 +15,7 @@ setClass(
   "Annotation",
   slots=list(
     file="character",
+    metadata="list",
     start="numeric",
     end="numeric",
     low="numeric",
@@ -24,6 +26,7 @@ setClass(
   ),
   prototype = list(
     file = NA_character_,
+    metadata = list(),
     start = 0,
     end = Inf,
     low = 0,
@@ -37,6 +40,7 @@ setClass(
 #' Create a new Annotation object
 #'
 #' @param file File being annotated.
+#' @param metadata A list of metadata.
 #' @param start Start time of annotation (seconds).
 #' @param end End time of annotation (seconds).
 #' @param low Low frequency of annotation (Hz).
@@ -48,6 +52,7 @@ setClass(
 #' @export
 annotation <- function(
   file=NA_character_,
+  metadata=list(),
   start=0,
   end=Inf,
   low=0,
@@ -58,14 +63,15 @@ annotation <- function(
 ) {
   annotation <- new(
     "Annotation",
-    file=file,
-    start=start,
-    end=end,
-    low=low,
-    high=high,
-    source=source,
-    type=type,
-    value=value
+    file=as.character(file),
+    metadata=as.list(metadata),
+    start=as.numeric(start),
+    end=as.numeric(end),
+    low=as.numeric(low),
+    high=as.numeric(high),
+    source=as.character(source),
+    type=as.character(type),
+    value=as.character(value)
   )
   return(annotation)
 }

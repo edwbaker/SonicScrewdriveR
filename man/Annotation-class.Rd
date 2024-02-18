@@ -12,6 +12,8 @@ The \code{Annotation} class is used to store annotations on \code{Wave}-like obj
 \describe{
 \item{\code{file}}{File being annotated.}
 
+\item{\code{metadata}}{A list for storing metadata.}
+
 \item{\code{start}}{Start time of annotation.}
 
 \item{\code{end}}{End time of annotation.}

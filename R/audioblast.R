@@ -10,6 +10,8 @@
 #' @param max_pages Maximum number of data pages to return, by default this is set to NULL and returns all pages.
 #' @param quiet If true will not print progress. Silence is a virtue.
 #' @param ... Fields and values to filter on. Any field defined by audioBLAST.
+#' @param output By default a `data.frame`. "Annotations" will return a list of
+#'   `Annotation` objects.
 #' @export
 #' @importFrom utils URLencode
 #' @importFrom jsonlite fromJSON
@@ -20,7 +22,30 @@
 #' audioblast("data", "recordings", taxon="Gryllotalpa vineae")
 #' }
 #'
-audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, page=1, quiet=FALSE, ...) {
+audioblast <- function(
+    type,
+    name,
+    endpoint=NULL,
+    check=TRUE,
+    max_pages=NULL,
+    page=1,
+    quiet=FALSE,
+    output="data.frame",
+    ...
+) {
+  if (!output %in% c("data.frame", "Annotations")) {
+    stop(paste(output, "is not a valid output type."))
+  }
+  if (output=="Annotations") {
+    if (type != "data" | name != "annomate") {
+      stop("Query does not gives results that can be turned into Annotation objects.")
+    }
+  }
+  if (!is.null(max_pages)) {
+    if (max_pages == 1) {
+      quiet <- TRUE
+    }
+  }
   args <- list(...)
   nams <- names(args)
   if (check) {
@@ -80,6 +105,32 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
   }
   if (!quiet) {
     close(pb)
+  }
+
+  if (output=="Annotations") {
+    l <- vector(mode="list", length=nrow(ret))
+    for (i in 1:nrow(ret)) {
+      l[[i]] <- annotation(
+        metadata = list(
+          "source" = ret[i, "source"],
+          "source_id" = ret[i, "source_id"],
+          "annotator" = ret[i, "annotator"],
+          "annotation_id" = ret[i, "annotation_id"],
+          "annotation_date" = ret[i, "annotation_date"],
+          "annotation_info_url" = ret[i, "annotation_info_url"],
+          "lat" = ret[i, "lat"],
+          "lon" = ret[i, "lon"],
+          "contact" = ret[i, "contact"]
+        ),
+        file = ret[i, "recording_url"],
+        source = "audioblast",
+        start = ret[i, "time_start"],
+        end = ret[i, "time_end"],
+        type = ret[i, "type"],
+        value = ret[i, "taxon"]
+      )
+    }
+    ret <- l
   }
   return(ret)
 }

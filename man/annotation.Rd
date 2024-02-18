@@ -6,6 +6,7 @@
 \usage{
 annotation(
   file = NA_character_,
+  metadata = list(),
   start = 0,
   end = Inf,
   low = 0,
@@ -17,6 +18,8 @@ annotation(
 }
 \arguments{
 \item{file}{File being annotated.}
+
+\item{metadata}{A list of metadata.}
 
 \item{start}{Start time of annotation (seconds).}
 
