@@ -12,9 +12,10 @@ writeAudacityLabels(annotations, file)
 \item{file}{Path to the Audacity label file.}
 }
 \description{
-Writes a list of \code{Annotation} objects to an Audacity label file. Internally
-this uses the \code{write.audacity()} function from the \code{seewave} package
-\insertCite{seewave2008}{sonicscrewdriver}.
+Writes a list of \code{Annotation} objects to an Audacity label file.
+\cr\cr
+Internally this uses the \code{write.audacity()} function from the \code{seewave}
+package \insertCite{seewave2008}{sonicscrewdriver}.
 }
 \references{
 \insertAllCited{}

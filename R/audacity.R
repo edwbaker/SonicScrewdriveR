@@ -40,9 +40,10 @@ readAudacityLabels <- function(file, output="annotations") {
 
 #' Write an Audacity label file
 #'
-#' Writes a list of `Annotation` objects to an Audacity label file. Internally
-#' this uses the `write.audacity()` function from the `seewave` package
-#' \insertCite{seewave2008}{sonicscrewdriver}.
+#' Writes a list of `Annotation` objects to an Audacity label file.
+#' \cr\cr
+#' Internally this uses the `write.audacity()` function from the `seewave`
+#' package \insertCite{seewave2008}{sonicscrewdriver}.
 #'
 #' @param annotations A list of `Annotation` objects.
 #' @param file Path to the Audacity label file.
