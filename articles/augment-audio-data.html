@@ -87,12 +87,7 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sonicscrewdriver.ebaker.me.uk" class="external-link">sonicscrewdriver</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'sonicscrewdriver'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     jitter</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sonicscrewdriver.ebaker.me.uk" class="external-link">sonicscrewdriver</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -121,8 +116,10 @@ the <code>sonicscrewdriver</code> package to generate a Dirac pulse.</p>
 <span></span>
 <span><span class="co"># Plot the pulse</span></span>
 <span><span class="fu">seewave</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/seewave/man/oscillo.html" class="external-link">oscillo</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></code></pre></div>
-<p><img src="augment-audio-data_files/figure-html/unnamed-chunk-2-1.png" width="700">
-## Noise augmentation</p>
+<p><img src="augment-audio-data_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<div class="section level3">
+<h3 id="noise-augmentation">Noise augmentation<a class="anchor" aria-label="anchor" href="#noise-augmentation"></a>
+</h3>
 <p>Noise augmentation is a common technique used to increase the size of
 the training data. It is the process of adding noise to the original
 data. The <code>sonicscrewdriver</code> package provides the
@@ -130,6 +127,7 @@ data. The <code>sonicscrewdriver</code> package provides the
 <p>In this example we will add two different amounts of white noise to
 the Dirac pulse.</p>
 <p><img src="augment-audio-data_files/figure-html/unnamed-chunk-3-1.png" width="700"><img src="augment-audio-data_files/figure-html/unnamed-chunk-3-2.png" width="700"></p>
+</div>
 <div class="section level3">
 <h3 id="time-shifting-rotationpadding">Time shifting (rotation/padding)<a class="anchor" aria-label="anchor" href="#time-shifting-rotationpadding"></a>
 </h3>
