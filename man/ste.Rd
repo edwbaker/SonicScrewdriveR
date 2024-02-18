@@ -10,7 +10,7 @@ ste(wave, method = "dietrich2004", ...)
 \item{wave}{A Wave object}
 
 \item{method}{Which method used to calculate the short term energy,
-by default dietrich2004 to use Dietrich (2004) \url{doi:10.1016/j.patcog.2004.04.004}.}
+by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.}
 
 \item{...}{Other arguments to pass to STE function}
 }
@@ -25,4 +25,7 @@ Computes the short term energy of a Wave.
 ste(sheep, method="dietrich2004")
 }
 
+}
+\references{
+\insertAllCited{}
 }

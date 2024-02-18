@@ -4,8 +4,10 @@
 #'
 #' @param wave A Wave object
 #' @param method Which method used to calculate the short term energy,
-#' by default dietrich2004 to use Dietrich (2004) <doi:10.1016/j.patcog.2004.04.004>.
+#' by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.
 #' @param ... Other arguments to pass to STE function
+#' @references
+#'   \insertAllCited{}
 #' @export
 #' @return A vector of short term energy values
 #' @examples
@@ -19,6 +21,16 @@ ste <-  function(
   ...
 ){
   if (method == "dietrich2004") {
-    ste_dietrich2004(wave, ...)
+    .ste_dietrich2004(wave, ...)
   }
+}
+
+.ste_dietrich2004 <- function(wave, U) {
+  e <- vector(mode="numeric", length=length(wave@left))
+  for (i in (U/2+1):(length(wave@left)-U/2)) {
+    values <- (i-U/2):(i+U/2)
+    values <- values[values > 0]
+    e[i] <- sum(abs(wave@left[values]))
+  }
+  return(e)
 }
