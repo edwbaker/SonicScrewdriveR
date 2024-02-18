@@ -36,7 +36,7 @@ Noise augmentation is a common technique used to increase the size of the traini
 
 In this example we will add two different amounts of white noise to the Dirac pulse.
 
-```{r, echo=FALSE}
+```{r}
 augmented <- c(
   generateNoise(p, "white", noise.ratio=0.1),
   generateNoise(p, "white", noise.ratio=0.3)
@@ -54,7 +54,7 @@ Time shifting is the process of shifting the audio data by a certain number of s
 
 To demonstrate time shifting we will generate the sum of a sine wave and a Dirac pulse.
 
-```{r, echo=FALSE}
+```{r}
 p1 <- tuneR::sine(440, duration=44100*3)
 p2 <- pulse("dirac", duration=44100*3)
 
@@ -65,7 +65,7 @@ seewave::oscillo(p)
 
 Time shifting by inserting silence.
 
-```{r, echo=FALSE}
+```{r}
 # Rotate the audio data by one second
 rotated <- generateTimeShift(p, amount=1)
 
@@ -74,7 +74,7 @@ seewave::oscillo(rotated[[1]])
 
 Alternatively, we can rotate the audio data.
 
-```{r, echo=FALSE}
+```{r}
 # Rotate the audio data by one second
 rotated <- generateTimeShift(p, type="rotate", amount=1)
 
@@ -85,7 +85,7 @@ seewave::oscillo(rotated[[1]])
 
 The `sonicscrewdriver` package allows you to chain together multiple augmentations to create complex data augmentation pipelines. For example, you can add noise to the audio data and then rotate the audio data.
 
-```{r, echo=FALSE}
+```{r}
 # Load some test audio data
 f <- system.file("extdata", "AUDIOMOTH.flac", package="sonicscrewdriver")
 w <- readAudio(f)
@@ -102,7 +102,7 @@ data <- c(w, augmented)
 
 It is possible to use anonymous functions to add multiple augmentations in a single step. This can be effectively used to generate large amounts of augmented data. The code below generates three different noise augmented versions of an input, and then two different time-shifted versions of each of those, yielding six augmented versions.
 
-```{r, echo=FALSE}
+```{r}
 # Load some test audio data
 f <- system.file("extdata", "AUDIOMOTH.flac", package="sonicscrewdriver")
 w <- readAudio(f)
@@ -125,7 +125,7 @@ data <- c(w, augmented)
 
 The same approach can be used with a list of initial `Wave`-like objects.
 
-```{r, echo=FALSE}
+```{r}
 # Load some test audio data
 f <- system.file("extdata", "AUDIOMOTH.flac", package="sonicscrewdriver")
 w <- list(
