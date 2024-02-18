@@ -31,7 +31,7 @@ Usage of the package is described in the following vignettes:
 
 -   [Managing audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/manage_audio.html) covers the basics of reading audio files with `readAudio()`, performing analyses over all audio channels using `allChannels()` and performing analysis on sections of audio with `windowing()`.
 
--   [Using other apps and tools in R using SOnicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html)
+-   [Using other apps and tools in R using SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html)
 
     -   [Using SonicScrewriveR with audioBlast](https://sonicscrewdriver.ebaker.me.uk/articles/audioblast.html) covers the use of `audioblast()` to find recordings, annotations, traits and analyses. `audioblastDownload()` can be used to download files you find using [audioBlast](https://audioblast.org).
 
