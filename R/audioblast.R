@@ -120,7 +120,7 @@ audioblast <- function(type, name, endpoint=NULL, check=TRUE, max_pages=NULL, pa
 #' @param metadata If true saves the data in d as a csv file.
 #' @param skip.existing If true will not overwrite existing files.
 #' @param dir Directory to save files to.
-#' @prarm quiet If true will not print progress.
+#' @param quiet If true will not print progress.
 #' @export
 #' @importFrom utils download.file write.csv
 audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", quiet=FALSE) {

@@ -20,6 +20,8 @@ audioblastDownload(
 \item{skip.existing}{If true will not overwrite existing files.}
 
 \item{dir}{Directory to save files to.}
+
+\item{quiet}{If true will not print progress.}
 }
 \description{
 Downloads audio files associated with a search using the audioBlast() function.
