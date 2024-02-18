@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, results=FALSE}
+```{r setup, message=FALSE}
 library(sonicscrewdriver)
 ```
 
