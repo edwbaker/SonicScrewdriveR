@@ -46,7 +46,8 @@ generateTimeShift <- function(
           duration = amount[i] * wave@samp.rate,
           samp.rate = wave@samp.rate,
           bit = wave@bit,
-          stereo = wave@stereo
+          stereo = wave@stereo,
+          pcm = wave@pcm
         )
         if (where %in% c("start", "both")) {
           nwave <- cutws(concat(insert, wave), to=original.length)
@@ -66,7 +67,7 @@ generateTimeShift <- function(
     if (inherits(wave, "Wave")) {
       for (i in 1:length(amount)) {
         offset <- amount[i] * wave@samp.rate
-        nwave <- concat(cutws(wave, from=offset+1), cutws(wave, to=offset))
+        nwave <- concat(cutws(wave, from=length(wave@left)-offset+1), cutws(wave, to=length(wave@left)-offset))
         ret <- c(ret, nwave)
       }
     }
