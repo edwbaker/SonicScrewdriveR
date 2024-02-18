@@ -93,25 +93,36 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     jitter</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="audacity">Audacity<a class="anchor" aria-label="anchor" href="#audacity"></a>
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
+<p>The <code>sonicscrewdriver</code> package provides a number of
+functions for interacting with other audio tools and software. This
+vignette provides an overview of the functions available for interacting
+with other tools.</p>
+</div>
+<div class="section level2">
+<h2 id="interfaces-with-other-tools">Interfaces with other tools<a class="anchor" aria-label="anchor" href="#interfaces-with-other-tools"></a>
+</h2>
+<div class="section level3">
+<h3 id="audacity">Audacity<a class="anchor" aria-label="anchor" href="#audacity"></a>
+</h3>
 <p>Label files exported from <a href="https://www.audacityteam.org/" class="external-link">Audacity</a> can be read into R
 using the <code><a href="../reference/readAudacityLabels.html">readAudacityLabels()</a></code> function. This function
 takes a path to a label file and returns a list of
 <code>Annotation</code> objects or a data frame with the start and end
 times of each label and the label text.</p>
 </div>
-<div class="section level2">
-<h2 id="audioblast">AudioBlast<a class="anchor" aria-label="anchor" href="#audioblast"></a>
-</h2>
+<div class="section level3">
+<h3 id="audioblast">AudioBlast<a class="anchor" aria-label="anchor" href="#audioblast"></a>
+</h3>
 <p>The <a href="https://api.audioblast.org" class="external-link">audioBlast API</a> can be
 accessed using the <code>audioBlast()</code> function. Files can be
 downloaded from the API using the <code>audioBlastDownload()</code>
 function.</p>
 </div>
-<div class="section level2">
-<h2 id="audiomoth">AudioMoth<a class="anchor" aria-label="anchor" href="#audiomoth"></a>
-</h2>
+<div class="section level3">
+<h3 id="audiomoth">AudioMoth<a class="anchor" aria-label="anchor" href="#audiomoth"></a>
+</h3>
 <p><a href="https://www.openacousticdevices.info/audiomoth" class="external-link">AudioMoth</a>
 configuration files and wave files can be read into R using the
 <code><a href="../reference/audiomothConfig.html">audiomothConfig()</a></code> and <code><a href="../reference/audiomothWave.html">audiomothWave()</a></code>
@@ -120,9 +131,46 @@ takes a path to a configuration file and returns a data frame of the
 configuration settings. The <code><a href="../reference/audiomothWave.html">audiomothWave()</a></code> function takes
 a path to a wave file and returns a list of extracted parameters.</p>
 </div>
+<div class="section level3">
+<h3 id="birdnet">BirdNet<a class="anchor" aria-label="anchor" href="#birdnet"></a>
+</h3>
+</div>
+</div>
 <div class="section level2">
-<h2 id="birdnet">BirdNet<a class="anchor" aria-label="anchor" href="#birdnet"></a>
+<h2 id="exemplar-applications">Exemplar applications<a class="anchor" aria-label="anchor" href="#exemplar-applications"></a>
 </h2>
+<div class="section level3">
+<h3 id="audio-file-with-annotations-from-audioblast-to-audacity">Audio file with annotations from audioBlast to Audacity<a class="anchor" aria-label="anchor" href="#audio-file-with-annotations-from-audioblast-to-audacity"></a>
+</h3>
+<p>The audio file of interest (id: <a href="https://bio.acousti.ca/node/10754" class="external-link">10754</a>) is a recording of
+the Mole Cricket <em>Gryllotalpa vineae</em> from the <a href="https://bio.acousti.ca" class="external-link">BioAcoustica</a> repository. Recordings
+and annotations from BioAcoustica are made available through the <a href="https://audioblast.org" class="external-link">audioBlast</a> API.</p>
+<p>First we will download the audio file and annotations from
+audioBlast.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Find the file on audioblast</span></span>
+<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, id<span class="op">=</span><span class="fl">10754</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Download the file to the mole_cricket directory</span></span>
+<span><span class="fu"><a href="../reference/audioblastDownload.html">audioblastDownload</a></span><span class="op">(</span><span class="va">data</span>, dir<span class="op">=</span><span class="st">"mole_cricket/"</span><span class="op">)</span></span></code></pre></div>
+<p>This has downloaded the audio file to the <code>mole_cricket</code>
+directory. It has also saved a metadata.csv file that includes more
+information about the audio file retrieved from audioBlast.</p>
+<p>Next we will download the annotations for this file from
+audioBlast.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fetch annotations from audioBlast as `Annotation` objects</span></span>
+<span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"annomate"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, id<span class="op">=</span><span class="fl">10754</span>, output<span class="op">=</span><span class="st">"Annotations"</span><span class="op">)</span></span></code></pre></div>
+<p>This has downloaded the annotations from audioBlast and converted
+them to a list of <code>Annotation</code> objects. Once annotation data
+are converted to <code>Annotation</code> objects that can be easily
+manipulated into a number of other useful formats.</p>
+<p>In this case we will convert the <code>Annotation</code> objects to
+an Audacity label file.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Convert the annotations to an Audacity label file</span></span>
+<span><span class="fu"><a href="../reference/writeAudacityLabels.html">writeAudacityLabels</a></span><span class="op">(</span><span class="va">a</span>, <span class="st">"mole_cricket/annotations.txt"</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
