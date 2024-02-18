@@ -13,16 +13,56 @@ knitr::opts_chunk$set(
 library(sonicscrewdriver)
 ```
 
-# Audacity
+# Introduction
+
+The `sonicscrewdriver` package provides a number of functions for interacting with other audio tools and software. This vignette provides an overview of the functions available for interacting with other tools.
+
+# Interfaces with other tools
+
+## Audacity
 
 Label files exported from [Audacity](https://www.audacityteam.org/) can be read into R using the `readAudacityLabels()` function. This function takes a path to a label file and returns a list of `Annotation` objects or a data frame with the start and end times of each label and the label text.
 
-# AudioBlast
+## AudioBlast
 
 The [audioBlast API](https://api.audioblast.org) can be accessed using the `audioBlast()` function. Files can be downloaded from the API using the `audioBlastDownload()` function.
 
-# AudioMoth
+## AudioMoth
 
 [AudioMoth](https://www.openacousticdevices.info/audiomoth) configuration files and wave files can be read into R using the `audiomothConfig()` and `audiomothWave()` functions, respectively. The `audiomothConfig()` function takes a path to a configuration file and returns a data frame of the configuration settings. The `audiomothWave()` function takes a path to a wave file and returns a list of extracted parameters.
 
-# BirdNet
+## BirdNet
+
+# Exemplar applications
+
+## Audio file with annotations from audioBlast to Audacity
+
+The audio file of interest (id: [10754](https://bio.acousti.ca/node/10754)) is a recording of the Mole Cricket *Gryllotalpa vineae* from the [BioAcoustica](https://bio.acousti.ca) repository. Recordings and annotations from BioAcoustica are made available through the [audioBlast](https://audioblast.org) API.
+
+First we will download the audio file and annotations from audioBlast.
+
+```{r}
+# Find the file on audioblast
+data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
+
+# Download the file to the mole_cricket directory
+audioblastDownload(data, dir="mole_cricket/")
+```
+
+This has downloaded the audio file to the `mole_cricket` directory. It has also saved a metadata.csv file that includes more information about the audio file retrieved from audioBlast.
+
+Next we will download the annotations for this file from audioBlast.
+
+```{r}
+# Fetch annotations from audioBlast as `Annotation` objects
+a <- audioblast("data", "annotations", source="bio.acousti.ca", id=10754, output="Annotations")"))
+```
+
+This has downloaded the annotations from audioBlast and converted them to a list of `Annotation` objects. Once annotation data are converted to `Annotation` objects that can be easily manipulated into a number of other useful formats.
+
+In this case we will convert the `Annotation` objects to an Audacity label file.
+
+```{r}
+# Convert the annotations to an Audacity label file
+writeAudacityLabels(a, "mole_cricket/annotations.txt")
+```
