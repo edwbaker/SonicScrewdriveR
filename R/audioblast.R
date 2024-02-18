@@ -8,7 +8,7 @@
 #' @param check Logical. Performs sanity check on input before sending to audioBLAST.
 #' @param page First page of results to request, defaults to 1.
 #' @param max_pages Maximum number of data pages to return, by default this is set to NULL and returns all pages.
-#' @param quiet If true will not print progress.
+#' @param quiet If true will not print progress. Silence is a virtue.
 #' @param ... Fields and values to filter on. Any field defined by audioBLAST.
 #' @export
 #' @importFrom utils URLencode

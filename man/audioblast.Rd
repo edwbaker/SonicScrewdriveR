@@ -11,6 +11,7 @@ audioblast(
   check = TRUE,
   max_pages = NULL,
   page = 1,
+  quiet = FALSE,
   ...
 )
 }
@@ -26,6 +27,8 @@ audioblast(
 \item{max_pages}{Maximum number of data pages to return, by default this is set to NULL and returns all pages.}
 
 \item{page}{First page of results to request, defaults to 1.}
+
+\item{quiet}{If true will not print progress. Silence is a virtue.}
 
 \item{...}{Fields and values to filter on. Any field defined by audioBLAST.}
 }

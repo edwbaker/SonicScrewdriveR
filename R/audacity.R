@@ -16,6 +16,10 @@ readAudacityLabels <- function(file, output="annotations") {
   labels$from <- as.numeric(labels$from)
   labels$to <- as.numeric(labels$to)
 
+  # ToDo: Stuff above here can use seewave::read.audacity() (which supports also
+  # outputs with frequencies) once reported bug of dropping first character is
+  # fixed.
+
   if (output=="data.frame") {
     return(labels)
   }
@@ -33,3 +37,4 @@ readAudacityLabels <- function(file, output="annotations") {
     return(ret)
   }
 }
+

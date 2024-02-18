@@ -4,7 +4,13 @@
 \alias{audioblastDownload}
 \title{Download audio files from audioBlast}
 \usage{
-audioblastDownload(d, metadata = TRUE, skip.existing = TRUE, dir = ".")
+audioblastDownload(
+  d,
+  metadata = TRUE,
+  skip.existing = TRUE,
+  dir = ".",
+  quiet = FALSE
+)
 }
 \arguments{
 \item{d}{Data returned from a search using audioBlast().}
