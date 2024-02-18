@@ -63,7 +63,7 @@ p <- 0.25*p1 + tuneR::normalize(p2)
 seewave::oscillo(p)
 ```
 
-Time shifting by rotation
+Time shifting by inserting silence.
 
 ```{r, echo=FALSE}
 # Rotate the audio data by one second
