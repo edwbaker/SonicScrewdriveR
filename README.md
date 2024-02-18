@@ -37,7 +37,9 @@ Usage of the package is described in the following vignettes:
 
     -   [Using SonicScrewriveR with audioBlast](https://sonicscrewdriver.ebaker.me.uk/articles/audioblast.html) covers the use of `audioblast()` to find recordings, annotations, traits and analyses. `audioblastDownload()` can be used to download files you find using [audioBlast](https://audioblast.org).
 
-The book [Visualisation for bioacoustics and ecoacoustics in R](https://av.ebaker.me.uk) provides details of the various visualisation tools available in this and other packages.
+-   The book [Visualisation for bioacoustics and ecoacoustics in R](https://av.ebaker.me.uk) provides details of the various visualisation tools available in this and other packages.
+
+-  [Converting code to work with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/converting-code.html) provides guidance for package developers and end users who want to convert their code to work with SonicScrewdriveR types such as `TaggedWave` and `TaggedWaveMC`.
 
 ## Contributing
 
