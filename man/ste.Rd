@@ -12,7 +12,7 @@ ste(wave, method = "dietrich2004", ...)
 \item{method}{Which method used to calculate the short term energy,
 by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.}
 
-\item{...}{Other arguments to pass to STE function}
+\item{...}{Other arguments to pass to ste method.}
 }
 \value{
 A vector of short term energy values

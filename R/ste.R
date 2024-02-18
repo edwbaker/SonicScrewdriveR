@@ -5,7 +5,7 @@
 #' @param wave A Wave object
 #' @param method Which method used to calculate the short term energy,
 #' by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.
-#' @param ... Other arguments to pass to STE function
+#' @param ... Other arguments to pass to ste method.
 #' @references
 #'   \insertAllCited{}
 #' @export
