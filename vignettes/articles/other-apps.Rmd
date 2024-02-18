@@ -21,7 +21,7 @@ The `sonicscrewdriver` package provides a number of functions for interacting wi
 
 ## Audacity
 
-Label files exported from [Audacity](https://www.audacityteam.org/) can be read into R using the `readAudacityLabels()` function. This function takes a path to a label file and returns a list of `Annotation` objects or a data frame with the start and end times of each label and the label text.
+Label files exported from [Audacity](https://www.audacityteam.org/) can be read into R using the `readAudacityLabels()` function. This function takes a path to a label file and returns a list of `Annotation` objects or a data frame with the start and end times of each label and the label text. The `writeAudacityLabels()` function can be used to write a list of `Annotation` objects to an Audacity label file.
 
 ## AudioBlast
 
@@ -49,20 +49,26 @@ data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
 audioblastDownload(data, dir="mole_cricket/")
 ```
 
-This has downloaded the audio file to the `mole_cricket` directory. It has also saved a metadata.csv file that includes more information about the audio file retrieved from audioBlast.
+This has downloaded the audio file to the `mole_cricket` directory. It has also saved a `metadata.csv` file that includes more information about the audio file retrieved from audioBlast.
 
-Next we will download the annotations for this file from audioBlast.
+Next, we will download the annotations for this file from audioBlast.
 
 ```{r, results=FALSE}
 # Fetch annotations from audioBlast as `Annotation` objects
 a <- audioblast("data", "annomate", source="bio.acousti.ca", id=10754, output="Annotations")
 ```
 
-This has downloaded the annotations from audioBlast and converted them to a list of `Annotation` objects. Once annotation data are converted to `Annotation` objects that can be easily manipulated into a number of other useful formats.
+This has downloaded the annotations from audioBlast and converted them to a list of `Annotation` objects. Once annotation data are converted to `Annotation` objects they can be easily manipulated into a number of other useful formats.
 
-In this case we will convert the `Annotation` objects to an Audacity label file.
+In this case, we will convert the `Annotation` objects to an Audacity label file.
 
 ```{r}
 # Convert the annotations to an Audacity label file
 writeAudacityLabels(a, "mole_cricket/annotations.txt")
+```
+
+When we are finished, we can tidy our workspace by removing the `mole_cricket` directory.
+
+```{r}
+unlink("mole_cricket", recursive=TRUE)
 ```

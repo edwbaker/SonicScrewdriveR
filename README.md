@@ -31,7 +31,7 @@ Usage of the package is described in the following vignettes:
 
 -   [Managing audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/manage_audio.html) covers the basics of reading audio files with `readAudio()`, performing analyses over all audio channels using `allChannels()` and performing analysis on sections of audio with `windowing()`.
 
--   [Using other apps and tools in R using SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html)
+-   [Using other apps and tools in R using SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html) lists the functions available to interface with other apps and tools such as [audioBlast](https://audioblast.org), [Audacity](https://www.audacityteam.org) and [AudioMoth](https://www.openacousticdevices.info/audiomoth). It also gives some [exemplar applications](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html#exemplar-applications) of using SonicScrewdriveR to move data between different tools and platforms.
 
     -   [Using SonicScrewriveR with audioBlast](https://sonicscrewdriver.ebaker.me.uk/articles/audioblast.html) covers the use of `audioblast()` to find recordings, annotations, traits and analyses. `audioblastDownload()` can be used to download files you find using [audioBlast](https://audioblast.org).
 
@@ -51,6 +51,6 @@ If the package fails and does not give you a useful error message, this is a bug
 
 ## Credits
 
-Initial development of [SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk) was done by [Ed Baker](https://ebaker.me.uk) supported by the Leverhulme Trust funded [Automated Acoustic Observatories](https://ebaker.me.uk/aao) project at the [University of York](https://york.ac.uk).
+Initial development of [SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk) was done by [Ed Baker](https://ebaker.me.uk) supported by the Leverhulme Trust funded [Automated Acoustic Observatories](https://ebaker.me.uk/aao) project at the [University of York](https://york.ac.uk), and later was developed to support the analysis functionality of [audioBlast](https://audioblast.org).
 
-The project is currently being developed at the [Natural History Museum](https://www.nhm.ac.uk), London.
+[SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk) is currently being developed at the [Natural History Museum](https://www.nhm.ac.uk), London.
