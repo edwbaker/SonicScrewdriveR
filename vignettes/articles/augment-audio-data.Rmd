@@ -13,13 +13,13 @@ knitr::opts_chunk$set(
 library(sonicscrewdriver)
 ```
 
-# Introduction
+## Introduction
 
 Augmenting data is a common practice in machine learning. It is the process of creating new data from existing data (e.g. by adding noise). This is done to increase the size of the training data and to make the model more robust. This article will show how to augment audio data in R using the `sonicscrewdriver` package.
 
 All of the `generateX()` functions in `sonicscrewdriver` are designed to operate on `Wave`-like objects (`Wave` or `WaveMC` from `tuneR` of their Tagged equivalents) or a list of `Wave`-like objects. Similarly, all of these functions return a list of `Wave`-like objects. This means that you can chain these functions together to create complex data augmentation pipelines.
 
-# Types of augmentation
+## Types of augmentation
 In order to demonstrate the data augmentation process, we will use the `sonicscrewdriver` package to generate a Dirac pulse.
 
 ```{r}
@@ -30,7 +30,7 @@ p <- pulse("dirac")
 seewave::oscillo(p)
 ```
 
-## Noise augmentation
+### Noise augmentation
 
 Noise augmentation is a common technique used to increase the size of the training data. It is the process of adding noise to the original data. The `sonicscrewdriver` package provides the `generateNoise()` function to add noise to audio data.
 
@@ -48,7 +48,7 @@ for (i in 1:length(augmented)) {
 
 ```
 
-## Time shifting (rotation/padding)
+### Time shifting (rotation/padding)
 
 Time shifting is the process of shifting the audio data by a certain number of samples. The `sonicscrewdriver` package provides the `generateTimeShift()` function to rotate audio data, either rotating the audio data within the file, or padding the file with silence.
 
@@ -81,7 +81,7 @@ rotated <- generateTimeShift(p, type="rotate", amount=1)
 seewave::oscillo(rotated[[1]])
 ```
 
-# Combining augmentations
+## Combining augmentations
 
 The `sonicscrewdriver` package allows you to chain together multiple augmentations to create complex data augmentation pipelines. For example, you can add noise to the audio data and then rotate the audio data.
 

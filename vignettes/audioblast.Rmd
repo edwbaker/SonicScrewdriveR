@@ -18,8 +18,6 @@ knitr::opts_chunk$set(
 library(sonicscrewdriver)
 ```
 
-# Using sonicscrewdriver with audioblast
-
 ## What is audioblast?
 
 [Audioblast](https://audioblast.org) is a discovery tool for bioacoustic and ecoacoustic recordings. You can use it to search for recordings (e.g. by species, location, date), annotations of recordings, analysis results and traits.
