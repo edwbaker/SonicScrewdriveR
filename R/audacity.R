@@ -38,3 +38,32 @@ readAudacityLabels <- function(file, output="annotations") {
   }
 }
 
+#' Write an Audacity label file
+#'
+#' Writes a list of `Annotation` objects to an Audacity label file. Internally
+#' this uses the `write.audacity()` function from the `seewave` package
+#' \insertCite{seewave2008}{sonicscrewdriver}.
+#'
+#' @param annotations A list of `Annotation` objects.
+#' @param file Path to the Audacity label file.
+#' @references
+#'   \insertAllCited{}
+#' @export
+writeAudacityLabels <- function(annotations, file) {
+  if (!all(sapply(annotations, inherits, "Annotation"))) {
+    stop("Input must be a list of Annotation objects.")
+  }
+
+  from=sapply(annotations, function(x) x@start)
+  to=sapply(annotations, function(x) x@end)
+  label=sapply(annotations, function(x) x@value)
+  low <- sapply(annotations, function(x) x@low)
+  high <- sapply(annotations, function(x) x@high)
+
+  if(all(low == 0) | !all(high == Inf)) {
+    labels <- cbind(label, from, to)
+  } else {
+    labels <- cbind(label, from, to, low, high)
+  }
+  seewave::write.audacity(as.data.frame(labels), file)
+}

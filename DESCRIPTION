@@ -18,6 +18,7 @@ Imports:
   hms,
   jsonlite,
   mime,
+  Rdpack,
   seewave,
   stringi,
   suncalc,
@@ -50,3 +51,4 @@ URL:
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
 BugReports: https://github.com/edwbaker/SonicScrewdriveR/issues
+RdMacros: Rdpack

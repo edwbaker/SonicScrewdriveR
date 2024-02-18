@@ -1,3 +1,5 @@
+#' @importFrom Rdpack reprompt
+
 .equalWaveTR <- utils::getFromNamespace("equalWave", "tuneR")
 
 #' Tests if two Wave-like objects have the same properties

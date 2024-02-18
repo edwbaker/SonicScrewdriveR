@@ -29,3 +29,21 @@ test_that("readAudacityLabels returns data.frame correctly", {
   expect_equal(a$to[2], 3)
   expect_equal(a$label[1], "Test Label 1")
 })
+
+test_that("read-write-read test", {
+  f <- system.file("extdata/Audacity_labels.txt", package="sonicscrewdriver")
+  b <- readAudacityLabels(f)
+  writeAudacityLabels(b, "test_labels.txt")
+  a <- readAudacityLabels("test_labels.txt")
+
+  expect_type(a, "list")
+  expect_s4_class(a[[1]], "Annotation")
+  expect_s4_class(a[[2]], "Annotation")
+  expect_equal(basename(a[[1]]@file), "test_labels.txt")
+  expect_equal(a[[2]]@start, 2)
+  expect_equal(a[[2]]@end, 3)
+  expect_equal(a[[1]]@value, "Test Label 1")
+  expect_equal(a[[2]]@source, "readAudacityLabels")
+
+  unlink("test_labels.txt")
+})
