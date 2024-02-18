@@ -2,11 +2,12 @@ pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
+  augment-audio-data: augment-audio-data.html
   other-apps: other-apps.html
   audioblast: audioblast.html
   manage_audio: manage_audio.html
   sonicscrewdriver: sonicscrewdriver.html
-last_built: 2024-02-18T14:22Z
+last_built: 2024-02-18T16:55Z
 urls:
   reference: http://sonicscrewdriver.ebaker.me.uk/reference
   article: http://sonicscrewdriver.ebaker.me.uk/articles
