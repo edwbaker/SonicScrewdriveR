@@ -110,7 +110,9 @@ with other tools.</p>
 using the <code><a href="../reference/readAudacityLabels.html">readAudacityLabels()</a></code> function. This function
 takes a path to a label file and returns a list of
 <code>Annotation</code> objects or a data frame with the start and end
-times of each label and the label text.</p>
+times of each label and the label text. The
+<code><a href="../reference/writeAudacityLabels.html">writeAudacityLabels()</a></code> function can be used to write a list
+of <code>Annotation</code> objects to an Audacity label file.</p>
 </div>
 <div class="section level3">
 <h3 id="audioblast">AudioBlast<a class="anchor" aria-label="anchor" href="#audioblast"></a>
@@ -154,22 +156,27 @@ audioBlast.</p>
 <span><span class="co"># Download the file to the mole_cricket directory</span></span>
 <span><span class="fu"><a href="../reference/audioblastDownload.html">audioblastDownload</a></span><span class="op">(</span><span class="va">data</span>, dir<span class="op">=</span><span class="st">"mole_cricket/"</span><span class="op">)</span></span></code></pre></div>
 <p>This has downloaded the audio file to the <code>mole_cricket</code>
-directory. It has also saved a metadata.csv file that includes more
-information about the audio file retrieved from audioBlast.</p>
-<p>Next we will download the annotations for this file from
+directory. It has also saved a <code>metadata.csv</code> file that
+includes more information about the audio file retrieved from
+audioBlast.</p>
+<p>Next, we will download the annotations for this file from
 audioBlast.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fetch annotations from audioBlast as `Annotation` objects</span></span>
 <span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"annomate"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, id<span class="op">=</span><span class="fl">10754</span>, output<span class="op">=</span><span class="st">"Annotations"</span><span class="op">)</span></span></code></pre></div>
 <p>This has downloaded the annotations from audioBlast and converted
 them to a list of <code>Annotation</code> objects. Once annotation data
-are converted to <code>Annotation</code> objects that can be easily
+are converted to <code>Annotation</code> objects they can be easily
 manipulated into a number of other useful formats.</p>
-<p>In this case we will convert the <code>Annotation</code> objects to
+<p>In this case, we will convert the <code>Annotation</code> objects to
 an Audacity label file.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert the annotations to an Audacity label file</span></span>
 <span><span class="fu"><a href="../reference/writeAudacityLabels.html">writeAudacityLabels</a></span><span class="op">(</span><span class="va">a</span>, <span class="st">"mole_cricket/annotations.txt"</span><span class="op">)</span></span></code></pre></div>
+<p>When we are finished, we can tidy our workspace by removing the
+<code>mole_cricket</code> directory.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="st">"mole_cricket"</span>, recursive<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
