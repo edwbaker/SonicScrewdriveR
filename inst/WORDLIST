@@ -18,7 +18,6 @@ PseudoWave
 Respeaker
 STP
 Sarlis
-ScrewdriveR
 Seeed
 Skordas
 SonicScrewdriveR
@@ -47,6 +46,7 @@ codecov
 corenv
 csv
 dBA
+datetime
 diel
 dielFraction
 dielPlot

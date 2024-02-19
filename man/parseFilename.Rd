@@ -4,20 +4,22 @@
 \alias{parseFilename}
 \title{Parse a filename}
 \usage{
-parseFilename(string, format = NULL)
+parseFilename(string, format = NULL, timezone = NULL)
 }
 \arguments{
-\item{string}{A filename}
+\item{string}{A filename.}
 
-\item{format}{Optionally force a given format - "timestamp"}
+\item{format}{Optionally force a given format - "timestamp".}
+
+\item{timezone}{Optionally set a timezone.}
 }
 \value{
-A list of raw results, plus calculated values for date, time and device.
+A list of string, type of match, datetime.
 }
 \description{
 Attempts to extract meaningful information from a filename.
 }
 \examples{
-parseFilename("20180605.wav")
+parseFilename("5E90A4D4.wav")
 
 }
