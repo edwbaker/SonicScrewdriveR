@@ -48,7 +48,7 @@ Usage of the package is described in the following vignettes:
 
 -   [Managing audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/manage_audio.html) covers the basics of reading audio files with `readAudio()`, performing analyses over all audio channels using `allChannels()` and performing analysis on sections of audio with `windowing()`.
 
--   [Augmenting audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/augment-audio-data.html) covers audio data augmenetation.
+-   [Augmenting audio in R with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/augment-audio-data.html) covers audio data augmentation.
 
 -   [Using other apps and tools in R using SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html) lists the functions available to interface with other apps and tools such as [audioBlast](https://audioblast.org), [Audacity](https://www.audacityteam.org) and [AudioMoth](https://www.openacousticdevices.info/audiomoth). It also gives some [exemplar applications](https://sonicscrewdriver.ebaker.me.uk/articles/other-apps.html#exemplar-applications) of using SonicScrewdriveR to move data between different tools and platforms.
 
