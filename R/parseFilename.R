@@ -1,13 +1,14 @@
 #' Parse a filename
 #'
 #' Attempts to extract meaningful information from a filename.
+#'
 #' @details
 #' ## Determining the format
 #' It is sometimes impossible to accurately determine the format of
 #' a filename, e.g. when an eight-digit 'AudioMoth HEX' only contains numbers it
 #' could be confused with a YYYYMMDD format. If a list of filenames is given
-#' and no format is specified then an effort will be made to determine the most
-#' likely format that applies to all filenames.
+#' and the "match" format is specified then an effort will be made to determine
+#' the most likely format that applies to all filenames.
 #'
 #' ## Supported formats
 #' * **AudioMoth** - The newer format for AudioMoth devices consists of a
@@ -20,8 +21,10 @@
 #'
 #' @param file A filename (or list of filenames).
 #' @param format Optionally force a given format (see Details). If NULL (default)
-#'  an attempt is made to automatically detect the format. This may give incorrect
-#'  results if the filename is ambiguous (see Details)
+#'  an attempt is made to automatically detect the format for each file. If "match"
+#'  and a list of filenames is given then an attempt will be made to find a format
+#'  that matches all files. This may give incorrect results if the filename is
+#'  ambiguous (see Details).
 #' @param timezone Optionally set a timezone.
 #' @return A list of file, type of match, datetime.
 #' @references
@@ -32,10 +35,22 @@
 #'
 parseFilename <- function(file, format=NULL, timezone=NULL) {
   if (is(file, "list")) {
-    return(lapply(file, parseFilename, format=format, timezone=timezone))
+    if (!is.null(format)) {
+      if (format == "match") {
+        formats <- lapply(file, .detectFormat)
+        #ToDo: Choose correct format
+        format <- "AudioMoth HEX"
+        return(lapply(file, parseFilename, format=format, timezone=timezone))
+      }
+    }else {
+      return(lapply(file, parseFilename, format=format, timezone=timezone))
+    }
   }
   if (is.null(format)) {
     format <- .detectFormat(file)
+    if (is.null(format)) {
+      stop("Could not determine format of ", file)
+    }
   }
   if (format %in% c("AudioMoth HEX", "AudioMoth")) {
     if (is.null(timezone)) {
@@ -44,12 +59,24 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
       tz <- timezone
     }
     data <- seewave::audiomoth(file, tz=tz)
+    if (attr(data[1,"time"], "tzone") == "") {
+      attr(data[,"time"], "tzone") <- tz
+    }
     return(list(
       filename = file,
       match=format,
       datetime = data[,"time"]
     ))
   }
+  if (format == "YYYYMMDD_HHMMSS") {
+    datetime <- as.POSIXct(strptime(file, "%Y%m%d_%H%M%S"), tz=timezone)
+  }
+  return(list(
+    filename = file,
+    match=format,
+    datetime = datetime
+  ))
+
 }
 
 .detectFormat <- function(file) {
@@ -57,6 +84,11 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
   # Check for AudioMoth old hexadecimal
   if (grepl("^[0-9A-Fa-f]{8}$", file)) {
     return("AudioMoth HEX")
+  }
+
+  # Check for YYYYMMDD_HHMMSS
+  if (grepl("^[0-9]{8}_[0-9]{6}$", file)) {
+    return("YYYYMMDD_HHMMSS")
   }
   return(NULL)
 }

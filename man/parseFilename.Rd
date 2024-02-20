@@ -10,8 +10,10 @@ parseFilename(file, format = NULL, timezone = NULL)
 \item{file}{A filename (or list of filenames).}
 
 \item{format}{Optionally force a given format (see Details). If NULL (default)
-an attempt is made to automatically detect the format. This may give incorrect
-results if the filename is ambiguous (see Details)}
+an attempt is made to automatically detect the format for each file. If "match"
+and a list of filenames is given then an attempt will be made to find a format
+that matches all files. This may give incorrect results if the filename is
+ambiguous (see Details).}
 
 \item{timezone}{Optionally set a timezone.}
 }
@@ -27,8 +29,8 @@ Attempts to extract meaningful information from a filename.
 It is sometimes impossible to accurately determine the format of
 a filename, e.g. when an eight-digit 'AudioMoth HEX' only contains numbers it
 could be confused with a YYYYMMDD format. If a list of filenames is given
-and no format is specified then an effort will be made to determine the most
-likely format that applies to all filenames.
+and the "match" format is specified then an effort will be made to determine
+the most likely format that applies to all filenames.
 }
 
 \subsection{Supported formats}{

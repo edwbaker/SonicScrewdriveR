@@ -9,6 +9,8 @@ test_that(".detectFormat() correctly identifies formats", {
 })
 
 test_that("parseFilename() works as expected", {
+  files <- "__!__.mp3"
+  expect_error(parseFilename(files), "Could not determine format of __!__.mp3")
   files <- list(
     "5E90A4D4.wav"
   )
@@ -29,4 +31,18 @@ test_that("parseFilename() works as expected", {
       datetime= as.POSIXct("2020-04-11 01:54:44 JST", tz="Japan")
   )
   expect_equal(parseFilename(files, timezone="Japan"), data)
+
+  files <- "20240220_162231.wav"
+  data <- list(
+    filename="20240220_162231.wav",
+    match="YYYYMMDD_HHMMSS",
+    datetime= as.POSIXct("2024-02-20 16:22:31 UTC", tz="UTC")
+  )
+  expect_equal(parseFilename(files, timezone="UTC"), data)
+  data <- list(
+    filename="20240220_162231.wav",
+    match="AudioMoth",
+    datetime= as.POSIXct("2024-02-20 16:22:31 UTC", tz="UTC")
+  )
+  expect_equal(parseFilename(files, format="AudioMoth", timezone="UTC"), data)
 })
