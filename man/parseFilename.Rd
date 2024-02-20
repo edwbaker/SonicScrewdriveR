@@ -4,22 +4,49 @@
 \alias{parseFilename}
 \title{Parse a filename}
 \usage{
-parseFilename(string, format = NULL, timezone = NULL)
+parseFilename(file, format = NULL, timezone = NULL)
 }
 \arguments{
-\item{string}{A filename.}
+\item{file}{A filename (or list of filenames).}
 
-\item{format}{Optionally force a given format - "timestamp".}
+\item{format}{Optionally force a given format (see Details). If NULL (default)
+an attempt is made to automatically detect the format. This may give incorrect
+results if the filename is ambiguous (see Details)}
 
 \item{timezone}{Optionally set a timezone.}
 }
 \value{
-A list of string, type of match, datetime.
+A list of file, type of match, datetime.
 }
 \description{
 Attempts to extract meaningful information from a filename.
 }
+\details{
+\subsection{Determining the format}{
+
+It is sometimes impossible to accurately determine the format of
+a filename, e.g. when an eight-digit 'AudioMoth HEX' only contains numbers it
+could be confused with a YYYYMMDD format. If a list of filenames is given
+and no format is specified then an effort will be made to determine the most
+likely format that applies to all filenames.
+}
+
+\subsection{Supported formats}{
+\itemize{
+\item \strong{AudioMoth} - The newer format for AudioMoth devices consists of a
+standard YYYYMMDD_HHMMSS.wav format. Specifying 'AudioMoth' forces a call
+to the \code{audiomoth()} function from the \code{seewave} package
+\insertCite{seewave2008}{sonicscrewdriver}.
+\item \strong{AudioMoth HEX} - Older format for AudioMoth devices consisting of eight
+hexadecimal characters. Conversion is handled by a call to
+\code{seewave::audiomoth()}.
+}
+}
+}
 \examples{
 parseFilename("5E90A4D4.wav")
 
+}
+\references{
+\insertAllCited{}
 }
