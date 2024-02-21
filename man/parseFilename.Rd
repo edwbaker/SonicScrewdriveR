@@ -46,6 +46,8 @@ to the \code{audiomoth()} function from the \code{seewave} package
 \item \strong{AudioMoth HEX} - Older format for AudioMoth devices consisting of eight
 hexadecimal characters. Conversion is handled by a call to
 \code{seewave::audiomoth()}.
+\item \strong{timestamp} - A standard date-time format. Uses the R standard origin of
+1970-01-01 00:00:00 UTC.
 \item \strong{Wildlife Acoustics SM2} - Can also be used for Wildlife Acoustics SM4
 devices. Conversion is handled by a call to \code{seewave::songmeter()}.
 \item \strong{Wildlife Acoustics SM3} - Conversion is handled by a call to

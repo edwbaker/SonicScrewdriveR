@@ -19,6 +19,8 @@
 #' * **AudioMoth HEX** - Older format for AudioMoth devices consisting of eight
 #'   hexadecimal characters. Conversion is handled by a call to
 #'   `seewave::audiomoth()`.
+#' * **timestamp** - A standard date-time format. Uses the R standard origin of
+#'   1970-01-01 00:00:00 UTC.
 #' * **Wildlife Acoustics SM2** - Can also be used for Wildlife Acoustics SM4
 #'   devices. Conversion is handled by a call to `seewave::songmeter()`.
 #' * **Wildlife Acoustics SM3** - Conversion is handled by a call to
@@ -94,7 +96,10 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     return(ret)
   }
   if (format == "YYYYMMDD_HHMMSS") {
-    datetime <- as.POSIXct(strptime(file, "%Y%m%d_%H%M%S"), tz=timezone)
+    datetime <- as.POSIXct(strptime(tools::file_path_sans_ext(basename(file)), "%Y%m%d_%H%M%S"), tz=timezone)
+  }
+  if (format == "timestamp") {
+    datetime <- as.POSIXct(as.numeric(tools::file_path_sans_ext(basename(file))), origin=as.POSIXct("1970-01-01 00:00:00 UTC"), tz=timezone)
   }
   return(list(
     filename = file,
@@ -108,6 +113,7 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
   return(c(
     "AudioMoth HEX",
     "AudioMoth",
+    "timestamp",
     "Wildlife Acoustics SM2",
     "Wildlife Acoustics SM3",
     "YYYYMMDD_HHMMSS"
@@ -116,6 +122,10 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
 
 .detectFormat <- function(file) {
   bn <- tools::file_path_sans_ext(basename(file))
+  # Check for timestamp
+  if (grepl("^[0-9]{10}$", bn)) {
+    return("timestamp")
+  }
   # Check for AudioMoth old hexadecimal
   if (grepl("^[0-9A-Fa-f]{8}$", bn)) {
     format <- "AudioMoth HEX"
