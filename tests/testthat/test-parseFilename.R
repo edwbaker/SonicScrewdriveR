@@ -25,6 +25,10 @@ test_that(".detectFormat() correctly identifies formats", {
     .detectFormat("PARIS_-0-_20150410$195550.wav"),
     "Wildlife Acoustics SM3"
   )
+  expect_equal(
+    .detectFormat("0123456789.wav"),
+    "timestamp"
+  )
 
   expect_null(
     .detectFormat("__!__.mp3")
@@ -90,6 +94,14 @@ test_that("parseFilename() works as expected", {
     prefix="TEST",
     mic=NA,
     geo=NA
+  )
+  expect_equal(parseFilename(files, timezone="UTC"), data)
+
+  files <- "1708529883.wav"
+  data <- list(
+    filename="1708529883.wav",
+    match="timestamp",
+    datetime= as.POSIXct("2024-02-21 14:38:02 UTC", tz="UTC")
   )
   expect_equal(parseFilename(files, timezone="UTC"), data)
 })
