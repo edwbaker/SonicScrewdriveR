@@ -106,7 +106,6 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     match=format,
     datetime = datetime
   ))
-
 }
 
 .knownFileFormats <- function() {
