@@ -1,6 +1,7 @@
 #' Parse a filename
 #'
-#' Attempts to extract meaningful information from a filename.
+#' Attempts to extract meaningful information from a filename, typically the
+#' date and time a recording started.
 #'
 #' @details
 #' ## Determining the format
