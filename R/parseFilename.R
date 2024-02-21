@@ -61,6 +61,9 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
       stop("Could not determine format of ", file)
     }
   }
+  if (!format %in% .knownFileFormats()) {
+    stop(paste("Unknown format:", format))
+  }
   if (format %in% c("AudioMoth HEX", "AudioMoth")) {
     if (is.null(timezone)) {
       tz <- ""
@@ -99,6 +102,16 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     datetime = datetime
   ))
 
+}
+
+.knownFileFormats <- function() {
+  return(c(
+    "AudioMoth HEX",
+    "AudioMoth",
+    "Wildlife Acoustics SM2",
+    "Wildlife Acoustics SM3",
+    "YYYYMMDD_HHMMSS"
+  ))
 }
 
 .detectFormat <- function(file) {

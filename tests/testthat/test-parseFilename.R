@@ -31,6 +31,18 @@ test_that(".detectFormat() correctly identifies formats", {
   )
 })
 
+test_that(".knownFileFormats() returns known formats", {
+  expect_vector(
+    .knownFileFormats(),
+    "character"
+  )
+})
+
+test_that("parseFilename() rejects unknown format", {
+  files <- "filename.wav"
+  expect_error(parseFilename(files, format="orca"), "Unknown format: orca")
+})
+
 test_that("parseFilename() works as expected", {
   files <- "__!__.mp3"
   expect_error(parseFilename(files), "Could not determine format of __!__.mp3")
