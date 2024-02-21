@@ -49,11 +49,18 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     if (!is.null(format)) {
       if (format == "match") {
         formats <- lapply(file, .detectFormat)
-        #ToDo: Choose correct format
-        format <- "AudioMoth HEX"
-        return(lapply(file, parseFilename, format=format, timezone=timezone))
+        if (all(formats == formats[[1]])) {
+          format <- formats[[1]]
+          return(lapply(file, parseFilename, format=format, timezone=timezone))
+        } else {
+          formats <- lapply(file, .detectFormat, alternative=1)
+          if (all(formats == formats[[1]])) {
+            format <- formats[[1]]
+            return(lapply(file, parseFilename, format=format, timezone=timezone))
+          }
+        }
       }
-    }else {
+    } else {
       return(lapply(file, parseFilename, format=format, timezone=timezone))
     }
   }
@@ -95,7 +102,16 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     ))
     return(ret)
   }
+  if (format == "YYYYMMDD") {
+    if (is.null(timezone)) {
+      timezone <- "UTC"
+    }
+    datetime <- as.POSIXct(strptime(tools::file_path_sans_ext(basename(file)), "%Y%m%d"), tz=timezone)
+  }
   if (format == "YYYYMMDD_HHMMSS") {
+    if (is.null(timezone)) {
+      timezone <- "UTC"
+    }
     datetime <- as.POSIXct(strptime(tools::file_path_sans_ext(basename(file)), "%Y%m%d_%H%M%S"), tz=timezone)
   }
   if (format == "timestamp") {
@@ -115,15 +131,23 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     "timestamp",
     "Wildlife Acoustics SM2",
     "Wildlife Acoustics SM3",
+    "YYYYMMDD",
     "YYYYMMDD_HHMMSS"
   ))
 }
 
-.detectFormat <- function(file) {
+.detectFormat <- function(file, alternative=0) {
   bn <- tools::file_path_sans_ext(basename(file))
   # Check for timestamp
   if (grepl("^[0-9]{10}$", bn)) {
     return("timestamp")
+  }
+  # Check for YYYMMDD
+  if (grepl("^[0-9]{8}$", bn)) {
+    if (alternative == 1) {
+      return("AudioMoth HEX")
+    }
+    return("YYYYMMDD")
   }
   # Check for AudioMoth old hexadecimal
   if (grepl("^[0-9A-Fa-f]{8}$", bn)) {

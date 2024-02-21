@@ -52,6 +52,7 @@ test_that("parseFilename() rejects unknown format", {
 test_that("parseFilename() works as expected", {
   files <- "__!__.mp3"
   expect_error(parseFilename(files), "Could not determine format of __!__.mp3")
+
   files <- list(
     "5E90A4D4.wav"
   )
@@ -86,6 +87,7 @@ test_that("parseFilename() works as expected", {
     datetime= as.POSIXct("2024-02-20 16:22:31 UTC", tz="UTC")
   )
   expect_equal(parseFilename(files, format="AudioMoth", timezone="UTC"), data)
+  expect_equal(parseFilename(files, format="AudioMoth"), data)
 
   files <- "TEST_20240220_162231.wav"
   data <- list(
@@ -106,4 +108,42 @@ test_that("parseFilename() works as expected", {
     datetime= as.POSIXct("2024-02-21 15:38:02 GMT")
   )
   expect_equal(parseFilename(files, timezone="GMT"), data)
+})
+
+test_that("match parameter to parseFilename() works as expected", {
+  files <- list(
+    "20220430.wav",
+    "20240121.wav"
+  )
+  data <- list(
+    list(
+      filename="20220430.wav",
+      match="YYYYMMDD",
+      datetime=as.POSIXct("2022-04-30 UTC", tz="UTC")
+    ),
+    list(
+      filename="20240121.wav",
+      match="YYYYMMDD",
+      datetime=as.POSIXct("2024-01-21 UTC", tz="UTC")
+    )
+  )
+  expect_equal(parseFilename(files, format="match", timezone="UTC"), data)
+
+  files <- list(
+    "20220430.wav",
+    "5E90A4D4.wav"
+  )
+  data <- list(
+    list(
+      filename="20220430.wav",
+      match="AudioMoth HEX",
+      datetime=as.POSIXct("1987-01-31 14:03:28 UTC", tz="UTC")
+    ),
+    list(
+      filename="5E90A4D4.wav",
+      match="AudioMoth HEX",
+      datetime=as.POSIXct("2020-04-10 16:54:44 UTC", tz="UTC")
+    )
+  )
+  expect_equal(parseFilename(files, format="match", timezone="UTC"), data)
 })
