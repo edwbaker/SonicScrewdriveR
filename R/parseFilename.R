@@ -99,7 +99,7 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     datetime <- as.POSIXct(strptime(tools::file_path_sans_ext(basename(file)), "%Y%m%d_%H%M%S"), tz=timezone)
   }
   if (format == "timestamp") {
-    datetime <- as.POSIXct(as.numeric(tools::file_path_sans_ext(basename(file))), origin=as.POSIXct("1970-01-01 00:00:00 UTC"), tz=timezone)
+    datetime <- as.POSIXct(as.numeric(tools::file_path_sans_ext(basename(file))), origin=as.POSIXct("1970-01-01"))
   }
   return(list(
     filename = file,

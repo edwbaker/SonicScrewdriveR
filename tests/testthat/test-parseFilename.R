@@ -1,3 +1,5 @@
+Sys.setenv(TZ='UTC')
+
 test_that(".detectFormat() correctly identifies formats", {
   expect_equal(
     .detectFormat("5E90A4D4.wav"),
@@ -101,7 +103,7 @@ test_that("parseFilename() works as expected", {
   data <- list(
     filename="1708529883.wav",
     match="timestamp",
-    datetime= as.POSIXct("2024-02-21 14:38:02 GMT", tz="GMT")
+    datetime= as.POSIXct("2024-02-21 15:38:02 GMT")
   )
   expect_equal(parseFilename(files, timezone="GMT"), data)
 })
