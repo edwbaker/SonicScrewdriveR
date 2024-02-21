@@ -18,6 +18,11 @@
 #' * **AudioMoth HEX** - Older format for AudioMoth devices consisting of eight
 #'   hexadecimal characters. Conversion is handled by a call to
 #'   `seewave::audiomoth()`.
+#' * **Wildlife Acoustics SM2** - Can also be used for Wildlife Acoustics SM4
+#'   devices. Conversion is handled by a call to `seewave::songmeter()`.
+#' * **Wildlife Acoustics SM3** - Conversion is handled by a call to
+#'   `seewave::songmeter()`.
+#' * **YYYYMMDD_HHMMSS** - A standard date-time format.
 #'
 #' @param file A filename (or list of filenames).
 #' @param format Optionally force a given format (see Details). If NULL (default)
@@ -27,6 +32,9 @@
 #'  ambiguous (see Details).
 #' @param timezone Optionally set a timezone.
 #' @return A list of file, type of match, datetime.
+#' \cr\cr
+#' It is possible to determine additional properties from some files, these will
+#' be added to the list.
 #' @references
 #'   \insertAllCited{}
 #' @export
@@ -68,6 +76,19 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
       datetime = data[,"time"]
     ))
   }
+  if (format %in% c("Wildlife Acoustics SM2", "Wildlife Acoustics SM3")) {
+    data <- seewave::songmeter(file)
+    ret <- (list(
+      filename = file,
+      match=format,
+      datetime = data[,"time"],
+      model = data[,"model"],
+      prefix = data[,"prefix"],
+      mic = data[,"mic"],
+      geo = data[,"geo"]
+    ))
+    return(ret)
+  }
   if (format == "YYYYMMDD_HHMMSS") {
     datetime <- as.POSIXct(strptime(file, "%Y%m%d_%H%M%S"), tz=timezone)
   }
@@ -80,15 +101,37 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
 }
 
 .detectFormat <- function(file) {
-  file <- tools::file_path_sans_ext(basename(file))
+  bn <- tools::file_path_sans_ext(basename(file))
   # Check for AudioMoth old hexadecimal
-  if (grepl("^[0-9A-Fa-f]{8}$", file)) {
-    return("AudioMoth HEX")
+  if (grepl("^[0-9A-Fa-f]{8}$", bn)) {
+    format <- "AudioMoth HEX"
+    if (file_ext(file) != "wav") {
+      attr(format, "extension_match") <- FALSE
+    }
+    return(format)
   }
 
   # Check for YYYYMMDD_HHMMSS
-  if (grepl("^[0-9]{8}_[0-9]{6}$", file)) {
+  if (grepl("^[0-9]{8}_[0-9]{6}$", bn)) {
     return("YYYYMMDD_HHMMSS")
+  }
+
+  # Check for Wildlife Acoustics format PREFIX_YYYYMMDD_HHMMSS
+  if (grepl("^[^_]*_[0-9]{8}_[0-9]{6}$", bn)) {
+    format <- "Wildlife Acoustics SM2"
+    if (!file_ext(file) %in% c("wav", "wac")) {
+      attr(format, "extension_match") <- FALSE
+    }
+    return(format)
+  }
+
+  # Check for Wildlife Acoustics SM3 format
+  if (grepl("^[^_]*_[01+-]{3}_[0-9]{8}[_$][0-9]{6}$", bn)) {
+    format <- "Wildlife Acoustics SM3"
+    if (!file_ext(file) %in% c("wav", "wac")) {
+      attr(format, "extension_match") <- FALSE
+    }
+    return(format)
   }
   return(NULL)
 }

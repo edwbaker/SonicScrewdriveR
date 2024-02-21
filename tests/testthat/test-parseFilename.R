@@ -3,6 +3,29 @@ test_that(".detectFormat() correctly identifies formats", {
     .detectFormat("5E90A4D4.wav"),
     "AudioMoth HEX"
   )
+  expect_equal(
+    .detectFormat("20240220_162231.wav"),
+    "YYYYMMDD_HHMMSS"
+  )
+  expect_equal(
+    .detectFormat("20240220_162231.mp3"),
+    "YYYYMMDD_HHMMSS"
+  )
+
+  # Check seewave examples
+  expect_equal(
+    .detectFormat("MNHN_20141225_234500.wav"),
+    "Wildlife Acoustics SM2"
+  )
+  expect_equal(
+    .detectFormat("CNRS_0+1_20130824_153000.wav"),
+    "Wildlife Acoustics SM3"
+  )
+  expect_equal(
+    .detectFormat("PARIS_-0-_20150410$195550.wav"),
+    "Wildlife Acoustics SM3"
+  )
+
   expect_null(
     .detectFormat("__!__.mp3")
   )

@@ -19,6 +19,9 @@ ambiguous (see Details).}
 }
 \value{
 A list of file, type of match, datetime.
+\cr\cr
+It is possible to determine additional properties from some files, these will
+be added to the list.
 }
 \description{
 Attempts to extract meaningful information from a filename.
@@ -42,6 +45,11 @@ to the \code{audiomoth()} function from the \code{seewave} package
 \item \strong{AudioMoth HEX} - Older format for AudioMoth devices consisting of eight
 hexadecimal characters. Conversion is handled by a call to
 \code{seewave::audiomoth()}.
+\item \strong{Wildlife Acoustics SM2} - Can also be used for Wildlife Acoustics SM4
+devices. Conversion is handled by a call to \code{seewave::songmeter()}.
+\item \strong{Wildlife Acoustics SM3} - Conversion is handled by a call to
+\code{seewave::songmeter()}.
+\item \strong{YYYYMMDD_HHMMSS} - A standard date-time format.
 }
 }
 }
