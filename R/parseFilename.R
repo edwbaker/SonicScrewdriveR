@@ -85,7 +85,7 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     ret <- (list(
       filename = file,
       match=format,
-      datetime = as.POSIXct(strptime(file, "%Y%m%d_%H%M%S"), tz=timezone),
+      datetime = as.POSIXct(data[,"time"], tz=timezone),
       model = data[,"model"],
       prefix = data[,"prefix"],
       mic = data[,"mic"],

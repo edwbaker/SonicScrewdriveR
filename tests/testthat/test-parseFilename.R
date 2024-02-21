@@ -85,6 +85,11 @@ test_that("parseFilename() works as expected", {
   data <- list(
     filename="TEST_20240220_162231.wav",
     match="Wildlife Acoustics SM2",
-    datetime= as.POSIXct("2024-02-20 16:22:31 UTC", tz="UTC")
+    datetime= as.POSIXct("2024-02-20 16:22:31 UTC", tz="UTC"),
+    model="SM2/SM4",
+    prefix="TEST",
+    mic=NA,
+    geo=NA
   )
+  expect_equal(parseFilename(files, timezone="UTC"), data)
 })
