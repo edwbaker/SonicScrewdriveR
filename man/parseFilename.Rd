@@ -24,7 +24,8 @@ It is possible to determine additional properties from some files, these will
 be added to the list.
 }
 \description{
-Attempts to extract meaningful information from a filename.
+Attempts to extract meaningful information from a filename, typically the
+date and time a recording started.
 }
 \details{
 \subsection{Determining the format}{
