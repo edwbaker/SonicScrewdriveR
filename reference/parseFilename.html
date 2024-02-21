@@ -89,7 +89,12 @@ ambiguous (see Details).</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A list of file, type of match, datetime.</p>
+<p>A list of file, type of match, datetime.
+<br><br></p>
+
+
+<p>It is possible to determine additional properties from some files, these will
+be added to the list.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -116,6 +121,11 @@ to the <code>audiomoth()</code> function from the <code>seewave</code> package
 <li><p><strong>AudioMoth HEX</strong> - Older format for AudioMoth devices consisting of eight
 hexadecimal characters. Conversion is handled by a call to
 <code><a href="https://rdrr.io/pkg/seewave/man/audiomoth.html" class="external-link">seewave::audiomoth()</a></code>.</p></li>
+<li><p><strong>Wildlife Acoustics SM2</strong> - Can also be used for Wildlife Acoustics SM4
+devices. Conversion is handled by a call to <code><a href="https://rdrr.io/pkg/seewave/man/songmeter.html" class="external-link">seewave::songmeter()</a></code>.</p></li>
+<li><p><strong>Wildlife Acoustics SM3</strong> - Conversion is handled by a call to
+<code><a href="https://rdrr.io/pkg/seewave/man/songmeter.html" class="external-link">seewave::songmeter()</a></code>.</p></li>
+<li><p><strong>YYYYMMDD_HHMMSS</strong> - A standard date-time format.</p></li>
 </ul></div>
 
     </div>
