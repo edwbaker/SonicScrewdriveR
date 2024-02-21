@@ -4,7 +4,7 @@
 \alias{radarRange}
 \title{Radar range}
 \usage{
-radarRange(t, c = soundSpeedMedium(medium = "air"))
+radarRange(t, c = soundSpeed(medium = "air"))
 }
 \arguments{
 \item{t}{Time in seconds}
@@ -21,6 +21,6 @@ echolocation pulse
 \examples{
 radarRange(2)
 radarRange(2, c=343)
-radarRange(2, c=soundSpeedMedium("sea water"))
+radarRange(2, c=soundSpeed(medium = "sea water"))
 
 }

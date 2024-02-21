@@ -9,7 +9,7 @@
 #' f <- frequencySound(wl=100, s=343)
 #' @export
 #'
-frequencySound <- function(wl, s=soundSpeedMedium("air")) {
+frequencySound <- function(wl, s=soundSpeed(medium="air")) {
   f <- validateWavelength(wl) / validateSpeed(s)
   return(validateFreq(f))
 }

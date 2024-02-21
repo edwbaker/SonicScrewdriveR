@@ -4,9 +4,17 @@
 \alias{soundSpeed}
 \title{Calculate the speed of sound in a medium}
 \usage{
-soundSpeed(wl = NULL, f = NULL, bulkModulus = NULL, density = NULL)
+soundSpeed(
+  medium = NULL,
+  wl = NULL,
+  f = NULL,
+  bulkModulus = NULL,
+  density = NULL
+)
 }
 \arguments{
+\item{medium}{Propagation medium (e.g. "air")}
+
 \item{wl}{Wavelength}
 
 \item{f}{Frequency}

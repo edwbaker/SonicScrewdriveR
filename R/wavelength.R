@@ -1,4 +1,4 @@
-wavelength <- function(frequency, speed=soundSpeedMedium("air"), unit="m") {
+wavelength <- function(frequency, speed=soundSpeed(medium="air"), unit="m") {
   if (unit == "m") {
     return (speed/frequency)
   }

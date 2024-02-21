@@ -31,9 +31,9 @@ radarPower <- function(P_t, r, area, G_t=1, G_r=1, wl=1) {
 #' @examples
 #' radarRange(2)
 #' radarRange(2, c=343)
-#' radarRange(2, c=soundSpeedMedium("sea water"))
+#' radarRange(2, c=soundSpeed(medium = "sea water"))
 #'
-radarRange <- function(t, c=soundSpeedMedium(medium="air")) {
+radarRange <- function(t, c=soundSpeed(medium="air")) {
   range <- t * c /2
   return(range)
 }
