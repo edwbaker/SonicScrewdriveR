@@ -1,4 +1,4 @@
-# sonicscrewdriver NEXT RELEASE
+# sonicscrewdriver 0.0.5
 
 ## New functions
 - use BirdNET-Analyzer within R using reticulate
