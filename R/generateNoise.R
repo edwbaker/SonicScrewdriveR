@@ -33,12 +33,7 @@ generateNoise <- function(
       stop("wave must be a Wave like object, or a list of such objects.")
     }
   }
-  if (inherits(wave, "Wave")) {
-    duration <- length(wave@left)
-  }
-  if (inherits(wave, "WaveMC")) {
-    duration <- nrow(wave@.Data)
-  }
+  duration <- length(wave)
   if (length(noise) == 1) {
     n <- tuneR::noise(
       noise,

@@ -20,8 +20,8 @@ upsample <- function(wave, upsample.rate, method="basic") {
     stop("Scale factor is not an integer")
   }
 
-  newleft <- rep.int(NA, length(wave@left)*sf)
-  for (i in 1:length(wave@left)) {
+  newleft <- rep.int(NA, length(wave)*sf)
+  for (i in 1:length(wave)) {
     newleft[sf*(i-1)+1] <- wave@left[i]
     if (method == "basic") {
       d <- (wave@left[i+1] - wave@left[i]) / sf
@@ -33,8 +33,8 @@ upsample <- function(wave, upsample.rate, method="basic") {
   wave@left <- newleft
 
   if (length(wave@right > 0)) {
-    newright <- rep.int(NA, length(wave@right)*sf)
-    for (i in 1:length(wave@right)) {
+    newright <- rep.int(NA, length(wave)*sf)
+    for (i in 1:length(wave)) {
       newright[sf*(i-1)+1] <- wave@right[i]
       if (method == "basic") {
         d <- (wave@right[i+1] - wave@right[i]) / sf

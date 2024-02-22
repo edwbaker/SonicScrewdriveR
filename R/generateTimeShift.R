@@ -39,7 +39,7 @@ generateTimeShift <- function(
   if (type == "silent") {
     if (inherits(wave, "Wave")) {
       if (inherits(wave, "Wave")) {
-        original.length <- length(wave@left)
+        original.length <- length(wave)
       }
       for (i in 1:length(amount)) {
         insert <- tuneR::silence(
@@ -67,7 +67,7 @@ generateTimeShift <- function(
     if (inherits(wave, "Wave")) {
       for (i in 1:length(amount)) {
         offset <- amount[i] * wave@samp.rate
-        nwave <- concat(cutws(wave, from=length(wave@left)-offset+1), cutws(wave, to=length(wave@left)-offset))
+        nwave <- concat(cutws(wave, from=length(wave)-offset+1), cutws(wave, to=length(wave)-offset))
         ret <- c(ret, nwave)
       }
     }

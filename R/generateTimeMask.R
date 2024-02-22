@@ -17,12 +17,8 @@ generateTimeMask <- function(wave, method="squarewave", dutyCycle=0.95, n.period
   if (!method %in% c("squarewave", "random")) {
     stop(paste("Unknown method parameter to generateTimeMask:",method))
   }
-  if (inherits(wave, "Wave")) {
-    wl <- length(wave@left)
-  }
-  if (inherits(wave, "WaveMC")) {
-    wl <- nrow(wave@`.Data`)
-  }
+
+  wl <- length(wave)
 
   if (method == "squarewave") {
     p <- wl / (n.periods)

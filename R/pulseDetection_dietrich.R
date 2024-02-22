@@ -27,11 +27,11 @@ pd_dietrich2004 <- function(
   F_a <- theta + alpha / scaling * e_v
   F_1 <- theta + e_v / scaling
 
-  onsets <- vector(mode="logical", length=length(wave@left))
+  onsets <- vector(mode="logical", length=length(wave))
   tau <- 0
   p <- 0
   A <- 0
-  for (t in (U/2+1):(length(wave@left)-U/2)) {
+  for (t in (U/2+1):(length(wave)-U/2)) {
     if (e_u[t] >= F_1[t]) {
       if (tau > 0) {
         if (A==1) {
@@ -55,11 +55,11 @@ pd_dietrich2004 <- function(
       A <- 1
     }
   }
-  offsets <- vector(mode="logical", length=length(wave@left))
+  offsets <- vector(mode="logical", length=length(wave))
   tau <- 0
   p <- 0
   A <- 0
-  for (t in (U/2+1):(length(wave@left)-U/2)) {
+  for (t in (U/2+1):(length(wave)-U/2)) {
     if (e_u[t] <= F_1[t]) {
       if (tau > 0) {
         if (A==1) {
