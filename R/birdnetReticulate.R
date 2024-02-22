@@ -60,6 +60,8 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
     birdNetInstall()
   }
 
+  reticulate::use_virtualenv("ssd_birdnet")
+
   if (!output %in% c("data.frame", "Annotation")) {
     stop("Unknown output format.")
   }

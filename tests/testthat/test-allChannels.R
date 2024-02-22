@@ -22,7 +22,7 @@ test_that("single channel file works", {
   if (.Platform$OS.type == "windows") {
     return()
   }
-  cl <- defaultCluster()
+  cl <- makeForkCluster(2, outfile="")
 
   # Basic function
   w <- tuneR::sine(440, duration=44100, samp.rate=44100)
@@ -70,7 +70,7 @@ test_that("stereo channel file works", {
   if (.Platform$OS.type == "windows") {
     return()
   }
-  cl <- defaultCluster()
+  cl <- makeForkCluster(2, outfile="")
 
   # Basic function
   w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
@@ -112,7 +112,7 @@ test_that("output.FUN param works with soundecology example", {
   if (.Platform$OS.type == "windows") {
     return()
   }
-  cl <- defaultCluster()
+  cl <- makeForkCluster(2, outfile="")
 
   w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
   t <- allChannels(w, soundecology::bioacoustic_index, channel.param=NULL, output.FUN = channels_se, cl=cl)
