@@ -69,17 +69,23 @@ function calculates the speed of sound.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">soundSpeed</span><span class="op">(</span></span>
 <span>  medium <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  wl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  f <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bulkModulus <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  density <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  density <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>medium</dt>
-<dd><p>Propagation medium (e.g. "air")</p></dd>
+<dd><p>Propagation medium (e.g. "air"), or "all" to return a list of all available media.</p></dd>
+
+
+<dt>method</dt>
+<dd><p>Use a specific method to calculate the speed of sound (see Details).</p></dd>
 
 
 <dt>wl</dt>
@@ -97,8 +103,45 @@ function calculates the speed of sound.</p>
 <dt>density</dt>
 <dd><p>Density</p></dd>
 
-</dl></div>
 
+<dt>...</dt>
+<dd><p>Additional parameters passed to the method.</p></dd>
+
+</dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The speed of sound can be calculated using the following methods:</p><ul><li><p><strong>cramer</strong> Uses the method described in Cramer (1993)
+.
+Additional parameters are:</p><ul><li><p>temp Temperature</p></li>
+<li><p>temp.unit Temperature unit</p></li>
+<li><p>pressure Pressure</p></li>
+<li><p>pressure.unit Pressure unit</p></li>
+<li><p>RH Relative humidity</p></li>
+<li><p>MoleFracCO2 Mole fraction of CO2</p></li>
+</ul></li>
+</ul></div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Cramer O (1993).
+“The variation of the specific heat ratio and the speed of sound in air with temperature, pressure, humidity, and CO2 concentration.”
+<em>The Journal of the Acoustical Society of America</em>, <b>93</b>(5), 2510-2516.
+ISSN 0001-4966, <a href="https://doi.org/10.1121/1.405827" class="external-link">doi:10.1121/1.405827</a>
+, https://pubs.aip.org/asa/jasa/article-pdf/93/5/2510/12186001/2510\_1\_online.pdf.</p>
+    </div>
+
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">soundSpeed</span><span class="op">(</span>medium<span class="op">=</span><span class="st">"air"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 343</span>
+<span class="r-in"><span><span class="fu">soundSpeed</span><span class="op">(</span>medium<span class="op">=</span><span class="st">"sea water"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1500</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">soundSpeed</span><span class="op">(</span>method<span class="op">=</span><span class="st">"cramer"</span>, temp<span class="op">=</span><span class="fl">14</span>, pressure<span class="op">=</span><span class="fl">3</span>, RH<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 343</span>
+<span class="r-in"><span><span class="fu">soundSpeed</span><span class="op">(</span>method<span class="op">=</span><span class="st">"cramer"</span>, temp<span class="op">=</span><span class="fl">14</span>, temp.unit<span class="op">=</span><span class="st">"C"</span>, pressure<span class="op">=</span><span class="fl">3</span>, pressure.unit<span class="op">=</span><span class="st">"kPa"</span>, RH<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 343</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
