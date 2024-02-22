@@ -69,7 +69,11 @@ test_that("bandpass filter works as expected", {
 })
 
 test_that("filterWave() works with cluster", {
-  cl <- defaultCluster()
+  if (.Platform$OS.type == "windows") {
+    return()
+  }
+
+  cl <- makeForkCluster(2, outfile="")
 
   # Generate list of Wave objects
   waves <- list(

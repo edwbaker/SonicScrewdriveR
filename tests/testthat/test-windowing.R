@@ -20,7 +20,7 @@ test_that("test windowing using filename", {
     return()
   }
 
-  cl <- defaultCluster()
+  cl <- makeForkCluster(2, outfile="")
 
   f1 <- function(start, wave, window.length) {
     return(1)
@@ -61,7 +61,7 @@ test_that("test windowing using Wave object", {
     return()
   }
 
-  cl <- defaultCluster()
+  cl <- makeForkCluster(2, outfile="")
 
   f1 <- function(start, wave, window.length) {
     return(1)
@@ -120,7 +120,10 @@ test_that("works as expected without pbapply installed multi-core", {
   local_mocked_bindings(
     package.installed = function(...) { return(FALSE)}
   )
-  cl <- defaultCluster()
+  if (.Platform$OS.type == "windows") {
+    return()
+  }
+  cl <- makeForkCluster(2, outfile="")
 
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
 

@@ -17,13 +17,8 @@
 #' }
 #'
 defaultCluster <- function(fork=TRUE) {
-  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-  if (nzchar(chk) && chk == "TRUE") {
-    # Use 2 cores on CRAN
-    cores <- 2L
-  } else {
-    cores <- max(1L, detectCores() - 1L)
-  }
+  cores <- max(1L, detectCores() - 1L)
+
   if (.Platform$OS.type == "windows") {
     fork <- FALSE
   }
