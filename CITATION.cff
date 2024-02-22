@@ -1,7 +1,0 @@
-citHeader(If you use this software, please cite it as below.)
-
-bibentry(bibtype = "Manual",
-        title = "Sonicscrewdriver",
-        author = person("E. Baker"),
-      	year = "2021",
-        url = "https://sonicscrewdriver.ebaker.me.uk")

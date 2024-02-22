@@ -1,12 +1,7 @@
-citHeader("To cite sonicscrewdriver in publications use:")
-
-citEntry(
-  entry    = "Manual",
+bibentry(
+  bibtype  = "Manual",
   title    = "SonicScrewdriveR",
   author   = "Ed Baker",
   year     = "2021",
-  url      = "https://cran.r-project.org/package=sonicscrewdriver",
-  textVersion = paste(
-    "Baker, E. (2021) SonicScrewdriveR. https://cran.r-project.org/package=sonicscrewdriver."
-  )
+  url.     = "https://cran.r-project.org/package=sonicscrewdriver",
 )
