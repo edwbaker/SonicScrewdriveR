@@ -86,24 +86,23 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
   datetime <- reticulate::import("datetime")
   analyzer <- bna$Analyzer()
 
-
-
   ret <- list()
-
   for (i in seq_along(files)) {
     if (!is.null(date)) {
-      date <- datetime$date(
+      d <- datetime$date(
         year = as.integer(format(date[i], "%Y")),
         month = as.integer(format(date[i], "%m")),
         day = as.integer(format(date[i], "%d"))
       )
+    } else {
+      d <- NULL
     }
     recording <- bn$Recording(
       analyzer,
       files[i],
-      lat = lat,
-      lon = lon,
-      date = date
+      lat = lat[i],
+      lon = lon[i],
+      date = d
       )
     recording$analyze()
 
