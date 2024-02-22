@@ -85,3 +85,28 @@ When we are finished, we can tidy our workspace by removing the `mole_cricket` d
 ```{r}
 unlink("mole_cricket", recursive=TRUE)
 ```
+
+## BirdNET Analyzer to Audacity label file
+
+The `birdNetAnalyse()` function can be used to analyse sound files using the `BirdNET-Analyzer`.
+
+Get the output of the BirdNET Analyzer as a list of `Annotation` objects.
+
+```{r, eval=FALSE}
+# Analyse sound files using BirdNET-Analyzer
+f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+annotations <- birdNetAnalyse(f, output="Annotation")
+```
+
+Convert the `Annotation` objects to an Audacity label file.
+
+```{r eval=FALSE}
+# Convert the annotations to an Audacity label file
+writeAudacityLabels(annotations, "birdnet_annotations.txt")
+```
+
+Cleaning up the workspace.
+
+```{r, eval=FALSE}
+unlink("birdnet_annotations.txt")
+```
