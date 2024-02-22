@@ -1,10 +1,7 @@
-cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-authors:
-- family-names: "Baker"
-  given-names: "Ed"
-  orcid: "https://orcid.org/0000-0002-5887-9543"
-title: "Sonicscrewdriver"
-version: 0.0.5
-date-released: 2021-05-02
-url: "https://cran.r-project.org/package=sonicscrewdriver"
+citHeader(If you use this software, please cite it as below.)
+
+bibentry(bibtype = "Manual",
+        title = "Sonicscrewdriver",
+        author = person("E. Baker"),
+      	year = "2021",
+        url = "https://sonicscrewdriver.ebaker.me.uk")
