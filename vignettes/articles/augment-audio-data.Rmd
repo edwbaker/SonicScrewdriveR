@@ -81,6 +81,40 @@ rotated <- generateTimeShift(p, type="rotate", amount=1)
 seewave::oscillo(rotated[[1]])
 ```
 
+
+## Time-masking
+
+Time-masking is the process of zeroing a section of the audio data. The `sonicscrewdriver` package provides the `generateTimeMask()` function to mask a section of the audio data.
+
+To demonstrate time masking we first generate a sine wave.
+
+```{r}
+# Generate a sine wave
+w <- tuneR::sine(1000, duration=100)
+
+# Plot the left audio channel
+plot(w@left)
+
+```
+
+Random masking sets a random section of the audio data to zero. In the example below we use a duty cycle of 0.95, which means that 5% of the audio data will be set to zero.
+
+```{r}
+# Mask the audio data
+masked <- generateTimeMask(w, method="random", dutyCycle=0.95)
+
+plot(masked@left)
+```
+
+It is also possible to introduce masking using a square wave. The `n.periods` parameter controls the number of periods in the square wave, and the `dutyCycle` parameter controls the duty cycle of the square wave.
+
+```{r}
+# Mask the audio data
+masked <- generateTimeMask(w, method="squarewave", dutyCycle=0.5, n.periods=5)
+
+plot(masked@left)
+```
+
 ## Combining augmentations
 
 The `sonicscrewdriver` package allows you to chain together multiple augmentations to create complex data augmentation pipelines. For example, you can add noise to the audio data and then rotate the audio data.

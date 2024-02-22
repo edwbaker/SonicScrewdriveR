@@ -6,16 +6,16 @@
 #' @param method The method to use for time masking (one of "squarewave", "random).
 #' @param dutyCycle The duty cycle of the output. A value of 0.95 means that 5%
 #'   of the time is masked.
-#' @param n.waves The number of waves to generate in the squarewave method.
+#' @param n.periods The number of waves to generate in the squarewave method.
 #' @export
-generateTimeMasked <- function(wave, method="squarewave", dutyCycle=0.95, n.waves=10) {
+generateTimeMask <- function(wave, method="squarewave", dutyCycle=0.95, n.periods=10) {
   if (is(wave, "list")) {
     if (all(sapply(wave, function(x) inherits(x, c("Wave", "WaveMC"))))) {
-      return(lapply(wave, generateTimeMasked, method=method))
+      return(lapply(wave, generateTimeMask, method=method))
     }
   }
   if (!method %in% c("squarewave", "random")) {
-    stop(paste("Unknown method parameter to generateTimeMasked:",method))
+    stop(paste("Unknown method parameter to generateTimeMask:",method))
   }
   if (inherits(wave, "Wave")) {
     wl <- length(wave@left)
@@ -25,10 +25,10 @@ generateTimeMasked <- function(wave, method="squarewave", dutyCycle=0.95, n.wave
   }
 
   if (method == "squarewave") {
-    p <- wl / (n.waves)
+    p <- wl / (n.periods)
     on <- floor(p * dutyCycle)
     off <- ceiling(p - on)
-    mask <- rep(c(rep_len(0,off), rep_len(1,on)), n.waves)
+    mask <- rep(c(rep_len(0,off), rep_len(1,on)), n.periods)
     mask <- mask[1:wl]
   }
   if (method == "random") {
