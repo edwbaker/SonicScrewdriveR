@@ -3,16 +3,48 @@
 #' Given a `Wave`-like object (or a list of `Wave`-like objects), generate
 #' new `Wave`-like objects with time masking.
 #' @param wave A `Wave`-like object (or a list of `Wave`-like objects).
-#' @param method The method to use for time masking (one of "squarewave").
+#' @param method The method to use for time masking (one of "squarewave", "random).
+#' @param dutyCycle The duty cycle of the output. A value of 0.95 means that 5%
+#'   of the time is masked.
+#' @param n.waves The number of waves to generate in the squarewave method.
 #' @export
-generateTimeMasked <- function(wave, method="squarewave") {
+generateTimeMasked <- function(wave, method="squarewave", dutyCycle=0.95, n.waves=10) {
   if (is(wave, "list")) {
     if (all(sapply(wave, function(x) inherits(x, c("Wave", "WaveMC"))))) {
       return(lapply(wave, generateTimeMasked, method=method))
     }
   }
-  if (method == "squarewave") {
-    return(wave)
+  if (!method %in% c("squarewave", "random")) {
+    stop(paste("Unknown method parameter to generateTimeMasked:",method))
   }
-  stop(paste("Unknown method parameter to generateTimeMasked:",method))
+  if (inherits(wave, "Wave")) {
+    wl <- length(wave@left)
+  }
+  if (inherits(wave, "WaveMC")) {
+    wl <- nrow(wave@`.Data`)
+  }
+
+  if (method == "squarewave") {
+    p <- wl / (n.waves)
+    on <- floor(p * dutyCycle)
+    off <- ceiling(p - on)
+    mask <- rep(c(rep_len(0,off), rep_len(1,on)), n.waves)
+    mask <- mask[1:wl]
+  }
+  if (method == "random") {
+    mask <- rep_len(1, wl)
+    mask[sample(1:wl, wl*(1-dutyCycle))] <- 0
+  }
+
+  if (inherits(wave, "Wave")) {
+    wave@left <- wave@left * mask
+    if (wave@stereo) {
+      wave@right <- wave@right * mask
+    }
+  }
+  if (inherits(wave, "WaveMC")) {
+    wave@.Data <- wave@.Data * mask
+  }
+  return(wave)
+
 }

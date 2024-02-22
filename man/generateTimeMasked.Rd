@@ -4,12 +4,17 @@
 \alias{generateTimeMasked}
 \title{Generate time masked Wave-like objects}
 \usage{
-generateTimeMasked(wave, method = "squarewave")
+generateTimeMasked(wave, method = "squarewave", dutyCycle = 0.95, n.waves = 10)
 }
 \arguments{
 \item{wave}{A \code{Wave}-like object (or a list of \code{Wave}-like objects).}
 
-\item{method}{The method to use for time masking (one of "squarewave").}
+\item{method}{The method to use for time masking (one of "squarewave", "random).}
+
+\item{dutyCycle}{The duty cycle of the output. A value of 0.95 means that 5\%
+of the time is masked.}
+
+\item{n.waves}{The number of waves to generate in the squarewave method.}
 }
 \description{
 Given a \code{Wave}-like object (or a list of \code{Wave}-like objects), generate
