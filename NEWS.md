@@ -1,6 +1,7 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functions
+- use BirdNET-Analyzer within R using reticulate
 - readAudio() generic function to read audio files
 - readAudacityLabels() to read Audacity label files
 - citation() information
