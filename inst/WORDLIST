@@ -13,6 +13,7 @@ Gryllotalpa
 HHMM
 HHMMSS
 IUPAC
+MoleFracCO
 Oecanthus
 POSIXlt
 PseudoWave
@@ -46,6 +47,7 @@ bedoya
 bioacoustic
 codecov
 corenv
+cramer
 csv
 dBA
 datetime

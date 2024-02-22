@@ -23,3 +23,8 @@ test_that("frequency and wavelength calculation works", {
 test_that("bulk modulus and density calculation works", {
   expect_equal(soundSpeed(bulkModulus =2.02e5, density=2), sqrt(1.01e5))
 })
+
+test_that("cramer method works as expected", {
+  expect_equal(soundSpeed(method="cramer", temp=14, pressure=3, RH=10), 343)
+  expect_equal(soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10), 343)
+})
