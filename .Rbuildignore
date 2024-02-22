@@ -19,3 +19,4 @@ README.md
 ^\.github$
 ^CITATION\.cff$
 ^vignettes/articles$
+^CRAN-SUBMISSION$
