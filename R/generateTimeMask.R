@@ -6,6 +6,11 @@
 #' @param method The method to use for time masking (one of "squarewave").
 #' @export
 generateTimeMasked <- function(wave, method="squarewave") {
+  if (is(wave, "list")) {
+    if (all(sapply(wave, function(x) inherits(x, c("Wave", "WaveMC"))))) {
+      return(lapply(wave, generateTimeMasked, method=method))
+    }
+  }
   if (method == "squarewave") {
     return(wave)
   }

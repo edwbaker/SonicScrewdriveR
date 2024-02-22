@@ -4,5 +4,6 @@ test_that("generateTimeMasked rejects incorrect method", {
     generateTimeMasked(w, method="capybara"),
     "Unknown method parameter to generateTimeMasked: capybara"
   )
+  w <- list(w,w,w,w)
   expect_silent(generateTimeMasked(w, method="squarewave"))
 })
