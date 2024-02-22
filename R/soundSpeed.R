@@ -20,6 +20,11 @@
 #'   * pressure.unit Pressure unit
 #'   * RH Relative humidity
 #'   * MoleFracCO2 Mole fraction of CO2
+#' * **seewave** Delegates the calculation of the speed of sound in air to the
+#'   package `seewave` \insertCite{seewave2008}{sonicscrewdriver}. This calculation is
+#'.  performed as \eqn{\text{speed} = 331.4 + 0.6 \times \text{temp}}.
+#'   Additional parameters are:
+#'   * temp Temperature
 #' @references
 #'   \insertAllCited{}
 #' @examples
@@ -28,8 +33,25 @@
 #'
 #' soundSpeed(method="cramer", temp=14, pressure=3, RH=10)
 #' soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
+#'
+#' t <- 1:30
+#' s <- lapply(t, \(x){soundSpeed(method="cramer", temp=x)})
 #' @export
 soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NULL, density=NULL, ...) {
+  # If method specified use it
+  if (!is.null(method)) {
+    if (method=="cramer") {
+      s <- .soundSpeed_cramer1993(...)
+      return(s)
+    }
+    if (method=="seewave") {
+      # Use dummy value for f, not used in calculation
+      if (!"temp" %in% names(list(...))) {
+        stop("Temperature must be specified.")
+      }
+      return(seewave::wasp(f=1, t=list(...)$temp, medium="air")$c)
+    }
+  }
   # If all arguments are null set default
   if (all(is.null(medium), is.null(wl), is.null(f), is.null(bulkModulus), is.null(density))) {
     medium <- "air"
@@ -37,12 +59,6 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
   if (!is.null(medium)) {
     s <- .soundSpeedMedium(medium)
     return(s)
-  }
-  if (!is.null(method)) {
-    if (method=="cramer") {
-      s <- .soundSpeed_cramer1993(...)
-      return(s)
-    }
   }
   if (!is.null(wl) & !is.null(f)) {
     s <- validateWavelength(wl) * validateFreq(f)
@@ -90,13 +106,13 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
 #' @noRd
 #' @return Numeric value of the speed of sound in m/s
 #' @examples
-#' soundSpeed_cramer1993(14, pressure=3, RH=10)
-#' soundSpeed_cramer1993(14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
+#' .soundSpeed_cramer1993(14, pressure=3, RH=10)
+#' .soundSpeed_cramer1993(14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
 .soundSpeed_cramer1993 <- function(temp,
                                   temp.unit = "C",
-                                  pressure,
+                                  pressure=100,
                                   pressure.unit = "kPa",
-                                  RH,
+                                  RH=50,
                                   MoleFracCO2=400^-6) {
   validateRH(RH)
   K <- convert2Kelvin(temp, temp.unit)

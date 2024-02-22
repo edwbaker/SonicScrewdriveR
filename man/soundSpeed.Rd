@@ -46,6 +46,13 @@ Additional parameters are:
 \item RH Relative humidity
 \item MoleFracCO2 Mole fraction of CO2
 }
+\item \strong{seewave} Delegates the calculation of the speed of sound in air to the
+package \code{seewave} \insertCite{seewave2008}{sonicscrewdriver}. This calculation is
+.  performed as \eqn{\text{speed} = 331.4 + 0.6 \times \text{temp}}.
+Additional parameters are:
+\itemize{
+\item temp Temperature
+}
 }
 }
 \examples{
@@ -54,6 +61,9 @@ soundSpeed(medium="sea water")
 
 soundSpeed(method="cramer", temp=14, pressure=3, RH=10)
 soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
+
+t <- 1:30
+s <- lapply(t, \(x){soundSpeed(method="cramer", temp=x)})
 }
 \references{
 \insertAllCited{}
