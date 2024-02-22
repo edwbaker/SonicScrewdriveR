@@ -31,7 +31,20 @@ The [audioBlast API](https://api.audioblast.org) can be accessed using the `audi
 
 [AudioMoth](https://www.openacousticdevices.info/audiomoth) configuration files and wave files can be read into R using the `audiomothConfig()` and `audiomothWave()` functions, respectively. The `audiomothConfig()` function takes a path to a configuration file and returns a data frame of the configuration settings. The `audiomothWave()` function takes a path to a wave file and returns a list of extracted parameters.
 
-### BirdNet
+### BirdNET Analyzer
+
+[BirdNET Analyzer](https://birdnet.cornell.edu) is a deep learning model for the automatic detection of bird sounds. The `birdNetInstall()` function can be used to install the `ssd_birdnet` environment required to use the `birdNetAnalyse()` function with `SonicScrewdriver`. The `birdNetAnalyse()` function takes a list of sound files and analyses them using the `BirdNET-Analyzer`. The function either returns a data frame with the results of the analysis or a list of `Annotation` objects.
+
+```{r, eval=FALSE}
+# Install the BirdNET environment
+birdNetInstall()
+```
+
+```{r, eval=FALSE}
+# Analyse sound files using BirdNET-Analyzer
+f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+birdNetAnalyse(f, lat=51.5, lon=0.1, date=as.Date("2021-01-01"))
+```
 
 ## Exemplar applications
 
