@@ -70,9 +70,9 @@ test_that("parseFilename() works as expected", {
   data <- list(
       filename="5E90A4D4.wav",
       match="AudioMoth HEX",
-      datetime= as.POSIXct("2020-04-11 01:54:44 JST", tz="Japan")
+      datetime= as.POSIXct("2020-04-10 16:54:44", tz="UTC")
   )
-  expect_equal(parseFilename(files, timezone="Japan"), data)
+  expect_equal(parseFilename(files, timezone="UTC"), data)
 
   files <- "20240220_162231.wav"
   data <- list(
