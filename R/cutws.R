@@ -18,7 +18,7 @@
 cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   validateIsWave(wave)
   if (is.infinite(to)) {
-    to <- length(wave@left)
+    to <- length(wave)
   }
   if (!is.numeric(from) | !is.numeric(to) | !(as.integer(from)==from) | !(as.integer(to) == to)) {
     stop("In cutws both from and to must be integers")

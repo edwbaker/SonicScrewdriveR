@@ -41,7 +41,7 @@ windowing <- function(
     n.samples <- info$duration * info$audio[,"sample_rate"]
   } else {
     validateIsWave(wave)
-    n.samples <- length(wave@left)
+    n.samples <- length(wave)
     FUN2 <- function(start, wave, window.length, ...){
       section <- cutws(wave, from=start, to=start+window.length)
       return(FUN(section, start, window.length, ...))
