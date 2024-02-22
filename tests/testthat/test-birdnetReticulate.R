@@ -1,5 +1,7 @@
-birdNetInstall(unattended=TRUE)
 skip_if_no_birdnet <- function() {
+  if (!reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
+    skip("ssd_birdnet not available for testing")
+  }
   if (!reticulate::py_module_available("birdnetlib"))
     skip("birdnetlib not available for testing")
 }
