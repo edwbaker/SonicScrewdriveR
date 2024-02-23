@@ -1,5 +1,8 @@
 # sonicscrewdriver NEXT RELEASE
 
+## Fixes
+- convert2seconds() where numeric value < 1000 passed as HHMM.
+
 # sonicscrewdriver 0.0.5
 
 ## New functions

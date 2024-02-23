@@ -33,6 +33,8 @@ convert2seconds <- function(T, input="minutes", origin="day") {
     if (!all(grepl("[[:digit:]]", T))) {
       stop("HHMM input must be numeric")
     }
+    # Pad start with 0 to length 4
+    T <- sprintf("%04d", as.numeric(T))
     s <- as.numeric(substr(T,1,2))*60*60 + as.numeric(substr(T,3,4))*60
   }
   if (input == "POSIX") {

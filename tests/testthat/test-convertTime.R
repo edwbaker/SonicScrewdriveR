@@ -16,6 +16,9 @@ test_that("Test conversions", {
   expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="day"), 60*60*12)
   expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="unix"), 1707652800)
   expect_equal(convert2seconds("0000", input="HHMM"), 0)
+  expect_equal(convert2seconds("0100", input="HHMM"), 60*60)
+  expect_equal(convert2seconds(0100, input="HHMM"), 60*60)
+  expect_equal(convert2seconds(0130, input="HHMM"), 90*60)
   expect_equal(convert2seconds(2400, input="HHMM"), 60*60*24)
 })
 
