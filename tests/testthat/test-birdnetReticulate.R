@@ -6,6 +6,10 @@ skip_if_no_birdnet <- function() {
     skip("birdnetlib not available for testing")
 }
 
+if (reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
+  reticulate::use_virtualenv("ssd_birdnet")
+}
+
 test_that("birdNetAnalyse() rejects incorrect input", {
   skip_if_no_birdnet()
   expect_error(birdNetAnalyse("filename", output="christmas cactus"), "Unknown output format.")
