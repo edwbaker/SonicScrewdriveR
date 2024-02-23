@@ -1,4 +1,4 @@
-# soniscrewdriver NEXT RELEASE
+# sonicscrewdriver NEXT RELEASE
 
 # sonicscrewdriver 0.0.5
 
