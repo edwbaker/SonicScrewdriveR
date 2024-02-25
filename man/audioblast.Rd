@@ -12,6 +12,7 @@ audioblast(
   max_pages = NULL,
   page = 1,
   quiet = FALSE,
+  on.issue = stop,
   output = "data.frame",
   ...
 )
@@ -30,6 +31,9 @@ audioblast(
 \item{page}{First page of results to request, defaults to 1.}
 
 \item{quiet}{If true will not print progress. Silence is a virtue.}
+
+\item{on.issue}{Function to call on error or warning. By default \code{stop} to raise
+a standard R error. Setting to \code{warning} will instead a warning.}
 
 \item{output}{By default a \code{data.frame}. "Annotations" will return a list of
 \code{Annotation} objects.}

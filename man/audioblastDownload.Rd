@@ -9,7 +9,8 @@ audioblastDownload(
   metadata = TRUE,
   skip.existing = TRUE,
   dir = ".",
-  quiet = FALSE
+  quiet = FALSE,
+  on.issue = stop
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ audioblastDownload(
 \item{dir}{Directory to save files to.}
 
 \item{quiet}{If true will not print progress.}
+
+\item{on.issue}{Function to call on error or warning. By default \code{stop} to raise
+a standard R error. Setting to \code{warning} will instead a warning.}
 }
 \description{
 Downloads audio files associated with a search using the audioBlast() function.
