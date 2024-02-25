@@ -174,7 +174,7 @@ audioblast <- function(
 #' @param quiet If true will not print progress.
 #' @export
 #' @importFrom utils download.file write.csv
-audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", quiet=FALSE) {
+audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", quiet=FALSE, on.issue=stop) {
   if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
   }
@@ -188,7 +188,8 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
     names <- names[file.exists(names)==FALSE]
   }
   for (i in 1:length(files)) {
-    download.file(files[i], destfile=paste(dir, names[i], sep="/"), quiet=quiet)
+    tryCatch(download.file(files[i], destfile=paste(dir, names[i], sep="/"), quiet=quiet),
+             error=function(e) on.error(e), warning=function(w) on.error(w))
   }
 }
 

@@ -46,12 +46,12 @@ test_that("audioblastDownload works as expected", {
   }
   recs <- audioblast("data", "recordings", max_pages = 1, source="bio.acousti.ca", id="11096")
 
-  audioblastDownload(recs, dir="ab_dl_test", metadata = FALSE, quiet=TRUE)
+  audioblastDownload(recs, dir="ab_dl_test", metadata = FALSE, quiet=TRUE, on.error=message)
   expect_true(dir.exists("ab_dl_test"))
   expect_equal(length(list.files("ab_dl_test", pattern="*.wav")), 1)
   expect_equal(length(list.files("ab_dl_test", pattern="*.csv")), 0)
 
-  audioblastDownload(recs, dir="ab_dl_test", metadata = TRUE, quiet=TRUE)
+  audioblastDownload(recs, dir="ab_dl_test", metadata = TRUE, quiet=TRUE, on.error=message)
   expect_equal(length(list.files("ab_dl_test", pattern="*.wav")), 1)
   expect_equal(length(list.files("ab_dl_test", pattern="*.csv")), 1)
 
