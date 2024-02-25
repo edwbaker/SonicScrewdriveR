@@ -9,6 +9,8 @@
 #' @param page First page of results to request, defaults to 1.
 #' @param max_pages Maximum number of data pages to return, by default this is set to NULL and returns all pages.
 #' @param quiet If true will not print progress. Silence is a virtue.
+#' @param on.issue Function to call on error or warning. By default `stop` to raise
+#'   a standard R error. Setting to `warning` will instead a warning.
 #' @param ... Fields and values to filter on. Any field defined by audioBLAST.
 #' @param output By default a `data.frame`. "Annotations" will return a list of
 #'   `Annotation` objects.
@@ -30,6 +32,7 @@ audioblast <- function(
     max_pages=NULL,
     page=1,
     quiet=FALSE,
+    on.issue = stop,
     output="data.frame",
     ...
 ) {
@@ -75,64 +78,66 @@ audioblast <- function(
       }
     }
   }
-  res <- jsonlite::fromJSON(URLencode(url))
-  if (is.null(res$data)) {
-    return(NULL)
-  }
-  ret <- res$data
-  mp <- min(res$last_page, max_pages)
-  page <- page + 1
-  if (!quiet) {
-    pb <- txtProgressBar(min = 0, max = mp, initial = page)
-  }
-  while (page <= mp) {
-    url <- paste0("https://api.audioblast.org/",type,"/",name,"/")
-    if (!is.null(endpoint)) {
-      url <- paste0(url, endpoint, "/")
-    }
-    url <- paste0(url, "?page=", page)
-    if (length(args) > 0) {
-      for (i in 1:length(args)) {
-        url <- paste0(url, "&", nams[[i]], "=", args[[i]])
-      }
-    }
+  tryCatch({
     res <- jsonlite::fromJSON(URLencode(url))
-    ret <- rbind(ret, res$data)
+    if (is.null(res$data)) {
+      return(NULL)
+    }
+    ret <- res$data
+    mp <- min(res$last_page, max_pages)
     page <- page + 1
     if (!quiet) {
-      setTxtProgressBar(pb,page)
+      pb <- txtProgressBar(min = 0, max = mp, initial = page)
     }
-  }
-  if (!quiet) {
-    close(pb)
-  }
+    while (page <= mp) {
+      url <- paste0("https://api.audioblast.org/",type,"/",name,"/")
+      if (!is.null(endpoint)) {
+        url <- paste0(url, endpoint, "/")
+      }
+      url <- paste0(url, "?page=", page)
+      if (length(args) > 0) {
+        for (i in 1:length(args)) {
+          url <- paste0(url, "&", nams[[i]], "=", args[[i]])
+        }
+      }
+      res <- jsonlite::fromJSON(URLencode(url))
+      ret <- rbind(ret, res$data)
+      page <- page + 1
+      if (!quiet) {
+        setTxtProgressBar(pb,page)
+      }
+    }
+    if (!quiet) {
+      close(pb)
+    }
 
-  if (output=="Annotations") {
-    l <- vector(mode="list", length=nrow(ret))
-    for (i in 1:nrow(ret)) {
-      l[[i]] <- annotation(
-        metadata = list(
-          "source" = ret[i, "source"],
-          "source_id" = ret[i, "source_id"],
-          "annotator" = ret[i, "annotator"],
-          "annotation_id" = ret[i, "annotation_id"],
-          "annotation_date" = ret[i, "annotation_date"],
-          "annotation_info_url" = ret[i, "annotation_info_url"],
-          "lat" = ret[i, "lat"],
-          "lon" = ret[i, "lon"],
-          "contact" = ret[i, "contact"]
-        ),
-        file = ret[i, "recording_url"],
-        source = "audioblast",
-        start = ret[i, "time_start"],
-        end = ret[i, "time_end"],
-        type = ret[i, "type"],
-        value = ret[i, "taxon"]
-      )
+    if (output=="Annotations") {
+      l <- vector(mode="list", length=nrow(ret))
+      for (i in 1:nrow(ret)) {
+        l[[i]] <- annotation(
+          metadata = list(
+            "source" = ret[i, "source"],
+            "source_id" = ret[i, "source_id"],
+            "annotator" = ret[i, "annotator"],
+            "annotation_id" = ret[i, "annotation_id"],
+            "annotation_date" = ret[i, "annotation_date"],
+            "annotation_info_url" = ret[i, "annotation_info_url"],
+            "lat" = ret[i, "lat"],
+            "lon" = ret[i, "lon"],
+            "contact" = ret[i, "contact"]
+          ),
+          file = ret[i, "recording_url"],
+          source = "audioblast",
+          start = ret[i, "time_start"],
+          end = ret[i, "time_end"],
+          type = ret[i, "type"],
+          value = ret[i, "taxon"]
+        )
+      }
+      ret <- l
     }
-    ret <- l
-  }
-  return(ret)
+    return(ret)
+  }, error=function(e) on.error(e), warning=function(w) on.error(w))
 }
 
 #' audioBlast - a stitch in time saves nine
@@ -171,6 +176,8 @@ audioblast <- function(
 #' @param metadata If true saves the data in d as a csv file.
 #' @param skip.existing If true will not overwrite existing files.
 #' @param dir Directory to save files to.
+#' @param on.issue Function to call on error or warning. By default `stop` to raise
+#'   a standard R error. Setting to `warning` will instead a warning.
 #' @param quiet If true will not print progress.
 #' @export
 #' @importFrom utils download.file write.csv
