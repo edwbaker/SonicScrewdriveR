@@ -72,6 +72,7 @@
 <span>  max_pages <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  page <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  on.issue <span class="op">=</span> <span class="va">stop</span>,</span>
 <span>  output <span class="op">=</span> <span class="st">"data.frame"</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -105,6 +106,11 @@
 
 <dt>quiet</dt>
 <dd><p>If true will not print progress. Silence is a virtue.</p></dd>
+
+
+<dt>on.issue</dt>
+<dd><p>Function to call on error or warning. By default <code>stop</code> to raise
+a standard R error. Setting to <code>warning</code> will instead a warning.</p></dd>
 
 
 <dt>output</dt>
