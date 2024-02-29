@@ -1,4 +1,4 @@
-pandoc: 2.19.2
+pandoc: 3.1.11
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
@@ -8,7 +8,7 @@ articles:
   audioblast: audioblast.html
   manage_audio: manage_audio.html
   sonicscrewdriver: sonicscrewdriver.html
-last_built: 2024-02-23T01:31Z
+last_built: 2024-02-29T12:01Z
 urls:
   reference: http://sonicscrewdriver.ebaker.me.uk/reference
   article: http://sonicscrewdriver.ebaker.me.uk/articles
