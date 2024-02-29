@@ -1,7 +1,5 @@
-Updated to fix failing tests from first submission of this version.
-- Updated CITATION format.
-- Directly limit parallel to two cores.
-- Set timezone explicitly in tests.
+Updated to fix issue related to policy on unavailable web resources in 
+audioblastDownload().
 
 ## R CMD check results
 

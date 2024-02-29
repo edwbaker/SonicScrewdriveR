@@ -10,7 +10,7 @@ audioblastDownload(
   skip.existing = TRUE,
   dir = ".",
   quiet = FALSE,
-  on.issue = stop
+  on.issue = .audioblastIssue
 )
 }
 \arguments{
