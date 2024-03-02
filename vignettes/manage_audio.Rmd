@@ -36,6 +36,44 @@ Some existing functions only operate on a single channel at a time. This may cau
 
 It is often desirable to process a long audio file in chunks. The `windowing()` function can be used to split an audio file into overlapping or non-overlapping windows. This function may be particularly useful for processing long Wave files in a memory-efficient manner. Optionally, a cluster can be specified to process windows on separate processor cores to increase processing speed.
 
+In order to demonstrate `windowing()` we first define a simple function that draws a rectangle around the windowed region of a sound file.
+
+```{r}
+drawWindow <- function( wave, start, window.length) {
+  rect(start, -1, start+window.length, 1, col= rgb(0,0,1.0,alpha=0.5))
+}
+
+```
+
+We can then show the windows generated if the `window.length` is 44100 samples, and the `window.overlap` is 0.
+
+```{r, results='hide'}
+# Create a 5 second sine wave of 1Hz
+w <- tuneR::sine(1, duration=5*44100)
+
+plot(w@left, type="l", xlab="Time (samples)", ylab="Amplitude")
+
+windowing(w, window.length=44100, window.overlap = 0, FUN=drawWindow)
+```
+
+The entire audio file is analysed in chunks of 44100 samples, with no overlap between windows. The `drawWindow()` function is applied to each window, and the result is plotted on top of the oscillogram of the original audio file.
+
+The `window.overlap` parameter can be adjusted so that the windows overlap by a certain number of samples.
+
+```{r, results='hide'}
+plot(w@left, type="l", xlab="Time (samples)", ylab="Amplitude")
+
+windowing(w, window.length=44100, window.overlap = 44100/2, FUN=drawWindow)
+```
+
+Alternatively, a negative value of `window.overlap` can be used to take regularly-spaced samples from the audio file.
+
+```{r, results='hide'}
+plot(w@left, type="l", xlab="Time (samples)", ylab="Amplitude")
+
+windowing(w, window.length=44100, window.overlap = -44100, FUN=drawWindow)
+```
+
 ### PseudoWave objects
 
 ## TaggedWave workflow
