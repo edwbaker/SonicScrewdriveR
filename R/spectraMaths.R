@@ -88,7 +88,7 @@ zeroSpectrum <- function(s1) {
 
 normaliseSpectrum <- function(s1) {
   s1<- validateSpectrum(s1, coerceNegative = TRUE)
-  m <- max(s1[[,2]])
-  s1[[,2]] <- s1[[,2]]/m
+  m <- max(s1[,2])
+  s1[,2] <- s1[,2]/m
   return(s1)
 }
