@@ -89,11 +89,3 @@ setMethod("concat", signature(object = "TaggedWave"), .concat)
 #' @rdname concat-methods
 #' @aliases concat,TaggedWaveMC-method
 setMethod("concat", signature(object = "TaggedWaveMC"), .concat)
-
-.lengthWave <- function(object) {
-  return(length(object@left))
-}
-
-.lengthWaveMC <- function(object) {
-  return(nrow(object@`.Data`))
-}
