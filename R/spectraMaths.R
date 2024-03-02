@@ -5,31 +5,20 @@
 #'
 #' @param s1 First spectrum
 #' @param s2 Second spectrum
-#' @param coerceNegative Sets any values below zero to zero, accepted values "input", "output" or "both".
+#' @param coerceNegative Sets any values below zero to zero in output.
 #' @return A spectrum of s1+s2
 #' @export
 #' @examples
 #' \dontrun{
-#' addSpectra(spec1, spec2)
-#' addSpectra(spec1, spec2, coerceNegative="input")
+#' subtractSpectra(spec1, spec2)
 #' }
 #'
-addSpectra <- function(s1, s2, coerceNegative="no") {
+addSpectra <- function(s1, s2, coerceNegative=TRUE) {
   validateComparableSpectra(s1, s2)
-  if(coerceNegative == "input" | coerceNegative == "both") {
-    coerceInput <- TRUE
-  } else {
-    coerceInput <- FALSE
-  }
-  s1 <- validateSpectrum(s1, coerceNegative=coerceInput)
-  s2 <- validateSpectrum(s2, coerceNegative=coerceInput)
+  s1 <- validateSpectrum(s1, coerceNegative=coerceNegative)
+  s2 <- validateSpectrum(s2, coerceNegative=coerceNegative)
   s1[,2] <- s1[,2] + s2[,2]
-  if(coerceNegative == "output" | coerceNegative == "both") {
-    coerceOutput <- TRUE
-  } else {
-    coerceOutput <- FALSE
-  }
-  s1 <- validateSpectrum(s1, coerceNegative=coerceOutput)
+  s1 <- validateSpectrum(s1, coerceNegative=coerceNegative)
   return(s1)
 }
 
@@ -40,31 +29,21 @@ addSpectra <- function(s1, s2, coerceNegative="no") {
 #'
 #' @param s1 First spectrum
 #' @param s2 Second spectrum
-#' @param coerceNegative Sets any values below zero to zero, accepted values "input", "output" or "both".
+#' @param coerceNegative Sets any values below zero to zero in output.
 #' @return A spectrum of s1 - s2
 #' @export
 #' @examples
 #' \dontrun{
 #' subtractSpectra(spec1, spec2)
-#' subtractSpectra(spec1, spec2, coerceNegative="both")
+#' subtractSpectra(spec1, spec2, coerceNegative=TRUE)
 #' }
 #'
-subtractSpectra <- function(s1, s2, coerceNegative="no") {
+subtractSpectra <- function(s1, s2, coerceNegative=TRUE) {
   validateComparableSpectra(s1, s2)
-  if(coerceNegative == "input" | coerceNegative == "both") {
-    coerceInput <- TRUE
-  } else {
-    coerceInput <- FALSE
-  }
-  s1 <- validateSpectrum(s1, coerceNegative=coerceInput)
-  s2 <- validateSpectrum(s2, coerceNegative=coerceInput)
+  s1 <- validateSpectrum(s1, coerceNegative=coerceNegative)
+  s2 <- validateSpectrum(s2, coerceNegative=coerceNegative)
   s1[,2] <- s1[,2] - s2[,2]
-  if(coerceNegative == "output" | coerceNegative == "both") {
-    coerceOutput <- TRUE
-  } else {
-    coerceOutput <- FALSE
-  }
-  s1 <- validateSpectrum(s1, coerceNegative=coerceOutput)
+  s1 <- validateSpectrum(s1, coerceNegative=coerceNegative)
   return(s1)
 }
 

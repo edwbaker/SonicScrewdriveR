@@ -4,14 +4,14 @@
 \alias{addSpectra}
 \title{Add two spectra from seewave}
 \usage{
-addSpectra(s1, s2, coerceNegative = "no")
+addSpectra(s1, s2, coerceNegative = TRUE)
 }
 \arguments{
 \item{s1}{First spectrum}
 
 \item{s2}{Second spectrum}
 
-\item{coerceNegative}{Sets any values below zero to zero, accepted values "input", "output" or "both".}
+\item{coerceNegative}{Sets any values below zero to zero in output.}
 }
 \value{
 A spectrum of s1+s2
@@ -22,8 +22,7 @@ the same bins.
 }
 \examples{
 \dontrun{
-addSpectra(spec1, spec2)
-addSpectra(spec1, spec2, coerceNegative="input")
+subtractSpectra(spec1, spec2)
 }
 
 }
