@@ -27,7 +27,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sonicscrewdriver</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.0.5.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.0.6.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,6 +128,42 @@ into overlapping or non-overlapping windows. This function may be
 particularly useful for processing long Wave files in a memory-efficient
 manner. Optionally, a cluster can be specified to process windows on
 separate processor cores to increase processing speed.</p>
+<p>In order to demonstrate <code><a href="../reference/windowing.html">windowing()</a></code> we first define a
+simple function that draws a rectangle around the windowed region of a
+sound file.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">drawWindow</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span> <span class="va">wave</span>, <span class="va">start</span>, <span class="va">window.length</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="va">start</span>, <span class="op">-</span><span class="fl">1</span>, <span class="va">start</span><span class="op">+</span><span class="va">window.length</span>, <span class="fl">1</span>, col<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">1.0</span>,alpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>We can then show the windows generated if the
+<code>window.length</code> is 44100 samples, and the
+<code>window.overlap</code> is 0.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create a 5 second sine wave of 1Hz</span></span>
+<span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">tuneR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tuneR/man/Waveforms.html" class="external-link">sine</a></span><span class="op">(</span><span class="fl">1</span>, duration<span class="op">=</span><span class="fl">5</span><span class="op">*</span><span class="fl">44100</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">w</span><span class="op">@</span><span class="va">left</span>, type<span class="op">=</span><span class="st">"l"</span>, xlab<span class="op">=</span><span class="st">"Time (samples)"</span>, ylab<span class="op">=</span><span class="st">"Amplitude"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/windowing.html">windowing</a></span><span class="op">(</span><span class="va">w</span>, window.length<span class="op">=</span><span class="fl">44100</span>, window.overlap <span class="op">=</span> <span class="fl">0</span>, FUN<span class="op">=</span><span class="va">drawWindow</span><span class="op">)</span></span></code></pre></div>
+<p><img src="manage_audio_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<p>The entire audio file is analysed in chunks of 44100 samples, with no
+overlap between windows. The <code>drawWindow()</code> function is
+applied to each window, and the result is plotted on top of the
+oscillogram of the original audio file.</p>
+<p>The <code>window.overlap</code> parameter can be adjusted so that the
+windows overlap by a certain number of samples.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">w</span><span class="op">@</span><span class="va">left</span>, type<span class="op">=</span><span class="st">"l"</span>, xlab<span class="op">=</span><span class="st">"Time (samples)"</span>, ylab<span class="op">=</span><span class="st">"Amplitude"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/windowing.html">windowing</a></span><span class="op">(</span><span class="va">w</span>, window.length<span class="op">=</span><span class="fl">44100</span>, window.overlap <span class="op">=</span> <span class="fl">44100</span><span class="op">/</span><span class="fl">2</span>, FUN<span class="op">=</span><span class="va">drawWindow</span><span class="op">)</span></span></code></pre></div>
+<p><img src="manage_audio_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p>Alternatively, a negative value of <code>window.overlap</code> can be
+used to take regularly-spaced samples from the audio file.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">w</span><span class="op">@</span><span class="va">left</span>, type<span class="op">=</span><span class="st">"l"</span>, xlab<span class="op">=</span><span class="st">"Time (samples)"</span>, ylab<span class="op">=</span><span class="st">"Amplitude"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/windowing.html">windowing</a></span><span class="op">(</span><span class="va">w</span>, window.length<span class="op">=</span><span class="fl">44100</span>, window.overlap <span class="op">=</span> <span class="op">-</span><span class="fl">44100</span>, FUN<span class="op">=</span><span class="va">drawWindow</span><span class="op">)</span></span></code></pre></div>
+<p><img src="manage_audio_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="pseudowave-objects">PseudoWave objects<a class="anchor" aria-label="anchor" href="#pseudowave-objects"></a>
