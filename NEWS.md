@@ -1,3 +1,8 @@
+# sonicscrewdriver 0.0.7
+
+## Fixes
+- internal function to normalise a spectrum
+
 # sonicscrewdriver 0.0.6
 
 ## Fixes
