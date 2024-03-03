@@ -1,4 +1,4 @@
-# sonicscrewdriver 0.0.7
+# sonicscrewdriver NEXT RELEASE
 
 ## Fixes
 - internal function to normalise a spectrum
