@@ -21,7 +21,7 @@ library(sonicscrewdriver)
 ## Managing audio in R with SonicScrewdriveR
 
 ### Reading audio files
-Several functions are available to read audio files into R, including the `readWave()` and `readMP3()` functions from the `tuneR` package, as well as tools from the package `av`. SonicScrewdriveR simplifies reading audio files by providing a single wrapper for these functions, `read_audio()`, which can read audio files in a variety of formats, including WAV, MP3, and FLAC. 
+Several functions are available to read audio files into R, including the `readWave()` and `readMP3()` functions from the `tuneR` package, as well as tools from the package `av`. SonicScrewdriveR simplifies reading audio files by providing a single wrapper for these functions, `readAudio()`, which can read audio files in a variety of formats, including WAV, MP3, and FLAC. 
 
 ```{r}
 filename <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
