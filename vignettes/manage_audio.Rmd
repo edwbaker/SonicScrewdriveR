@@ -74,6 +74,24 @@ plot(w@left, type="l", xlab="Time (samples)", ylab="Amplitude")
 windowing(w, window.length=44100, window.overlap = -44100, FUN=drawWindow)
 ```
 
+The `bind.wave` parameter can be used to combine the results of the windowing function into a single Wave object (if FUN returns a Wave object).
+
+In the example below we use `windowing()` to add noise to sections of a sine wave.
+
+```{r, results='hide'}
+w <- tuneR::sine(1, duration=5*44100)
+
+addNoise <- function(w, start, window.length) {
+  nw <- tuneR::noise("white", duration=length(w@left), samp.rate=w@samp.rate, pcm=w@pcm, bit=w@bit)
+  rw <- w + nw/max(nw@left) # Scale noise to the amplitude of the sine wave
+  return(rw)
+}
+
+o <- windowing(w, window.length=44100, window.overlap = -44100, FUN=addNoise, bind.wave=TRUE)
+plot(o@left, type="l", xlab="Time (samples)", ylab="Amplitude")
+
+```
+
 ### PseudoWave objects
 
 ## TaggedWave workflow

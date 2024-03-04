@@ -25,16 +25,16 @@
 #' }
 windowing <- function(
   wave,
-  window.length,
+  window.length=1000,
   FUN,
   window.overlap=0,
-  bind.wave=TRUE,
+  bind.wave=FALSE,
   complete.windows=TRUE,
   cluster=NULL,
   ...){
   if (typeof(wave) == "character") {
     FUN2 <- function(start, wave, window.length, ...){
-      wave <- readAudio(wave, from=start,to=start+window.length,units="samples")
+      wave <- readAudio(wave, from=start,to=start+window.length-1,units="samples")
       return(FUN(wave, start, window.length, ...))
     }
     info <- av::av_media_info(wave)
@@ -43,10 +43,17 @@ windowing <- function(
     validateIsWave(wave)
     n.samples <- length(wave)
     FUN2 <- function(start, wave, window.length, ...){
-      section <- cutws(wave, from=start, to=start+window.length)
+      section <- cutws(wave, from=start, to=start+window.length-1)
       return(FUN(section, start, window.length, ...))
     }
   }
+  if (bind.wave) {
+    if (window.overlap > 0) {
+      stop("Cannot bind waves with positive overlap.")
+    }
+  }
+
+
   n.windows <- ceiling(n.samples / (window.length - window.overlap))
 
   starts <- c(
@@ -72,11 +79,42 @@ windowing <- function(
   }
 
   if (bind.wave & typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
-    w <- l[[1]]
-    for (i in 2:length(l)) {
-      w <- tuneR::bind(w, l[[i]])
+    if (window.overlap == 0) {
+      w <- l[[1]]
+      for (i in 2:length(l)) {
+        w <- tuneR::bind(w, l[[i]])
+      }
+      l <- w
+    } else {
+      if (inherits(wave, "Wave")) {
+        segment <- cutws(wave, from=starts[1]+window.length, to=starts[2]-1)
+      } else {
+        segment <- readAudio(wave, from=starts[1]+window.length, to=starts[2]-1, units="samples")
+      }
+      w <- tuneR::bind(l[[1]], segment)
+      for (i in 2:(length(l))) {
+        if (i == length(l)) {
+          if (starts[i]+window.length >= n.samples) {
+            w <- tuneR::bind(w, l[[i]])
+          } else {
+            if (inherits(wave, "Wave")) {
+              segment <- cutws(wave, from=starts[i]+window.length, to=min(n.samples, starts[i]+window.length-1))
+            } else {
+              segment <- readAudio(wave, from=starts[i]+window.length, to=n.samples, units="samples")
+            }
+            w <- tuneR::bind(w, l[[i]], segment)
+          }
+        } else {
+          if (inherits(wave, "Wave")) {
+            segment <- cutws(wave, from=starts[i]+window.length, to=starts[i+1]-1)
+          } else {
+            segment <- readAudio(wave, from=starts[i]+window.length, to=min(starts[i+1]-1, n.samples), units="samples")
+          }
+          w <- tuneR::bind(w, l[[i]], segment)
+        }
+      }
+      l <- w
     }
-    l <- w
   }
   return(l)
 }
