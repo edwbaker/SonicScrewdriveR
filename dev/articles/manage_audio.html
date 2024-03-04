@@ -164,6 +164,23 @@ used to take regularly-spaced samples from the audio file.</p>
 <span></span>
 <span><span class="fu"><a href="../reference/windowing.html">windowing</a></span><span class="op">(</span><span class="va">w</span>, window.length<span class="op">=</span><span class="fl">44100</span>, window.overlap <span class="op">=</span> <span class="op">-</span><span class="fl">44100</span>, FUN<span class="op">=</span><span class="va">drawWindow</span><span class="op">)</span></span></code></pre></div>
 <p><img src="manage_audio_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p>The <code>bind.wave</code> parameter can be used to combine the
+results of the windowing function into a single Wave object (if FUN
+returns a Wave object).</p>
+<p>In the example below we use <code><a href="../reference/windowing.html">windowing()</a></code> to add noise to
+sections of a sine wave.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">tuneR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tuneR/man/Waveforms.html" class="external-link">sine</a></span><span class="op">(</span><span class="fl">1</span>, duration<span class="op">=</span><span class="fl">5</span><span class="op">*</span><span class="fl">44100</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">addNoise</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">w</span>, <span class="va">start</span>, <span class="va">window.length</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">nw</span> <span class="op">&lt;-</span> <span class="fu">tuneR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tuneR/man/Waveforms.html" class="external-link">noise</a></span><span class="op">(</span><span class="st">"white"</span>, duration<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">w</span><span class="op">@</span><span class="va">left</span><span class="op">)</span>, samp.rate<span class="op">=</span><span class="va">w</span><span class="op">@</span><span class="va">samp.rate</span>, pcm<span class="op">=</span><span class="va">w</span><span class="op">@</span><span class="va">pcm</span>, bit<span class="op">=</span><span class="va">w</span><span class="op">@</span><span class="va">bit</span><span class="op">)</span></span>
+<span>  <span class="va">rw</span> <span class="op">&lt;-</span> <span class="va">w</span> <span class="op">+</span> <span class="va">nw</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">nw</span><span class="op">@</span><span class="va">left</span><span class="op">)</span> <span class="co"># Scale noise to the amplitude of the sine wave</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">rw</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/windowing.html">windowing</a></span><span class="op">(</span><span class="va">w</span>, window.length<span class="op">=</span><span class="fl">44100</span>, window.overlap <span class="op">=</span> <span class="op">-</span><span class="fl">44100</span>, FUN<span class="op">=</span><span class="va">addNoise</span>, bind.wave<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">o</span><span class="op">@</span><span class="va">left</span>, type<span class="op">=</span><span class="st">"l"</span>, xlab<span class="op">=</span><span class="st">"Time (samples)"</span>, ylab<span class="op">=</span><span class="st">"Amplitude"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="manage_audio_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="pseudowave-objects">PseudoWave objects<a class="anchor" aria-label="anchor" href="#pseudowave-objects"></a>
