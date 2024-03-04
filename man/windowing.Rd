@@ -6,10 +6,10 @@
 \usage{
 windowing(
   wave,
-  window.length,
+  window.length = 1000,
   FUN,
   window.overlap = 0,
-  bind.wave = TRUE,
+  bind.wave = FALSE,
   complete.windows = TRUE,
   cluster = NULL,
   ...
