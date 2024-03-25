@@ -2,6 +2,7 @@
 
 ## Fixes
 - internal function to normalise a spectrum
+- better testing of bind.wave parameter to windowing().
 
 # sonicscrewdriver 0.0.6
 
