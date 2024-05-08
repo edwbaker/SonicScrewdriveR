@@ -28,7 +28,7 @@ sweptsine(
 
 \item{samp.rate}{Sample rate of swept wave}
 
-\item{output}{"Wave" for a Wave object, or "vector"}
+\item{output}{"wave" for a Wave object, or "vector"}
 
 \item{...}{Additional arguments to pass to data2Wave}
 }
