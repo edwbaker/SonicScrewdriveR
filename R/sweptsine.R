@@ -8,7 +8,7 @@
 #' @param time.unit One of "seconds", "samples"
 #' @param A Amplitude of wave
 #' @param samp.rate Sample rate of swept wave
-#' @param output "Wave" for a Wave object, or "vector"
+#' @param output "wave" for a Wave object, or "vector"
 #' @param ... Additional arguments to pass to data2Wave
 #' @export
 #' @return A swept wave object of the type specified in output.
