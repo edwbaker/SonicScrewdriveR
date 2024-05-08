@@ -8,7 +8,7 @@
 #' @param time.unit One of "seconds", "samples"
 #' @param A Amplitude of wave
 #' @param samp.rate Sample rate of swept wave
-#' @param output "wave" for a Wave object, or "vector"
+#' @param output "Wave" for a Wave object, or "vector"
 #' @param ... Additional arguments to pass to data2Wave
 #' @export
 #' @return A swept wave object of the type specified in output.
@@ -16,6 +16,9 @@
 #' sweptsine()
 #'
 sweptsine <- function(f0=100, f1=2500, sweep.time=1, time.unit="seconds", A=1, samp.rate=44100, output="wave", ...) {
+  if (!output %in% c("wave", "vector")) {
+    stop("output must be one of 'wave' or 'vector'")
+  }
   if (time.unit == "seconds") {
     vector_length <- samp.rate*sweep.time
   } else if (time.unit == "samples") {
@@ -38,5 +41,4 @@ sweptsine <- function(f0=100, f1=2500, sweep.time=1, time.unit="seconds", A=1, s
   if (output == "wave") {
     return(data2Wave(w, samp.rate=samp.rate, ...))
   }
-
 }
