@@ -26,9 +26,7 @@ sweptsine <- function(f0=100, f1=2500, sweep.time=1, time.unit="seconds", A=1, s
   } else {
     stop("time.unit must be one of 'seconds' or 'samples'")
   }
-  if (!output %in% c("wave", "vector")) {
-    stop("output must be one of 'wave' or 'vector'")
-  }
+
   delta_f <- (f1 - f0) / vector_length
 
   f <- seq(from=f0, by=delta_f, length=vector_length)
