@@ -31,7 +31,7 @@ sweptsine <- function(f0=100, f1=2500, sweep.time=1, time.unit="seconds", A=1, s
 
   f <- seq(from=f0, by=delta_f, length=vector_length)
   phi <- seq(from=0, by=2*pi*f/samp.rate, length=vector_length)
-  w <- A * sin(phi)
+  w <- A * sin(phi/2)
 
   if (output == "vector") {
     return(w)

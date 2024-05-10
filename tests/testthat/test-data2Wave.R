@@ -21,12 +21,12 @@ test_that("Normalisation works", {
   w <- tuneR::sine(440)
   d <- w@left * 2
 
-  expect_lte(max(data2Wave(d, normalise = TRUE)@left), 1)
+  expect_lte(max(data2Wave(d, unit="1", normalise = TRUE)@left), 1)
   expect_gt(max(data2Wave(d, normalise = FALSE)@left), 1)
 
   # Generate sequence < 1
   d <- w@left / 2
 
-  expect_gte(max(data2Wave(d, normalise = TRUE)@left), 0.99)
+  expect_gte(max(data2Wave(d, unit="1", normalise = TRUE)@left), 0.99)
   expect_lte(max(data2Wave(d, normalise = FALSE)@left), 0.5)
 })

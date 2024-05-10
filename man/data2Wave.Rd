@@ -8,6 +8,7 @@ data2Wave(
   left,
   samp.rate = 44100,
   bit = 16,
+  unit = NULL,
   remove.offset = TRUE,
   normalise = TRUE
 )
@@ -18,6 +19,8 @@ data2Wave(
 \item{samp.rate}{Sampling rate for Wave object}
 
 \item{bit}{Bit depth of Wave object}
+
+\item{unit}{See tuneR::normalize. If NULL this is handled automatically.}
 
 \item{remove.offset}{If TRUE any DC offset is removed}
 
