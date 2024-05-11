@@ -1,0 +1,38 @@
+---
+title: "Generating test signals"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sonicscrewdriver)
+```
+
+## Introduction
+
+The `sonicscrewdriver` package can be used to generate a variety of test signals.
+
+### Sine sweeps
+
+A sine sweep is a signal that increases in frequency over time. The `sweptsine()` function can be used to generate a sine sweep signal. The following example generates a sine sweep signal that starts at 20 Hz and ends at 20 kHz.
+
+````{r}
+sweep <- sweptsine(20, 20000)
+seewave::spectro(sweep)
+````
+
+By default linear sweeps are generated, but it is also possible to generate logarithmic sweeps by setting the `mode` argument to `"log"`.
+
+````{r}
+par(mfrow=c(2,1))
+sweep <- sweptsine(1, 100)
+seewave::oscillo(sweep, title="Linear")
+sweep <- sweptsine(1, 100, mode="log")
+seewave::oscillo(sweep, title="Logarithmic")
+````
+
