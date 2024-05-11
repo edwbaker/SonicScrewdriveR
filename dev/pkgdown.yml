@@ -8,7 +8,8 @@ articles:
   manage_audio: manage_audio.html
   other-apps: other-apps.html
   sonicscrewdriver: sonicscrewdriver.html
-last_built: 2024-05-11T15:44Z
+  test-signals: test-signals.html
+last_built: 2024-05-11T15:57Z
 urls:
   reference: http://sonicscrewdriver.ebaker.me.uk/reference
   article: http://sonicscrewdriver.ebaker.me.uk/articles
