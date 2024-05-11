@@ -1,5 +1,5 @@
 ---
-title: "Generating test signals"
+title: "Generating acoustic test signals in R"
 ---
 
 ```{r, include = FALSE}
@@ -15,9 +15,9 @@ library(sonicscrewdriver)
 
 ## Introduction
 
-The `sonicscrewdriver` package can be used to generate a variety of test signals.
+The `sonicscrewdriver` package can be used to generate a variety of acoustic test signals.
 
-### Sine sweeps
+## Sine sweeps
 
 A sine sweep is a signal that increases in frequency over time. The `sweptsine()` function can be used to generate a sine sweep signal. The following example generates a sine sweep signal that starts at 20 Hz and ends at 20 kHz.
 
