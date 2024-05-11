@@ -1,4 +1,4 @@
-# sonicscrewdriver NEXT RELEASE
+# sonicscrewdriver 0.0.7
 
 ## New functions
 - sweptsine() can generate logarithmic sweeps with mode="log"
