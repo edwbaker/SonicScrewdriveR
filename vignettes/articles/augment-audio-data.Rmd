@@ -58,7 +58,7 @@ To demonstrate time shifting we will generate the sum of a sine wave and a Dirac
 p1 <- tuneR::sine(440, duration=44100*3)
 p2 <- pulse("dirac", duration=44100*3)
 
-p <- 0.25*p1 + tuneR::normalize(p2)
+p <- 0.25*p1 + normalise(p2)
 
 seewave::oscillo(p)
 ```

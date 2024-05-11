@@ -1,12 +1,11 @@
 #' @importFrom grDevices rgb
 #' @importFrom seewave spectro
-#' @importFrom tuneR normalize
 indexSpec <- function(
     files,
     noise="/volumes/AAO/nhm-unp-1/_noise.wav",
     wl=256
 ){
-  sf <-normalize(readWave(files[1]))
+  sf <-normalise(readWave(files[1]))
   s <- spectro(sf, f=sf@samp.rate, plot=FALSE, wl=wl)
   bins <- length(s$freq)
 
@@ -18,7 +17,7 @@ indexSpec <- function(
 
   for (i in 1:length(files)) {
     print(i)
-    wave <- normalize(readWave(files[i]))
+    wave <- normalise(readWave(files[i]))
     spec <- spectro(wave, plot=FALSE, wl=wl)
 
     for (j in 1:bins) {

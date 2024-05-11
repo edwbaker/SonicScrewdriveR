@@ -20,7 +20,7 @@ dutyCycle <- function(
   normalise = TRUE
 ) {
   if (normalise) {
-    wave <- tuneR::normalize(wave)
+    wave <- normalise(wave)
   }
   w <- abs(wave@left)
   l <- length(w)
