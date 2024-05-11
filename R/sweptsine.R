@@ -44,9 +44,12 @@ sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="s
   if (mode == "linear") {
     w <- sweptsine.lin(f0, f1, sweep.time, samp.rate, vector_length)
   } else if (mode == "log") {
+    if (f0 <= 0) {
+      stop("sweptsine: f0 must be greater than zero in logarithmic mode")
+    }
     w <- sweptsine.log(f0, f1, sweep.time, samp.rate, vector_length)
   } else {
-    stop("mode must be one of 'linear' or 'log'")
+    stop("sweptsine: mode must be one of 'linear' or 'log'")
   }
 
   if (output == "vector") {
