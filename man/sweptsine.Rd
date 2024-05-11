@@ -9,7 +9,6 @@ sweptsine(
   f1 = 2500,
   sweep.time = 1,
   time.unit = "seconds",
-  A = 1,
   samp.rate = 44100,
   output = "wave",
   ...
@@ -24,8 +23,6 @@ sweptsine(
 
 \item{time.unit}{One of "seconds", "samples"}
 
-\item{A}{Amplitude of wave}
-
 \item{samp.rate}{Sample rate of swept wave}
 
 \item{output}{"wave" for a Wave object, or "vector"}
@@ -39,6 +36,13 @@ A swept wave object of the type specified in output.
 Generates a frequency swept sine wave and returns it as a Wave object or vector.
 }
 \examples{
-sweptsine()
+#Generate a swept sine wave between 0Hz and 10kHz.
+w <- sweptsine(0, 10e3)
+
+#Generate a swept sine wave between 0Hz and 10kHz and normalise it.
+w <- normalise(sweptsine(0, 10e3))
+
+#Generate a stereo swept sine wave between 100Hz and 1KHz.
+w <- stereo(sweptsine(100, 1e3))
 
 }

@@ -25,7 +25,7 @@ data2Wave <- function(left, samp.rate=44100, bit=16, unit=NULL, remove.offset=TR
   }
   wave <- tuneR::Wave(left=left, right = numeric(0), samp.rate=samp.rate, bit=bit)
   if (normalise == TRUE) {
-    wave <- normalise(wave, unit=unit)
+    wave <- normalise(wave, unit=unit, center=FALSE)
   }
   return(wave)
 }
