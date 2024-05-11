@@ -9,7 +9,6 @@
 #' @param normalise IF TRUE the output Wave is normalised to -1:1
 #' @param unit See tuneR::normalize. If NULL this is handled automatically.
 #' @return A mono Wave object.
-#' @importFrom tuneR normalize
 #' @examples
 #' pattern <- seq(from=-1, to=1, length.out=100)
 #' data <- rep.int(pattern, 100)
@@ -26,10 +25,7 @@ data2Wave <- function(left, samp.rate=44100, bit=16, unit=NULL, remove.offset=TR
   }
   wave <- tuneR::Wave(left=left, right = numeric(0), samp.rate=samp.rate, bit=bit)
   if (normalise == TRUE) {
-    if (is.null(unit)){
-      unit <- as.character(wave@bit)
-    }
-    wave <- normalize(wave, unit=unit)
+    wave <- normalise(wave, unit=unit)
   }
   return(wave)
 }
