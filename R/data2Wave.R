@@ -19,13 +19,10 @@ data2Wave <- function(left, samp.rate=44100, bit=16, unit=NULL, remove.offset=TR
   if (!is.numeric(left)) {
     stop("Data must be numeric.")
   }
-  if (remove.offset == TRUE) {
-    a <- mean(left)
-    left <- left-a
-  }
+
   wave <- tuneR::Wave(left=left, right = numeric(0), samp.rate=samp.rate, bit=bit)
   if (normalise == TRUE) {
-    wave <- normalise(wave, unit=unit, center=FALSE)
+    wave <- normalise(wave, unit=unit, center=remove.offset)
   }
   return(wave)
 }

@@ -2,11 +2,12 @@
 % Please edit documentation in R/sweptsine.R
 \name{sweptsine}
 \alias{sweptsine}
-\title{Generate a frequency-swept sine wave}
+\title{Generate a sine sweep}
 \usage{
 sweptsine(
   f0 = 100,
   f1 = 2500,
+  mode = "linear",
   sweep.time = 1,
   time.unit = "seconds",
   samp.rate = 44100,
@@ -18,6 +19,8 @@ sweptsine(
 \item{f0}{Start frequency}
 
 \item{f1}{End frequency}
+
+\item{mode}{One of "linear", "log"}
 
 \item{sweep.time}{Duration of swept wave}
 
@@ -33,7 +36,8 @@ sweptsine(
 A swept wave object of the type specified in output.
 }
 \description{
-Generates a frequency swept sine wave and returns it as a Wave object or vector.
+Generates a frequency swept sine wave (either linear or logarithmic) and
+returns it as a Wave object or vector.
 }
 \examples{
 #Generate a swept sine wave between 0Hz and 10kHz.
@@ -43,6 +47,9 @@ w <- sweptsine(0, 10e3)
 w <- normalise(sweptsine(0, 10e3))
 
 #Generate a stereo swept sine wave between 100Hz and 1KHz.
-w <- stereo(sweptsine(100, 1e3))
+w <- tuneR::stereo(sweptsine(100, 1e3))
+
+#Generate an exponentially swept sine wave between 100Hz and 1KHz.
+w <- sweptsine(100, 1e3, mode="log")
 
 }

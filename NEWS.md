@@ -1,8 +1,17 @@
 # sonicscrewdriver NEXT RELEASE
 
+## New functions
+- sweptsine() can generate logarithmic sweeps with mode="log"
+- normalise() wrapper to tuneR::normalize() to detect bit depth
+- data2Wave() uses new normalise() wrapper
+
+## Documentation
+- additional examples for sweptsine()
+
 ## Fixes
 - internal function to normalise a spectrum
 - better testing of bind.wave parameter to windowing().
+
 
 # sonicscrewdriver 0.0.6
 
