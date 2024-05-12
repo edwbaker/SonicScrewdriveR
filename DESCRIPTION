@@ -1,6 +1,6 @@
 Package: sonicscrewdriver
 Title: Bioacoustic Analysis and Publication Tools
-Version: 0.0.7
+Version: 0.0.8.9000
 Authors@R: c(
   person("Ed", "Baker", 
     email = "ed@ebaker.me.uk",
