@@ -98,10 +98,33 @@
 
 
 <dt>output.unit</dt>
-<dd><p>"bits" or  "bytes"</p></dd>
+<dd><p>"human", "bits" or  "bytes"</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    
 
+<p>The size of the audio file in the specified unit</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>By default <code><a href="humanBytes.html">humanBytes()</a></code> is used to convert the output to human readable format,
+however this can be changed by setting <code>output.unit</code> to "bits" or "bytes".</p>
+    </div>
+
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># One minute of mono 16-bit audio sampled at 44.1kHz</span></span></span>
+<span class="r-in"><span><span class="fu">audio_filesize</span><span class="op">(</span>samp.rate<span class="op">=</span><span class="fl">44100</span>, bit.depth<span class="op">=</span><span class="fl">16</span>, channels<span class="op">=</span><span class="fl">1</span>, duration<span class="op">=</span><span class="fl">1</span>, duration.unit<span class="op">=</span><span class="st">"minutes"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 42336000</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># One year of stereo 24-bit audio sampled at 96kHz</span></span></span>
+<span class="r-in"><span><span class="fu">audio_filesize</span><span class="op">(</span>samp.rate<span class="op">=</span><span class="fl">96000</span>, bit.depth<span class="op">=</span><span class="fl">24</span>, channels<span class="op">=</span><span class="fl">2</span>, duration<span class="op">=</span><span class="fl">1</span>, duration.unit<span class="op">=</span><span class="st">"years"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.453179e+14</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
