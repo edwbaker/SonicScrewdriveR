@@ -1,11 +1,12 @@
 # sonicscrewdriver NEXT RELEASE
 
-## New functions
+## New functionality
 - dolbear() can now perform Dolbear's law calculations for more species
+- audio_filesize() can output in human-friendly units using humanBytes()
 
 # sonicscrewdriver 0.0.7
 
-## New functions
+## New functionality
 - sweptsine() can generate logarithmic sweeps with mode="log"
 - normalise() wrapper to tuneR::normalize() to detect bit depth
 - data2Wave() uses new normalise() wrapper
@@ -27,7 +28,7 @@
 
 # sonicscrewdriver 0.0.5
 
-## New functions
+## New functionality
 - use BirdNET-Analyzer within R using reticulate
 - readAudio() generic function to read audio files
 - readAudacityLabels() to read Audacity label files
