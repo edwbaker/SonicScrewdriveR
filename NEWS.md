@@ -1,5 +1,7 @@
 #sonicscrewdriver NEXT RELEASE
 
+## New functions
+- dolbear() can now perform Dolbear's law calculations for more species
 
 # sonicscrewdriver 0.0.7
 

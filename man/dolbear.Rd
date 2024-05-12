@@ -11,17 +11,29 @@ dolbear(n = NULL, t = NULL, species = "Oecanthus fultoni")
 
 \item{t}{Temperature in Celsius}
 
-\item{species}{Species to use (by default Oecanthus fultoni)}
+\item{species}{Species to use (by default \emph{Oecanthus fultoni}), NULL to
+calculate for all species.}
 }
 \value{
-Missing value of n or t
+Data frame with t and n calculated for matching species.
 }
 \description{
-Calculates either chirps per minute based on temperature or vice versa
-using Dolbear's law (or equivalent laws for other species)
+\insertCite{dolbear1897;textual}{sonicscrewdriver} was the first to publish a formula for
+how the rate of chirping of crickets varies with temperature, using the tree cricket
+\emph{Oecanthus fultoni}.
+}
+\details{
+Subsequent research by Dolbear and others have published additional formulae for other
+species: \emph{Oecanthus fultoni} \insertCite{fulton1925}{sonicscrewdriver},
+\emph{Oecanthus rileyi} \insertCite{walker1962}{sonicscrewdriver},
+\emph{Oecanthus alexanderi} \insertCite{walker2010}{sonicscrewdriver}, and
+\emph{Oecanthus allardi} \insertCite{allard1957}{sonicscrewdriver}.
 }
 \examples{
 dolbear(n=6)
 dolbear(t=25)
 
+}
+\references{
+\insertAllCited{}
 }
