@@ -2,7 +2,7 @@
 title: "Using audioBlast with R"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{audioblast}
+  %\VignetteIndexEntry{Using audioBlast with R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
