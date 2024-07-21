@@ -1,4 +1,3 @@
-
 r_to_py.Wave<- function(rx, convert) {
   # Check rx is a Wave object
   if (inherits(rx, "Wave")) {
@@ -14,7 +13,7 @@ r_to_py.Wave<- function(rx, convert) {
   return(px)
 }
 
-py_to_wave <- function(px) {
+py_to_r.Wave <- function(px) {
   rx <- Wave(px[[1]], samp.rate = px[[2]])
   return(px)
 }
