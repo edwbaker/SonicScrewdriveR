@@ -51,3 +51,4 @@ Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
 BugReports: https://github.com/edwbaker/SonicScrewdriveR/issues
 RdMacros: Rdpack
+RoxygenNote: 7.3.2
