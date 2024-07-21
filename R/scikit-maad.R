@@ -7,8 +7,8 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' birdnetInstall()
-#' birdNetInstall(unattended=TRUE)
+#' maadInstall()
+#' maadInstall(unattended=TRUE)
 #' }
 maadInstall <- function(unattended=FALSE) {
   if (!package.installed("reticulate")) {

@@ -15,7 +15,7 @@ This function installs scikit-maad in the \code{ssd_scikit-maad} environment usi
 }
 \examples{
 \dontrun{
-birdnetInstall()
-birdNetInstall(unattended=TRUE)
+maadInstall()
+maadInstall(unattended=TRUE)
 }
 }
