@@ -76,6 +76,7 @@ gs
 hardRain
 humanBytes
 kPa
+maad
 magrittr
 meanspec
 metdata
@@ -92,6 +93,7 @@ readAudacityLabels
 readAudio
 rileyi
 rythmicity
+scikit
 sd
 se
 seewave
