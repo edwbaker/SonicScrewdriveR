@@ -1,16 +1,15 @@
 pandoc: 3.1.11
-pkgdown: 2.0.9
+pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   audioblast: audioblast.html
-  augment-audio-data: augment-audio-data.html
-  converting-code: converting-code.html
+  articles/augment-audio-data: augment-audio-data.html
+  articles/converting-code: converting-code.html
   manage_audio: manage_audio.html
-  other-apps: other-apps.html
+  articles/other-apps: other-apps.html
   sonicscrewdriver: sonicscrewdriver.html
-  test-signals: test-signals.html
-last_built: 2024-05-13T16:00Z
+  articles/test-signals: test-signals.html
+last_built: 2024-07-21T13:00Z
 urls:
   reference: http://sonicscrewdriver.ebaker.me.uk/reference
   article: http://sonicscrewdriver.ebaker.me.uk/articles
-
