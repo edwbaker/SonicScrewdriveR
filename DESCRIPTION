@@ -28,21 +28,21 @@ Encoding: UTF-8
 LazyData: true
 Language: en-GB
 Suggests:
-    av,
-    covr,
-    devtools,
-    googleCloudStorageR,
-    googleLanguageR,
-    knitr,
-    parallel,
-    pbapply,
-    plotrix,
-    reticulate,
-    rmarkdown,
-    soundecology,
-    spelling,
-    testthat (>= 3.0.0),
-    WaveletComp
+  av,
+  covr,
+  devtools,
+  googleCloudStorageR,
+  googleLanguageR,
+  knitr,
+  parallel,
+  pbapply,
+  plotrix,
+  reticulate,
+  rmarkdown,
+  soundecology,
+  spelling,
+  testthat (>= 3.0.0),
+  WaveletComp
 VignetteBuilder: knitr
 URL: 
   https://sonicscrewdriver.ebaker.me.uk, 
