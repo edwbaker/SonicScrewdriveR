@@ -9,6 +9,13 @@ r_to_py.Wave(rx, convert = FALSE)
 
 py_to_r.Wave(px, convert = FALSE)
 }
+\arguments{
+\item{rx}{A Wave object.}
+
+\item{convert}{Logical indicating whether to convert the Wave object to an R object.}
+
+\item{px}{A Python representation of a wave.}
+}
 \description{
 Helper functions for reticulate to move Wave objects between R and Python
 }
