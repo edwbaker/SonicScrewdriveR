@@ -36,28 +36,29 @@ convert2bytes <- function(S, input="bits") {
 #' @export
 #'
 humanBytes <- function(S) {
-  if (S > 1e+18) {
+  if (S >= 1e+18) {
     S <- S/1e+18
     return(paste(S,"EB"))
-  }
-  if (S > 1e+15) {
+  } else if (S >= 1e+15) {
     S <- S/1e+15
     return(paste(S, "PB"))
-  }
-  if (S > 1e+12) {
+  } else if (S >= 1e+12) {
     S <- S/1e+12
     return(paste(S, "TB"))
-  }
-  if (S > 1e+9) {
+  } else if (S >= 1e+9) {
     S <- S/1e+9
     return(paste(S, "GB"))
-  }
-  if (S > 1e+6) {
+  } else if (S >= 1e+6) {
     S <- S/1e+6
     return(paste(S, "MB"))
-  }
-  if (S > 1e+3) {
+  } else if (S >= 1e+3) {
     S <- S/1e+3
     return(paste(S, "kB"))
+  } else {
+    if (S==1) {
+      return(paste(S, "byte"))
+    } else {
+      return(paste(S, "bytes"))
+    }
   }
 }

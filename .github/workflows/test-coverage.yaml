@@ -43,7 +43,7 @@ jobs:
         shell: bash
 
       - name: Upload test results
-        if: failure()
+        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-test-failures
