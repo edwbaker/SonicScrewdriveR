@@ -23,7 +23,8 @@ setClass(
 )
 
 #' Helper function to convert a Wave-like object to scikit-maad spectrogram
-#' @param object A Wave or WaveMC object, or a spectrogram_maad object
+#' @param object A Wave or WaveMC object (or Tagged equivalent),
+#'   or a spectrogram_maad object
 #' @return A spectrogram_maad object
 spectrogram_maad <- function(object) {
   if (inherits(object, "spectrogam_maad")) {
@@ -31,5 +32,11 @@ spectrogram_maad <- function(object) {
   }
   if (inherits(object, c("Wave", "WaveMC"))) {
     return(maad_spectrogram(object))
+  }
+  if (inherits(object, c("TaggedWave", "TaggedWaveMC"))) {
+    if (object@spectrogram_maad == "NULL") {
+      object@spectrogram_maad <- maad_spectrogram(object)
+    }
+    return(object@spectrogram_maad)
   }
 }

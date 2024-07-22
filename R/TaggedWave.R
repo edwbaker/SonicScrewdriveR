@@ -8,7 +8,8 @@
   return(list(
     origin="character",
     metadata="list",
-    processing="list"
+    processing="list",
+    spectrogam_maad = "ANY"
   ))
 }
 

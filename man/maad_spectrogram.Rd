@@ -19,6 +19,6 @@ A \code{spectrogram_maad} object.
 \description{
 This is a wrapper function for the \code{maad.sound.spectrogram} function
 from the scikit-maad package for Python. It computes the spectrogram of a
-sound wave. Further usage details are provied at
+sound wave. Further usage details are provided at
 \url{https://maad.readthedocs.io/en/latest/maad.sound.html#maad.sound.spectrogram}.
 }

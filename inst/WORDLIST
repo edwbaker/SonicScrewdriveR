@@ -20,6 +20,7 @@ MoleFracCO
 Oecanthus
 POSIXlt
 PseudoWave
+QUT
 Respeaker
 STP
 Sarlis
@@ -67,6 +68,8 @@ ecoacoustic
 ecoacoustics
 ffilter
 filterw
+fmax
+fmin
 frequencyStats
 fultoni
 getSunlightTimes
@@ -105,6 +108,8 @@ ste
 suncalc
 sweptsine
 timezone
+tmax
+tmin
 tuneR
 tz
 uncalibrated
