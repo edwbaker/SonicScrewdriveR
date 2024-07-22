@@ -82,6 +82,7 @@
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/labelPadding.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/labelReduction.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/maadInstall.html</loc></url>
+<url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/maad_spectrogram.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/map2RGB.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/naturalFrequency.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/normalise.html</loc></url>
@@ -113,6 +114,8 @@
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/slash-PseudoWave-numeric-method.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/soundSpeed.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/specStats.html</loc></url>
+<url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/spectrogram_maad-class.html</loc></url>
+<url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/spectrogram_maad.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/ste.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/sub-Wave-TimeRegion-method.html</loc></url>
 <url><loc>http://sonicscrewdriver.ebaker.me.uk/dev/reference/subtractSpectra.html</loc></url>
