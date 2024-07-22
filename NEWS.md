@@ -1,6 +1,8 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- Wave methods for reticulate allow wave objects to be passed between R and Python
+- Initial support for scikit-maad Python package
 - dolbear() can now perform Dolbear's law calculations for more species
 - audio_filesize() can output in human-friendly units using humanBytes()
 

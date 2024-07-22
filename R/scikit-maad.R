@@ -12,7 +12,7 @@
 #' }
 maadInstall <- function(unattended=FALSE) {
   if (!package.installed("reticulate")) {
-    stop("The reticulate package is required to create the `ssd_birdnet` environment.")
+    stop("The reticulate package is required to create the `ssd_scikit-maad` environment.")
   }
 
   if (interactive()) {
@@ -30,3 +30,16 @@ maadInstall <- function(unattended=FALSE) {
   }
   reticulate::virtualenv_install("ssd_scikit-maad", "scikit-maad")
 }
+
+getMaad <- function() {
+  if (!package.installed("reticulate")) {
+    stop("The reticulate package is required to use scikit-maad.")
+  }
+  if (!reticulate::virtualenv_exists(envname = "ssd_scikit-maad")) {
+    maadInstall()
+  }
+  reticulate::use_virtualenv("ssd_scikit-maad")
+  maad <- reticulate::import("maad")
+  return(maad)
+}
+
