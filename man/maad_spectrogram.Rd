@@ -4,17 +4,20 @@
 \alias{maad_spectrogram}
 \title{Compute a spectrogram of a sound wave using scikit-maad}
 \usage{
-maad_spectrogram(wave, ..., maad = NULL)
+maad_spectrogram(wave, mode = "power", ..., maad = NULL)
 }
 \arguments{
 \item{wave}{A Wave object}
+
+\item{mode}{The type of spectrogram to compute. Options are "power", "amplitude" "complex".
+Default is "power".}
 
 \item{...}{Additional arguments to pass to \code{maad.sound.spectrogram}.}
 
 \item{maad}{An optional \code{maad} object. If not provided, one will be created using \code{getMaad()}.}
 }
 \value{
-A \code{spectrogram_maad} object.
+Generically a \code{spectrogram_maad} object.
 }
 \description{
 This is a wrapper function for the \code{maad.sound.spectrogram} function

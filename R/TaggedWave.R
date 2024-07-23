@@ -9,7 +9,7 @@
     origin="character",
     metadata="list",
     processing="list",
-    spectrogam_maad = "ANY"
+    spectrogram_maad_power = "spectrogram_maad"
   ))
 }
 

@@ -26,9 +26,9 @@ maadInstall <- function(unattended=FALSE) {
   }
 
   if (!reticulate::virtualenv_exists(envname = "ssd_scikit-maad")) {
-    reticulate::virtualenv_create(envname = "ssd_scikit-maad")
+    reticulate::virtualenv_create(envname = "ssd_scikit-maad", packages=NULL)
   }
-  reticulate::virtualenv_install("ssd_scikit-maad", "scikit-maad")
+  reticulate::virtualenv_install("ssd_scikit-maad", c("scikit-maad", "numpy==1.26.4"))
 }
 
 getMaad <- function() {

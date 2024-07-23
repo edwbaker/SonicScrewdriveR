@@ -2,7 +2,7 @@
 % Please edit documentation in R/scikit-maad-indices.R
 \name{maad_temporal_activity}
 \alias{maad_temporal_activity}
-\title{Compute the acoustic activity index using scikit-maad temporal activity}
+\title{Compute the acoustic activity index using scikit-maad}
 \usage{
 maad_temporal_activity(
   wave,
