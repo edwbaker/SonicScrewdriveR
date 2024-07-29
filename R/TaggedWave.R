@@ -160,7 +160,7 @@ untagWave <- function(w) {
 #' @noRd
 .getTags <- function(w) {
   if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
-    return(list("origin"=w@origin, "metadata"=w@metadata, "processing"=w@processing))
+    return(list("origin"=w@origin, "metadata"=w@metadata, "processing"=w@processing, spectrogram_maad_power=w@spectrogram_maad_power))
   }
   if (!is(w, "list")) {
     stop("Attempting to get tags from object that is not TaggedWave or TaggedWaveMC.")
