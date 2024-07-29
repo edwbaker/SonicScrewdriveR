@@ -44,6 +44,8 @@ test_that("audioblast works with real data", {
 })
 
 test_that("audioblastDownload works as expected", {
+  #ToDo: Remove skip when DDI have fixed Scratchpads
+  skip("Skipping audioblastDownload while NHM can't keep Scratchpad online.")
   skip_on_cran()
   if (dir.exists("ab_dl_test")) {
     unlink("ab_dl_test", recursive=TRUE)
