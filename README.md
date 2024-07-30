@@ -40,6 +40,8 @@ devtools::install_github("edwbaker/SonicScrewdriveR")
 library(sonicscrewdriver)
 ```
 
+[Development version documentation](https://sonicscrewdriver.ebaker.me.uk/dev/)
+
 ## Usage
 
 Usage of the package is described in the following vignettes:
