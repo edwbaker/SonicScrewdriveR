@@ -1,6 +1,6 @@
 [![CRAN Version](https://www.r-pkg.org/badges/version/sonicscrewdriver)](https://cran.r-project.org/package=sonicscrewdriver) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/sonicscrewdriver)]() [![](http://cranlogs.r-pkg.org/badges/last-week/sonicscrewdriver?color=green)](https://cran.r-project.org/package=sonicscrewdriver) [![codecov](https://codecov.io/gh/edwbaker/SonicScrewdriveR/graph/badge.svg?token=pQq9E428KB)](https://codecov.io/gh/edwbaker/SonicScrewdriveR) [![R-CMD-check](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml)
 
-# SonicScrewdriveR
+# SonicScrewdriveR <a href="http://sonicscrewdriver.ebaker.me.uk"><img src="man/figures/logo.png" align="right" height="138" alt="sonicscrewdriver website" /></a>
 
 This package provides tools for manipulating sound files for analysis and visualisation.
 
