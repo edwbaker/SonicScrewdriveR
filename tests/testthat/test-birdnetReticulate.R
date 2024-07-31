@@ -2,6 +2,7 @@ skip_if_no_birdnet <- function() {
   if (!reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
     skip("ssd_birdnet not available for testing")
   }
+  reticulate::use_virtualenv("ssd_birdnet")
   if (!reticulate::py_module_available("birdnetlib"))
     skip("birdnetlib not available for testing")
 }
@@ -9,6 +10,14 @@ skip_if_no_birdnet <- function() {
 if (reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
   reticulate::use_virtualenv("ssd_birdnet")
 }
+
+test_that("birdnet installation works", {
+  skip_on_cran()
+  if (reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
+    reticulate::virtualenv_remove(envname = "ssd_birdnet")
+  }
+  expect_no_warning(birdNetInstall(unattended=TRUE))
+})
 
 test_that("birdNetAnalyse() rejects incorrect input", {
   skip_if_no_birdnet()

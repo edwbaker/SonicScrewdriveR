@@ -15,7 +15,7 @@ birdNetInstall <- function(unattended=FALSE) {
     stop("The reticulate package is required to create the `ssd_birdnet` environment.")
   }
 
-  if (interactive()) {
+  if (!unattended & interactive()) {
     if (!utils::askYesNo("Do you want to install the birdnet environment?")) {
       stop("The `ssd_birdnet` environment is required to use the `birdnetAnalyse()` function.")
     }
