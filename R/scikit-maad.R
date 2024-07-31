@@ -15,7 +15,7 @@ maadInstall <- function(unattended=FALSE) {
     stop("The reticulate package is required to create the `ssd_scikit-maad` environment.")
   }
 
-  if (interactive()) {
+  if (!unattended & interactive()) {
     if (!utils::askYesNo("Do you want to install the scikit-maad environment?")) {
       stop("The `ssd_scikit-maad` environment is required to use maad functions in sonicscrewdriver.")
     }
