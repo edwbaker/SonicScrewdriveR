@@ -25,6 +25,10 @@ test_that("noClick method on Wave objects works", {
   w3 <- concat(w1, w1, w1, method="noClick")
   expect_true(is(w3, "Wave"))
   expect_lt(length(w3@left), length(w1@left)*3)
+
+  expect_error(.noClick(w1), "Input must be a list.")
+
+  expect_equal(.noClick(list(w1)), list(w1))
 })
 
 test_that("bind method on WaveMC objects works", {

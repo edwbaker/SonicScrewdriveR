@@ -21,10 +21,13 @@ test_that("random method works as expected", {
 
 test_that("squarewave method works as expected", {
   w <- data2Wave(rep_len(1, 1000), normalise = F, remove.offset = F)
+  w <- stereo(w,w)
   wn <- generateTimeMask(w, method="squarewave", dutyCycle=0.95)
   expect_equal(length(wn), length(w))
   expect_equal(sum(wn@left), 950)
+  expect_equal(sum(wn@right), 950)
 
+  w <- data2Wave(rep_len(1, 1000), normalise = F, remove.offset = F)
   w <- tuneR::WaveMC(stereo(w,w))
   wn <- generateTimeMask(w, method="squarewave", dutyCycle=0.95)
   expect_equal(nrow(wn), nrow(w))
