@@ -31,6 +31,11 @@ maadInstall <- function(unattended=FALSE) {
   reticulate::virtualenv_install("ssd_scikit-maad", c("scikit-maad", "numpy==1.26.4"))
 }
 
+#' Import scikit-maad
+#'
+#' Imports the scikit-maad object into R. This allows reuse of the same object between
+#' function calls.
+#' @export
 getMaad <- function() {
   if (!package.installed("reticulate")) {
     stop("The reticulate package is required to use scikit-maad.")
