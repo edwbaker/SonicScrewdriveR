@@ -4,6 +4,7 @@ test_that(".tagSlots returns correct format", {
 
 test_that("attempt to convert non-Wave like object throws error", {
   expect_error(tagWave(1), "Attempting to tag object that is not of type Wave or WaveMC.")
+  expect_error(untagWave(1), "Attempting to untag object that is not of type TaggedWave or TaggedWaveMC.")
 })
 
 test_that("converting Wave to TaggedWave works", {
@@ -106,6 +107,10 @@ test_that(".isTagged() works as expected", {
   expect_true(.isTagged(tw))
   expect_false(.isTagged(w))
   expect_error(.isTagged(1), "Attempting to check object that is not Wave like.")
+  expect_equal(sum(.isTagged(list(tw, tw))), 2)
+  expect_equal(sum(.isTagged(list(w, tw))), 1)
+  expect_equal(sum(.isTagged(list(w, w))), 0)
+  expect_error(sum(.isTagged(list(tw, 1))), "Attempting to check object that is not Wave like.")
 })
 
 test_that(".getTags() works as expected", {

@@ -82,7 +82,9 @@ setMethod("addProcess", signature(object = "TaggedWaveMC"), .addProcess)
 #' @importFrom methods as
 #' @export
 tagWave <- function(w, origin="user") {
-  if (is(w, "Wave")) {
+  if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
+    return(w)
+  } else if (is(w, "Wave")) {
     validateIsWave(w)
     tw <- as(w, "TaggedWave")
     tw@origin <- origin
@@ -92,8 +94,6 @@ tagWave <- function(w, origin="user") {
     tw <- as(w, "TaggedWaveMC")
     tw@origin <- origin
     return(tw)
-  } else if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
-    return(w)
   } else if (is(w, "list")) {
     if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
       return(lapply(w, tagWave))
@@ -169,5 +169,4 @@ untagWave <- function(w) {
     tags <- sapply(w, .getTags, simplify=FALSE)
     return(tags)
   }
-  stop("Attempting to get tags from object that is not TaggedWave or TaggedWaveMC.")
 }
