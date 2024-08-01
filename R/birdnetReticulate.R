@@ -22,7 +22,7 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
     stop("The reticulate package is required to use BirdNET.")
   }
   if (!reticulate::virtualenv_exists(envname = "sonicscrewdriver")) {
-    pythontInstall()
+    pythonInstall()
   }
 
   reticulate::use_virtualenv("sonicscrewdriver")
