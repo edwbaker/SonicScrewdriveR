@@ -1,38 +1,3 @@
-#' Install the BirdNET environment
-#'
-#' This function installs BirdNET in the `ssd_birdnet` environment using `reticulate`.
-#'
-#' @param unattended If TRUE then the function will not prompt the user to install
-#'   the environment in a non-interactive session.
-#' @export
-#' @examples
-#' \dontrun{
-#' birdnetInstall()
-#' birdNetInstall(unattended=TRUE)
-#' }
-birdNetInstall <- function(unattended=FALSE) {
-  if (!package.installed("reticulate")) {
-    stop("The reticulate package is required to create the `ssd_birdnet` environment.")
-  }
-
-  if (!unattended & interactive()) {
-    if (!utils::askYesNo("Do you want to install the birdnet environment?")) {
-      stop("The `ssd_birdnet` environment is required to use the `birdnetAnalyse()` function.")
-    }
-  } else {
-    if (!unattended) {
-      stop("The `ssd_birdnet` environment is required to use the `birdnetAnalyse()` function.")
-    }
-  }
-
-  if (!reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
-    reticulate::virtualenv_create(envname = "ssd_birdnet")
-  }
-  reticulate::virtualenv_install("ssd_birdnet", "librosa")
-  reticulate::virtualenv_install("ssd_birdnet", "tensorflow")
-  reticulate::virtualenv_install("ssd_birdnet", "birdnetlib")
-}
-
 #' Analyse sound files using BirdNET-Analyzer
 #'
 #' This function takes a list of sound files and analyses them using the
@@ -56,11 +21,11 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
   if (!package.installed("reticulate")) {
     stop("The reticulate package is required to use BirdNET.")
   }
-  if (!reticulate::virtualenv_exists(envname = "ssd_birdnet")) {
-    birdNetInstall()
+  if (!reticulate::virtualenv_exists(envname = "sonicscrewdriver")) {
+    pythontInstall()
   }
 
-  reticulate::use_virtualenv("ssd_birdnet")
+  reticulate::use_virtualenv("sonicscrewdriver")
 
   if (!output %in% c("data.frame", "Annotation")) {
     stop("Unknown output format.")
@@ -82,7 +47,7 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
     }
   }
 
-  reticulate::use_virtualenv("ssd_birdnet")
+  reticulate::use_virtualenv("sonicscrewdriver")
   bn <- reticulate::import("birdnetlib")
   bna <- reticulate::import("birdnetlib.analyzer")
   datetime <- reticulate::import("datetime")
