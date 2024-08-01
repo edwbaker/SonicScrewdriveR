@@ -37,7 +37,6 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatComplexity.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatSpectrum.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/birdNetAnalyse.html</loc></url>
-<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/birdNetInstall.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/channels_se.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/circularise.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/concat-methods.html</loc></url>
@@ -76,6 +75,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/generateNoise.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/generateTimeMask.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/generateTimeShift.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/getMaad.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/gs_transcribe.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanBytes.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanTime.html</loc></url>
@@ -83,7 +83,6 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/jitter.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/labelPadding.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/labelReduction.html</loc></url>
-<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/maadInstall.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/maad_acoustic_complexity_index.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/maad_frequency_entropy.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/maad_number_of_peaks.html</loc></url>
@@ -107,6 +106,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pulse.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pulseDetection.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pulseIntervals.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pythonInstall.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/radarPower.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/radarRange.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/radialPolygon.html</loc></url>
