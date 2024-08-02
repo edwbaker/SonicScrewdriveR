@@ -12,7 +12,8 @@ r_to_py.Wave<- function(rx, convert=FALSE) {
       #ToDo: Handle Stereo
     } else {
       validateIsWave(rx)
-      px <- list(as.numeric(unlist(rx@left)), rx@samp.rate)
+      px <- list(reticulate::np_array(as.numeric(unlist(rx@left))), rx@samp.rate)
+      names(px) <- c("data", "samp.rate")
     }
   } else if (inherits(rx, "WaveMC")) {
     #ToDO: Handle WaveMC

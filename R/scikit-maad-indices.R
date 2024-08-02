@@ -201,18 +201,18 @@ maad_number_of_peaks <- function(object, ..., maad=NULL) {
 #' \item{EPS}{Entropy of spectral maxima (peaks).}
 #' \item{EPS_KURT}{Kurtosis of spectral maxima.}
 #' \item{EPS_SKEW}{Skewness of spectral maxima.}
+#' @export
 maad_spectral_entropy <- function(object, flim=NULL, maad=NULL) {
-  stop("Not exported - error in maad?")
   if (is.null(maad)) {
     maad <- getMaad()
   }
 
-  if (is.null(flim)) {
-    flim <- c(0, object@samp.rate/2)
-  }
-
   object <- .spectrogram_maad_power(object)
-  ret <- maad$features$spectral_entropy(Sxx=object@Sxx, fn=object@fn, flim="None")
+  ret <- maad$features$spectral_entropy(
+    Sxx  = reticulate::np_array(object@Sxx),
+    fn   = reticulate::np_array(object@fn),
+    flim = reticulate::np_array(flim)
+  )
   names(ret) <- c("EAS", "ECU", "ECV", "EPS", "EPS_KURT", "EPS_SKEW")
   return(ret)
 }
