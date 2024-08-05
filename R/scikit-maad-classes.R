@@ -1,5 +1,3 @@
-
-
 #' Helper function to convert a Wave-like object to scikit-maad spectrogram
 #' @param object A Wave or WaveMC object (or Tagged equivalent),
 #'   or a spectrogram_maad object

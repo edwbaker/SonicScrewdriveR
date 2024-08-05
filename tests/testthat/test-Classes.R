@@ -1,0 +1,10 @@
+test_that("creating spectrogram_maad class works", {
+  sm <- new("spectrogram_maad")
+  expect_s4_class(sm, "spectrogram_maad")
+  expect_true(is.matrix(sm@Sxx))
+  expect_true(is.numeric(sm@fn))
+  expect_true(is.numeric(sm@tn))
+  expect_type(sm@extents, "list")
+  expect_true(is.character(sm@mode))
+  expect_equal(sm@mode, "power")
+})
