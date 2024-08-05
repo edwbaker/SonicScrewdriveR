@@ -3,6 +3,11 @@ maad_power2dB <- function(object, maad=NULL) {
     maad <- getMaad()
   }
 
-  ret <- maad$util$power2dB(object)
+  if (length(object)== 1) {
+    ret <- maad$util$power2dB(object)
+    return(ret)
+  }
+
+  ret <- maad$util$power2dB(reticulate::np_array(object))
   return(ret)
 }
