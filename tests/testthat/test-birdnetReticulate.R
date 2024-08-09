@@ -1,6 +1,6 @@
 skip_if_no_virtualenv <- function() {
   if (!reticulate::virtualenv_exists(envname = "sonicscrewdriver")) {
-    skip("ssd_birdnet not available for testing")
+    skip("sonicscrewdriver Python virtualenv not available for testing")
   }
   reticulate::use_virtualenv("sonicscrewdriver")
   if (!reticulate::py_module_available("birdnetlib"))
