@@ -17,7 +17,7 @@ maad_temporal_entropy(
 
 \item{compatibility}{One of "QUT" \insertCite{qut}{sonicscrewdriver}, "seewave" \insertCite{seewave2008}{sonicscrewdriver}.}
 
-\item{mode}{Mode of the envelope calculation. Can be "fast" or "Hilbert".}
+\item{mode}{Mode of the envelope calculation. Can be "fast" or "hilbert".}
 
 \item{Nt}{Size of each frame. The largest, the highest is the approximation.}
 

@@ -13,11 +13,16 @@ maad_spectral_activity(object, dB_threshold = 6, maad = NULL)
 
 \item{maad}{An optional maad object. If not provided, one will be created using \code{getMaad()}.}
 }
-\description{
-Acoustic activity corresponds to the portion of the spectrogram above a
-threshold frequency per frequency along time axis \insertCite{towsey2017}{sonicscrewdriver}.
+\value{
 The function computes for each frequency bin:
 \item{ACTfract}{Proportion (fraction) of points above the threshold.}
 \item{ACTcount}{Total number of points above the threshold.}
 \item{ACTmean}{Mean value (in dB) of the portion of the signal above the threshold.}
+}
+\description{
+Acoustic activity corresponds to the portion of the spectrogram above a
+threshold frequency per frequency along time axis \insertCite{towsey2017}{sonicscrewdriver}.
+}
+\references{
+\insertAllCited{}
 }

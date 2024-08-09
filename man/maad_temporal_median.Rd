@@ -9,7 +9,7 @@ maad_temporal_median(wave, mode = "fast", Nt = 512, maad = NULL)
 \arguments{
 \item{wave}{A Wave object.}
 
-\item{mode}{Mode of the envelope calculation. Can be "fast" or "Hilbert".}
+\item{mode}{Mode of the envelope calculation. Can be "fast" or "hilbert".}
 
 \item{Nt}{Size of each frame. The largest, the highest is the approximation.}
 

@@ -4,7 +4,7 @@
 #' \url{https://scikit-maad.github.io/generated/maad.features.temporal_median.html}.
 #'
 #' @param wave A Wave object.
-#' @param mode Mode of the envelope calculation. Can be "fast" or "Hilbert".
+#' @param mode Mode of the envelope calculation. Can be "fast" or "hilbert".
 #' @param Nt Size of each frame. The largest, the highest is the approximation.
 #' @param maad An optional maad object. If not provided, one will be created using \code{getMaad()}.
 #' @return Numeric median of the envelope.
@@ -24,7 +24,7 @@ maad_temporal_median <- function(wave, mode="fast", Nt=512, maad=NULL) {
 #'
 #' @param wave A Wave object.
 #' @param compatibility One of "QUT" \insertCite{qut}{sonicscrewdriver}, "seewave" \insertCite{seewave2008}{sonicscrewdriver}.
-#' @param mode Mode of the envelope calculation. Can be "fast" or "Hilbert".
+#' @param mode Mode of the envelope calculation. Can be "fast" or "hilbert".
 #' @param Nt Size of each frame. The largest, the highest is the approximation.
 #' @param maad An optional maad object. If not provided, one will be created using \code{getMaad()}.
 #' @return Numeric entropy of the envelope.
@@ -221,13 +221,15 @@ maad_spectral_entropy <- function(object, flim=NULL, maad=NULL) {
 #'
 #' Acoustic activity corresponds to the portion of the spectrogram above a
 #' threshold frequency per frequency along time axis \insertCite{towsey2017}{sonicscrewdriver}.
-#' The function computes for each frequency bin:
-#' \item{ACTfract}{Proportion (fraction) of points above the threshold.}
-#' \item{ACTcount}{Total number of points above the threshold.}
-#' \item{ACTmean}{Mean value (in dB) of the portion of the signal above the threshold.}
 #' @param object A Wave object or a spectrogram_maad object.
 #' @param dB_threshold dB threshold of activity (default = 6).
 #' @param maad An optional maad object. If not provided, one will be created using \code{getMaad()}.
+#' @return The function computes for each frequency bin:
+#' \item{ACTfract}{Proportion (fraction) of points above the threshold.}
+#' \item{ACTcount}{Total number of points above the threshold.}
+#' \item{ACTmean}{Mean value (in dB) of the portion of the signal above the threshold.}
+#' @references
+#'  \insertAllCited{}
 #' @export
 maad_spectral_activity <- function(object, dB_threshold=6, maad=NULL) {
   if (is.null(maad)) {
