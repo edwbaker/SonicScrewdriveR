@@ -216,3 +216,25 @@ maad_spectral_entropy <- function(object, flim=NULL, maad=NULL) {
   names(ret) <- c("EAS", "ECU", "ECV", "EPS", "EPS_KURT", "EPS_SKEW")
   return(ret)
 }
+
+#' Compute the spectral activity using scikit-maad
+#'
+#' Acoustic activity corresponds to the portion of the spectrogram above a
+#' threshold frequency per frequency along time axis \insertCite{towsey2017}{sonicscrewdriver}.
+#' The function computes for each frequency bin:
+#' \item{ACTfract}{Proportion (fraction) of points above the threshold.}
+#' \item{ACTcount}{Total number of points above the threshold.}
+#' \item{ACTmean}{Mean value (in dB) of the portion of the signal above the threshold.}
+#' @param object A Wave object or a spectrogram_maad object.
+#' @param dB_threshold dB threshold of activity (default = 6).
+#' @param maad An optional maad object. If not provided, one will be created using \code{getMaad()}.
+#' @export
+maad_spectral_activity <- function(object, dB_threshold=6, maad=NULL) {
+  if (is.null(maad)) {
+    maad <- getMaad()
+  }
+  object <- .spectrogram_maad_dB(object)
+  ret <- maad$features$spectral_activity(object@Sxx, dB_threshold=as.numeric(dB_threshold))
+  names(ret) <- c("ACTfract", "ACTcount", "ACTmean")
+  return(ret)
+}
