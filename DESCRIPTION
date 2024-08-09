@@ -13,7 +13,6 @@ Description: Provides tools for manipulating sound files for bioacoustic
   that values are physically possible wherever feasible. 
 Depends: R (>= 3.4.0)
 Imports:
-  av,
   methods,
   ggplot2,
   hms,
@@ -29,6 +28,7 @@ Encoding: UTF-8
 LazyData: true
 Language: en-GB
 Suggests:
+  av,
   covr,
   devtools,
   googleCloudStorageR,
