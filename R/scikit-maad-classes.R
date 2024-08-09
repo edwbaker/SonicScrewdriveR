@@ -11,6 +11,13 @@
   }
 }
 
+.spectrogram_maad_dB <- function(object) {
+  spec <- .spectrogram_maad_power(object)
+  spec@Sxx <- 10 * log10(spec@Sxx)
+  spec@mode = "dB"
+  return(spec)
+}
+
 #' Helper function to convert a Wave-like object to scikit-maad spectrum
 #' @param object A Wave or WaveMC object (or Tagged equivalent),
 #'   or a spectrum
