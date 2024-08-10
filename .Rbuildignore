@@ -20,3 +20,4 @@ README.md
 ^CITATION\.cff$
 ^vignettes/articles$
 ^CRAN-SUBMISSION$
+^.*\.pem$

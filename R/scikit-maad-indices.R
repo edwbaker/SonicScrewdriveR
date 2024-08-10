@@ -125,8 +125,11 @@ maad_temporal_events <- function(wave, dB_threshold=3, rejectDuration=0.1, mode=
 #'   \insertAllCited{}
 #' @export
 maad_acoustic_complexity_index <- function(object, maad=NULL) {
+  if (is.null(maad)) {
+    maad <- getMaad()
+  }
   object <- .spectrogram_maad_power(object)
-  ret <- maad$features$acoustic_complexity_index(object@Sxx)
+  ret <- maad$features$acoustic_complexity_index(reticulate::np_array(object@Sxx))
   names(ret) <- c("ACI_xx", "ACI_per_bin", "ACI_sum")
   return(ret)
 }
