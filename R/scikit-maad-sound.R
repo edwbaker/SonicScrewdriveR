@@ -35,7 +35,11 @@ maad_spectrogram <- function(wave, mode="power", ..., maad=NULL) {
 
 maad_wave <- function(wave) {
  #ToDo: Process wave to be expected as maad.
+  if (inherits(wave, c("WaveMC", "TaggedWaveMC"))) {
+    return(reticulate::np_array(wave@`.Data`[,1]))
+  } else if (inherits(wave, c("Wave", "TaggedWave"))) {
     return(reticulate::np_array(wave@left))
+  }
 }
 
 #' Compute a spectrum of a sound wave using scikit-maad
