@@ -163,5 +163,41 @@ test_that("maad_acoustic_complexity_index works as expected", {
   expect_true(is.numeric(ret[[1]]))
   expect_true(is.numeric(ret[[2]]))
   expect_true(is.numeric(ret[[3]]))
+})
 
+test_that("maad_frequency_entropy works as expected", {
+  f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- readWave(f)
+
+  ret <- maad_frequency_entropy(w)
+  expect_equal(length(ret), 2)
+  expect_equal(names(ret), c("Hf", "Ht_per_bin"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+
+  maad <- getMaad()
+
+  ret <- maad_frequency_entropy(w, maad=maad)
+  expect_equal(length(ret), 2)
+  expect_equal(names(ret), c("Hf", "Ht_per_bin"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+
+  ret <- maad_frequency_entropy(w, compatibility="seewave", maad=maad)
+  expect_equal(length(ret), 2)
+  expect_equal(names(ret), c("Hf", "Ht_per_bin"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+
+  ret <- maad_frequency_entropy(tagWave(w), maad=maad)
+  expect_equal(length(ret), 2)
+  expect_equal(names(ret), c("Hf", "Ht_per_bin"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+
+  ret <- maad_frequency_entropy(tuneR::WaveMC(tuneR::stereo(w,w)), maad=maad)
+  expect_equal(length(ret), 2)
+  expect_equal(names(ret), c("Hf", "Ht_per_bin"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
 })
