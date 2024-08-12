@@ -17,7 +17,7 @@ upsample <- function(wave, upsample.rate, method="basic") {
   validateIsWave(wave)
   sf <- upsample.rate / wave@samp.rate
   if (sf != round(sf)) {
-    stop("Scale factor is not an integer")
+    stop("Scale factor is not an integer.")
   }
 
   newleft <- rep.int(NA, length(wave)*sf)
@@ -30,9 +30,8 @@ upsample <- function(wave, upsample.rate, method="basic") {
       }
     }
   }
-  wave@left <- newleft
 
-  if (length(wave@right > 0)) {
+  if (wave@stereo) {
     newright <- rep.int(NA, length(wave)*sf)
     for (i in 1:length(wave)) {
       newright[sf*(i-1)+1] <- wave@right[i]
@@ -43,10 +42,17 @@ upsample <- function(wave, upsample.rate, method="basic") {
         }
       }
     }
-    wave@right <- newright
   }
-  wave@samp.rate <- upsample.rate
-  return(wave)
+
+  if (wave@stereo) {
+    new_wave <- stereo(
+      Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm),
+      Wave(newright, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm))
+  } else {
+    new_wave <- Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm)
+  }
+
+  return(new_wave)
 }
 
 
