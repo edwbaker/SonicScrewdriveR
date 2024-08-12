@@ -201,3 +201,34 @@ test_that("maad_frequency_entropy works as expected", {
   expect_true(is.numeric(ret[[1]]))
   expect_true(is.numeric(ret[[2]]))
 })
+
+test_that("maad_number_of_peaks works as expected", {
+  f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- readWave(f)
+
+  ret <- maad_number_of_peaks(w)
+  expect_true(is.numeric(ret))
+
+  maad <- getMaad()
+
+  ret <- maad_number_of_peaks(w, maad=maad)
+  expect_true(is.numeric(ret))
+
+  ret <- maad_number_of_peaks(w, mode="linear", maad=maad)
+  expect_true(is.numeric(ret))
+
+  ret <- maad_number_of_peaks(w, min_peak_val=400, maad=maad)
+  expect_true(is.numeric(ret))
+
+  ret <- maad_number_of_peaks(w, min_freq_dist=400, maad=maad)
+  expect_true(is.numeric(ret))
+
+  ret <- maad_number_of_peaks(w, slopes=c(2,2), maad=maad)
+  expect_true(is.numeric(ret))
+
+  ret <- maad_number_of_peaks(w, prominence=1, maad=maad)
+  expect_true(is.numeric(ret))
+
+  ret <- maad_number_of_peaks(w, prominence=c(0, 100), maad=maad)
+  expect_true(is.numeric(ret))
+})
