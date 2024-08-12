@@ -33,7 +33,7 @@ higher slopes than threshold values will be kept.}
 
 \item{prominence}{The first element is the minimal prominence and the second
 element is the maximal prominence. If a single number is provided it is
-interpreted as the minimal value, and no maximial value will be used.}
+interpreted as the minimal value, and no maximal value will be used.}
 
 \item{maad}{An optional maad object. If not provided, one will be created
 using \code{getMaad()}.}

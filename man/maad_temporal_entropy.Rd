@@ -15,7 +15,8 @@ maad_temporal_entropy(
 \arguments{
 \item{wave}{A Wave object.}
 
-\item{compatibility}{One of "QUT" \insertCite{qut}{sonicscrewdriver}, "seewave" \insertCite{seewave2008}{sonicscrewdriver}.}
+\item{compatibility}{One of "QUT" \insertCite{qut}{sonicscrewdriver},
+"seewave" \insertCite{seewave2008}{sonicscrewdriver}.}
 
 \item{mode}{Mode of the envelope calculation. Can be "fast" or "hilbert".}
 

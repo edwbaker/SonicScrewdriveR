@@ -218,7 +218,7 @@ maad_frequency_entropy <- function(object, compatibility="QUT", maad=NULL) {
 #'   higher slopes than threshold values will be kept.
 #' @param prominence The first element is the minimal prominence and the second
 #'   element is the maximal prominence. If a single number is provided it is
-#'   interpreted as the minimal value, and no maximial value will be used.
+#'   interpreted as the minimal value, and no maximal value will be used.
 #' @param maad An optional maad object. If not provided, one will be created
 #'   using \code{getMaad()}.
 #'
@@ -268,17 +268,18 @@ maad_number_of_peaks <- function(
 #' \item{EPS}{Entropy of spectral maxima (peaks).}
 #' \item{EPS_KURT}{Kurtosis of spectral maxima.}
 #' \item{EPS_SKEW}{Skewness of spectral maxima.}
-#' @export
 maad_spectral_entropy <- function(object, flim=NULL, maad=NULL) {
+  #ToDo: Why doesn't this work? Does it work in Python?
+  #ToDo: Needs tests.
   if (is.null(maad)) {
     maad <- getMaad()
   }
 
   object <- .spectrogram_maad_power(object)
   ret <- maad$features$spectral_entropy(
-    Sxx  = reticulate::np_array(object@Sxx),
-    fn   = reticulate::np_array(object@fn),
-    flim = reticulate::np_array(flim)
+    object@Sxx,
+    object@fn,
+    flim=flim
   )
   names(ret) <- c("EAS", "ECU", "ECV", "EPS", "EPS_KURT", "EPS_SKEW")
   return(ret)

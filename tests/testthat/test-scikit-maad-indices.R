@@ -232,3 +232,31 @@ test_that("maad_number_of_peaks works as expected", {
   ret <- maad_number_of_peaks(w, prominence=c(0, 100), maad=maad)
   expect_true(is.numeric(ret))
 })
+
+test_that("maad_spectral_activity works as expected", {
+  f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- readWave(f)
+
+  ret <- maad_spectral_activity(w)
+  expect_equal(length(ret), 3)
+  expect_equal(names(ret), c("ACTfract", "ACTcount", "ACTmean"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+  expect_true(is.numeric(ret[[3]]))
+
+  maad <- getMaad()
+
+  ret <- maad_spectral_activity(w, maad=maad)
+  expect_equal(length(ret), 3)
+  expect_equal(names(ret), c("ACTfract", "ACTcount", "ACTmean"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+  expect_true(is.numeric(ret[[3]]))
+
+  ret <- maad_spectral_activity(w, dB_threshold =4, maad=maad)
+  expect_equal(length(ret), 3)
+  expect_equal(names(ret), c("ACTfract", "ACTcount", "ACTmean"))
+  expect_true(is.numeric(ret[[1]]))
+  expect_true(is.numeric(ret[[2]]))
+  expect_true(is.numeric(ret[[3]]))
+})

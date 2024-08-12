@@ -36,8 +36,8 @@ The [audioBlast API](https://api.audioblast.org) can be accessed using the `audi
 [BirdNET Analyzer](https://birdnet.cornell.edu) is a deep learning model for the automatic detection of bird sounds. The `birdNetInstall()` function can be used to install the `ssd_birdnet` environment required to use the `birdNetAnalyse()` function with `SonicScrewdriver`. The `birdNetAnalyse()` function takes a list of sound files and analyses them using the `BirdNET-Analyzer`. The function either returns a data frame with the results of the analysis or a list of `Annotation` objects.
 
 ```{r, eval=FALSE}
-# Install the BirdNET environment
-birdNetInstall()
+# Install the Python environment
+pythonInstall()
 ```
 
 ```{r, eval=FALSE}
@@ -45,6 +45,24 @@ birdNetInstall()
 f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
 birdNetAnalyse(f, lat=51.5, lon=0.1, date=as.Date("2021-01-01"))
 ```
+
+
+### scikit-maad
+
+[scikit-maad](https://scikit-maad.github.io/index.html) is an open source Python package dedicated to the quantitative analysis of environmental audio recordings. `sonicscrewdriver` makes use of the `reticulate` package to create a Python environment and to interact with scikit-maad. In `sonicscrewdriver` scikit-maad functions are prefixed with `maad_`.
+
+```{r, eval=FALSE}
+# Install the Python environment
+pythonInstall()
+```
+
+```{r, eval=FALSE}
+f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+w <- readWave(f)
+
+maad_aci <- maad_acoustic_complexity_index(w)
+```
+
 
 ## Exemplar applications
 
