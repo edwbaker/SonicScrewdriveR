@@ -23,7 +23,8 @@ maad_temporal_median <- function(wave, mode="fast", Nt=512, maad=NULL) {
 #' \url{https://scikit-maad.github.io/generated/maad.features.temporal_entropy.html}.
 #'
 #' @param wave A Wave object.
-#' @param compatibility One of "QUT" \insertCite{qut}{sonicscrewdriver}, "seewave" \insertCite{seewave2008}{sonicscrewdriver}.
+#' @param compatibility One of "QUT" \insertCite{qut}{sonicscrewdriver},
+#'   "seewave" \insertCite{seewave2008}{sonicscrewdriver}.
 #' @param mode Mode of the envelope calculation. Can be "fast" or "hilbert".
 #' @param Nt Size of each frame. The largest, the highest is the approximation.
 #' @param maad An optional maad object. If not provided, one will be created using \code{getMaad()}.
@@ -31,11 +32,21 @@ maad_temporal_median <- function(wave, mode="fast", Nt=512, maad=NULL) {
 #' @references
 #'  \insertAllCited{}
 #' @export
-maad_temporal_entropy <- function(wave, compatibility="QUT", mode="fast", Nt=512, maad=NULL) {
+maad_temporal_entropy <- function(
+    wave,
+    compatibility="QUT",
+    mode="fast",
+    Nt=512,
+    maad=NULL) {
   if (is.null(maad)) {
     maad <- getMaad()
   }
-  ret <- maad$features$temporal_entropy(maad_wave(wave), compatibility=compatibility, mode=mode, Nt=as.integer(Nt))
+  ret <- maad$features$temporal_entropy(
+    maad_wave(wave),
+    compatibility=compatibility,
+    mode=mode,
+    Nt=as.integer(Nt)
+  )
   return(ret)
 }
 
@@ -57,11 +68,21 @@ maad_temporal_entropy <- function(wave, compatibility="QUT", mode="fast", Nt=512
 #' @references
 #'  \insertAllCited{}
 #' @export
-maad_temporal_activity <- function(wave, dB_threshold=3, mode="fast", Nt=512, maad=NULL) {
+maad_temporal_activity <- function(
+    wave,
+    dB_threshold=3,
+    mode="fast",
+    Nt=512,
+    maad=NULL) {
   if (is.null(maad)) {
     maad <- getMaad()
   }
-  ret <- maad$features$temporal_activity(maad_wave(wave), dB_threshold=as.numeric(dB_threshold), mode=mode, Nt=as.integer(Nt))
+  ret <- maad$features$temporal_activity(
+    maad_wave(wave),
+    dB_threshold=as.numeric(dB_threshold),
+    mode=mode,
+    Nt=as.integer(Nt)
+  )
   names(ret) <- c("ACTfrac", "ACTcount", "ACTmean")
   return(ret)
 }
@@ -91,11 +112,24 @@ maad_temporal_activity <- function(wave, dB_threshold=3, mode="fast", Nt=512, ma
 #' @references
 #' \insertAllCited{}
 #' @export
-maad_temporal_events <- function(wave, dB_threshold=3, rejectDuration=0.1, mode="fast", Nt=512, maad=NULL) {
+maad_temporal_events <- function(
+    wave,
+    dB_threshold=3,
+    rejectDuration=0.1,
+    mode="fast",
+    Nt=512,
+    maad=NULL) {
   if (is.null(maad)) {
     maad <- getMaad()
   }
-  ret <- maad$features$temporal_events(maad_wave(wave), fs=wave@samp.rate, dB_threshold=as.numeric(dB_threshold), rejectDuration=as.numeric(rejectDuration), mode=mode, Nt=as.integer(Nt))
+  ret <- maad$features$temporal_events(
+    maad_wave(wave),
+    fs=wave@samp.rate,
+    dB_threshold=as.numeric(dB_threshold),
+    rejectDuration=as.numeric(rejectDuration),
+    mode=mode,
+    Nt=as.integer(Nt)
+  )
   names(ret) <- c("EVTfrac", "EVTcount", "EVTmean", "EVN")
   return(ret)
 }
