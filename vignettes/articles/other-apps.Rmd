@@ -51,6 +51,8 @@ birdNetAnalyse(f, lat=51.5, lon=0.1, date=as.Date("2021-01-01"))
 
 [scikit-maad](https://scikit-maad.github.io/index.html) is an open source Python package dedicated to the quantitative analysis of environmental audio recordings. `sonicscrewdriver` makes use of the `reticulate` package to create a Python environment and to interact with scikit-maad. In `sonicscrewdriver` scikit-maad functions are prefixed with `maad_`.
 
+The functions provided accept standard Wave-like objects (i.e. `tuneR` `Wave` or `WaveMC` objects, as well as their tagged equivalents from this package).
+
 ```{r, eval=FALSE}
 # Install the Python environment
 pythonInstall()
