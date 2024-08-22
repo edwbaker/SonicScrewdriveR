@@ -75,3 +75,30 @@ annotation <- function(
   )
   return(annotation)
 }
+
+#' Save a time region defined by an Annotation object as a Wave file
+#'
+#' @param annotation An Annotation object.
+#' @param wave (Optional) A Wave object, if not given will load the wave file from Annotation filename.
+#' @importFrom tuneR writeWave
+#' @importFrom tools  file_path_sans_ext
+#' @export
+writeAnnotationWave <- function(annotation, wave=NULL) {
+  if (is.list(annotation)) {
+    lapply(annotation, writeAnnotationWave, wave=wave)
+    return()
+  }
+  if (is.null(wave)) {
+    wave <- readWave(annotation@file)
+  }
+
+  output <- paste0(file_path_sans_ext(basename(annotation@file)), "_", annotation@start, "-", annotation@end, ".wav")
+
+  end <- annotation@end
+  if (duration(wave) < annotation@end) {
+    message("Annotation end time is greater than the duration of the wave file.")
+    end <- duration(wave)
+  }
+  region <- cutw(wave, from=annotation@start, to=end, unit="seconds", output="Wave")
+  writeWave(region, filename=output)
+}
