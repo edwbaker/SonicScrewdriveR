@@ -102,3 +102,32 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
   region <- cutw(wave, from=annotation@start, to=end, unit="seconds", output="Wave")
   writeWave(region, filename=output)
 }
+
+#' Check if two annotations overlap or are continuous
+#' @param annotation1 An Annotation object.
+#' @param annotation2 An Annotation object.
+#' @param domain Domain of the annotations, either "time", "frequency", or "both".
+#' @return TRUE if the annotations overlap, FALSE otherwise.
+.annotation_check_overlap <- function(annotation1, annotation2, domain="time") {
+  if (domain == "time") {
+    if (annotation1@start <= annotation2@end && annotation1@end >= annotation2@start) {
+      return(TRUE)
+    }
+    return(FALSE)
+  }
+  if (domain == "frequency") {
+    if (annotation1@low <= annotation2@high && annotation1@high >= annotation2@low) {
+      return(TRUE)
+    }
+    return(FALSE)
+  }
+  if (domain == "both") {
+    if (
+      annotation1@start <= annotation2@end && annotation1@end >= annotation2@start &&
+      annotation1@low <= annotation2@high && annotation1@high >= annotation2@low
+    ) {
+      return(TRUE)
+    }
+    return(FALSE)
+  }
+}

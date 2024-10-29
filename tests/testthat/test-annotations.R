@@ -1,0 +1,47 @@
+test_that("annotation overlaps detected time domain", {
+  a1 <- annotation(start=0, end=15)
+  a2 <- annotation(start=20, end=30)
+  a3 <- annotation(start=5, end=10)
+  a4 <- annotation(start=10, end=30)
+  a5 <- annotation(start=15, end=30)
+
+  expect_false(.annotation_check_overlap(a1, a2))
+  expect_false(.annotation_check_overlap(a2, a1))
+  expect_true(.annotation_check_overlap(a1, a3))
+  expect_true(.annotation_check_overlap(a3, a1))
+  expect_true(.annotation_check_overlap(a1, a4))
+  expect_true(.annotation_check_overlap(a4, a1))
+  expect_true(.annotation_check_overlap(a1, a5))
+  expect_true(.annotation_check_overlap(a5, a1))
+})
+
+test_that("annotation overlaps detected frequency domain", {
+  a1 <- annotation(low=0, high=1000)
+  a2 <- annotation(low=2000, high=3000)
+  a3 <- annotation(low=500, high=1500)
+  a4 <- annotation(low=200, high=800)
+  a5 <- annotation(low=1000, high=2000)
+
+  expect_false(.annotation_check_overlap(a1, a2, domain="frequency"))
+  expect_false(.annotation_check_overlap(a2, a1, domain="frequency"))
+  expect_true(.annotation_check_overlap(a1, a3, domain="frequency"))
+  expect_true(.annotation_check_overlap(a3, a1, domain="frequency"))
+  expect_true(.annotation_check_overlap(a1, a4, domain="frequency"))
+  expect_true(.annotation_check_overlap(a4, a1, domain="frequency"))
+  expect_true(.annotation_check_overlap(a1, a5, domain="frequency"))
+  expect_true(.annotation_check_overlap(a5, a1, domain="frequency"))
+})
+
+test_that("annotation overlaps detected time and frequency domain", {
+  a1 <- annotation(start=0, end=10, low=0, high=1000)
+  a2 <- annotation(start=20, end=30, low=2000, high=3000)
+  a3 <- annotation(start=5, end=15, low=500, high=1500)
+  a4 <- annotation(start=0, end=10, low=1000, high=2000)
+
+  expect_false(.annotation_check_overlap(a1, a2, domain="both"))
+  expect_false(.annotation_check_overlap(a2, a1, domain="both"))
+  expect_true(.annotation_check_overlap(a1, a3, domain="both"))
+  expect_true(.annotation_check_overlap(a3, a1, domain="both"))
+  expect_true(.annotation_check_overlap(a1, a4, domain="both"))
+  expect_true(.annotation_check_overlap(a4, a1, domain="both"))
+})
