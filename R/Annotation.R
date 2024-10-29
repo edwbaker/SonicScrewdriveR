@@ -131,3 +131,73 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
     return(FALSE)
   }
 }
+
+#' Check if two annotations can be merged
+#' @param annotation1 An Annotation object.
+#' @param annotation2 An Annotation object.
+#' @param same.source If TRUE, annotations must have the same source to be merged.
+#' @return TRUE if the annotations can be merged, FALSE otherwise.
+.annotation_can_merge <- function(annotation1, annotation2, same.source=TRUE) {
+  if (is.na(annotation1@source) & is.na(annotation2@source)) {
+    if (is.na(annotation1@type) & is.na(annotation2@type)) {
+      if (is.na(annotation1@value) & is.na(annotation2@value)) {
+        return(TRUE)
+      } else {
+        if (annotation1@value != annotation2@value) {
+          return(FALSE)
+        }
+      }
+    } else {
+      if (annotation1@type != annotation2@type) {
+        return(FALSE)
+      }
+    }
+  } else {
+    if (same.source & annotation1@source != annotation2@source) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+#' Combine overlapping annotations
+#' @param annotation1 An Annotation object.
+#' @param annotation2 An Annotation object.
+#' @param domain Domain of the annotations, either "time", "frequency", or "both".
+#' @param same.source If TRUE, annotations must have the same source to be merged.
+#' @return A new Annotation object.
+#' @export
+annotation_merge_overlapping <- function(annotation1, annotation2, domain="time", same.source=TRUE) {
+  if (!.annotation_can_merge(annotation1, annotation2, same.source=same.source)) {
+    return(FALSE)
+  }
+  if (!.annotation_check_overlap(annotation1, annotation2, domain=domain)) {
+    return(FALSE)
+  }
+  start <- NULL
+  end <- NULL
+  low <- 0
+  high <- Inf
+
+  if (domain == "time" | domain =="both") {
+    start = min(annotation1@start, annotation2@start)
+    end = max(annotation1@end, annotation2@end)
+  }
+  if (domain == "frequency" | domain =="both") {
+    low = min(annotation1@low, annotation2@low)
+    high = max(annotation1@high, annotation2@high)
+  }
+
+  new_annotation <- annotation(
+    file=annotation1@file,
+    metadata=c(annotation1@metadata, annotation2@metadata),
+    start=start,
+    end=end,
+    low=low,
+    high=high,
+    source=annotation1@source,
+    type=annotation1@type,
+    value=annotation1@value
+  )
+  return(new_annotation)
+}

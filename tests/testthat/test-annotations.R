@@ -45,3 +45,22 @@ test_that("annotation overlaps detected time and frequency domain", {
   expect_true(.annotation_check_overlap(a1, a4, domain="both"))
   expect_true(.annotation_check_overlap(a4, a1, domain="both"))
 })
+
+test_that("merging overlapping annotations works", {
+  a1 <- annotation(start=0, end=10)
+  a2 <- annotation(start=5, end=15)
+  a3 <- annotation(start=0, end=15)
+
+  expect_true(all.equal(annotation_merge_overlapping(a1, a2), a3))
+
+  a4 <- annotation(start=0, end=10, low=0, high=1000)
+  a5 <- annotation(start=5, end=20, low=500, high=1500)
+  a6 <- annotation(start=0, end=20, low=0, high=1500)
+
+  expect_true(all.equal(annotation_merge_overlapping(a4, a5, domain="both"), a6))
+
+  a7 <- annotation(start=0, end=10, low=0, high=1000)
+  a8 <- annotation(start=50, end=200, low=5000, high=15000)
+
+  expect_false(annotation_merge_overlapping(a7, a8, domain="both"))
+})
