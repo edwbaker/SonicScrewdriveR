@@ -25,7 +25,6 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/addSpectra.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/allChannels.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotation.html</loc></url>
-<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotations_merge.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audio_filesize.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblast.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.html</loc></url>
@@ -64,7 +63,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dolbear.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_can_merge.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_check_overlap.html</loc></url>
-<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_merge_overlapping.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-merge_annotations.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-spectrogram_maad_power.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-spectrum_maad.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dutyCycle.html</loc></url>
@@ -97,6 +96,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/maad_temporal_events.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/maad_temporal_median.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/map2RGB.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/merge_annotations.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/naturalFrequency.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/normalise.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/ntd.html</loc></url>
