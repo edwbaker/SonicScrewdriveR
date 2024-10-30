@@ -25,7 +25,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/addSpectra.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/allChannels.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotation.html</loc></url>
-<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotation_merge_overlapping.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotations_merge.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audio_filesize.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblast.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.html</loc></url>
@@ -64,6 +64,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dolbear.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_can_merge.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_check_overlap.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_merge_overlapping.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-spectrogram_maad_power.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-spectrum_maad.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dutyCycle.html</loc></url>
@@ -125,6 +126,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/sheepFrequencyStats.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/shimmer.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/slash-PseudoWave-numeric-method.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/sort_annotations.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/soundSpeed.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/specStats.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/spectrogram_maad-class.html</loc></url>
