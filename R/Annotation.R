@@ -160,74 +160,95 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
   return(TRUE)
 }
 
-#' Combine overlapping annotations
-#' @param annotation1 An Annotation object.
-#' @param annotation2 An Annotation object.
-#' @param domain Domain of the annotations, either "time", "frequency", or "both".
-#' @param same.source If TRUE, annotations must have the same source to be merged.
-#' @return A new Annotation object.
-.annotation_merge_overlapping <- function(annotation1, annotation2, domain="time", same.source=TRUE) {
-  if (!.annotation_can_merge(annotation1, annotation2, same.source=same.source)) {
-    return(FALSE)
-  }
-  if (!.annotation_check_overlap(annotation1, annotation2, domain=domain)) {
-    return(FALSE)
-  }
-  start <- 0
-  end <- Inf
-  low <- 0
-  high <- Inf
-
-  if (domain == "time" | domain =="both") {
-    start = min(annotation1@start, annotation2@start)
-    end = max(annotation1@end, annotation2@end)
-  }
-  if (domain == "frequency" | domain =="both") {
-    low = min(annotation1@low, annotation2@low)
-    high = max(annotation1@high, annotation2@high)
-  }
-
-  new_annotation <- annotation(
-    file=annotation1@file,
-    metadata=c(annotation1@metadata, annotation2@metadata),
-    start=start,
-    end=end,
-    low=low,
-    high=high,
-    source=annotation1@source,
-    type=annotation1@type,
-    value=annotation1@value
-  )
-  return(new_annotation)
-}
-
 #' Combine annotations
 #'
-#' Checks a list of annotations for those that are overlapping, and returns a list
-#' where overlapping annotations are merged.
+#' Checks a list of annotations for those that are overlapping in the time or
+#' frequency domain, and returns a list where overlapping annotations are merged.
+#' Annotation objects must have the same `file`, `type` and `value` to be merged.
 #' @param annotations A list of Annotation objects.
-#' @param domain Domain of the annotations, either "time", "frequency", or "both".
+#' @param domain Domain of the annotations, either "time" or "frequency".
 #' @param same.source If TRUE, annotations must have the same source to be merged.
 #' @return A list of Annotation objects.
 #' @export
-annotations_merge <- function(annotations, domain="time", same.source=TRUE) {
-  if (length(annotations) < 2) {
-    return(annotations)
-  }
-  annotations <- sort_annotations(annotations, domain=domain)
-  merged <- list(annotations[[1]])
-  for (i in 1:length(annotations)) {
-    for (j in 1:length(merged)) {
-      merged_annotation <- .annotation_merge_overlapping(merged[[j]], annotations[[i]], domain=domain, same.source=same.source)
-      if (is.logical(merged_annotation)) {
-        merged <- c(merged, annotations[i])
-      } else {
-        merged[[j]] <- merged_annotation
-        break
+merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
+  uniq_files <- unique(sapply(annotations, function(x) x@file))
+  uniq_types <- unique(sapply(annotations, function(x) x@type))
+  uniq_values <- unique(sapply(annotations, function(x) x@value))
+
+  ret <- list()
+  for (i in 1:length(uniq_files)) {
+    file <- uniq_files[i]
+    for (j in 1:length(uniq_types)) {
+      type <- uniq_types[j]
+      for (k in 1:length(uniq_values)) {
+        value <- uniq_values[k]
+         if (same.source) {
+          uniq_source <- unique(sapply(annotations, function(x) x@source))
+          for (l in 1:length(uniq_source)) {
+            source <- uniq_source[l]
+            filtered <- sapply(annotations, function(x) {
+              x@file == file & x@type == type & x@value == value & x@source == source
+            })
+            filtered[is.na(filtered)] <- TRUE
+            ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain, same.source=TRUE))
+          }
+         } else {
+           filtered <- sapply(annotations, function(x) {
+             x@file == file & x@type == type & x@value == value
+           })
+           filtered[is.na(filtered)] <- TRUE
+           ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain, same.source=FALSE))
+         }
+
       }
     }
   }
-  return(merged)
+  return(ret)
+}
+
+#' Combine annotations helper function
+#'
+#' Checks a list of annotations for those that are overlapping in the time or
+#' frequency domain, and returns a list where overlapping annotations are merged.
+#'
+#' The exported function `merge_annotations()` handles sanity checks and calls this function.
+#' @param annotations A list of Annotation objects.
+#' @param domain Domain of the annotations, either "time" or "frequency".
+#' @param same.source If TRUE, annotations must have the same source to be merged.
+#' @return A list of Annotation objects.
+.merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
+  if (domain == "time") {
+    annotations <- sort_annotations(annotations)
+    if (length(annotations) == 1) {
+      return(annotations)
+    }
+    remove = vector(mode="logical", length=length(annotations))
+    for (i in 1:(length(annotations)-1)) {
+      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)
+        & .annotation_can_merge(annotations[[i]], annotations[[i+1]], same.source=same.source)) {
+        annotations[[i+1]]@start <- annotations[[i]]@start
+        remove[i] <- TRUE
+      }
+    }
+    annotations <- annotations[!remove]
+    return(annotations)
+  }
+  if (domain == "frequency") {
+    annotations <- sort_annotations(annotations, domain="frequency")
+    if (length(annotations) == 1) {
+      return(annotations)
+    }
+    remove = vector(mode="logical", length=length(annotations))
+    for (i in 1:(length(annotations)-1)) {
+      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)
+        & .annotation_can_merge(annotations[[i]], annotations[[i+1]], same.source=same.source)) {
+        annotations[[i+1]]@low <- annotations[[i]]@low
+        remove[i] <- TRUE
+      }
+    }
+    annotations <- annotations[!remove]
+    return(annotations)
+  }
 }
 
 #' Sort annotations

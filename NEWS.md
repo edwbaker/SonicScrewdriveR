@@ -5,6 +5,7 @@
 - Initial support for scikit-maad Python package
 - dolbear() can now perform Dolbear's law calculations for more species
 - audio_filesize() can output in human-friendly units using humanBytes()
+- functions for sorting and merging Annotation objects
 
 # sonicscrewdriver 0.0.7
 

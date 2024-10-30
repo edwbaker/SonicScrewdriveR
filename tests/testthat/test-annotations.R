@@ -44,31 +44,10 @@ test_that("annotation overlaps detected time and frequency domain", {
   expect_true(.annotation_check_overlap(a3, a1, domain="both"))
   expect_true(.annotation_check_overlap(a1, a4, domain="both"))
   expect_true(.annotation_check_overlap(a4, a1, domain="both"))
-})
 
-test_that("merging overlapping annotations works", {
-  a1 <- annotation(start=0, end=10)
-  a2 <- annotation(start=5, end=15)
-  a3 <- annotation(start=0, end=15)
-
-  expect_true(all.equal(.annotation_merge_overlapping(a1, a2), a3))
-
-  a1 <- annotation(low=0, high=1000)
-  a2 <- annotation(low=500, high=1500)
-  a3 <- annotation(low=0, high=1500)
-
-  expect_true(all.equal(.annotation_merge_overlapping(a1, a2, domain="frequency"), a3))
-
-  a4 <- annotation(start=0, end=10, low=0, high=1000)
-  a5 <- annotation(start=5, end=20, low=500, high=1500)
-  a6 <- annotation(start=0, end=20, low=0, high=1500)
-
-  expect_true(all.equal(.annotation_merge_overlapping(a4, a5, domain="both"), a6))
-
-  a7 <- annotation(start=0, end=10, low=0, high=1000)
-  a8 <- annotation(start=50, end=200, low=5000, high=15000)
-
-  expect_false(.annotation_merge_overlapping(a7, a8, domain="both"))
+  a1 <- annotation(start=0, end=20, low=5, high=30)
+  a2 <- annotation(start=15, end=25, low=0, high=10)
+  expect_true(.annotation_check_overlap(a1, a2, domain="both"))
 })
 
 test_that("sort_annotations works", {
@@ -104,7 +83,7 @@ test_that("sort_annotations works", {
   expect_true(all.equal(sort_annotations(a, domain="both"), test))
 })
 
-test_that("annotations_merge works as expected",{
+test_that("merge_annotations works as expected",{
   a1 <- list(
     annotation(start=0, end=20),
     annotation(start=30, end=40),
@@ -115,7 +94,7 @@ test_that("annotations_merge works as expected",{
     annotation(start=0, end=40)
   )
 
-  expect_true(all.equal(annotations_merge(a1), test))
+  expect_true(all.equal(merge_annotations(a1), test))
 
   a2 <- list(
     annotation(start=0, end=20),
@@ -128,7 +107,7 @@ test_that("annotations_merge works as expected",{
     annotation(start=0, end=40)
   )
 
-  expect_true(all.equal(annotations_merge(a2), test))
+  expect_true(all.equal(merge_annotations(a2), test))
 
   a3 <- list(
     annotation(low=0, high=10),
@@ -140,31 +119,139 @@ test_that("annotations_merge works as expected",{
     annotation(low=0, high=40)
   )
 
-  expect_true(all.equal(annotations_merge(a3, domain="frequency"), test))
+  expect_true(all.equal(merge_annotations(a3, domain="frequency"), test))
 
   a4 <- list(
-    annotation(start=0, end=15, low=10, high=20),
-    annotation(start=10, end=20, low=5, high=30),
-    annotation(start=15, end=25, low=0, high=10)
+    annotation(start=0, end=20, source="a"),
+    annotation(start=30, end=40, source="a"),
+    annotation(start=10, end=30,  source="a")
   )
 
   test <- list(
-    annotation(start=0, end=25, low=0, high=30)
+    annotation(start=0, end=40, source="a")
   )
 
-  expect_true(all.equal(annotations_merge(a4, domain="both"), test))
+  expect_true(all.equal(merge_annotations(a4), test))
 
   a5 <- list(
-    annotation(start=0, end=15, low=10, high=20),
-    annotation(start=10, end=20, low=5, high=30),
-    annotation(start=10, end=20, low=70, high=80),
-    annotation(start=15, end=25, low=0, high=10)
+    annotation(start=0, end=20, source="a"),
+    annotation(start=30, end=40, source="a"),
+    annotation(start=10, end=30,  source="a"),
+    annotation(start=0, end=20, source="b"),
+    annotation(start=30, end=40, source="b"),
+    annotation(start=10, end=30,  source="b")
   )
 
   test <- list(
-    annotation(start=0, end=25, low=0, high=30),
-    annotation(start=10, end=20, low=70, high=80)
+    annotation(start=0, end=40, source="a"),
+    annotation(start=0, end=40, source="b")
   )
 
-  expect_true(all.equal(annotations_merge(a5, domain="both"), test))
+  expect_true(all.equal(merge_annotations(a5), test))
+
+  expect_true(all.equal(merge_annotations(a5, same.source=F), list(test[[2]])))
+
+  a5 <- list(
+    annotation(start=0, end=20, file="a"),
+    annotation(start=30, end=40, file="a"),
+    annotation(start=10, end=30,  file="a"),
+    annotation(start=0, end=20, file="b"),
+    annotation(start=30, end=40, file="b"),
+    annotation(start=10, end=30,  file="b")
+  )
+
+  test <- list(
+    annotation(start=0, end=40, file="a"),
+    annotation(start=0, end=40, file="b")
+  )
+
+  expect_true(all.equal(merge_annotations(a5), test))
+
+  a6 <- list(
+    annotation(start=0, end=20, file="a", type="monkey"),
+    annotation(start=30, end=40, file="a", type="monkey"),
+    annotation(start=10, end=30,  file="a", type="monkey"),
+    annotation(start=0, end=20, file="b", type="monkey"),
+    annotation(start=30, end=40, file="b", type="monkey"),
+    annotation(start=10, end=30,  file="b", type="monkey"),
+    annotation(start=0, end=20, file="a", type="dog"),
+    annotation(start=30, end=40, file="a", type="dog"),
+    annotation(start=10, end=30,  file="a", type="dog"),
+    annotation(start=0, end=20, file="b", type="dog"),
+    annotation(start=30, end=40, file="b", type="dog"),
+    annotation(start=10, end=30,  file="b", type="dog")
+  )
+
+  test <- list(
+    annotation(start=0, end=40, file="a", type="monkey"),
+    annotation(start=0, end=40, file="a", type="dog"),
+    annotation(start=0, end=40, file="b", type="monkey"),
+    annotation(start=0, end=40, file="b", type="dog")
+  )
+
+  expect_true(all.equal(merge_annotations(a6), test))
+
+  a6 <- list(
+    annotation(start=0, end=20, type="a", value="monkey"),
+    annotation(start=30, end=40, type="a", value="monkey"),
+    annotation(start=10, end=30,  type="a", value="monkey"),
+    annotation(start=0, end=20, type="b", value="monkey"),
+    annotation(start=30, end=40, type="b", value="monkey"),
+    annotation(start=10, end=30,  type="b", value="monkey"),
+    annotation(start=0, end=20, type="a", value="dog"),
+    annotation(start=30, end=40, type="a", value="dog"),
+    annotation(start=10, end=30,  type="a", value="dog"),
+    annotation(start=0, end=20, type="b", value="dog"),
+    annotation(start=30, end=40, type="b", value="dog"),
+    annotation(start=10, end=30,  type="b", value="dog")
+  )
+
+  test <- list(
+    annotation(start=0, end=40, type="a", value="monkey"),
+    annotation(start=0, end=40, type="a", value="dog"),
+    annotation(start=0, end=40, type="b", value="monkey"),
+    annotation(start=0, end=40, type="b", value="dog")
+  )
+
+  expect_true(all.equal(merge_annotations(a6), test))
+
+  a7 <- list(
+    annotation(start=0, end=20, file="a", type="monkey", value=TRUE),
+    annotation(start=30, end=40, file="a", type="monkey", value=TRUE),
+    annotation(start=10, end=30,  file="a", type="monkey", value=TRUE),
+    annotation(start=0, end=20, file="b", type="monkey", value=TRUE),
+    annotation(start=30, end=40, file="b", type="monkey", value=TRUE),
+    annotation(start=10, end=30,  file="b", type="monkey", value=TRUE),
+    annotation(start=0, end=20, file="a", type="dog", value=TRUE),
+    annotation(start=30, end=40, file="a", type="dog", value=TRUE),
+    annotation(start=10, end=30,  file="a", type="dog", value=TRUE),
+    annotation(start=0, end=20, file="b", type="dog", value=TRUE),
+    annotation(start=30, end=40, file="b", type="dog", value=TRUE),
+    annotation(start=10, end=30,  file="b", type="dog", value=TRUE),
+    annotation(start=0, end=20, file="a", type="monkey", value=FALSE),
+    annotation(start=30, end=40, file="a", type="monkey", value=FALSE),
+    annotation(start=10, end=30,  file="a", type="monkey", value=FALSE),
+    annotation(start=0, end=20, file="b", type="monkey", value=FALSE),
+    annotation(start=30, end=40, file="b", type="monkey", value=FALSE),
+    annotation(start=10, end=30,  file="b", type="monkey", value=FALSE),
+    annotation(start=0, end=20, file="a", type="dog", value=FALSE),
+    annotation(start=30, end=40, file="a", type="dog", value=FALSE),
+    annotation(start=10, end=30,  file="a", type="dog", value=FALSE),
+    annotation(start=0, end=20, file="b", type="dog", value=FALSE),
+    annotation(start=30, end=40, file="b", type="dog", value=FALSE),
+    annotation(start=10, end=30,  file="b", type="dog", value=FALSE)
+  )
+
+  test <- list(
+    annotation(start=0, end=40, file="a", type="monkey", value=TRUE),
+    annotation(start=0, end=40, file="a", type="monkey", value=FALSE),
+    annotation(start=0, end=40, file="a", type="dog", value=TRUE),
+    annotation(start=0, end=40, file="a", type="dog", value=FALSE),
+    annotation(start=0, end=40, file="b", type="monkey", value=TRUE),
+    annotation(start=0, end=40, file="b", type="monkey", value=FALSE),
+    annotation(start=0, end=40, file="b", type="dog", value=TRUE),
+    annotation(start=0, end=40, file="b", type="dog", value=FALSE)
+  )
+
+  expect_true(all.equal(merge_annotations(a7), test))
 })
