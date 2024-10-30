@@ -166,16 +166,15 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
 #' @param domain Domain of the annotations, either "time", "frequency", or "both".
 #' @param same.source If TRUE, annotations must have the same source to be merged.
 #' @return A new Annotation object.
-#' @export
-annotation_merge_overlapping <- function(annotation1, annotation2, domain="time", same.source=TRUE) {
+.annotation_merge_overlapping <- function(annotation1, annotation2, domain="time", same.source=TRUE) {
   if (!.annotation_can_merge(annotation1, annotation2, same.source=same.source)) {
     return(FALSE)
   }
   if (!.annotation_check_overlap(annotation1, annotation2, domain=domain)) {
     return(FALSE)
   }
-  start <- NULL
-  end <- NULL
+  start <- 0
+  end <- Inf
   low <- 0
   high <- Inf
 
@@ -200,4 +199,55 @@ annotation_merge_overlapping <- function(annotation1, annotation2, domain="time"
     value=annotation1@value
   )
   return(new_annotation)
+}
+
+#' Combine annotations
+#'
+#' Checks a list of annotations for those that are overlapping, and returns a list
+#' where overlapping annotations are merged.
+#' @param annotations A list of Annotation objects.
+#' @param domain Domain of the annotations, either "time", "frequency", or "both".
+#' @param same.source If TRUE, annotations must have the same source to be merged.
+#' @return A list of Annotation objects.
+#' @export
+annotations_merge <- function(annotations, domain="time", same.source=TRUE) {
+  if (length(annotations) < 2) {
+    return(annotations)
+  }
+  annotations <- sort_annotations(annotations, domain=domain)
+  merged <- list(annotations[[1]])
+  for (i in 1:length(annotations)) {
+    for (j in 1:length(merged)) {
+      merged_annotation <- .annotation_merge_overlapping(merged[[j]], annotations[[i]], domain=domain, same.source=same.source)
+      if (is.logical(merged_annotation)) {
+        merged <- c(merged, annotations[i])
+      } else {
+        merged[[j]] <- merged_annotation
+        break
+      }
+    }
+  }
+  return(merged)
+}
+
+#' Sort annotations
+#'
+#' Sorts a list of annotations by either start time, frequency, or both.
+#' @param annotations A list of Annotation objects.
+#' @param domain Domain of the annotations, either "time", "frequency", or "both".
+#' @param decreasing If TRUE, sort in decreasing order.
+#' @return A list of Annotation objects.
+#' @export
+sort_annotations <- function(annotations, domain="time", decreasing=FALSE) {
+  if (domain == "frequency" | domain == "both") {
+    annotations <- annotations[order(sapply(annotations, function(x) x@low))]
+  }
+  if (domain == "time" | domain == "both") {
+    annotations <- annotations[order(sapply(annotations, function(x) x@start))]
+  }
+
+  if (decreasing) {
+    annotations <- rev(annotations)
+  }
+  return(annotations)
 }
