@@ -20,9 +20,9 @@ library(sonicscrewdriver)
 
 ## Managing labelled audio data in R with SonicScrewdriveR
 
-### Setting annotation bondaries
+### Setting annotation boundaries
 
-SonicScewdriveR provides a set of functionality to read, generate, manage and write label data for audio files. This `Annotation` class is used to consistently handle annotations to audio files. Annotations are delimited in the time domain (seconds) and frequency domain (Hz).
+SonicScrewdriveR provides a set of functionality to read, generate, manage and write label data for audio files. This `Annotation` class is used to consistently handle annotations to audio files. Annotations are delimited in the time domain (seconds) and frequency domain (Hz).
 
 ```{r}
 a1 <- annotation(

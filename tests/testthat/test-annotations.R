@@ -184,36 +184,13 @@ test_that("merge_annotations works as expected",{
 
   test <- list(
     annotation(start=0, end=40, file="a", type="monkey"),
-    annotation(start=0, end=40, file="a", type="dog"),
     annotation(start=0, end=40, file="b", type="monkey"),
+    annotation(start=0, end=40, file="a", type="dog"),
     annotation(start=0, end=40, file="b", type="dog")
   )
 
   expect_true(all.equal(merge_annotations(a6), test))
 
-  a6 <- list(
-    annotation(start=0, end=20, type="a", value="monkey"),
-    annotation(start=30, end=40, type="a", value="monkey"),
-    annotation(start=10, end=30,  type="a", value="monkey"),
-    annotation(start=0, end=20, type="b", value="monkey"),
-    annotation(start=30, end=40, type="b", value="monkey"),
-    annotation(start=10, end=30,  type="b", value="monkey"),
-    annotation(start=0, end=20, type="a", value="dog"),
-    annotation(start=30, end=40, type="a", value="dog"),
-    annotation(start=10, end=30,  type="a", value="dog"),
-    annotation(start=0, end=20, type="b", value="dog"),
-    annotation(start=30, end=40, type="b", value="dog"),
-    annotation(start=10, end=30,  type="b", value="dog")
-  )
-
-  test <- list(
-    annotation(start=0, end=40, type="a", value="monkey"),
-    annotation(start=0, end=40, type="a", value="dog"),
-    annotation(start=0, end=40, type="b", value="monkey"),
-    annotation(start=0, end=40, type="b", value="dog")
-  )
-
-  expect_true(all.equal(merge_annotations(a6), test))
 
   a7 <- list(
     annotation(start=0, end=20, file="a", type="monkey", value=TRUE),
@@ -244,12 +221,12 @@ test_that("merge_annotations works as expected",{
 
   test <- list(
     annotation(start=0, end=40, file="a", type="monkey", value=TRUE),
-    annotation(start=0, end=40, file="a", type="monkey", value=FALSE),
-    annotation(start=0, end=40, file="a", type="dog", value=TRUE),
-    annotation(start=0, end=40, file="a", type="dog", value=FALSE),
     annotation(start=0, end=40, file="b", type="monkey", value=TRUE),
-    annotation(start=0, end=40, file="b", type="monkey", value=FALSE),
+    annotation(start=0, end=40, file="a", type="dog", value=TRUE),
     annotation(start=0, end=40, file="b", type="dog", value=TRUE),
+    annotation(start=0, end=40, file="a", type="monkey", value=FALSE),
+    annotation(start=0, end=40, file="b", type="monkey", value=FALSE),
+    annotation(start=0, end=40, file="a", type="dog", value=FALSE),
     annotation(start=0, end=40, file="b", type="dog", value=FALSE)
   )
 

@@ -5,15 +5,15 @@
 \title{Create a new Annotation object}
 \usage{
 annotation(
-  file = NA_character_,
+  file = "",
   metadata = list(),
   start = 0,
   end = Inf,
   low = 0,
   high = Inf,
-  source = NA_character_,
-  type = NA_character_,
-  value = NA_character_
+  source = "",
+  type = "",
+  value = ""
 )
 }
 \arguments{

@@ -4,14 +4,12 @@
 \alias{.merge_annotations}
 \title{Combine annotations helper function}
 \usage{
-.merge_annotations(annotations, domain = "time", same.source = TRUE)
+.merge_annotations(annotations, domain = "time")
 }
 \arguments{
 \item{annotations}{A list of Annotation objects.}
 
 \item{domain}{Domain of the annotations, either "time" or "frequency".}
-
-\item{same.source}{If TRUE, annotations must have the same source to be merged.}
 }
 \value{
 A list of Annotation objects.

@@ -25,15 +25,15 @@ setClass(
     value="character"
   ),
   prototype = list(
-    file = NA_character_,
+    file = "",
     metadata = list(),
     start = 0,
     end = Inf,
     low = 0,
     high = Inf,
-    source = NA_character_,
-    type = NA_character_,
-    value = NA_character_
+    source = "",
+    type = "",
+    value = ""
   )
 )
 
@@ -51,15 +51,15 @@ setClass(
 #' @return An Annotation object.
 #' @export
 annotation <- function(
-  file=NA_character_,
+  file="",
   metadata=list(),
   start=0,
   end=Inf,
   low=0,
   high=Inf,
-  source=NA_character_,
-  type=NA_character_,
-  value=NA_character_
+  source="",
+  type="",
+  value=""
 ) {
   annotation <- new(
     "Annotation",
@@ -132,34 +132,6 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
   }
 }
 
-#' Check if two annotations can be merged
-#' @param annotation1 An Annotation object.
-#' @param annotation2 An Annotation object.
-#' @param same.source If TRUE, annotations must have the same source to be merged.
-#' @return TRUE if the annotations can be merged, FALSE otherwise.
-.annotation_can_merge <- function(annotation1, annotation2, same.source=TRUE) {
-  if (is.na(annotation1@source) & is.na(annotation2@source)) {
-    if (is.na(annotation1@type) & is.na(annotation2@type)) {
-      if (is.na(annotation1@value) & is.na(annotation2@value)) {
-        return(TRUE)
-      } else {
-        if (annotation1@value != annotation2@value) {
-          return(FALSE)
-        }
-      }
-    } else {
-      if (annotation1@type != annotation2@type) {
-        return(FALSE)
-      }
-    }
-  } else {
-    if (same.source & annotation1@source != annotation2@source) {
-      return(FALSE)
-    }
-  }
-  return(TRUE)
-}
-
 #' Combine annotations
 #'
 #' Checks a list of annotations for those that are overlapping in the time or
@@ -171,38 +143,37 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
 #' @return A list of Annotation objects.
 #' @export
 merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
-  uniq_files <- unique(sapply(annotations, function(x) x@file))
-  uniq_types <- unique(sapply(annotations, function(x) x@type))
-  uniq_values <- unique(sapply(annotations, function(x) x@value))
-
   ret <- list()
-  for (i in 1:length(uniq_files)) {
-    file <- uniq_files[i]
-    for (j in 1:length(uniq_types)) {
-      type <- uniq_types[j]
-      for (k in 1:length(uniq_values)) {
-        value <- uniq_values[k]
-         if (same.source) {
-          uniq_source <- unique(sapply(annotations, function(x) x@source))
-          for (l in 1:length(uniq_source)) {
-            source <- uniq_source[l]
-            filtered <- sapply(annotations, function(x) {
-              x@file == file & x@type == type & x@value == value & x@source == source
-            })
-            filtered[is.na(filtered)] <- TRUE
-            ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain, same.source=TRUE))
-          }
-         } else {
-           filtered <- sapply(annotations, function(x) {
-             x@file == file & x@type == type & x@value == value
-           })
-           filtered[is.na(filtered)] <- TRUE
-           ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain, same.source=FALSE))
-         }
 
-      }
+  if (same.source) {
+    rel_columns <- sapply(annotations, function(x) list(file=x@file, type=x@type, value=x@value, source=x@source))
+    uniq_cols <- unique(as.data.frame(t(rel_columns)))
+
+    for (i in 1:nrow(uniq_cols)) {
+      file <- uniq_cols[i, "file"]
+      type <- uniq_cols[i, "type"]
+      value <- uniq_cols[i, "value"]
+      source <- uniq_cols[i, "source"]
+      filtered <- sapply(annotations, function(x) {
+        x@file == file & x@type == type & x@value == value & x@source == source
+      })
+      ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain))
+    }
+  } else {
+    rel_columns <- sapply(annotations, function(x) list(file=x@file, type=x@type, value=x@value))
+    uniq_cols <- unique(as.data.frame(t(rel_columns)))
+
+    for (i in 1:nrow(uniq_cols)) {
+      file <- uniq_cols[i, "file"]
+      type <- uniq_cols[i, "type"]
+      value <- uniq_cols[i, "value"]
+      filtered <- sapply(annotations, function(x) {
+        x@file == file & x@type == type & x@value == value
+      })
+      ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain))
     }
   }
+
   return(ret)
 }
 
@@ -214,18 +185,16 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
 #' The exported function `merge_annotations()` handles sanity checks and calls this function.
 #' @param annotations A list of Annotation objects.
 #' @param domain Domain of the annotations, either "time" or "frequency".
-#' @param same.source If TRUE, annotations must have the same source to be merged.
 #' @return A list of Annotation objects.
-.merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
+.merge_annotations <- function(annotations, domain="time") {
   if (domain == "time") {
     annotations <- sort_annotations(annotations)
-    if (length(annotations) == 1) {
+    if (length(annotations) < 2) {
       return(annotations)
     }
     remove = vector(mode="logical", length=length(annotations))
     for (i in 1:(length(annotations)-1)) {
-      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)
-        & .annotation_can_merge(annotations[[i]], annotations[[i+1]], same.source=same.source)) {
+      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
         annotations[[i+1]]@start <- annotations[[i]]@start
         remove[i] <- TRUE
       }
@@ -240,8 +209,7 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
     }
     remove = vector(mode="logical", length=length(annotations))
     for (i in 1:(length(annotations)-1)) {
-      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)
-        & .annotation_can_merge(annotations[[i]], annotations[[i+1]], same.source=same.source)) {
+      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
         annotations[[i+1]]@low <- annotations[[i]]@low
         remove[i] <- TRUE
       }
