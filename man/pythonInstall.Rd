@@ -15,7 +15,7 @@ This function installs scikit-maad in the \code{sonicscrewdriver} environment us
 }
 \examples{
 \dontrun{
-maadInstall()
-maadInstall(unattended=TRUE)
+pythonInstall()
+pythonInstall(unattended=TRUE)
 }
 }

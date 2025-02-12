@@ -7,8 +7,8 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' maadInstall()
-#' maadInstall(unattended=TRUE)
+#' pythonInstall()
+#' pythonInstall(unattended=TRUE)
 #' }
 pythonInstall <- function(unattended=FALSE) {
   if (!package.installed("reticulate")) {
