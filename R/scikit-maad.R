@@ -12,6 +12,8 @@ getMaad <- function() {
   }
   reticulate::use_virtualenv("sonicscrewdriver")
   maad <- reticulate::import("maad")
+  maad$sound <- reticulate::import("maad.sound")
+  maad$features <- reticulate::import("maad.features")
   return(maad)
 }
 
