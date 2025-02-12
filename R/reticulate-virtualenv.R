@@ -29,4 +29,5 @@ pythonInstall <- function(unattended=FALSE) {
     reticulate::virtualenv_create(envname = "sonicscrewdriver", packages=NULL)
   }
   reticulate::virtualenv_install("sonicscrewdriver", c("scikit-maad", "numpy==1.26.4", "librosa", "tensorflow==2.10", "birdnetlib"))
+
 }
