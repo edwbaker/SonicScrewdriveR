@@ -74,34 +74,26 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
     recording$analyze()
 
     for (j in seq_along(recording$detections)) {
-      if (output=="Annotation") {
-        ret <- c(
-          ret,
-          annotation(
-            file = files[i],
-            start = recording$detections[[j]]$start_time,
-            end = recording$detections[[j]]$end_time,
-            source = "BirdNet-Analyzer",
-            type = "bidnet-detection",
-            value = recording$detections[[j]]$label,
-            metadata = list(
-              "confidence" = recording$detections[[j]]$confidence,
-              "common_name" = recording$detections[[j]]$common_name,
-              "scientific_name" = recording$detections[[j]]$scientific_name
-            )
+      ret <- c(
+        ret,
+        annotation(
+          file = files[i],
+          start = recording$detections[[j]]$start_time,
+          end = recording$detections[[j]]$end_time,
+          source = "BirdNet-Analyzer",
+          type = "bidnet-detection",
+          value = recording$detections[[j]]$label,
+          metadata = list(
+            "confidence" = recording$detections[[j]]$confidence,
+            "common_name" = recording$detections[[j]]$common_name,
+            "scientific_name" = recording$detections[[j]]$scientific_name
           )
         )
-      } else {
-        if (length(ret) > 0) {
-          ret <- rbind(ret, c(file=files[i], recording$detections[[j]]))
-        } else {
-          ret <- c(file=files[i], recording$detections[[j]])
-        }
-      }
+      )
     }
   }
   if (output=="Annotation") {
     return(ret)
   }
-  return(as.data.frame(ret))
+  return(AnnotationList2DataFrame(ret))
 }

@@ -22,8 +22,8 @@ test_that("birdNetAnalyse() returns correct format", {
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   f <- c(f,f)
   df <- birdNetAnalyse(f, output="data.frame")
-  expect_type(df, "list")
-  expect_equal(ncol(df), 7)
+  expect_true(is.data.frame(df))
+  expect_equal(ncol(df), 11)
 
   a <- birdNetAnalyse(f, output="Annotation")
   expect_type(a, "list")

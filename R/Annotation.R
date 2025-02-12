@@ -240,3 +240,57 @@ sort_annotations <- function(annotations, domain="time", decreasing=FALSE) {
   }
   return(annotations)
 }
+
+#' Convert a list of Annotation objects to a data.frame
+#'
+#' Converts a list of Annotation objects to a data.frame, with one column for
+#' each metadata name in the list.
+#'
+#' @param x A list of Annotation objects.
+#' @return A data.frame.
+#' @export
+AnnotationList2DataFrame <- function(x) {
+  if (!all(sapply(x, inherits, "Annotation"))) {
+    stop("All items in list must be Annotation objects.")
+  }
+
+  # Get all possible names of values in the metadata slot
+  metadata_names <- unique(unlist(lapply(x, function(y) names(y@metadata))))
+
+  ret <- data.frame(
+    file=character(length=length(x)),
+    start=numeric(length=length(x)),
+    end=numeric(length=length(x)),
+    low=numeric(length=length(x)),
+    high=numeric(length=length(x)),
+    source=character(length=length(x)),
+    type=character(length=length(x)),
+    value=character(length=length(x)),
+    stringsAsFactors=FALSE
+  )
+
+  names <- colnames(ret)
+
+  for (i in 1:length(metadata_names)) {
+    ret <- cbind(ret, character(length=length(x)))
+  }
+  colnames(ret) <- c(names, metadata_names)
+
+  for (i in 1:length(x)) {
+    ret[i, "file"] <- x[[i]]@file
+    ret[i, "start"] <- x[[i]]@start
+    ret[i, "end"] <- x[[i]]@end
+    ret[i, "low"] <- x[[i]]@low
+    ret[i, "high"] <- x[[i]]@high
+    ret[i, "source"] <- x[[i]]@source
+    ret[i, "type"] <- x[[i]]@type
+    ret[i, "value"] <- x[[i]]@value
+
+    for (j in 1:length(metadata_names)) {
+      if (metadata_names[j] %in% names(x[[i]]@metadata)) {
+        ret[i, metadata_names[j]] <- x[[i]]@metadata[[metadata_names[j]]]
+      }
+    }
+  }
+  return(ret)
+}
