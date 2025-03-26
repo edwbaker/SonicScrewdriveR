@@ -81,7 +81,7 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
           start = recording$detections[[j]]$start_time,
           end = recording$detections[[j]]$end_time,
           source = "BirdNet-Analyzer",
-          type = "bidnet-detection",
+          type = "birdnet-detection",
           value = recording$detections[[j]]$label,
           metadata = list(
             "confidence" = recording$detections[[j]]$confidence,
