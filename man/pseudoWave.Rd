@@ -38,4 +38,6 @@ pw <- pseudoWave("noise", "white")
 
 pw <- pseudoWave("sine", params=list("f0"=440))
 
+pw <- pseudoWave("file", "myfile.wav")
+
 }

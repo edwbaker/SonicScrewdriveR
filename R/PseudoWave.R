@@ -47,6 +47,8 @@ setClass(
 #'
 #' pw <- pseudoWave("sine", params=list("f0"=440))
 #'
+#' pw <- pseudoWave("file", "myfile.wav")
+#'
 pseudoWave <- function(
     type=NA_character_,
     subtype=NA_character_,
@@ -57,6 +59,15 @@ pseudoWave <- function(
 ) {
   if (is.na(type)) {
     stop("Type must be specified")
+  }
+  if (type=="file"){
+    # params list must have file set
+    if (is.na(subtype)) {
+      stop("Filename must be specified")
+    }
+    if (!file.exists(subtype)) {
+      stop("File does not exist")
+    }
   }
   p <-
   return(
@@ -73,6 +84,10 @@ pseudoWave <- function(
 }
 
 depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
+  if (pw@type == "file") {
+    w <- readAudio(pw@subtype)
+    stereo <- w@stereo
+  }
   if (pw@type == "noise") {
     if (!is.na(pw@seed)) {set.seed(pw@seed)}
     w <- .depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
