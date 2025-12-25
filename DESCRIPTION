@@ -45,7 +45,7 @@ Suggests:
   WaveletComp
 VignetteBuilder: knitr
 URL: 
-  https://sonicscrewdriver.ebaker.me.uk, 
+  https://sonicscrewdriver.ebaker.me.uk,
   https://github.com/edwbaker/SonicScrewdriveR
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3

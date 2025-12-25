@@ -1,8 +1,9 @@
-url: https://sonicscrewdriver.ebaker.me.uk
+url: https://sonicscrewdriver.ebaker.me.uk/
 template:
   bootstrap: 5
 development:
   mode: auto
 authors:
-    Ed Baker:
-      href: "https://ebaker.me.uk"
+  Ed Baker:
+    href: https://ebaker.me.uk
+
