@@ -1,5 +1,5 @@
 pandoc: 3.1.11
-pkgdown: 2.1.1
+pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   annotations: annotations.html
@@ -10,7 +10,7 @@ articles:
   articles/other-apps: other-apps.html
   sonicscrewdriver: sonicscrewdriver.html
   articles/test-signals: test-signals.html
-last_built: 2025-03-26T18:32Z
+last_built: 2025-12-25T13:26Z
 urls:
   reference: https://sonicscrewdriver.ebaker.me.uk/reference
   article: https://sonicscrewdriver.ebaker.me.uk/articles
