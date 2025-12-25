@@ -1,25 +1,25 @@
-<!-- badges: start -->[![CRAN Version](https://www.r-pkg.org/badges/version/sonicscrewdriver)](https://cran.r-project.org/package=sonicscrewdriver) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/sonicscrewdriver)]() [![](http://cranlogs.r-pkg.org/badges/last-week/sonicscrewdriver?color=green)](https://cran.r-project.org/package=sonicscrewdriver) [![codecov](https://codecov.io/gh/edwbaker/SonicScrewdriveR/graph/badge.svg?token=pQq9E428KB)](https://codecov.io/gh/edwbaker/SonicScrewdriveR) [![R-CMD-check](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml)<!-- badges: end -->
+# SonicScrewdriveR <a href="http://sonicscrewdriver.ebaker.me.uk"><img src="man/figures/logo.png" alt="sonicscrewdriver website" align="right" height="138"/></a>
 
-# SonicScrewdriveR <a href="http://sonicscrewdriver.ebaker.me.uk"><img src="man/figures/logo.png" align="right" height="138" alt="sonicscrewdriver website" /></a>
+<!-- badges: start --> [![CRAN Version](https://www.r-pkg.org/badges/version/sonicscrewdriver)](https://cran.r-project.org/package=sonicscrewdriver) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/sonicscrewdriver)]() [![](http://cranlogs.r-pkg.org/badges/last-week/sonicscrewdriver?color=green)](https://cran.r-project.org/package=sonicscrewdriver) [![codecov](https://codecov.io/gh/edwbaker/SonicScrewdriveR/graph/badge.svg?token=pQq9E428KB)](https://codecov.io/gh/edwbaker/SonicScrewdriveR) [![R-CMD-check](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edwbaker/SonicScrewdriveR/actions/workflows/R-CMD-check.yaml) <!-- badges: end -->
+
 
 This package provides tools for manipulating sound files for analysis and visualisation.
 
 With SonicScrewdriveR you can:
 
-- Easily read audio files of many types.
+-   Easily read audio files of many types.
 
-- Work seamlessly with multi-channel audio.
+-   Work seamlessly with multi-channel audio.
 
-- Read/write/convert audio and metadata in formats used by other tools.
+-   Read/write/convert audio and metadata in formats used by other tools.
 
-- Apply filters to audio.
+-   Apply filters to audio.
 
-- Augment audio data for machine learning.
+-   Augment audio data for machine learning.
 
-- Visualise audio data.
+-   Visualise audio data.
 
-- Create self-documenting analysis pipelines.
-
+-   Create self-documenting analysis pipelines.
 
 The need for `SonicScrewdriveR` arose initially in the [Automated Acoustic Observatories](https://ebaker.me.uk/aoo) project at the [University of York](https://www.york.ac.uk), and later in the development of [audioBlast](https://audioblast.org). Both of these projects required the ability to read and manipulate audio files in a variety of formats and to visualise and analyse the data contained within them. The package is designed to be as flexible as possible and to be able to handle audio file formats with differing encoding, channel numbers, and sample rates. In one sense, it can be seen as a wrapper around existing packages to provide a unified interface, but it also offers many new functions and visualisations.
 
@@ -56,7 +56,7 @@ Usage of the package is described in the following vignettes:
 
 -   The book [Visualisation for bioacoustics and ecoacoustics in R](https://av.ebaker.me.uk) provides details of the various visualisation tools available in this and other packages.
 
--  [Converting code to work with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/converting-code.html) provides guidance for package developers and end users who want to convert their code to work with SonicScrewdriveR types such as `TaggedWave` and `TaggedWaveMC`.
+-   [Converting code to work with SonicScrewdriveR](https://sonicscrewdriver.ebaker.me.uk/articles/converting-code.html) provides guidance for package developers and end users who want to convert their code to work with SonicScrewdriveR types such as `TaggedWave` and `TaggedWaveMC`.
 
 ## Contributing
 
