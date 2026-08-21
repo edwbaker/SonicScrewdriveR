@@ -13,6 +13,7 @@
 #' @param reverse If FALSE plots in an anti-clockwise direction
 #' @param ... Other parameters passed to polygon()
 #' @importFrom graphics polygon
+#' @return No return value, called for its side effect of drawing a polygon on the current plot.
 #' @export
 radialPolygon <- function(
     angle1,angle2,
@@ -91,6 +92,7 @@ radialPolygon <- function(
 #' dielPlot() or yearlyPlot() this function append the beginning values to the end to ensure an entire
 #' loop is created.
 #' @param values A vector if values
+#' @return The input vector with its first value appended, so that it closes on itself.
 #' @export
 circularise <- function(values) {
   return(c(values, values[1]))

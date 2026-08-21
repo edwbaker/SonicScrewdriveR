@@ -176,3 +176,12 @@ test_that("validate time in seconds", {
   expect_error(validateTimeInSeconds(c(1,500), max_t = 400), "Time in Seconds cannot be longer than max_t")
   expect_equal(validateTimeInSeconds(c(1,500), max_t = 400, coerceMaximum=TRUE), c(1,400))
 })
+
+test_that("validateIsWaveLike accepts Wave and WaveMC", {
+  w <- tuneR::sine(1000, duration=10)
+  expect_equal(validateIsWaveLike(w), w)
+  mc <- tuneR::WaveMC(w)
+  expect_equal(validateIsWaveLike(mc), mc)
+  expect_error(validateIsWaveLike("string"), "Expecting a Wave or WaveMC object")
+  expect_error(validateIsWaveLike(1), "Expecting a Wave or WaveMC object")
+})

@@ -9,6 +9,9 @@ dielPositions(format = "3hourly")
 \arguments{
 \item{format}{One of "3hours" (default), "hours", or "minutes"}
 }
+\value{
+A numeric vector of label positions, in radians.
+}
 \description{
 Generates positions for three-hourly labels of a dielPlot() in radians.
 }

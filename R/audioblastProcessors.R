@@ -7,6 +7,7 @@
 #' @param lat Latitude of location.
 #' @param lon Longitude of location.
 #' @param overwrite If TRUE then the function will overwrite any existing min/max.
+#' @return The traits data frame, with value_min and value_max converted to numeric times of day.
 #' @export
 ab_diel_traits <- function(traits, date, lat, lon, overwrite=FALSE) {
   date <- as.Date(date)

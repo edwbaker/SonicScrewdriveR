@@ -9,11 +9,11 @@ convert2bytes(S, input = "bits")
 \arguments{
 \item{S}{The value to convert}
 
-\item{input}{The unit  to convert, allowed values are "bits", "kB", "MB", "GB"}
+\item{input}{The unit to convert, allowed values are "bits", "bytes", "kB", "MB", "GB"}
 }
 \value{
-The numeric value in seconds
+The numeric value in bytes
 }
 \description{
-Converts time measurements into seconds
+Converts file size measurements into bytes.
 }

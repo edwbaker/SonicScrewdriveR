@@ -10,7 +10,7 @@
 #' @export
 #'
 frequencySound <- function(wl, s=soundSpeed(medium="air")) {
-  f <- validateWavelength(wl) / validateSpeed(s)
+  f <- validateSpeed(s) / validateWavelength(wl)
   return(validateFreq(f))
 }
 
@@ -30,6 +30,7 @@ frequencySound <- function(wl, s=soundSpeed(medium="air")) {
 #' @examples
 #' naturalFrequency(L=20,R=0.5)
 #' naturalFrequency(L=20,C=1/4,R=0.5)
+#' @return The natural frequency, in Hertz.
 #' @export
 #'
 naturalFrequency <- function(L, C="default", R) {
@@ -54,6 +55,7 @@ naturalFrequency <- function(L, C="default", R) {
 #' @importFrom utils data
 #' @examples
 #' f <- resonantFrequency(L=1)
+#' @return The resonant frequency, in Hertz.
 #' @export
 #'
 resonantFrequency <- function(L, C="default") {

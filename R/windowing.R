@@ -18,6 +18,7 @@
 #'   processed unless it has a length equal to window.length.
 #' @param cluster A cluster form the 'parallel' package for multi-core computation.
 #' @keywords wave
+#' @return A list of the results of FUN for each window, or a single Wave object if bind.wave is TRUE.
 #' @export
 #' @examples
 #' \dontrun{
@@ -58,7 +59,7 @@ windowing <- function(
 
   starts <- c(
     1,
-    1:(n.windows-1) * (window.length - window.overlap) +1
+    seq_len(n.windows-1) * (window.length - window.overlap) +1
   )
   if (complete.windows) {
     starts <- starts[which(starts <= n.samples - window.length + 1)]
@@ -79,41 +80,33 @@ windowing <- function(
   }
 
   if (bind.wave & typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
+    #tuneR::bind() copies everything it is given, so binding one window at a time
+    #copies the whole of the output so far on every iteration. Collecting the parts
+    #and binding them in a single call avoids that.
     if (window.overlap == 0) {
-      w <- l[[1]]
-      for (i in 2:length(l)) {
-        w <- tuneR::bind(w, l[[i]])
-      }
-      l <- w
+      l <- do.call(tuneR::bind, l)
     } else {
-      if (inherits(wave, "Wave")) {
-        segment <- cutws(wave, from=starts[1]+window.length, to=starts[2]-1)
-      } else {
-        segment <- readAudio(wave, from=starts[1]+window.length, to=starts[2]-1, units="samples")
-      }
-      w <- tuneR::bind(l[[1]], segment)
-      for (i in 2:(length(l))) {
+      #With a gap between windows the sections of the wave that no window covers are
+      #read back in, so the parts alternate between a window and the gap after it.
+      parts <- vector(mode="list", length=2*length(l))
+      for (i in 1:length(l)) {
+        parts[[2*i-1]] <- l[[i]]
+        gap.start <- starts[i] + window.length
         if (i == length(l)) {
-          if (starts[i]+window.length >= n.samples) {
-            w <- tuneR::bind(w, l[[i]])
-          } else {
-            if (inherits(wave, "Wave")) {
-              segment <- cutws(wave, from=starts[i]+window.length, to=min(n.samples, starts[i]+window.length-1))
-            } else {
-              segment <- readAudio(wave, from=starts[i]+window.length, to=n.samples, units="samples")
-            }
-            w <- tuneR::bind(w, l[[i]], segment)
-          }
+          gap.end <- n.samples
         } else {
-          if (inherits(wave, "Wave")) {
-            segment <- cutws(wave, from=starts[i]+window.length, to=starts[i+1]-1)
-          } else {
-            segment <- readAudio(wave, from=starts[i]+window.length, to=min(starts[i+1]-1, n.samples), units="samples")
-          }
-          w <- tuneR::bind(w, l[[i]], segment)
+          gap.end <- min(starts[i+1]-1, n.samples)
+        }
+        if (gap.end < gap.start) {
+          next
+        }
+        if (inherits(wave, "Wave")) {
+          parts[[2*i]] <- cutws(wave, from=gap.start, to=gap.end)
+        } else {
+          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, units="samples")
         }
       }
-      l <- w
+      l <- do.call(tuneR::bind, parts[!vapply(parts, is.null, logical(1))])
     }
   }
   return(l)

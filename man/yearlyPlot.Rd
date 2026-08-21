@@ -29,6 +29,9 @@ yearlyPlot(
 
 \item{legend}{Whether to show a legend}
 }
+\value{
+Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
+}
 \description{
 ToDO......
 }

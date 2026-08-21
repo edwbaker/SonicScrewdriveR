@@ -11,8 +11,11 @@ yearlyPositions(year = 2022, format = "months")
 
 \item{format}{One of months, mid-months, days}
 }
+\value{
+A numeric vector of label positions, in radians.
+}
 \description{
-Generates positions for monthly labels of a dielPlot() in radians. The positions can either be for the
+Generates positions for monthly labels of a yearlyPlot() in radians. The positions can either be for the
 start of the month, or middle of the month.
 }
 \details{

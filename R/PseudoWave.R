@@ -69,7 +69,6 @@ pseudoWave <- function(
       stop("File does not exist")
     }
   }
-  p <-
   return(
     new(
       "PseudoWave",
@@ -145,6 +144,7 @@ setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
 #' @param e1 Input 1
 #' @param e2 Input 2
 #' @importFrom methods callGeneric validObject
+#' @return A PseudoWave object with its scale multiplied by e2.
 setMethod("*", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
@@ -158,6 +158,7 @@ setMethod("*", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
+#' @return A PseudoWave object with its scale divided by e2.
 setMethod("/", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
@@ -171,6 +172,7 @@ setMethod("/", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
+#' @return A PseudoWave object with e2 added to its offset.
 setMethod("+", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
@@ -184,6 +186,7 @@ setMethod("+", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
+#' @return A PseudoWave object with e2 subtracted from its offset.
 setMethod("-", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
@@ -197,6 +200,7 @@ setMethod("-", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
+#' @return A PseudoWave object with its scale multiplied by e1.
 setMethod("*", signature(e1 = "numeric", e2 = "PseudoWave"),
   function(e1, e2){
     validObject(e2)
@@ -210,6 +214,7 @@ setMethod("*", signature(e1 = "numeric", e2 = "PseudoWave"),
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
+#' @return A PseudoWave object with e1 added to its offset.
 setMethod("+", signature(e1 = "numeric", e2 = "PseudoWave"),
   function(e1, e2){
     validObject(e2)

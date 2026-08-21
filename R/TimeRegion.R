@@ -93,6 +93,7 @@ region <- function(unit, from=0, to=Inf) {
 #' Allow subsetting a Wave object with a TimeRegion
 #' @param x Wave Object
 #' @param i TimeRegion object
+#' @return A Wave object containing only the samples within the time region.
 setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
   if (inherits(i,"TimeRegion")) {
     tr <- .timeRegion2samples(i, x@samp.rate)

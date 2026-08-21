@@ -179,6 +179,7 @@ audioblast <- function(
 #' @param on.issue Function to call on error or warning. By default `stop` to raise
 #'   a standard R error. Setting to `warning` will instead a warning.
 #' @param quiet If true will not print progress.
+#' @return No return value, called for its side effect of downloading files.
 #' @export
 #' @importFrom utils download.file write.csv
 audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", quiet=FALSE, on.issue=.audioblastIssue) {
@@ -201,7 +202,10 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
 }
 
 .audioblastIssue <- function(e) {
-  print("There was an issue downloading the requested file via audioblast.")
-  print(e)
-  print("If this issue continues please contact the audioblast team.")
+  warning(
+    "There was an issue downloading the requested file via audioblast.\n",
+    conditionMessage(e), "\n",
+    "If this issue continues please contact the audioblast team.",
+    call. = FALSE
+  )
 }

@@ -5,6 +5,7 @@
 #' @param file Path to the Audacity label file.
 #' @param output One of "annotations" or "data.frame".
 #' @importFrom utils read.csv2
+#' @return A list of Annotation objects, or a data frame if output is "data.frame".
 #' @export
 readAudacityLabels <- function(file, output="annotations") {
   if (!output %in% c("annotations", "data.frame")) {
@@ -49,6 +50,7 @@ readAudacityLabels <- function(file, output="annotations") {
 #' @param file Path to the Audacity label file.
 #' @references
 #'   \insertAllCited{}
+#' @return No return value, called for its side effect of writing a label file.
 #' @export
 writeAudacityLabels <- function(annotations, file) {
   if (!all(sapply(annotations, inherits, "Annotation"))) {

@@ -23,6 +23,9 @@ birdNetAnalyse(
 
 \item{output}{One of "data.frame" or "Annotation".}
 }
+\value{
+A list of Annotation objects, or a data frame if output is "data.frame".
+}
 \description{
 This function takes a list of sound files and analyses them using the
 \code{BirdNET-Analyzer} \insertCite{birdnet2021}{sonicscrewdriver}. The function

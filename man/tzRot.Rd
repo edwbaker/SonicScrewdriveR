@@ -11,6 +11,9 @@ tzRot(tz, init = pi)
 
 \item{init}{Initial rotation. Defaults to pi.}
 }
+\value{
+The rotation of the plot, in radians.
+}
 \description{
 Given a timezone offset in hours returns a rotation in radians to apply to values for a diel plot.
 }

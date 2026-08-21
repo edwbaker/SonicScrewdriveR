@@ -1,11 +1,11 @@
 #' Convert bits to bytes
 #'
-#' Converts time measurements into seconds
+#' Converts file size measurements into bytes.
 #'
 #' @param S The value to convert
-#' @param input The unit  to convert, allowed values are "bits", "kB", "MB", "GB"
+#' @param input The unit to convert, allowed values are "bits", "bytes", "kB", "MB", "GB"
 #' @export
-#' @return The numeric value in seconds
+#' @return The numeric value in bytes
 #'
 convert2bytes <- function(S, input="bits") {
   if (input == "bits") {

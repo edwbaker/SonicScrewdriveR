@@ -1,6 +1,7 @@
 #' Generate labels for a yearly plot
 #'
-#' Generates monthly labels for a yearlyPlot()..
+#' Generates monthly labels for a yearlyPlot().
+#' @return A character vector of twelve month abbreviations.
 #' @export
 yearlyLabels <- function() {
   ret <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -10,12 +11,13 @@ yearlyLabels <- function() {
 
 #' Generate positions of labels for a yearly plot
 #'
-#' Generates positions for monthly labels of a dielPlot() in radians. The positions can either be for the
+#' Generates positions for monthly labels of a yearlyPlot() in radians. The positions can either be for the
 #' start of the month, or middle of the month.
 #'
 #' The function allows for leap years if the year parameter is provided.
 #' @param year Year to calculate
 #' @param format One of months, mid-months, days
+#' @return A numeric vector of label positions, in radians.
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
   if (!format %in% c("months", "mid-months", "days")) {
@@ -71,6 +73,7 @@ yearlyPositions <- function(year=2022, format="months") {
 #' @param year Year to calculate fractions of (allows for leap years)
 #' @param input One of POSIXlt (default)
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @return The position of the date within the year, in radians or as a fraction of a year.
 #' @export
 yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
   if(!input %in% c("POSIX", "day")) {
@@ -101,6 +104,7 @@ yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
 #' @param year Year to plot (allows for leap years)
 #' @param method Plotting package to use
 #' @param rot Rotation of the origin (defaults to pi)
+#' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 emptyYearly <- function(year=2022, method="plotix", rot=pi) {
   plotrix::radial.plot(
@@ -129,6 +133,7 @@ emptyYearly <- function(year=2022, method="plotix", rot=pi) {
 #' @param limits Plotting limits of the daylight regions, default to c(1,2)
 #' @param method Plotting library to use
 #' @param legend Whether to show a legend
+#' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
 yearlyPlot <- function(year=2022, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=F) {

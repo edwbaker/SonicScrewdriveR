@@ -13,3 +13,7 @@ test_that("cm calcualtion is correct", {
 test_that("error on invalid unit", {
   expect_error(wavelength(1, speed=300, unit="Fahrenheit is a moon unit"))
 })
+
+test_that("wavelength inverts frequencySound", {
+  expect_equal(wavelength(frequencySound(wl=0.5)), 0.5)
+})

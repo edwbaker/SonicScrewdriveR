@@ -15,6 +15,9 @@ dayPhases(time = as.Date(Sys.time()), lat = 50.1, lon = 1.83, tz = "UTC")
 
 \item{tz}{Time-zone of recording device when recording was made}
 }
+\value{
+A matrix with a row for each phase of the day and columns giving its start and end.
+}
 \description{
 Wrapper for suncalc::getSunlightTimes that formats output for this package.
 }

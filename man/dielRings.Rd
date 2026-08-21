@@ -29,6 +29,9 @@ dielRings(
 
 \item{legend}{Boolean. Whether to plot a legend.}
 }
+\value{
+Called for its side effect of drawing on the current plot. The return value is that of the underlying plotting function and should not be relied on.
+}
 \description{
 Plot rings on a diel plot.
 }

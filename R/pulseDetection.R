@@ -5,6 +5,7 @@
 #' @param wave A Wave object containing pulses
 #' @param method Which method to use for pulse detection
 #' @param ... Other arguments to pass to pulse detection function
+#' @return The output of the pulse detection method used.
 #' @export
 #'
 pulseDetection <- function(

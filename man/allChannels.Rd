@@ -29,7 +29,8 @@ soundecology package.}
 \item{...}{Optional. Additional parameters to pass to FUN.}
 }
 \value{
-A list of outputs.
+A list with one entry per channel, whatever the class and channel
+count of the input. Each entry is itself a list.
 }
 \description{
 Some functions (e.g. ffilter from seewave) only operate on a single

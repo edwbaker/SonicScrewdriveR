@@ -13,6 +13,9 @@ emptyYearly(year = 2022, method = "plotix", rot = pi)
 
 \item{rot}{Rotation of the origin (defaults to pi)}
 }
+\value{
+Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
+}
 \description{
 Create a yearly plot with labels but without sun or night duration plotted.
 }

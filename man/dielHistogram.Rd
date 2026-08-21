@@ -14,7 +14,7 @@ dielHistogram(
 )
 }
 \arguments{
-\item{times}{A vector of times that can be pocessed by dielFraction().}
+\item{times}{A vector of times that can be processed by dielFraction().}
 
 \item{by}{Controls the size of histogram bins, one of "hour", "15minute", "30minute".}
 

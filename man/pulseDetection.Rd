@@ -13,6 +13,9 @@ pulseDetection(wave, method = "simple", ...)
 
 \item{...}{Other arguments to pass to pulse detection function}
 }
+\value{
+The output of the pulse detection method used.
+}
 \description{
 Detects pulses in a Wave, defaults to using Dietrich (2004).
 }

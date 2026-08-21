@@ -1,7 +1,7 @@
 #' Diel Histogram
 #'
 #' Draws a histogram on a dielPlot() using pre-defined bins related to time of day.
-#' @param times A vector of times that can be pocessed by dielFraction().
+#' @param times A vector of times that can be processed by dielFraction().
 #' @param by Controls the size of histogram bins, one of "hour", "15minute", "30minute".
 #' @param col Colour of the plot.
 #' @param maxval By default scales histogram within limits, specifying a maximum value here allows comparison between plots.

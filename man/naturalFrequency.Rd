@@ -13,6 +13,9 @@ naturalFrequency(L, C = "default", R)
 
 \item{R}{Resistance}
 }
+\value{
+The natural frequency, in Hertz.
+}
 \description{
 Calculates the natural frequency given the inductance, capacitance and resistance. In the acoustic case
 the inductance is inertia or mass, the capacitance is elasticity (bulk modulus) and resistance is composed of air

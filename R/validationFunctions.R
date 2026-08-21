@@ -61,11 +61,19 @@ validateKelvin <- function(T) {
 #'
 #' @param wave Object to test
 #' @importFrom methods is
+#' @return The Wave object unchanged. An error is raised if it is not a Wave object.
 #' @export
 #'
 validateIsWave <- function(wave) {
   if (!inherits(wave, "Wave") | !is(wave, "Wave")) {
     stop("Expecting a Wave object")
+  }
+  return(wave)
+}
+
+validateIsWaveLike <- function(wave) {
+  if (!inherits(wave, c("Wave", "WaveMC"))) {
+    stop("Expecting a Wave or WaveMC object")
   }
   return(wave)
 }

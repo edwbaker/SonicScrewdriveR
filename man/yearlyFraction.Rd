@@ -15,6 +15,9 @@ yearlyFraction(t, year = 2022, input = "POSIX", unit = "radians")
 
 \item{unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
 }
+\value{
+The position of the date within the year, in radians or as a fraction of a year.
+}
 \description{
 Given an object that can be coerced to POSIXlt, return the fraction of a year represented by the object.
 }

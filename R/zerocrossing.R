@@ -22,3 +22,17 @@ zerocross <- function(wave) {
   wave@left[az] <- 0
   return(zc)
 }
+
+#' Identify the period boundaries in a Wave object
+#'
+#' A period spans two zero crossings, so every second crossing is taken to give one
+#' boundary per period. Using every crossing would measure half cycles instead, and
+#' the two halves of an asymmetric waveform differ even when its period is perfectly
+#' constant.
+#'
+#' @param wave A Wave object
+#' @return A vector of period boundary locations
+#' @noRd
+.periodBoundaries <- function(wave) {
+  return(zerocross(wave)[c(TRUE, FALSE)])
+}

@@ -3,13 +3,15 @@
 #' Calculates the peak, centre, bandwidth and quality factor. The quality factor (Q) is calculated at both
 #' -3dB and -10dB as discussed by Bennett-Clark (1999)  <doi: 10.1080/09524622.1999.9753408>.
 #'
-#' @param wave A Wave object
+#' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
+#'   allChannels(), which returns one set of statistics per channel.
 #' @param wave_spec A precomputed spectrum (optional, if not present will be generated)
 #' @param plot IF TRUE displays values
 #' @param warn If TRUE provides warnings when values are not consistent
 #' @param lowcut Frequency (in kHz) values below which are ignored.
 #' @importFrom graphics abline plot title
 #' @importFrom seewave sfm
+#' @return A list of frequency statistics, with an entry for each of the -3dB and -10dB thresholds.
 #' @export
 #'
 frequencyStats <- function(
@@ -19,6 +21,14 @@ frequencyStats <- function(
   lowcut=1,
   plot=FALSE
 ) {
+  if (.useAllChannels(wave)) {
+    #A closure keeps the arguments away from the formals of allChannels()
+    return(allChannels(
+      wave,
+      function(w) frequencyStats(w, wave_spec=wave_spec, warn=warn, lowcut=lowcut, plot=plot),
+      channel.param = NULL
+    ))
+  }
   validateIsWave(wave)
   if (is.null(wave_spec)) {
     wave_spec <- seewave::meanspec(wave, norm=FALSE, plot=FALSE)

@@ -29,6 +29,9 @@ soundSpeed(
 
 \item{...}{Additional parameters passed to the method.}
 }
+\value{
+The speed of sound in the medium, in metres per second.
+}
 \description{
 Given sufficient parameters (i.e. wavelength and frequency, bulk modulus and density) this
 function calculates the speed of sound.

@@ -13,6 +13,9 @@ filterWave(w, filt, cl = NULL)
 
 \item{cl}{Optional. If a cluster is specified, the filter will be applied in parallel.}
 }
+\value{
+A filtered Wave or WaveMC object, or a list of such objects if given a list.
+}
 \description{
 A WaveFilter object is an object containing information necessary for the
 filterw function to apply the filter to a Wave object. This is designed to

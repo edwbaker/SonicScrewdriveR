@@ -29,5 +29,5 @@ test_that("error on incorrect unit convert2Kelvin", {
 
 
 test_that("nobody has created a working convert to Farenheit function", {
-  expect_error(convert2Fahrenheit(0), "Implementation of this function is against the politcial beliefs of the author.")
+  expect_error(convert2Fahrenheit(0), "Implementation of this function is against the political beliefs of the author.")
 })

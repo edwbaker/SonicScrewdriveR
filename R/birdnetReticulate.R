@@ -12,6 +12,7 @@
 #' @param output One of "data.frame" or "Annotation".
 #' @references
 #'  \insertAllCited{}
+#' @return A list of Annotation objects, or a data frame if output is "data.frame".
 #' @export
 #' @examples
 #' \dontrun{

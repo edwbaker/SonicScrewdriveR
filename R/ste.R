@@ -26,11 +26,21 @@ ste <-  function(
 }
 
 .ste_dietrich2004 <- function(wave, U) {
-  e <- vector(mode="numeric", length=length(wave))
-  for (i in (U/2+1):(length(wave)-U/2)) {
-    values <- (i-U/2):(i+U/2)
-    values <- values[values > 0]
-    e[i] <- sum(abs(wave@left[values]))
+  # The energy at sample i is the sum of abs(wave@left) over a window of U+1
+  # samples centred on i, so a cumulative sum gives every value in one pass.
+  # For odd U the window sits half a sample to the left of centre.
+  x <- abs(wave@left)
+  n <- length(wave)
+  before <- floor(U/2)
+  after <- ceiling(U/2)
+
+  e <- vector(mode="numeric", length=n)
+  if (n - after < before + 1) {
+    return(e)
   }
+
+  i <- (before + 1):(n - after)
+  cs <- c(0, cumsum(x))
+  e[i] <- cs[i - before + U + 1] - cs[i - before]
   return(e)
 }

@@ -82,6 +82,7 @@ annotation <- function(
 #' @param wave (Optional) A Wave object, if not given will load the wave file from Annotation filename.
 #' @importFrom tuneR writeWave
 #' @importFrom tools  file_path_sans_ext
+#' @return No return value, called for its side effect of writing a Wave file.
 #' @export
 writeAnnotationWave <- function(annotation, wave=NULL) {
   if (is.list(annotation)) {

@@ -36,6 +36,7 @@
 #'
 #' t <- 1:30
 #' s <- lapply(t, \(x){soundSpeed(method="cramer", temp=x)})
+#' @return The speed of sound in the medium, in metres per second.
 #' @export
 soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NULL, density=NULL, ...) {
   # If method specified use it

@@ -2,6 +2,7 @@
 #'
 #' Imports the scikit-maad object into R. This allows reuse of the same object between
 #' function calls.
+#' @return The scikit-maad Python module, with its sound and features submodules attached.
 #' @export
 getMaad <- function() {
   if (!package.installed("reticulate")) {

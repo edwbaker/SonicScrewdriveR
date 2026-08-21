@@ -55,6 +55,7 @@ dayPhase <- function(time=Sys.time(), duration=40000, lat=50.1, lon=1.83, tz="UT
 #' @param tz Time-zone of recording device when recording was made
 #'
 #' @importFrom suncalc getSunlightTimes getMoonIllumination getMoonTimes
+#' @return A matrix with a row for each phase of the day and columns giving its start and end.
 dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
   sc <- getSunlightTimes(as.Date(time), lat=lat, lon=lon, tz=tz)
   #Also load next day to find out when night ends
@@ -120,6 +121,7 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 #' @param lat Latitude of recording device
 #' @param lon Longitude of recording device
 #' @param tz Time-zone of recording device when recording was made
+#' @return A data frame with a row for each day, giving the times of each phase of the day and the state of the moon.
 #' @export
 #' @importFrom suncalc getSunlightTimes getMoonIllumination getMoonTimes
 #' @importFrom hms as_hms

@@ -9,6 +9,7 @@
 #' @param scaling Scaling
 #' @param V V Window length
 #' @param psi Psi
+#' @return A list of input values plus the onset and offset times of pulses.
 #' @export
 #'
 pd_simple <- function(

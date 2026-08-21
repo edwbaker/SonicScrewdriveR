@@ -60,7 +60,7 @@ setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 #' The TaggedWaveMC class extended the WaveMC class from the tuneR package so
 #' that it can include extended metadata and the results of analyses.
 #'
-#' @slot metadata A list for storing metdata.
+#' @slot metadata A list for storing metadata.
 #' @slot analyses A list for storing analyses.
 setClass(
   "TaggedWaveMC",

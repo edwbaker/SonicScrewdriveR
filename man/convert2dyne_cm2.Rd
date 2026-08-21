@@ -11,6 +11,9 @@ convert2dyne_cm2(P, input = "kPa")
 
 \item{input}{The unit of the pressure to convert, allowed values are "kPa", "P".}
 }
+\value{
+The numeric value in dyne per square centimetre.
+}
 \description{
 Converts pressure measurements into dyne per square centimetre
 }

@@ -11,6 +11,9 @@ writeAnnotationWave(annotation, wave = NULL)
 
 \item{wave}{(Optional) A Wave object, if not given will load the wave file from Annotation filename.}
 }
+\value{
+No return value, called for its side effect of writing a Wave file.
+}
 \description{
 Save a time region defined by an Annotation object as a Wave file
 }

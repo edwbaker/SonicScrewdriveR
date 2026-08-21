@@ -20,7 +20,7 @@ gs_transcribe <- function(filename, bucket=NULL,...) {
     max_samp_rate = 48000
     wave <- readWave(filename)
     if (wave@samp.rate > max_samp_rate) {
-      print("Downsampling to 48kHz")
+      message("Downsampling to 48kHz")
       savewav(wave, f=max_samp_rate, filename="temp.wav", extensible = FALSE)
       filename <- "temp.wav"
       wave@samp.rate <- max_samp_rate

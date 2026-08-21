@@ -4,6 +4,7 @@
 #' at three hourly intervals.
 #'
 #' @param format One of clock24 (default) or clock12
+#' @return A character vector of eight labels, at three hourly intervals.
 #' @export
 #' @examples
 #' dielLabels()
@@ -24,6 +25,7 @@ dielLabels <- function(format="clock24") {
 #'
 #' Generates positions for three-hourly labels of a dielPlot() in radians.
 #' @param format One of "3hours" (default), "hours", or "minutes"
+#' @return A numeric vector of label positions, in radians.
 #' @export
 #' @examples
 #' dielPositions()
@@ -53,6 +55,7 @@ dielPositions <- function(format="3hourly") {
 #' @param t Object to be converted to a fraction
 #' @param input One of POSIX (default) or HHMM
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @return The position of the time within the day, in radians or as a fraction of a day.
 #' @export
 dielFraction <- function(t, input="POSIX", unit="radians") {
   if (!input %in% .convertable2seconds()) {
@@ -78,6 +81,7 @@ dielFraction <- function(t, input="POSIX", unit="radians") {
 #' Create a diel plot with labels but without sun altitude or times of day plotted.
 #' @param method Plotting package to use
 #' @param rot Rotation of the origin (defaults to pi)
+#' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 emptyDiel <- function(method="plotrix", rot=pi) {
   if (!method %in% .dielPlotMethods()) {
@@ -104,6 +108,7 @@ emptyDiel <- function(method="plotrix", rot=pi) {
 #' Given a timezone offset in hours returns a rotation in radians to apply to values for a diel plot.
 #' @param tz Timezone numeric
 #' @param init Initial rotation. Defaults to pi.
+#' @return The rotation of the plot, in radians.
 #' @export
 tzRot <- function(tz, init=pi) {
   return(init + -tz*2*pi/24)
@@ -121,6 +126,7 @@ tzRot <- function(tz, init=pi) {
 #' @param limits Plotting limits of the daylight regions, default to c(1,2)
 #' @param method Plotting library to use
 #' @param legend Whether to show a legend
+#' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
 dielPlot <- function(
@@ -248,6 +254,7 @@ dielPlot <- function(
 #' @param format Defaults to HHMM
 #' @param limits Region of a dielPlot() to plot rings. Defaults to c(1,2)
 #' @param legend Boolean. Whether to plot a legend.
+#' @return Called for its side effect of drawing on the current plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
   cols <- rep_len(cols, length.out = length(names))

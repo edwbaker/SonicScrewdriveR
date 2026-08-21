@@ -47,3 +47,19 @@
   }
   stop("bit must be one of 8, 16, 24, 32, or 64.")
 }
+
+#' Should a single channel function be applied via allChannels()?
+#'
+#' Single channel functions read the left slot of a Wave. Anything with more
+#' than one channel to consider, and any WaveMC (which has no left slot at all),
+#' has to go through allChannels() instead.
+#' @noRd
+.useAllChannels <- function(wave) {
+  if (inherits(wave, "WaveMC")) {
+    return(TRUE)
+  }
+  if (inherits(wave, "Wave")) {
+    return(wave@stereo)
+  }
+  return(FALSE)
+}

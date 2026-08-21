@@ -7,6 +7,7 @@
 #' @param dutyCycle The duty cycle of the output. A value of 0.95 means that 5%
 #'   of the time is masked.
 #' @param n.periods The number of waves to generate in the squarewave method.
+#' @return The Wave or WaveMC object with the time mask applied.
 #' @export
 generateTimeMask <- function(wave, method="squarewave", dutyCycle=0.95, n.periods=10) {
   if (is(wave, "list")) {

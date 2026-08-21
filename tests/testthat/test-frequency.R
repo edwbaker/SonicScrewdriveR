@@ -13,3 +13,15 @@ test_that("resonantFrequency gives expected output", {
   expect_lt(resonantFrequency(1,1) - 0.15915494, 0.001)
   expect_gt(resonantFrequency(1,1) - 0.15915494, -0.001)
 })
+
+test_that("frequencySound divides the speed of sound by the wavelength", {
+  # The default test above cannot distinguish speed/wl from wl/speed, as the
+  # speed of sound in air is used for both arguments.
+  expect_equal(frequencySound(wl=100, s=343), 3.43)
+  expect_equal(frequencySound(wl=2, s=660), 330)
+})
+
+test_that("frequencySound inverts wavelength", {
+  expect_equal(frequencySound(wl=wavelength(1000)), 1000)
+  expect_equal(frequencySound(wl=wavelength(50, speed=5941), s=5941), 50)
+})

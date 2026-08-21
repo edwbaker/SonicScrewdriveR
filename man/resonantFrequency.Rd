@@ -11,6 +11,9 @@ resonantFrequency(L, C = "default")
 
 \item{C}{Capacitance, by default IUPAC standard pressure.}
 }
+\value{
+The resonant frequency, in Hertz.
+}
 \description{
 Calculates the resonant frequency given the inductance and capacitance. In the acoustic case
 the inductance is inertia or mass, the capacitance is elasticity (bulk modulus) and resistance is composed of air

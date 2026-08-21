@@ -36,6 +36,7 @@ setClass(
 #' @param w A Wave object.
 #' @param filt Wave object with the selected filter applied.
 #' @param cl Optional. If a cluster is specified, the filter will be applied in parallel.
+#' @return A filtered Wave or WaveMC object, or a list of such objects if given a list.
 #' @export
 filterWave <- function(w, filt, cl=NULL) {
   if (inherits(w, c("TaggedWave", "TaggedWaveMC"))) {

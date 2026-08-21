@@ -33,6 +33,7 @@ convert2kPascals <- function(P, input="kPa") {
 #'
 #' @param P The value of the pressure to convert
 #' @param input The unit of the pressure to convert, allowed values are "kPa", "P".
+#' @return The numeric value in dyne per square centimetre.
 #' @export
 #' @examples
 #' convert2dyne_cm2(1, input="Pa")

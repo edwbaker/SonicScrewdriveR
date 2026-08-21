@@ -6,6 +6,7 @@
 #' @examples
 #' rp <- referencePressure()
 #' rp <- referencePressure(unit="dyne_cm2")
+#' @return The reference sound pressure, in the unit specified.
 #' @export
 #'
 referencePressure <- function(unit="Pa") {
@@ -27,6 +28,7 @@ referencePressure <- function(unit="Pa") {
 #' @param unit Unit to return, "watt_cm2"
 #' @examples
 #' ri <- referenceIntensity()
+#' @return The reference sound intensity, in the unit specified.
 #' @export
 #'
 referenceIntensity <- function(unit="watt_cm2") {
