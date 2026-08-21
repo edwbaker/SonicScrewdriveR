@@ -10,6 +10,10 @@
   are calculated for each frequency bin of each time window and mapped to the red,
   green and blue channels of an image. Any three of the indices listed by
   fcisIndexNames() can be used, and there is a plot() method for the result.
+- humanBytes() and convert2bytes() understand binary file size units such as KiB and
+  MiB, as well as the decimal kB and MB, selected with the units argument. The units
+  available are listed by the new fileSizeUnits(). audio_filesize() passes the choice
+  on when its output.unit is "human".
 
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each
@@ -50,6 +54,10 @@
   the soundecology package, as it did not look for the names those functions give
   their results. It now supports every soundecology index, and raises an error rather
   than returning NULL when given something else.
+- humanBytes() raised an error when given more than one size, as it tested them with
+  a single if statement. It now returns one string per size, and gives NA for missing
+  values. Sizes are rounded to three decimal places, which can be changed with the
+  new digits argument.
 - pulseDetection() with method="threshold" reported positions U samples later than
   they occurred, as the zero padding added to the start of the wave was not removed
   from the results. Positions now match those from the other methods.

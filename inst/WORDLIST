@@ -17,6 +17,8 @@ Gryllotalpa
 HHMM
 HHMMSS
 IUPAC
+KiB
+MiB
 MoleFracCO
 Oecanthus
 POSIXlt
@@ -74,6 +76,7 @@ ecoacoustics
 fcis
 fcisIndexNames
 ffilter
+fileSizeUnits
 filterw
 fmax
 fmin

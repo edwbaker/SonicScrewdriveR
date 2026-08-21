@@ -10,7 +10,8 @@ audio_filesize(
   channels = 1,
   duration = 1,
   duration.unit = "seconds",
-  output.unit = "bits"
+  output.unit = "bits",
+  units = "decimal"
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ audio_filesize(
 \item{duration.unit}{One of seconds, minutes, hours, days}
 
 \item{output.unit}{"human", "bits" or  "bytes"}
+
+\item{units}{Units used when output.unit is "human", either "decimal" or
+"binary". See humanBytes().}
 }
 \value{
 The size of the audio file in the specified unit

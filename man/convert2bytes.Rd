@@ -2,18 +2,26 @@
 % Please edit documentation in R/convertFileSizes.R
 \name{convert2bytes}
 \alias{convert2bytes}
-\title{Convert bits to bytes}
+\title{Convert file sizes to bytes}
 \usage{
 convert2bytes(S, input = "bits")
 }
 \arguments{
 \item{S}{The value to convert}
 
-\item{input}{The unit to convert, allowed values are "bits", "bytes", "kB", "MB", "GB"}
+\item{input}{The unit to convert, one of those given by fileSizeUnits(), or
+"bits" or "bytes".}
 }
 \value{
 The numeric value in bytes
 }
 \description{
-Converts file size measurements into bytes.
+Converts file size measurements into bytes. Both decimal units, which are powers
+of 1000, and binary units, which are powers of 1024, are accepted.
+}
+\examples{
+convert2bytes(8, input="bits")
+convert2bytes(1, input="kB")
+convert2bytes(1, input="KiB")
+
 }
