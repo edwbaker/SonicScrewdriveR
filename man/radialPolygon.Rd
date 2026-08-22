@@ -38,6 +38,9 @@ radialPolygon(
 
 \item{...}{Other parameters passed to polygon()}
 }
+\value{
+No return value, called for its side effect of drawing a polygon on the current plot.
+}
 \description{
 Used to plot sectors, annuli and horizons on a dielPlot() or yearlyPlot(). The polygon
 has an inner and outer horizon - which can be set to a fixed radius or a vector.

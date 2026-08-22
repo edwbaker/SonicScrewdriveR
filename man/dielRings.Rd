@@ -11,7 +11,8 @@ dielRings(
   cols = "grey",
   format = "HHMM",
   limits = c(1, 2),
-  legend = T
+  legend = TRUE,
+  rot = tzRot(0)
 )
 }
 \arguments{
@@ -28,6 +29,11 @@ dielRings(
 \item{limits}{Region of a dielPlot() to plot rings. Defaults to c(1,2)}
 
 \item{legend}{Boolean. Whether to plot a legend.}
+
+\item{rot}{Rotation of the plot, which must match the dielPlot() being drawn on.}
+}
+\value{
+Called for its side effect of drawing on the current plot. The return value is that of the underlying plotting function and should not be relied on.
 }
 \description{
 Plot rings on a diel plot.

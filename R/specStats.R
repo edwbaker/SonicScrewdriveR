@@ -9,75 +9,65 @@
 #' @param line.col Colour for the line
 #' @param ribbon.col Colour for the ribbon
 #' @return A ggplot2 object
-#' @importFrom ggplot2 aes element_blank geom_line geom_ribbon labs theme
+#' @importFrom ggplot2 aes element_blank geom_line geom_ribbon labs theme .data
 #' @export
 #'
 specStats <- function(spectra, stats="minMax", line.col="black", ribbon.col="grey70") {
-  #Deal with other input types
-  if (typeof(spectra) == "list") {
-    validateSpectrum(spectra[[1]])
-    for (i in 2:length(spectra)) {
-      validateComparableSpectra(spectra[[1]], spectra[[i]])
-      if (stats=="minMax") {
-        results <- specStats_min_max(spectra)
-        data <- as.data.frame(cbind(spectra[[1]], results))
-        names(data) <- c("freq","first", "min", "max", "mean")
-        plot <- ggplot2::ggplot(data, aes(x=data$freq, y=data$mean)) +
-          geom_ribbon(aes(ymin=min,ymax=max), fill = ribbon.col) +
-          geom_line(colour=line.col) +
-          labs(x="Frequency (kHz)", y="Amplitude") +
-          theme( axis.text.y=element_blank(),
-                 axis.ticks.y=element_blank()
-          )
-      }
-      if (stats=="sd") {
-        results <- specStats_sd(spectra)
-        data <- as.data.frame(cbind(spectra[[1]], results))
-        names(data) <- c("freq","first", "sd", "mean")
-        plot <- ggplot2::ggplot(data, aes(x=data$freq, y=data$mean)) +
-          geom_ribbon(aes(ymin=mean-sd,ymax=mean+sd), fill = ribbon.col) +
-          geom_line(colour=line.col) +
-          labs(x="Frequency (kHz)", y="Amplitude") +
-          theme( axis.text.y=element_blank(),
-                 axis.ticks.y=element_blank()
-          )
-      }}
+  .validateChoice(stats, c("minMax", "sd"), "stats", "specStats", prep="for")
+  if (!is.list(spectra) || length(spectra) == 0) {
+    stop("specStats requires a list of one or more spectra.")
   }
-  print(plot)
-  return(plot)
+  if (stats == "sd" && length(spectra) < 2) {
+    stop("Two or more spectra are required for a standard deviation.")
+  }
+
+  validateSpectrum(spectra[[1]])
+  for (i in seq_along(spectra)[-1]) {
+    validateComparableSpectra(spectra[[1]], spectra[[i]])
+  }
+
+  if (stats == "minMax") {
+    results <- specStats_min_max(spectra)
+    ribbon <- geom_ribbon(aes(ymin=.data$min, ymax=.data$max), fill = ribbon.col)
+  } else {
+    results <- specStats_sd(spectra)
+    ribbon <- geom_ribbon(aes(ymin=.data$mean-.data$sd, ymax=.data$mean+.data$sd), fill = ribbon.col)
+  }
+
+  data <- as.data.frame(cbind(spectra[[1]], results))
+  names(data) <- c("freq", "first", colnames(results))
+
+  return(
+    ggplot2::ggplot(data, aes(x=.data$freq, y=.data$mean)) +
+      ribbon +
+      geom_line(colour=line.col) +
+      labs(x="Frequency (kHz)", y="Amplitude") +
+      theme( axis.text.y=element_blank(),
+             axis.ticks.y=element_blank()
+      )
+  )
 }
 
+#' Amplitudes of a list of spectra as a matrix
+#'
+#' One row per frequency bin and one column per spectrum, so that a statistic
+#' across the spectra is a summary of a row rather than a nested loop.
+#'
+#' @param spectra A list of spectra
+#' @return A numeric matrix of amplitudes.
+#' @noRd
+.specAmplitudes <- function(spectra) {
+  return(vapply(spectra, function(s) s[,2], numeric(nrow(spectra[[1]]))))
+}
 
 #' @importFrom stats sd
 #'
 specStats_sd <- function(spectra) {
-  sd  <- vector(length=length(spectra[[1]][,1]))
-  mean <- vector(length=length(spectra[[1]][,1]))
-  for (i in 1:length(spectra[[1]][,1])) {
-    values <- vector(length=length(spectra))
-    for (j in 1:length(spectra)) {
-      values[j] <- spectra[[j]][[i,2]]
-    }
-    sd[[i]] <- sd(values)
-    mean[[i]]<- mean(values)
-  }
-  data <- cbind(sd, mean)
-  return(data)
+  amp <- .specAmplitudes(spectra)
+  return(cbind(sd=apply(amp, 1, sd), mean=rowMeans(amp)))
 }
 
 specStats_min_max <- function(spectra) {
-  min  <- vector(length=length(spectra[[1]][,1]))
-  max  <- vector(length=length(spectra[[1]][,1]))
-  mean <- vector(length=length(spectra[[1]][,1]))
-  for (i in 1:length(spectra[[1]][,1])) {
-    values <- vector(length=length(spectra))
-    for (j in 1:length(spectra)) {
-      values[j] <- spectra[[j]][[i,2]]
-    }
-    min[[i]] <- min(values)
-    max[[i]] <- max(values)
-    mean[[i]]<- mean(values)
-  }
-  data <- cbind(min, max, mean)
-  return(data)
+  amp <- .specAmplitudes(spectra)
+  return(cbind(min=apply(amp, 1, min), max=apply(amp, 1, max), mean=rowMeans(amp)))
 }

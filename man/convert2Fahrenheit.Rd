@@ -11,6 +11,9 @@ convert2Fahrenheit(temp, input)
 
 \item{input}{The unit of the temperature to convert, allowed values are "K", "C".}
 }
+\value{
+No return value, this conversion is not implemented and the function raises an error.
+}
 \description{
 Converts temperature measurements into Fahrenheit
 }

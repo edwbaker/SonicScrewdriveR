@@ -35,14 +35,21 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
     }
     data <- data[which(data$species==species),]
   }
-  m <- data$m
-  c <- data$c
+  #Each value asked about is calculated for every population in the table. Left
+  #as they were, a vector of values was recycled against the rows, so each value
+  #was paired with a different regression line rather than tried against them all.
+  values <- if (is.null(t)) n else t
+  rows <- rep(seq_len(nrow(data)), times=length(values))
+  values <- rep(values, each=nrow(data))
+  data <- data[rows, , drop=FALSE]
+  rownames(data) <- NULL
 
   if (is.null(t)) {
-    t <- (n-c)/m
-  }
-  if (is.null(n)) {
-    n <- m*t+c
+    n <- values
+    t <- (n - data$c)/data$m
+  } else {
+    t <- values
+    n <- data$m*t + data$c
   }
 
   return(cbind(data,t,n))

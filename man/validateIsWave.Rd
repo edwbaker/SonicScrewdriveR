@@ -9,6 +9,9 @@ validateIsWave(wave)
 \arguments{
 \item{wave}{Object to test}
 }
+\value{
+The Wave object unchanged. An error is raised if it is not a Wave object.
+}
 \description{
 Helper function to test that the input is a Wave object. Will create an error if not.
 }

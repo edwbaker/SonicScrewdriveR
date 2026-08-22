@@ -13,6 +13,7 @@
 #' @param reverse If FALSE plots in an anti-clockwise direction
 #' @param ... Other parameters passed to polygon()
 #' @importFrom graphics polygon
+#' @return No return value, called for its side effect of drawing a polygon on the current plot.
 #' @export
 radialPolygon <- function(
     angle1,angle2,
@@ -25,7 +26,13 @@ radialPolygon <- function(
     ...
 ) {
 
-  if (length(angle1) == 1 & length(angle2) == 1) {
+  if (length(angle1) == 1 && length(angle2) == 1) {
+    #A sector that starts and ends at the same angle covers the whole circle. The
+    #angles were left equal, which collapsed the grid below to a single value and
+    #drew a two point polygon, which is to say nothing at all.
+    if (angle1 == angle2) {
+      angle2 <- angle1 + 2*pi
+    }
     while (angle1 > angle2) {
       angle2 <- angle2 + 2*pi
     }
@@ -91,6 +98,7 @@ radialPolygon <- function(
 #' dielPlot() or yearlyPlot() this function append the beginning values to the end to ensure an entire
 #' loop is created.
 #' @param values A vector if values
+#' @return The input vector with its first value appended, so that it closes on itself.
 #' @export
 circularise <- function(values) {
   return(c(values, values[1]))

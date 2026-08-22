@@ -12,6 +12,9 @@
 
 \item{e2}{Input 2}
 }
+\value{
+A PseudoWave object with e1 added to its offset.
+}
 \description{
 Numeric addition by PseudoWave
 }

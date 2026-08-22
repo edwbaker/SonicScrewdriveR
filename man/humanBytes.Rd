@@ -4,15 +4,26 @@
 \alias{humanBytes}
 \title{Converts bytes in human readable form}
 \usage{
-humanBytes(S)
+humanBytes(S, units = "decimal", digits = 3)
 }
 \arguments{
-\item{S}{Number of bytes}
+\item{S}{Number of bytes. A vector may be given.}
+
+\item{units}{One of "decimal", giving units such as kB, or "binary", giving units
+such as KiB.}
+
+\item{digits}{Number of decimal places to round to, or NULL for no rounding.}
 }
 \value{
-String in human readable format
+String in human readable format, one for each value of S.
 }
 \description{
 Given an input of bytes calculates the result in a sensible output unit (e.g.
-MB, GB, PB).
+MB, GB, PB). Decimal units are powers of 1000, and binary units powers of 1024.
+}
+\examples{
+humanBytes(1500)
+humanBytes(1500, units="binary")
+humanBytes(c(1, 1024, 1e6))
+
 }

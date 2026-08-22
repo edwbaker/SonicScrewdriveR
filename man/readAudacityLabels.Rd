@@ -11,6 +11,9 @@ readAudacityLabels(file, output = "annotations")
 
 \item{output}{One of "annotations" or "data.frame".}
 }
+\value{
+A list of Annotation objects, or a data frame if output is "data.frame".
+}
 \description{
 Reads an Audacity label file and returns either a list of \code{Annotation} objects
 or a data frame.

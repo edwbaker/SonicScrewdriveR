@@ -1,64 +1,80 @@
-#' Convert bits to bytes
+#' Convert file sizes to bytes
 #'
-#' Converts time measurements into seconds
+#' Converts file size measurements into bytes. Both decimal units, which are powers
+#' of 1000, and binary units, which are powers of 1024, are accepted.
 #'
 #' @param S The value to convert
-#' @param input The unit  to convert, allowed values are "bits", "kB", "MB", "GB"
+#' @param input The unit to convert, one of those given by fileSizeUnits(), or
+#'   "bits" or "bytes".
 #' @export
-#' @return The numeric value in seconds
+#' @return The numeric value in bytes
+#' @examples
+#' convert2bytes(8, input="bits")
+#' convert2bytes(1, input="kB")
+#' convert2bytes(1, input="KiB")
 #'
 convert2bytes <- function(S, input="bits") {
-  if (input == "bits") {
-    return(S/8)
+  units <- c(
+    bits = 1/8,
+    bytes = 1,
+    .fileSizeMultipliers("decimal"),
+    .fileSizeMultipliers("binary")
+  )
+  .validateChoice(input, names(units), "input", "convert2bytes")
+  return(S * units[[input]])
+}
+
+#' Units used for file sizes
+#'
+#' The units understood by convert2bytes() and produced by humanBytes(). Decimal
+#' units are powers of 1000 and binary units are powers of 1024.
+#'
+#' @param units One of "decimal" or "binary"
+#' @export
+#' @return A character vector of unit names, from smallest to largest.
+#' @examples
+#' fileSizeUnits()
+#' fileSizeUnits("binary")
+#'
+fileSizeUnits <- function(units="decimal") {
+  return(names(.fileSizeMultipliers(units)))
+}
+
+#' Number of bytes in each file size unit
+#'
+#' @param units One of "decimal" or "binary"
+#' @return A named numeric vector of the number of bytes in each unit.
+#' @noRd
+.fileSizeMultipliers <- function(units="decimal") {
+  if (units == "decimal") {
+    ret <- 1000^(1:6)
+    names(ret) <- c("kB", "MB", "GB", "TB", "PB", "EB")
+    return(ret)
   }
-  if (input =="bytes") {
-    return(S)
+  if (units == "binary") {
+    ret <- 1024^(1:6)
+    names(ret) <- c("KiB", "MiB", "GiB", "TiB", "PiB", "EiB")
+    return(ret)
   }
-  if (input == "kB") {
-    return(S*1e+3)
-  }
-  if (input == "MB") {
-    return(S*1e+6)
-  }
-  if (input == "GB") {
-    return(S*1e+9)
-  }
-  stop(paste("Unknown input to convert2bytes:",input))
+  stop(paste("Unknown units for file sizes:", units))
 }
 
 #' Converts bytes in human readable form
 #'
 #' Given an input of bytes calculates the result in a sensible output unit (e.g.
-#' MB, GB, PB).
+#' MB, GB, PB). Decimal units are powers of 1000, and binary units powers of 1024.
 #'
-#' @param S Number of bytes
-#' @return String in human readable format
+#' @param S Number of bytes. A vector may be given.
+#' @param units One of "decimal", giving units such as kB, or "binary", giving units
+#'   such as KiB.
+#' @param digits Number of decimal places to round to, or NULL for no rounding.
+#' @return String in human readable format, one for each value of S.
 #' @export
+#' @examples
+#' humanBytes(1500)
+#' humanBytes(1500, units="binary")
+#' humanBytes(c(1, 1024, 1e6))
 #'
-humanBytes <- function(S) {
-  if (S >= 1e+18) {
-    S <- S/1e+18
-    return(paste(S,"EB"))
-  } else if (S >= 1e+15) {
-    S <- S/1e+15
-    return(paste(S, "PB"))
-  } else if (S >= 1e+12) {
-    S <- S/1e+12
-    return(paste(S, "TB"))
-  } else if (S >= 1e+9) {
-    S <- S/1e+9
-    return(paste(S, "GB"))
-  } else if (S >= 1e+6) {
-    S <- S/1e+6
-    return(paste(S, "MB"))
-  } else if (S >= 1e+3) {
-    S <- S/1e+3
-    return(paste(S, "kB"))
-  } else {
-    if (S==1) {
-      return(paste(S, "byte"))
-    } else {
-      return(paste(S, "bytes"))
-    }
-  }
+humanBytes <- function(S, units="decimal", digits=3) {
+  return(.humanUnits(S, .fileSizeMultipliers(units), "byte", pluralise="base", digits=digits))
 }

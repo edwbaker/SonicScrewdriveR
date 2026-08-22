@@ -9,6 +9,9 @@ referencePressure(unit = "Pa")
 \arguments{
 \item{unit}{Unit to return, "Pa" or "dyne_cm2"}
 }
+\value{
+The reference sound pressure, in the unit specified.
+}
 \description{
 Provides the standard reference pressure level.
 }

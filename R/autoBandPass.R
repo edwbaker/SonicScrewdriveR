@@ -24,18 +24,17 @@ autoBandPass <- function(
   lowcut=1000
 ) {
   validateIsWave(wave)
-  if (!is.integer(n.bw)) {stop("n.bw must be an integer.")}
+  #A whole number given as 1 rather than 1L is a double, so the value is checked
+  #rather than the storage type, which rejected the default of this function.
+  if (!is.numeric(n.bw) || length(n.bw) != 1 || is.na(n.bw) || n.bw != round(n.bw)) {
+    stop("n.bw must be an integer.")
+  }
+  .validateChoice(bw, c("-3dB", "-10dB"), "bw", "autoBandPass", prep="for")
   wave2 <- seewave::ffilter(wave, from=lowcut, output="Wave")
   data <- frequencyStats(wave2)
   rm(wave2)
-  if (bw=="-3dB") {
-    bw <- data$`-3dB`$bandwidth * 1000
-    centre <- data$`-3dB`$centre * 1000
-  }
-  if (bw=="-10dB") {
-    bw <- data$`-10dB`$bandwidth * 1000
-    centre <- data$`-10dB`$centre * 1000
-  }
+  centre <- data[[bw]]$centre * 1000
+  bw <- data[[bw]]$bandwidth * 1000
   wave <- seewave::ffilter(
     wave,
     from=centre-n.bw*bw,

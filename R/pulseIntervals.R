@@ -12,24 +12,27 @@ pulseIntervals <- function(
   nsd=2
 ){
   diffs <- diff(pulses$onsets)
+  if (length(diffs) == 0) {
+    return(list("onsets" = numeric(0), "offsets" = numeric(0)))
+  }
+
   m <- mean(diffs)
   s <- stats::sd(diffs)
-  nsd <- 2
-
-  odds <- diffs > m + nsd*s | diffs < m-nsd*s
-
-  n_intervals <- length(which(odds[odds==TRUE]))
-  onsets <- vector(mode="numeric", length=n_intervals)
-  offsets <- onsets
-
-  for (i in 2:length(odds)) {
-    if (odds[i] == TRUE) {
-      onsets[i] <- pulses$onsets[i-1]
-      offsets[i] <- pulses$onsets[i-1]+diffs[i]
-    }
+  #A single interval has no standard deviation, and cannot be an outlier of a set
+  #of one.
+  if (is.na(s)) {
+    odds <- rep(FALSE, length(diffs))
+  } else {
+    odds <- diffs > m + nsd*s | diffs < m - nsd*s
   }
+
+  #The gap measured by diffs[i] runs from the ith onset to the one after it. The
+  #results were previously written at the index of the interval being examined
+  #rather than of the interval being kept, which left the output padded with
+  #zeroes and paired each gap with the onset before the one it started at.
+  found <- which(odds)
   return(list(
-    "onsets" = onsets,
-    "offsets" = offsets
+    "onsets" = pulses$onsets[found],
+    "offsets" = pulses$onsets[found + 1]
   ))
 }

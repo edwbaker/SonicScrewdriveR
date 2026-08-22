@@ -36,6 +36,9 @@ processed unless it has a length equal to window.length.}
 
 \item{...}{Additional parameters to FUN}
 }
+\value{
+A list of the results of FUN for each window, or a single Wave object if bind.wave is TRUE.
+}
 \description{
 Separates a Wave object into windows of a defined length and runs a function
 on the window section. Windows may overlap, and the function can make use of

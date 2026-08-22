@@ -7,6 +7,7 @@
 #' @param lat Latitude of location.
 #' @param lon Longitude of location.
 #' @param overwrite If TRUE then the function will overwrite any existing min/max.
+#' @return The traits data frame, with value_min and value_max converted to numeric times of day.
 #' @export
 ab_diel_traits <- function(traits, date, lat, lon, overwrite=FALSE) {
   date <- as.Date(date)
@@ -46,7 +47,7 @@ ab_diel_traits <- function(traits, date, lat, lon, overwrite=FALSE) {
 #' @param overwrite If TRUE then the function will overwrite any existing min/max.
 #' @keywords internal
 #' @noRd
-#' @importFrom stringi stri_replace_all_charclass stri_pad
+#' @importFrom stringi stri_replace_all_charclass
 .calcTimesOfDay <- function(times, min, max, date, lat, lon, overwrite=FALSE) {
   #Some initial tidying
   times <- tolower(stri_replace_all_charclass(times, "\\p{WHITE_SPACE}", ""))
@@ -110,43 +111,28 @@ ab_diel_traits <- function(traits, date, lat, lon, overwrite=FALSE) {
 
   d <- getSunlightTimes(date=date, lat=lat, lon=lon)
   starts <- c(
-    paste0(
-      stri_pad(as.POSIXlt(d$sunrise)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$sunrise)$min, 2, "left", 0)
-    ),
-    paste0(
-      stri_pad(as.POSIXlt(d$night)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$night)$min, 2, "left", 0)
-    ),
+    .hhmm(d$sunrise),
+    .hhmm(d$night),
     "0000",
-    paste0(
-      stri_pad(as.POSIXlt(d$solarNoon)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$solarNoon)$min, 2, "left", 0)
-    ),
-    paste0(
-      stri_pad(as.POSIXlt(d$sunset)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$sunset)$min, 2, "left", 0)
-    )
+    .hhmm(d$solarNoon),
+    .hhmm(d$sunset)
   )
   ends <- c(
-    paste0(
-      stri_pad(as.POSIXlt(d$sunset)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$sunset)$min, 2, "left", 0)
-    ),
-    paste0(
-      stri_pad(as.POSIXlt(d$nightEnd)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$nightEnd)$min, 2, "left", 0)
-    ),
+    .hhmm(d$sunset),
+    .hhmm(d$nightEnd),
     "2359",
-    paste0(
-      stri_pad(as.POSIXlt(d$sunset)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$sunset)$min, 2, "left", 0)
-    ),
-    paste0(
-      stri_pad(as.POSIXlt(d$night)$hour, 2, "left", 0),
-      stri_pad(as.POSIXlt(d$night)$min, 2, "left", 0)
-    )
+    .hhmm(d$sunset),
+    .hhmm(d$night)
   )
   ret <- as.data.frame(cbind(times,starts,ends))
   return(ret)
+}
+
+#' Format a time as a four digit HHMM string
+#'
+#' @param t A POSIXct or POSIXlt time.
+#' @return A character vector of HHMM strings.
+#' @noRd
+.hhmm <- function(t) {
+  return(format(as.POSIXlt(t), "%H%M"))
 }

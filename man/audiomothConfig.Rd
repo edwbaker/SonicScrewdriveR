@@ -10,7 +10,7 @@ audiomothConfig(filename)
 \item{filename}{Path to the configuration file to read}
 }
 \value{
-A data frame of matching annotations
+A data frame of the configuration settings, with columns Key and Value
 }
 \description{
 Reads and parses an AudioMoth configuration file.

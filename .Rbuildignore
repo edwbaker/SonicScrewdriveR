@@ -21,3 +21,4 @@ README.md
 ^vignettes/articles$
 ^CRAN-SUBMISSION$
 ^.*\.pem$
+^\.claude$

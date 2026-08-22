@@ -10,9 +10,7 @@
 #' @return Numeric median of the envelope.
 #' @export
 maad_temporal_median <- function(wave, mode="fast", Nt=512, maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   ret <- maad$features$temporal_median(maad_wave(wave), mode=mode, Nt=as.integer(Nt))
   return(ret)
 }
@@ -38,9 +36,7 @@ maad_temporal_entropy <- function(
     mode="fast",
     Nt=512,
     maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   ret <- maad$features$temporal_entropy(
     maad_wave(wave),
     compatibility=compatibility,
@@ -74,9 +70,7 @@ maad_temporal_activity <- function(
     mode="fast",
     Nt=512,
     maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   ret <- maad$features$temporal_activity(
     maad_wave(wave),
     dB_threshold=as.numeric(dB_threshold),
@@ -119,9 +113,7 @@ maad_temporal_events <- function(
     mode="fast",
     Nt=512,
     maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   ret <- maad$features$temporal_events(
     maad_wave(wave),
     fs=wave@samp.rate,
@@ -159,9 +151,7 @@ maad_temporal_events <- function(
 #'   \insertAllCited{}
 #' @export
 maad_acoustic_complexity_index <- function(object, maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   object <- .spectrogram_maad_power(object)
   ret <- maad$features$acoustic_complexity_index(reticulate::np_array(object@Sxx))
   names(ret) <- c("ACI_xx", "ACI_per_bin", "ACI_sum")
@@ -190,7 +180,7 @@ maad_acoustic_complexity_index <- function(object, maad=NULL) {
 #'   \insertAllCited{}
 #' @export
 maad_frequency_entropy <- function(object, compatibility="QUT", maad=NULL) {
-  maad <- getMaad()
+  maad <- .maad(maad)
   object <- .spectrogram_maad_power(object)
   ret <- maad$features$frequency_entropy(object@Sxx, compatibility=compatibility)
   names(ret) <- c("Hf", "Ht_per_bin")
@@ -232,9 +222,7 @@ maad_number_of_peaks <- function(
     slopes=c(1, 1),
     prominence=0,
     maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   object <- .spectrogram_maad_power(object)
   if (length(prominence) == 2) {
     prominence <- reticulate::np_array(prominence)
@@ -268,17 +256,27 @@ maad_number_of_peaks <- function(
 #' \item{EPS}{Entropy of spectral maxima (peaks).}
 #' \item{EPS_KURT}{Kurtosis of spectral maxima.}
 #' \item{EPS_SKEW}{Skewness of spectral maxima.}
+#' @export
 maad_spectral_entropy <- function(object, flim=NULL, maad=NULL) {
-  #ToDo: Why doesn't this work? Does it work in Python?
-  #ToDo: Needs tests.
-  if (is.null(maad)) {
-    maad <- getMaad()
+  maad <- .maad(maad)
+  if (!is.null(flim)) {
+    if (!is.numeric(flim) || length(flim) != 2) {
+      stop("flim must be a numeric vector of length two.")
+    }
+    #scikit-maad tests flim for being a tuple, an array or a number. A plain
+    #vector arrives from R as a Python list, which is none of those, so the band
+    #of frequencies was left unset and the calculation failed on it.
+    flim <- reticulate::tuple(flim[[1]], flim[[2]])
   }
 
   object <- .spectrogram_maad_power(object)
+  #fn has to reach Python as an array rather than as a list. Left as a list,
+  #scikit-maad's own default for flim, which is (fn.min(), fn.max()), has no
+  #min() to call. Sxx is not affected, as scikit-maad puts that through
+  #np.asarray() itself.
   ret <- maad$features$spectral_entropy(
-    object@Sxx,
-    object@fn,
+    reticulate::np_array(object@Sxx),
+    reticulate::np_array(object@fn),
     flim=flim
   )
   names(ret) <- c("EAS", "ECU", "ECV", "EPS", "EPS_KURT", "EPS_SKEW")
@@ -300,9 +298,7 @@ maad_spectral_entropy <- function(object, flim=NULL, maad=NULL) {
 #'  \insertAllCited{}
 #' @export
 maad_spectral_activity <- function(object, dB_threshold=6, maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
   object <- .spectrogram_maad_dB(object)
   ret <- maad$features$spectral_activity(object@Sxx, dB_threshold=as.numeric(dB_threshold))
   names(ret) <- c("ACTfract", "ACTcount", "ACTmean")

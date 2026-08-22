@@ -64,6 +64,7 @@ convert2Celsius <- function(temp, input="K") {
 #'
 #' @param temp The value of the temperature to convert
 #' @param input The unit of the temperature to convert, allowed values are "K", "C".
+#' @return No return value, this conversion is not implemented and the function raises an error.
 #' @export
 #' @examples
 #' \dontrun{
@@ -71,5 +72,5 @@ convert2Celsius <- function(temp, input="K") {
 #' }
 #'
 convert2Fahrenheit <- function(temp, input) {
-  stop("Implementation of this function is against the politcial beliefs of the author.")
+  stop("Implementation of this function is against the political beliefs of the author.")
 }

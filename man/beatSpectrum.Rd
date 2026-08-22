@@ -9,9 +9,9 @@ beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 \arguments{
 \item{wave}{an R object or path to a wave file}
 
-\item{min_period}{the minimal rythmicity period expected, in seconds}
+\item{min_period}{the minimal rhythmicity period expected, in seconds}
 
-\item{max_period}{the maximal rythmicity period expected, in seconds}
+\item{max_period}{the maximal rhythmicity period expected, in seconds}
 
 \item{dj}{the frequency resolution of the cwt (in voices per octave)}
 

@@ -260,3 +260,62 @@ test_that("maad_spectral_activity works as expected", {
   expect_true(is.numeric(ret[[2]]))
   expect_true(is.numeric(ret[[3]]))
 })
+
+test_that("maad_spectral_entropy works as expected", {
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- readWave(f)
+
+  # fn reached Python as a list, which has no min() for scikit-maad's own default
+  # of flim=(fn.min(), fn.max()), so this used to fail on every call.
+  ret <- maad_spectral_entropy(w)
+  expect_equal(length(ret), 6)
+  expect_equal(names(ret), c("EAS", "ECU", "ECV", "EPS", "EPS_KURT", "EPS_SKEW"))
+  expect_true(all(vapply(ret, is.numeric, logical(1))))
+
+  maad <- getMaad()
+  expect_equal(maad_spectral_entropy(w, maad=maad), ret)
+
+  # A spectrogram gives the same answer as the wave it came from.
+  expect_equal(maad_spectral_entropy(maad_spectrogram(w)), ret)
+})
+
+test_that("maad_spectral_entropy takes a band of frequencies", {
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- readWave(f)
+
+  # scikit-maad tests flim for being a tuple or an array, and a plain vector
+  # arrives from R as a list, so a band used to leave its index unassigned.
+  banded <- maad_spectral_entropy(w, flim=c(1000, 3000))
+  expect_equal(names(banded), c("EAS", "ECU", "ECV", "EPS", "EPS_KURT", "EPS_SKEW"))
+  expect_false(isTRUE(all.equal(unlist(banded), unlist(maad_spectral_entropy(w)))))
+
+  expect_error(maad_spectral_entropy(w, flim=1000), "length two")
+  expect_error(maad_spectral_entropy(w, flim=c("a", "b")), "length two")
+})
+
+test_that("maad_spectral_entropy matches scikit-maad called directly", {
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- readWave(f)
+  spectrogram <- maad_spectrogram(w)
+
+  maad <- getMaad()
+  np <- reticulate::import("numpy")
+  direct <- maad$features$spectral_entropy(
+    np$asarray(spectrogram@Sxx),
+    np$asarray(spectrogram@fn)
+  )
+
+  expect_equal(unname(unlist(maad_spectral_entropy(spectrogram))), unname(unlist(direct)))
+})
+
+test_that("maad_spectral_entropy separates a tone from noise", {
+  # The values are one minus an entropy, so an ordered spectrum scores high.
+  tone <- tuneR::sine(2000, duration=8000, samp.rate=8000)
+  noise <- tuneR::noise("white", duration=8000, samp.rate=8000)
+
+  expect_gt(maad_spectral_entropy(tone)[["EAS"]], maad_spectral_entropy(noise)[["EAS"]])
+  for (value in c("EAS", "ECU", "ECV", "EPS")) {
+    expect_gte(maad_spectral_entropy(noise)[[value]], 0)
+    expect_lte(maad_spectral_entropy(noise)[[value]], 1)
+  }
+})

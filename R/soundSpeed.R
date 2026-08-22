@@ -35,7 +35,8 @@
 #' soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
 #'
 #' t <- 1:30
-#' s <- lapply(t, \(x){soundSpeed(method="cramer", temp=x)})
+#' s <- lapply(t, function(x){soundSpeed(method="cramer", temp=x)})
+#' @return The speed of sound in the medium, in metres per second.
 #' @export
 soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NULL, density=NULL, ...) {
   # If method specified use it
@@ -51,6 +52,9 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
       }
       return(seewave::wasp(f=1, t=list(...)$temp, medium="air")$c)
     }
+    #Without this an unknown method fell out of the block and the default
+    #below returned the speed of sound in air as though nothing were wrong.
+    stop(paste("Unknown method for soundSpeed:", method))
   }
   # If all arguments are null set default
   if (all(is.null(medium), is.null(wl), is.null(f), is.null(bulkModulus), is.null(density))) {
@@ -68,6 +72,7 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
     s <- sqrt(validateBulkModulus(bulkModulus)/validateDensity(density))
     return(s)
   }
+  stop("Insufficient arguments to calculate the speed of sound.")
 }
 
 #' Get the speed of sound in a medium
@@ -84,7 +89,9 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
   names  <- c("air", "sea water", "freshwater", "helium", "hydrogen", "liquid helium", "mercury", "aluminium", "lead", "steel")
   values <- c(343, 1500, 1430, 999, 1330, 211, 1451, 6420, 1960, 5941)
   if (medium=="all") {
-    return(data.frame(cbind(names, values)))
+    #cbind() of a character and a numeric vector gives a character matrix, which
+    #turned every speed into a string.
+    return(data.frame(names = names, values = values, stringsAsFactors = FALSE))
   }
   if (medium %in% names) {
     return(values[which(names==medium)])
@@ -101,7 +108,12 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
 #' @param pressure Pressure
 #' @param pressure.unit Pressure unit
 #' @param RH Relative humidity
-#' @param MoleFracCO2 Mole fraction of CO2
+#' @param MoleFracCO2 Mole fraction of CO2. The default is the nominal composition
+#'   used by Cramer, 400 ppm.
+#' @details
+#' Cramer's expression is valid for temperatures from 0 to 30 degrees Celsius,
+#' pressures from 75 to 102 kPa, a mole fraction of water vapour up to 0.06, and a
+#' mole fraction of CO2 up to 0.01. Values outside those ranges are extrapolations.
 #' @keywords internal
 #' @noRd
 #' @return Numeric value of the speed of sound in m/s
@@ -113,7 +125,7 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
                                   pressure=100,
                                   pressure.unit = "kPa",
                                   RH=50,
-                                  MoleFracCO2=400^-6) {
+                                  MoleFracCO2=400e-6) {
   validateRH(RH)
   K <- convert2Kelvin(temp, temp.unit)
   celsius <- convert2Celsius(temp, temp.unit)
@@ -130,7 +142,7 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
   MoleFracH20 <- MolConH20/100
 
   C1 <- 0.603055*celsius + 331.5024- celsius^2*5.28*10^-4 + (0.1495874*celsius + 51.471935 - celsius^2*7.82*10^-4)*MoleFracH20
-  C2 <- (-1.82*10^-7+3.73*10^-8*T-celsius^2*2.93*10^-10)*P+(-85.20931-0.228525*celsius+ celsius^2*5.91*10^-5)*MoleFracCO2
+  C2 <- (-1.82*10^-7+3.73*10^-8*celsius-celsius^2*2.93*10^-10)*P+(-85.20931-0.228525*celsius+ celsius^2*5.91*10^-5)*MoleFracCO2
   C3 = MoleFracH20^2*2.835149 + P^2*2.15*10^-13 - MoleFracCO2^2*29.179762 - 4.86*10^-4*MoleFracH20*P*MoleFracCO2
   C = C1+C2-C3
   return(C)

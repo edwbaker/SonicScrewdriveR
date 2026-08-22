@@ -3,16 +3,21 @@
 #' Calculates the peak, centre, bandwidth and quality factor. The quality factor (Q) is calculated at both
 #' -3dB and -10dB as discussed by Bennett-Clark (1999)  <doi:10.1080/09524622.1999.9753408>.
 #'
-#' @param wave A Wave object
+#' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
+#'   allChannels(), which returns one set of statistics per channel.
 #' @importFrom seewave meanspec sh
 #' @export
-#' @return A list of spectral entropy types.
+#' @return A list of spectral entropy types. For multi-channel input, one such
+#'   list per channel.
 #' @examples
 #' \dontrun{
 #' entropyStats(sheep)
 #' }
 #'
 entropyStats <- function(wave) {
+  if (.useAllChannels(wave)) {
+    return(allChannels(wave, entropyStats, channel.param=NULL))
+  }
   validateIsWave(wave)
 
   spec <- meanspec(wave)

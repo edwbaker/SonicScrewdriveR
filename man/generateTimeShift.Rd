@@ -4,24 +4,17 @@
 \alias{generateTimeShift}
 \title{Generated time-shifted versions of a Wave-like object}
 \usage{
-generateTimeShift(
-  wave,
-  type = "silent",
-  amount = c(1, 2),
-  where = "start",
-  output = "list"
-)
+generateTimeShift(wave, type = "silent", amount = c(1, 2), where = "start")
 }
 \arguments{
-\item{wave}{A Wave-like object or list of Wave-like objects.}
+\item{wave}{A Wave or WaveMC object, or a list of such objects.}
 
 \item{type}{The type of time-shift to apply. Either "silent" or "rotate".}
 
 \item{amount}{Vector of amount of time to shift by (seconds).}
 
-\item{where}{Where to insert silence if \code{type} is "silent".}
-
-\item{output}{Return a list.}
+\item{where}{Where to insert silence if \code{type} is "silent". One of "start",
+"end", or "both". If "both" two versions are generated for each amount.}
 }
 \value{
 A Wave-like object or list of Wave-like objects.

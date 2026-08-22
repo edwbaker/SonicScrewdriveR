@@ -26,37 +26,23 @@ pulse <- function(
   output="Wave",
   invert=FALSE
 ) {
-  if (!type %in% c("dirac", "square")) {
-    stop("pulse type not recognised.")
-  }
+  .validateChoice(type, c("dirac", "square"), msg="pulse type not recognised.")
   if (leading + pulse.length > duration) {
     stop("sum of leading and pulse.length cannot be greater than duration.")
   }
-  if (!output %in% c("Wave", "TaggedWave")) {
-    stop("output format not recognised.")
-  }
+  .validateChoice(output, c("Wave", "TaggedWave"), msg="output format not recognised.")
   pcm <- .setPCM(bit, pcm)
   w <- tuneR::silence(duration=duration, samp.rate=samp.rate, bit=bit, pcm=pcm, stereo=stereo)
-  if (w@bit==8) {
-    if (invert) {
-      max <- 0
-    } else {
-      max <- 255
-    }
+  #The amplitude has to suit the unit that was asked for. tuneR::silence() resolves
+  #bit=1 to a Wave whose bit slot reads 32, so taking the amplitude from that slot
+  #put every pulse that was not 8-bit far outside the range its format allows and
+  #writeWave() refused to write the result.
+  if (invert) {
+    #Eight bit PCM is unsigned, so its quietest value is zero rather than the
+    #negative of its loudest.
+    max <- if (w@bit == 8) 0 else -.waveFullScale(w)
   } else {
-    if (pcm) {
-      if (invert) {
-        max <- -2^w@bit / 2
-      } else {
-        max <- 2^w@bit / 2
-      }
-    } else {
-      if (invert) {
-        max <- -2^w@bit
-      } else {
-        max <- 2^w@bit
-      }
-    }
+    max <- .waveFullScale(w)
   }
   if (type=="dirac") {
     w@left[leading + 1] <- max
@@ -65,9 +51,12 @@ pulse <- function(
     }
   }
   if (type=="square") {
-    w@left[(leading + 1):(leading + pulse.length)] <- max
+    #seq_len() so that a pulse of no length writes nothing, where (leading+1):
+    #(leading+0) counted backwards and wrote two samples.
+    samples <- leading + seq_len(pulse.length)
+    w@left[samples] <- max
     if (stereo) {
-      w@right[(leading + 1):(leading + pulse.length)] <- max
+      w@right[samples] <- max
     }
   }
   if (output=="Wave") {

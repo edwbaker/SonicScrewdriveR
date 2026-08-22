@@ -26,6 +26,13 @@ daysPhases(
 
 \item{tz}{Time-zone of recording device when recording was made}
 }
+\value{
+A data frame with a row for each day, giving the times of each phase of the day and the state of the moon.
+}
 \description{
 Phases of days
+}
+\examples{
+daysPhases(date=as.Date("2024-06-15"), period="month")
+
 }

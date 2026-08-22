@@ -34,9 +34,11 @@ readBirdNet <- function(file, filename_parsing="none") {
       ret <- cbind(ret, starts, ends)
       colnames(ret) <- c(cn, "Start", "End")
     }
-  } else {
-    l <- list.files(file, full.names=T)
+  } else if (dir.exists(file)) {
+    l <- list.files(file, full.names=TRUE)
     ret <- do.call(rbind, lapply(l, readBirdNet, filename_parsing=filename_parsing))
+  } else {
+    stop(paste("No such file or directory:", file))
   }
   return(ret)
 }

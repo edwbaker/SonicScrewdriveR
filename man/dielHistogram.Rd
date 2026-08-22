@@ -10,11 +10,12 @@ dielHistogram(
   col = "grey",
   maxval = NA,
   presence.only = FALSE,
-  limits = c(1, 2)
+  limits = c(1, 2),
+  rot = tzRot(0)
 )
 }
 \arguments{
-\item{times}{A vector of times that can be pocessed by dielFraction().}
+\item{times}{A vector of times that can be processed by dielFraction().}
 
 \item{by}{Controls the size of histogram bins, one of "hour", "15minute", "30minute".}
 
@@ -25,6 +26,8 @@ dielHistogram(
 \item{presence.only}{Only show presence/absence not values.}
 
 \item{limits}{Limits of the plotting (see dielPlot()).}
+
+\item{rot}{Rotation of the plot, which must match the dielPlot() being drawn on.}
 }
 \value{
 A data frame of start and end points of bins.

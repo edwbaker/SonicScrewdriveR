@@ -7,7 +7,8 @@
 dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns a list with one duty cycle per channel.}
 
 \item{limit}{Threshold above which to consider the signal}
 
@@ -16,7 +17,8 @@ dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
 \item{normalise}{If TRUE the Wave is normalised using tuneR}
 }
 \value{
-A numerical value for the duty cycle between 0 and 1 (or 0 and 100\% if percentage output).
+A numerical value for the duty cycle between 0 and 1 (or 0 and 100\% if
+percentage output). For multi-channel input, a list of such values.
 }
 \description{
 Proportion of a wave with signal above the limit

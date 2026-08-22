@@ -6,8 +6,8 @@
 #' the average power per frequency band.
 #'
 #' @param wave an R object or path to a wave file
-#' @param min_period the minimal rythmicity period expected, in seconds
-#' @param max_period the maximal rythmicity period expected, in seconds
+#' @param min_period the minimal rhythmicity period expected, in seconds
+#' @param max_period the maximal rhythmicity period expected, in seconds
 #' @param dj the frequency resolution of the cwt (in voices per octave)
 #' @param ... extra arguments passed to \code{analyze.wavelet()}
 #' @return a spectrum as a data frame.

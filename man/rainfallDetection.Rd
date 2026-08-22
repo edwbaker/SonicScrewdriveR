@@ -7,14 +7,16 @@
 rainfallDetection(wave, method = "bedoya2017", ...)
 }
 \arguments{
-\item{wave}{A Wave object to detect rainfall in}
+\item{wave}{A Wave object to detect rainfall in. Stereo Wave and WaveMC
+objects are passed to allChannels(), which returns one value per channel.}
 
 \item{method}{Which rainfall detection method to use ("bedoya2017")}
 
 \item{...}{Other arguments to pass to rain detection function}
 }
 \value{
-Numeric value from the rainfall detection algorithm chosen.
+Numeric value from the rainfall detection algorithm chosen. For
+multi-channel input, a list of such values.
 }
 \description{
 Detects rainfall in a Wave. An uncalibrated version of Bedoya et al (2017) \url{doi:10.1016/j.ecolind.2016.12.018} is available in this package. The hardRain

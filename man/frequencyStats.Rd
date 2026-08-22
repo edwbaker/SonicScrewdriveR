@@ -7,7 +7,8 @@
 frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns one set of statistics per channel.}
 
 \item{wave_spec}{A precomputed spectrum (optional, if not present will be generated)}
 
@@ -16,6 +17,9 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 \item{lowcut}{Frequency (in kHz) values below which are ignored.}
 
 \item{plot}{IF TRUE displays values}
+}
+\value{
+A list of frequency statistics, with an entry for each of the -3dB and -10dB thresholds.
 }
 \description{
 Calculates the peak, centre, bandwidth and quality factor. The quality factor (Q) is calculated at both

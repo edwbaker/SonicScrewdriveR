@@ -1,13 +1,14 @@
 #' Cut wave by samples
 #'
-#' Extract a section of a Wave object based on sample positions. This function
-#' will automatically detect if a Wave object is stereo.
+#' Extract a section of a Wave or WaveMC object based on sample positions. This
+#' function will automatically detect if a Wave object is stereo, and returns
+#' the same class of object it was given.
 #'
-#' @param wave A Wave object
+#' @param wave A Wave or WaveMC object
 #' @param from First sample to return
 #' @param to Last sample to return
 #' @param plot If TRUE shows the cut region within the original waveform
-#' @return A Wave object
+#' @return A Wave or WaveMC object
 #' @export
 #' @examples
 #' \dontrun{
@@ -16,7 +17,7 @@
 #' }
 #'
 cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
-  validateIsWave(wave)
+  validateIsWaveLike(wave)
   if (is.infinite(to)) {
     to <- length(wave)
   }
@@ -26,7 +27,9 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   if (from > to){
     stop("In cutws to must be greater than from")
   }
-  if (wave@stereo) {
+  if (inherits(wave, "WaveMC")) {
+    cutwave <- tuneR::WaveMC(wave@.Data[from:to, , drop=FALSE], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
+  } else if (wave@stereo) {
     cutwave <- tuneR::Wave(wave@left[from:to], right=wave@right[from:to], samp.rate=wave@samp.rate, bit=wave@bit)
   } else {
     cutwave <- tuneR::Wave(wave@left[from:to], samp.rate=wave@samp.rate, bit=wave@bit)

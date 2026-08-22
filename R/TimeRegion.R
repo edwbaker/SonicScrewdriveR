@@ -26,78 +26,41 @@ setClass(
 #' @return A TimeRegion object.
 #' @export
 region <- function(unit, from=0, to=Inf) {
-  if (!unit %in% c("samples", "seconds", "minutes", "hours")) {
-    stop("Unit must be one of samples, seconds, minutes, hours")
-  }
-  if (unit == "samples") {
-    return(.samples(from, to))
-  }
-  if (unit == "seconds") {
-    return(.seconds(from, to))
-  }
-  if (unit == "minutes") {
-    return(.minutes(from, to))
-  }
-  if (unit == "hours") {
-    return(.hours(from, to))
-  }
-}
-
-.samples <- function(from, to) {
-  t <- new("TimeRegion")
-  t@from <- from
-  t@to <- to
-  t@unit <- "samples"
-  return(t)
-}
-
-.seconds <- function(from, to) {
-  t <- new("TimeRegion")
-  t@from <- from
-  t@to <- to
-  t@unit <- "seconds"
-  return(t)
-}
-
-.minutes <- function(from, to) {
-  t <- new("TimeRegion")
-  t@from <- from
-  t@to <- to
-  t@unit <- "minutes"
-  return(t)
-}
-
-.hours <- function(from, to) {
-  t <- new("TimeRegion")
-  t@from <- from
-  t@to <- to
-  t@unit <- "hours"
-  return(t)
+  .validateChoice(
+    unit, c("samples", "seconds", "minutes", "hours"),
+    msg="Unit must be one of samples, seconds, minutes, hours"
+  )
+  return(new("TimeRegion", from=from, to=to, unit=unit))
 }
 
 .timeRegion2samples <- function(t, samp.rate) {
-  if (t@unit == "samples") {
-    return(c(t@from,t@to))
-  }
-  if (t@unit =="seconds") {
-    return(c(max(1,(t@from*samp.rate)),(t@to*samp.rate)))
-  }
-  if (t@unit =="minutes") {
-    return(c(max(1,(t@from*samp.rate)),(t@to*samp.rate)*60))
-}
-  if (t@unit =="hours") {
-    return(c(max(1,(t@from*samp.rate)),(t@to*samp.rate)*3600))
-  }
+  #One multiplier per unit, applied to both ends. Applying it to only the end of
+  #the region put the start of a region given in minutes or hours at the sample
+  #for that many seconds.
+  multiplier <- switch(t@unit,
+    samples = 1,
+    seconds = samp.rate,
+    minutes = samp.rate * 60,
+    hours = samp.rate * 3600,
+    stop(paste("Unknown unit for TimeRegion:", t@unit))
+  )
+  return(c(max(1, t@from * multiplier), t@to * multiplier))
 }
 
 #' Allow subsetting a Wave object with a TimeRegion
 #' @param x Wave Object
 #' @param i TimeRegion object
+#' @return A Wave object containing only the samples within the time region.
 setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
   if (inherits(i,"TimeRegion")) {
     tr <- .timeRegion2samples(i, x@samp.rate)
-    if (is.infinite(tr[2])) {
-      tr[2] <- length(x@left)
+    #Clamped either way. Only an infinite end used to be brought back to the
+    #length of the wave, so a finite region reaching past it gave a wave padded
+    #with NA rather than one ending where the audio does.
+    tr[1] <- max(1, tr[1])
+    tr[2] <- min(tr[2], length(x@left))
+    if (tr[2] < tr[1]) {
+      stop("Time region begins after the end of the wave.")
     }
     x@left <- x@left[tr[1]:tr[2]]
     if (x@stereo) {

@@ -42,6 +42,7 @@ Suggests:
   soundecology,
   spelling,
   testthat (>= 3.0.0),
+  withr,
   WaveletComp
 VignetteBuilder: knitr
 URL: 
@@ -51,4 +52,4 @@ Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
 BugReports: https://github.com/edwbaker/SonicScrewdriveR/issues
 RdMacros: Rdpack
-RoxygenNote: 7.3.2
+Config/roxygen2/version: 8.1.0

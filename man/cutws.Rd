@@ -7,7 +7,7 @@
 cutws(wave, from = 1, to = Inf, plot = FALSE)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave or WaveMC object}
 
 \item{from}{First sample to return}
 
@@ -16,11 +16,12 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 \item{plot}{If TRUE shows the cut region within the original waveform}
 }
 \value{
-A Wave object
+A Wave or WaveMC object
 }
 \description{
-Extract a section of a Wave object based on sample positions. This function
-will automatically detect if a Wave object is stereo.
+Extract a section of a Wave or WaveMC object based on sample positions. This
+function will automatically detect if a Wave object is stereo, and returns
+the same class of object it was given.
 }
 \examples{
 \dontrun{

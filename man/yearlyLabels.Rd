@@ -6,6 +6,9 @@
 \usage{
 yearlyLabels()
 }
+\value{
+A character vector of twelve month abbreviations.
+}
 \description{
-Generates monthly labels for a yearlyPlot()..
+Generates monthly labels for a yearlyPlot().
 }

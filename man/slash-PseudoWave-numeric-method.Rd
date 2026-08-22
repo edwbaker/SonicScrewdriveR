@@ -12,6 +12,9 @@
 
 \item{e2}{Input 2}
 }
+\value{
+A PseudoWave object with its scale divided by e2.
+}
 \description{
 PseudoWave scalar division
 }

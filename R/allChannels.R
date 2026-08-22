@@ -11,32 +11,28 @@
 #'   The "channels_se" function provides standard functionality for the
 #'   soundecology package.
 #' @param ... Optional. Additional parameters to pass to FUN.
-#' @return A list of outputs.
+#' @return A list with one entry per channel, whatever the class and channel
+#'   count of the input. Each entry is itself a list.
 #' @export
 allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NULL, ...) {
+  #Every input is treated as a number of channels, so that the output has the
+  #same structure whatever the class and channel count of the input.
   if (is(w, "Wave")) {
-    if (w@stereo == FALSE) {
-      ret <- .doChannel(1, w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
-      return(ret)
-    } else {
-      if (is.null(cl)) {
-        ret <- lapply(1:2, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
-      } else {
-        ret <- parallel::parLapply(cl, 1:2, .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
-      }
-      return(ret)
-    }
+    channels <- if (w@stereo) 2 else 1
   } else if (is(w, "WaveMC")) {
-    if (is.null(cl)) {
-      ret <- lapply(1:w@dim[2], .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
-    } else {
-      ret <- parallel::parLapply(cl, 1:w@dim[2], .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
-    }
-    return(ret)
+    channels <- w@dim[2]
+  } else {
+    stop("Expecting a Wave or WaveMC object.")
   }
+  if (is.null(cl)) {
+    ret <- lapply(1:channels, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
+  } else {
+    ret <- parallel::parLapply(cl, 1:channels, .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
+  }
+  return(ret)
 }
 
-#' @importFrom tuneR channel
+#' @importFrom tuneR channel Wave
 .doChannel <- function(channel, w, channel.param, output.FUN, FUN, ...) {
   if (is.null(channel.param)) {
     if (is(w, "Wave")) {
@@ -46,7 +42,13 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
         w <- channel(w, "right")
       }
     } else if (is(w, "WaveMC")) {
-      w <- w[,channel]
+      #Extract as a Wave, as single channel functions expect the left slot
+      w <- tuneR::Wave(
+        w@.Data[,channel],
+        samp.rate = w@samp.rate,
+        bit = w@bit,
+        pcm = w@pcm
+      )
     }
   }
   l <- list(FUN, w, ...)
@@ -75,16 +77,25 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
 #' package when using allChannels.
 #'
 #' @param ... Export from a bioacoustic index function from the soundecology package
+#' @return A list containing the value calculated for the left channel.
 #' @export
 channels_se <- function(...) {
-  params = list(...)
-  if ("left_area" %in% names(params)) {
-    return(list(params$left_area))
+  params <- list(...)
+
+  #Each index function in soundecology gives the value for the left channel a
+  #different name. allChannels() passes one channel at a time, so the left value is
+  #the value for the channel being processed.
+  values <- c(
+    "left_area",      #bioacoustic_index
+    "adi_left",       #acoustic_diversity
+    "aei_left",       #acoustic_evenness
+    "ndsi_left",      #ndsi
+    "AciTotAll_left"  #acoustic_complexity
+  )
+
+  found <- values[values %in% names(params)]
+  if (length(found) == 0) {
+    stop("Not the output of a supported soundecology index function.")
   }
-  if ("adi_left" %in% names(params)) {
-    return(list(params$adi_left))
-  }
-  if ("aei_left" %in% names(params)) {
-    return(list(params$aei_left))
-  }
+  return(list(params[[found[1]]]))
 }

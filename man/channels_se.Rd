@@ -9,6 +9,9 @@ channels_se(...)
 \arguments{
 \item{...}{Export from a bioacoustic index function from the soundecology package}
 }
+\value{
+A list containing the value calculated for the left channel.
+}
 \description{
 Used to process the output of acoustic index functions from the soundecology
 package when using allChannels.

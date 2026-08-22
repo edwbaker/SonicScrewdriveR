@@ -11,6 +11,9 @@ writeAudacityLabels(annotations, file)
 
 \item{file}{Path to the Audacity label file.}
 }
+\value{
+No return value, called for its side effect of writing a label file.
+}
 \description{
 Writes a list of \code{Annotation} objects to an Audacity label file.
 \cr\cr

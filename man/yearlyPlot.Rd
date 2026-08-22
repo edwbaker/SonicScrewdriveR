@@ -11,7 +11,7 @@ yearlyPlot(
   limits = c(0, 2),
   plot = NULL,
   method = "plotrix",
-  legend = F
+  legend = FALSE
 )
 }
 \arguments{
@@ -28,6 +28,9 @@ yearlyPlot(
 \item{method}{Plotting library to use}
 
 \item{legend}{Whether to show a legend}
+}
+\value{
+Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 }
 \description{
 ToDO......

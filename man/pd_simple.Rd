@@ -29,6 +29,9 @@ pd_simple(
 
 \item{psi}{Psi}
 }
+\value{
+A list of input values plus the onset and offset times of pulses.
+}
 \description{
 Detects pulses in a Wave.
 }

@@ -11,6 +11,9 @@
 
 \item{i}{TimeRegion object}
 }
+\value{
+A Wave object containing only the samples within the time region.
+}
 \description{
 Allow subsetting a Wave object with a TimeRegion
 }

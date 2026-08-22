@@ -12,6 +12,9 @@
 
 \item{e2}{Input 2}
 }
+\value{
+A PseudoWave object with its scale multiplied by e1.
+}
 \description{
 Numeric multiplication by PseudoWave
 }
