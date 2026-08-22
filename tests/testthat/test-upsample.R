@@ -54,7 +54,9 @@ test_that("upsample matches the reference implementation", {
 
   for (nm in names(channels)) {
     for (sf in c(1, 2, 3, 5, 8)) {
-      for (method in c("basic", "other")) {
+      # "basic" is the only string method the documentation offers; the other
+      # documented form is a function, which is exercised below.
+      for (method in c("basic")) {
         expect_equal(
           .upsampleChannel(channels[[nm]], sf, method),
           ref_upsampleChannel(channels[[nm]], sf, method),
@@ -92,4 +94,24 @@ test_that("upsample gives the same values on both channels of a stereo wave", {
   up <- upsample(w, 8000*3)
   expect_equal(up@left, ref_upsampleChannel(l, 3, "basic"))
   expect_equal(up@right, ref_upsampleChannel(r, 3, "basic"))
+})
+
+
+test_that("upsample applies a function given as the method", {
+  # The documentation offers "a function to interpolate NAs in a vector", but the
+  # function was never called, so any method other than "basic" returned a channel
+  # of interleaved NAs.
+  channel <- c(1, 3, 5)
+  filled <- .upsampleChannel(channel, 2, function(x) ifelse(is.na(x), -1, x))
+  expect_equal(filled, c(1, -1, 3, -1, 5, -1))
+
+  w <- tuneR::Wave(c(0, 400, 200), samp.rate=8000, bit=16)
+  up <- upsample(w, 16000, method=function(x) ifelse(is.na(x), 0, x))
+  expect_equal(up@left, c(0, 0, 400, 0, 200, 0))
+})
+
+test_that("upsample rejects a method it does not know", {
+  expect_error(.upsampleChannel(c(1, 2), 2, "dog"), "Unknown method for upsample: dog")
+  expect_error(upsample(tuneR::sine(4000, samp.rate=44100), 88200, method="dog"),
+               "Unknown method for upsample")
 })

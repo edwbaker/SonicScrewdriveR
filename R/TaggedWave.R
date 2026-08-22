@@ -27,11 +27,10 @@ setClass(
 )
 
 .addProcess <- function(object, process, output, duration) {
-  if (length(object@processing) == 0) {
-    object@processing <- list(list("process" = process, "output" = output))
-  } else {
-    object@processing <- list(object@processing, list("process" = process, "output" = output))
-  }
+  #Appended, so that the history stays a flat list of processes in the order they
+  #were applied. Wrapping the existing list alongside the new entry nested it one
+  #deeper on every call, so the shape of the slot changed with its length.
+  object@processing <- c(object@processing, list(list("process" = process, "output" = output)))
   return(object)
 }
 

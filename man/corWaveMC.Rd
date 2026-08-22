@@ -4,7 +4,7 @@
 \alias{corWaveMC}
 \title{Correlate channels in a WaveMC object}
 \usage{
-corWaveMC(wave, times, window, temp = 25, cluster = NULL)
+corWaveMC(wave, times, window, cluster = NULL, ...)
 }
 \arguments{
 \item{wave}{A WaveMC object}
@@ -13,14 +13,35 @@ corWaveMC(wave, times, window, temp = 25, cluster = NULL)
 
 \item{window}{Width of the window to correlate in seconds (centred on times)}
 
-\item{temp}{Air temperature in Celsius}
-
 \item{cluster}{A cluster for parallel execution}
+
+\item{...}{Additional arguments passed to \code{seewave::corenv()}, e.g. \code{method}
+or the envelope smoothing arguments.}
 }
 \value{
-List of corenv lists for events, and a list of the time differences between channels
+A list with one entry per event, each holding the \code{corenv} list for
+every channel in \code{correlations}, and the delay of every channel relative to
+the first in \code{delays} (see Details).
 }
 \description{
 Uses the corenv function from seewave to calculate the envelope correlation for timed
 events between the channels of a WaveMC object
+}
+\details{
+The delays are the offsets \code{corenv()} reports, with the sign changed so that a
+positive delay means the sound arrived at that channel later than it arrived
+at the first channel, which is the convention \code{tdoa()} and \code{bearing()} use.
+\code{corenv()} resolves an offset only to a whole sample, and reports any delay of
+zero or less as one sample greater than it is. \code{tdoa()} with
+\code{method="envelope"} measures the same thing without either limitation, and its
+output can be passed to \code{bearing()}.
+
+\code{corenv()} correlates ranks rather than values unless it is told otherwise,
+which for a recording with quiet stretches between events can put the largest
+correlation at no offset at all whatever the offset really is. Pass
+\code{method="pearson"} if the delays look implausible.
+}
+\seealso{
+\code{\link[=tdoa]{tdoa()}}, which measures the time differences of arrival between
+channels, and \code{\link[=bearing]{bearing()}}, which turns them into a direction.
 }

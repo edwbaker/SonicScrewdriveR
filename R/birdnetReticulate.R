@@ -22,15 +22,14 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
   if (!package.installed("reticulate")) {
     stop("The reticulate package is required to use BirdNET.")
   }
+  .useUtf8Locale()
   if (!reticulate::virtualenv_exists(envname = "sonicscrewdriver")) {
     pythonInstall()
   }
 
   reticulate::use_virtualenv("sonicscrewdriver")
 
-  if (!output %in% c("data.frame", "Annotation")) {
-    stop("Unknown output format.")
-  }
+  .validateChoice(output, c("data.frame", "Annotation"), msg="Unknown output format.")
   if (!is.null(lat)) {
     if (is.null(lon)) {
       stop("If lat is provided, lon must also be provided.")
@@ -54,7 +53,13 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
   datetime <- reticulate::import("datetime")
   analyzer <- bna$Analyzer()
 
-  ret <- list()
+  #A list of dates formatted one element at a time gave a one element list to
+  #format(), and as.integer() then read NA for the year, month and day.
+  if (!is.null(date)) {
+    date <- as.Date(do.call(c, as.list(date)))
+  }
+
+  ret <- vector("list", length(files))
   for (i in seq_along(files)) {
     if (!is.null(date)) {
       d <- datetime$date(
@@ -74,25 +79,25 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
       )
     recording$analyze()
 
-    for (j in seq_along(recording$detections)) {
-      ret <- c(
-        ret,
-        annotation(
-          file = files[i],
-          start = recording$detections[[j]]$start_time,
-          end = recording$detections[[j]]$end_time,
-          source = "BirdNet-Analyzer",
-          type = "birdnet-detection",
-          value = recording$detections[[j]]$label,
-          metadata = list(
-            "confidence" = recording$detections[[j]]$confidence,
-            "common_name" = recording$detections[[j]]$common_name,
-            "scientific_name" = recording$detections[[j]]$scientific_name
-          )
+    #Collected per file and joined once at the end. Growing the list a detection
+    #at a time copied the whole of it on every one.
+    ret[[i]] <- lapply(recording$detections, function(detection) {
+      annotation(
+        file = files[i],
+        start = detection$start_time,
+        end = detection$end_time,
+        source = "BirdNet-Analyzer",
+        type = "birdnet-detection",
+        value = detection$label,
+        metadata = list(
+          "confidence" = detection$confidence,
+          "common_name" = detection$common_name,
+          "scientific_name" = detection$scientific_name
         )
       )
-    }
+    })
   }
+  ret <- do.call(c, ret)
   if (output=="Annotation") {
     return(ret)
   }

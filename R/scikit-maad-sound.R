@@ -13,9 +13,7 @@
 #' @return Generically a \code{spectrogram_maad} object.
 #' @export
 maad_spectrogram <- function(wave, mode="power", ..., maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
 
   ret <- maad$sound$spectrogram(x=maad_wave(wave), fs=wave@samp.rate, ...)
   names(ret) <- c("Sxx", "tn", "fn","extents")
@@ -56,9 +54,7 @@ maad_wave <- function(wave) {
 #' \item{f_idx}{Index of sample frequencies.}
 #' @export
 maad_spectrum <- function(wave, ..., maad=NULL) {
-  if (is.null(maad)) {
-    maad <- getMaad()
-  }
+  maad <- .maad(maad)
 
   ret <- maad$sound$spectrum(s=maad_wave(wave), fs=wave@samp.rate, ...)
   names(ret) <- c("pxx", "f_idx")

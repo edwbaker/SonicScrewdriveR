@@ -32,3 +32,7 @@ A data frame with a row for each day, giving the times of each phase of the day 
 \description{
 Phases of days
 }
+\examples{
+daysPhases(date=as.Date("2024-06-15"), period="month")
+
+}

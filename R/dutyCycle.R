@@ -21,6 +21,7 @@ dutyCycle <- function(
   output="unit",
   normalise = TRUE
 ) {
+  .validateChoice(output, c("unit", "percent"), msg="output format not recognised.")
   if (.useAllChannels(wave)) {
     #A closure keeps the arguments away from the formals of allChannels()
     return(allChannels(
@@ -38,7 +39,5 @@ dutyCycle <- function(
   if (output == "unit") {
     return(validateDutyCycle(c/l))
   }
-  if (output == "percent") {
-    return(100*validateDutyCycle(c/l))
-  }
+  return(100*validateDutyCycle(c/l))
 }

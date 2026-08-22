@@ -13,13 +13,31 @@
 
 zerocross <- function(wave) {
   validateIsWave(wave)
-  #Get locations of zero-crossings
-  az <- which(wave@left == 0) #Actual zeroes
+  #A sample that is exactly zero is only a crossing if the signal changes sign
+  #across it. Every zero used to be reported as one, so a run of them gave a
+  #crossing per sample and a zero between two samples of the same sign gave a
+  #crossing that never happened.
+  nonzero <- which(wave@left != 0)
+  if (length(nonzero) == 0) {
+    return(integer(0))
+  }
 
-  wave@left[az] <- NA         #Prevent double-detection of zero crossings where actual zeroes occur
-  zc <- which(diff(sign(wave@left)) != 0) + 1 #+1 places zc at start of sample after crossing, to match real time
-  zc <- sort(c(az,zc))
-  wave@left[az] <- 0
+  zc <- integer(0)
+  if (length(nonzero) > 1) {
+    changes <- which(diff(sign(wave@left[nonzero])) != 0)
+    before <- nonzero[changes]
+    after <- nonzero[changes + 1]
+    #Where zeroes lie between the two samples the first of them is the crossing,
+    #and otherwise the sample after the sign changed, which matches real time.
+    zc <- ifelse(after - before > 1, before + 1, after)
+  }
+
+  #A wave that begins at zero and then departs from it crosses at its first
+  #sample. There is nothing before it to change sign against, so it has to be
+  #taken separately, and a wave that is zero throughout is handled above.
+  if (wave@left[1] == 0) {
+    zc <- c(1L, zc)
+  }
   return(zc)
 }
 

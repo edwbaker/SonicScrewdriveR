@@ -27,9 +27,7 @@
 #' w <- sweptsine(100, 1e3, mode="log")
 #'
 sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="seconds", samp.rate=44100, output="wave", ...) {
-  if (!output %in% c("wave", "vector")) {
-    stop("output must be one of 'wave' or 'vector'")
-  }
+  .validateChoice(output, c("wave", "vector"), msg="output must be one of 'wave' or 'vector'")
   if (f1 <= f0) {
     stop("sweptsine: f1 must be greater than f0")
   }

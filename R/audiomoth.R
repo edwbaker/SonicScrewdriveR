@@ -14,7 +14,9 @@
 audiomothConfig <- function(filename) {
   f <- readLines(filename)
   c <- read.csv(textConnection(sub(":", "|", f)), header=FALSE, sep="|")
-  c[,1] <- trimws(c[,1])
+  #Both columns. Replacing the colon with a separator leaves a space at the front
+  #of every value, so comparing a value against a string never matched.
+  c[] <- lapply(c, trimws)
   colnames(c) <- c("Key", "Value")
   return(c)
 }

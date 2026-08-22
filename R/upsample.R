@@ -40,7 +40,7 @@ upsample <- function(wave, upsample.rate, method="basic") {
 .upsampleChannel <- function(channel, sf, method) {
   n <- length(channel)
 
-  if (method == "basic" && sf > 1) {
+  if (is.character(method) && length(method) == 1 && method == "basic" && sf > 1) {
     #The final sample has no following sample to interpolate towards, so its
     #value is held rather than producing NAs at the end of the channel.
     d <- c(diff(channel), 0) / sf
@@ -52,5 +52,14 @@ upsample <- function(wave, upsample.rate, method="basic") {
   #Other methods are expected to interpolate the NAs left between input samples.
   new <- rep.int(NA_real_, n*sf)
   new[seq.int(from=1, by=sf, length.out=n)] <- channel
+
+  #The documented use of method is a function that fills those NAs. It was never
+  #called, so any method other than "basic" returned a channel of NAs.
+  if (is.function(method)) {
+    return(method(new))
+  }
+  if (!identical(method, "basic")) {
+    stop(paste("Unknown method for upsample:", method))
+  }
   return(new)
 }

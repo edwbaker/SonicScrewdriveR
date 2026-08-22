@@ -145,12 +145,15 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
 #' @export
 merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
   ret <- list()
+  if (length(annotations) == 0) {
+    return(ret)
+  }
 
   if (same.source) {
     rel_columns <- sapply(annotations, function(x) list(file=x@file, type=x@type, value=x@value, source=x@source))
     uniq_cols <- unique(as.data.frame(t(rel_columns)))
 
-    for (i in 1:nrow(uniq_cols)) {
+    for (i in seq_len(nrow(uniq_cols))) {
       file <- uniq_cols[i, "file"]
       type <- uniq_cols[i, "type"]
       value <- uniq_cols[i, "value"]
@@ -164,7 +167,7 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
     rel_columns <- sapply(annotations, function(x) list(file=x@file, type=x@type, value=x@value))
     uniq_cols <- unique(as.data.frame(t(rel_columns)))
 
-    for (i in 1:nrow(uniq_cols)) {
+    for (i in seq_len(nrow(uniq_cols))) {
       file <- uniq_cols[i, "file"]
       type <- uniq_cols[i, "type"]
       value <- uniq_cols[i, "value"]
@@ -196,7 +199,11 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
     remove = vector(mode="logical", length=length(annotations))
     for (i in 1:(length(annotations)-1)) {
       if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
+        #The merged annotation spans both, so it keeps the earlier start and
+        #whichever end is later. Taking only the start discarded the coverage of
+        #an annotation that wholly contained the next one.
         annotations[[i+1]]@start <- annotations[[i]]@start
+        annotations[[i+1]]@end <- max(annotations[[i]]@end, annotations[[i+1]]@end)
         remove[i] <- TRUE
       }
     }
@@ -205,19 +212,21 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
   }
   if (domain == "frequency") {
     annotations <- sort_annotations(annotations, domain="frequency")
-    if (length(annotations) == 1) {
+    if (length(annotations) < 2) {
       return(annotations)
     }
     remove = vector(mode="logical", length=length(annotations))
     for (i in 1:(length(annotations)-1)) {
       if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
         annotations[[i+1]]@low <- annotations[[i]]@low
+        annotations[[i+1]]@high <- max(annotations[[i]]@high, annotations[[i+1]]@high)
         remove[i] <- TRUE
       }
     }
     annotations <- annotations[!remove]
     return(annotations)
   }
+  stop(paste("Unknown domain for merge_annotations:", domain))
 }
 
 #' Sort annotations
@@ -272,12 +281,12 @@ AnnotationList2DataFrame <- function(x) {
 
   names <- colnames(ret)
 
-  for (i in 1:length(metadata_names)) {
+  for (i in seq_along(metadata_names)) {
     ret <- cbind(ret, character(length=length(x)))
   }
   colnames(ret) <- c(names, metadata_names)
 
-  for (i in 1:length(x)) {
+  for (i in seq_along(x)) {
     ret[i, "file"] <- x[[i]]@file
     ret[i, "start"] <- x[[i]]@start
     ret[i, "end"] <- x[[i]]@end
@@ -287,7 +296,7 @@ AnnotationList2DataFrame <- function(x) {
     ret[i, "type"] <- x[[i]]@type
     ret[i, "value"] <- x[[i]]@value
 
-    for (j in 1:length(metadata_names)) {
+    for (j in seq_along(metadata_names)) {
       if (metadata_names[j] %in% names(x[[i]]@metadata)) {
         ret[i, metadata_names[j]] <- x[[i]]@metadata[[metadata_names[j]]]
       }

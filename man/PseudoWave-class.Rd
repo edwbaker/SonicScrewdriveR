@@ -20,9 +20,8 @@ Wave object when operated on.
 
 \item{\code{offset}}{This value is added to the  Wave channels}
 
-\item{\code{seed}}{Random seed for reproducible output, NA for no seed}
-
-\item{\code{scale}}{Logical. Whether to use the random seed value}
+\item{\code{seed}}{Random seed, so that the same PseudoWave gives the same samples
+every time. NA draws a fresh sequence on each use.}
 
 \item{\code{params}}{List of additional parameters to pass to generating function}
 }}

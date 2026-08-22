@@ -8,13 +8,7 @@
 #' @return The numeric value in degrees
 #'
 convert2degrees <- function(A, input="radians") {
-  if (input == "radians") {
-    return(A*180/pi)
-  }
-  if (input == "degrees"){
-    return(A)
-  }
-  stop(paste("Unknown input to convert2degrees:",input))
+  .convertLinear(A, input, "degrees", .angleMultipliers(), fn="convert2degrees")
 }
 
 #' Convert angle to radians
@@ -27,11 +21,5 @@ convert2degrees <- function(A, input="radians") {
 #' @return The numeric value in radians
 #'
 convert2radians <- function(A, input="degrees") {
-  if (input == "degrees") {
-    return(A*pi/180)
-  }
-  if (input == "radians"){
-    return(A)
-  }
-  stop(paste("Unknown input to convert2radians:",input))
+  .convertLinear(A, input, "radians", .angleMultipliers(), fn="convert2radians")
 }

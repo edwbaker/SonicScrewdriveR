@@ -13,6 +13,11 @@
 #' @export
 #' @importFrom tuneR readWave
 readRespeaker6 <- function(filename, from=1, to=Inf, units="samples", header=FALSE) {
+  #With header=TRUE readWave() gives a plain list describing the file, which has
+  #no channels to select from, so it is returned as it comes.
+  if (header) {
+    return(readWave(filename, from, to, units, header=TRUE, toWaveMC=TRUE))
+  }
   w <- readWave(filename, from, to, units, header, toWaveMC=TRUE)
   w@.Data[which(is.na(w@.Data))] <- 0
   w@.Data <- w@.Data[,1:6]

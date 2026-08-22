@@ -10,28 +10,19 @@
 #' @param where Where to insert silence if `type` is "silent". One of "start",
 #'   "end", or "both". If "both" two versions are generated for each amount.
 #' @param amount Vector of amount of time to shift by (seconds).
-#' @param output Return a list.
 #' @return A Wave-like object or list of Wave-like objects.
 #' @export
 generateTimeShift <- function(
     wave,
     type="silent",
     amount=c(1,2),
-    where="start",
-    output="list"
+    where="start"
 ) {
-  if (!type %in% c("silent", "rotate")) {
-    stop("Unknown value for type.")
-  }
-  if (!where %in% c("start", "end", "both")) {
-    stop("Unknown value for where.")
-  }
-  if(!output %in% c("list")) {
-    stop("Unknown value for output.")
-  }
+  .validateChoice(type, c("silent", "rotate"), msg="Unknown value for type.")
+  .validateChoice(where, c("start", "end", "both"), msg="Unknown value for where.")
   if (is.list(wave)) {
     if (all(sapply(wave, inherits, c("Wave", "WaveMC")))) {
-      return(lapply(wave, generateTimeShift, type=type, amount=amount, where=where, output=output))
+      return(lapply(wave, generateTimeShift, type=type, amount=amount, where=where))
     } else {
       stop("All elements of wave must be Wave-like objects.")
     }
@@ -42,7 +33,7 @@ generateTimeShift <- function(
   ret <- list()
   original.length <- length(wave)
   if (type == "silent") {
-    for (i in 1:length(amount)) {
+    for (i in seq_along(amount)) {
       insert <- .silence(wave, round(amount[i] * wave@samp.rate))
       if (where %in% c("start", "both")) {
         #Insertion at the start pushes the end of the wave off the end
@@ -55,8 +46,16 @@ generateTimeShift <- function(
     }
   }
   if (type == "rotate") {
-    for (i in 1:length(amount)) {
-      offset <- round(amount[i] * wave@samp.rate)
+    for (i in seq_along(amount)) {
+      #A rotation repeats itself every whole wave, so a shift of more than the
+      #length of the wave is the same as its remainder. Taken literally it asked
+      #cutws() for a section running backwards, which failed on any recording
+      #shorter than the largest shift.
+      offset <- round(amount[i] * wave@samp.rate) %% original.length
+      if (offset == 0) {
+        ret[[length(ret)+1]] <- wave
+        next
+      }
       ret[[length(ret)+1]] <- concat(
         cutws(wave, from=original.length-offset+1),
         cutws(wave, to=original.length-offset)

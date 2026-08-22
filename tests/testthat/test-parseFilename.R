@@ -105,9 +105,19 @@ test_that("parseFilename() works as expected", {
   data <- list(
     filename="1708529883.wav",
     match="timestamp",
-    datetime= as.POSIXct("2024-02-21 15:38:02 GMT")
+    # Built from the epoch the filename holds, in the zone asked for. The value
+    # here used to be a second out and in whatever zone the machine was in, which
+    # went unnoticed because expect_equal() compares times that large by relative
+    # tolerance and a second is well inside it.
+    datetime= as.POSIXct(1708529883, origin=as.POSIXct("1970-01-01", tz="UTC"), tz="GMT")
   )
   expect_equal(parseFilename(files, timezone="GMT"), data)
+  expect_equal(as.numeric(parseFilename(files, timezone="GMT")$datetime), 1708529883)
+  # The instant is the same wherever it is read.
+  expect_equal(
+    as.numeric(parseFilename(files, timezone="America/New_York")$datetime),
+    as.numeric(parseFilename(files, timezone="UTC")$datetime)
+  )
 })
 
 test_that("match parameter to parseFilename() works as expected", {

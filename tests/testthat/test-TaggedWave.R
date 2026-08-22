@@ -97,7 +97,10 @@ test_that("addProcess works as expected", {
   tw <- addProcess(tw, "Aslan")
   tw <- addProcess(tw, "AsCran", "the pedantic lion")
   expect_equal(typeof(tw@processing), "list")
-  expect_equal(tw@processing[[1]], list(list("process" = "Aslan", "output" = NULL)))
+  # The history is a flat list of processes. It used to be wrapped one deeper on
+  # every call, so the first entry had a different shape from the last.
+  expect_equal(length(tw@processing), 2)
+  expect_equal(tw@processing[[1]], list("process" = "Aslan", "output" = NULL))
   expect_equal(tw@processing[[2]], list("process" = "AsCran", "output" = "the pedantic lion"))
 })
 

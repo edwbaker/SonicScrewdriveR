@@ -3,31 +3,21 @@ plotHMS.at <- function() {
 }
 
 plotHMS.lab <- function() {
-  return(c(
-    "0000",
-    "0100",
-    "0200",
-    "0300",
-    "0400",
-    "0500",
-    "0600",
-    "0700",
-    "0800",
-    "0900",
-    "1000",
-    "1100",
-    "1200",
-    "1300",
-    "1400",
-    "1500",
-    "1600",
-    "1700",
-    "1800",
-    "1900",
-    "2000",
-    "2100",
-    "2200",
-    "2300",
-    "2400"
-  ))
+  return(sprintf("%02d00", 0:24))
+}
+
+#' Draw the legend for a polar plot
+#'
+#' dielPlot(), dielRings() and yearlyPlot() each drew the same legend, differing
+#' only in where they put it and how large it is.
+#'
+#' @param labels Character vector of legend entries.
+#' @param cols Colours matching `labels`.
+#' @param x,y Position of the legend, in user coordinates.
+#' @param cex Character expansion for the legend text.
+#' @importFrom graphics legend
+#' @return Called for its side effect of drawing a legend.
+#' @noRd
+.polarLegend <- function(labels, cols, x=-3, y=2.5, cex=1) {
+  legend(x, y, labels, col=cols, lty=1, lwd=5, bty="n", cex=cex)
 }

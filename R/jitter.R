@@ -20,12 +20,12 @@
 #' jitter(sheep, method="relative")
 #' }
 jitter <- function(wave, method="absolute") {
+  #Without this an unknown method fell off the end and returned NULL invisibly.
+  .validateChoice(method, c("absolute", "relative"), "method", "jitter", prep="for")
   if (method=="absolute") {
     return(jitter_abs(wave))
   }
-  if (method=="relative") {
-    return(jitter_rel(wave))
-  }
+  return(jitter_rel(wave))
 }
 
 jitter_abs <- function(wave)  {
@@ -41,16 +41,13 @@ jitter_abs <- function(wave)  {
 }
 
 jitter_rel <- function(wave) {
-  validateIsWave(wave)
-  t <- diff(.periodBoundaries(wave))
-  n <- length(t)
-  if (n < 2) {
-    return(NA_real_)
+  #Relative jitter is the absolute measurement over the mean period, so it is
+  #expressed in terms of it rather than repeating the calculation.
+  j <- jitter_abs(wave)
+  if (is.na(j)) {
+    return(j)
   }
-
-  j <- sum(abs(diff(t))) / (n - 1)
-  j <- j/mean(t)
-  return(j)
+  return(j / mean(diff(.periodBoundaries(wave))))
 }
 
 

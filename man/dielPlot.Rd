@@ -12,7 +12,7 @@ dielPlot(
   plot = NULL,
   rot = tzRot(0),
   method = "plotrix",
-  legend = F
+  legend = FALSE
 )
 }
 \arguments{

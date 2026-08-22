@@ -28,10 +28,15 @@ pd_simple <- function(
   F_1 <- theta + e_v / scaling
   pulse <- e_u > F_a
   
+  #F_a is the threshold the pulses were found with, so it is returned alongside
+  #F_1. Returning only F_1 meant the threshold given back did not reproduce the
+  #pulses given back. The names match pd_dietrich2004().
   return(list(
     theta = theta,
+    F_a = F_a,
     F_1 = F_1,
     e_u = e_u,
+    e_v = e_v,
     pulse = pulse,
     onsets = which(diff(pulse) == 1),
     offsets = which(diff(pulse) == -1)

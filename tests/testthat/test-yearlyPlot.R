@@ -59,3 +59,37 @@ test_that("Plotting does not throw errors", {
   expect_silent(yearlyPlot("2024", lat=54, lon=0))
   expect_silent(yearlyPlot("2024", lat=54, lon=0, legend=TRUE))
 })
+
+test_that("yearlyPlot uses the year it is given, not the session timezone", {
+  # Dates were built as times in the session's zone and read back as UTC, so a
+  # session east of UTC asked for sun times a day out.
+  pdf(NULL)
+  on.exit({dev.off(); Sys.setenv(TZ="UTC")})
+  for (tz in c("UTC", "Australia/Sydney", "America/Los_Angeles")) {
+    Sys.setenv(TZ=tz)
+    expect_silent(yearlyPlot(2024, lat=50.1, lon=1.83))
+  }
+})
+
+test_that("yearlyPlot copes with latitudes where the sun does not set", {
+  # suncalc gives NA for both sunrise and sunset, and polygon() reads a missing
+  # coordinate as a break between sub-polygons rather than as a full day.
+  pdf(NULL)
+  on.exit(dev.off())
+  expect_silent(yearlyPlot(2024, lat=78, lon=15))
+  expect_silent(yearlyPlot(2024, lat=-78, lon=15))
+})
+
+test_that("yearlyPlot labels the year it was asked for", {
+  # emptyYearly() was called with no arguments, so a leap year was labelled with
+  # the positions of the default 2022.
+  expect_false(identical(yearlyPositions(2024), yearlyPositions(2023)))
+  expect_equal(length(yearlyPositions(2024)), 12)
+})
+
+test_that("yearlyPlot says so when an argument does nothing", {
+  pdf(NULL)
+  on.exit(dev.off())
+  expect_warning(yearlyPlot(2024, lat=50, lon=0, plot="night"), "not implemented")
+  expect_error(yearlyPlot(2024, lat=50, lon=0, method="dog"), "Unknown method")
+})
