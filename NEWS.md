@@ -87,6 +87,15 @@
   reports downsampling with a message, rather than printing to the console. Both can
   now be suppressed in the usual way.
 
+## Fixes
+- readAudio() returns audio read through the av package (e.g. FLAC) at the bit
+  depth of the source file, rather than at a bit depth inferred from the decoded
+  samples. Audio read this way now compares equal to the same audio read from a
+  WAVE file. Note that a 24bit file is returned as 32bit, as the av package does
+  not report a bit depth of 24.
+- readAudio() no longer leaves the sample_rate and channels attributes attached
+  by av::read_audio_bin() on the samples of the Wave object it returns
+
 # sonicscrewdriver 0.0.7
 
 ## New functionality
