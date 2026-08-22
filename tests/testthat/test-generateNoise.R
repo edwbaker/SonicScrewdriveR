@@ -34,6 +34,13 @@ test_that("generateNoise outputs something Wave-like", {
   expect_s4_class(generateNoise(w, "white", FALSE, 0.5, output="list")[[2]], "WaveMC")
 })
 
+test_that("generateNoise preserves PCM settings from audio read through av", {
+  skip_if_not_installed("av")
+
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"))
+  expect_silent(generateNoise(w, "white", FALSE, 0.1, output="list"))
+})
+
 # The thresholds below were set when a pulse peaked at 2^32 rather than at the 1
 # a floating point wave allows, and noise was referenced to that same wrong scale.
 # At a noise ratio of 0.25 the noise now sits near 0.05 of full scale.

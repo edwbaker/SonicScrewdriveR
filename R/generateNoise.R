@@ -39,12 +39,13 @@ generateNoise <- function(
       noise,
       duration=duration,
       samp.rate=wave@samp.rate,
-      bit=wave@bit
+      bit=wave@bit,
+      pcm=wave@pcm
     )
   } else {
-    n <- tuneR::silence(duration=duration, samp.rate=wave@samp.rate, bit=wave@bit)
+    n <- tuneR::silence(duration=duration, samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
     for (i in 1:length(noise)) {
-      nw <- tuneR::noise(noise[i], duration=duration, samp.rate=wave@samp.rate, bit=wave@bit)
+      nw <- tuneR::noise(noise[i], duration=duration, samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
       n@left <- n@left + nw@left
     }
   }
