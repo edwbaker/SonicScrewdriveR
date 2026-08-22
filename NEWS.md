@@ -374,6 +374,9 @@
   Behaviour is unchanged except where noted under Fixes.
 - generateTimeShift() no longer takes an output argument. It accepted only the value
   "list" and never used it.
+- The tests that query the audioBlast API now skip when it cannot be reached, rather
+  than failing. The API answers R's default user agent with a 403, so R CMD check
+  failed on any machine behind that.
 
 ## Documentation
 - convert2bytes() was described as converting time measurements into seconds, and its

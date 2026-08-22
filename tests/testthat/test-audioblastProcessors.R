@@ -1,4 +1,6 @@
 test_that("ab_diel_traits with real data", {
+  skip_on_cran()
+  skip_if_no_audioblast()
   data <- audioblast(
     "data",
     "traits",
