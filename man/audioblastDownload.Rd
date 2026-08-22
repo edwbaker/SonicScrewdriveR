@@ -27,6 +27,9 @@ audioblastDownload(
 \item{on.issue}{Function to call on error or warning. By default \code{stop} to raise
 a standard R error. Setting to \code{warning} will instead a warning.}
 }
+\value{
+No return value, called for its side effect of downloading files.
+}
 \description{
 Downloads audio files associated with a search using the audioBlast() function.
 }

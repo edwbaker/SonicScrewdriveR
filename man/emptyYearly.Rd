@@ -4,7 +4,7 @@
 \alias{emptyYearly}
 \title{Create an empty yearly plot}
 \usage{
-emptyYearly(year = 2022, method = "plotix", rot = pi)
+emptyYearly(year = 2022, method = "plotrix", rot = pi)
 }
 \arguments{
 \item{year}{Year to plot (allows for leap years)}
@@ -12,6 +12,9 @@ emptyYearly(year = 2022, method = "plotix", rot = pi)
 \item{method}{Plotting package to use}
 
 \item{rot}{Rotation of the origin (defaults to pi)}
+}
+\value{
+Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 }
 \description{
 Create a yearly plot with labels but without sun or night duration plotted.

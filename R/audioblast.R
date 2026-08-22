@@ -36,9 +36,10 @@ audioblast <- function(
     output="data.frame",
     ...
 ) {
-  if (!output %in% c("data.frame", "Annotations")) {
-    stop(paste(output, "is not a valid output type."))
-  }
+  .validateChoice(
+    output, c("data.frame", "Annotations"),
+    msg=paste(output, "is not a valid output type.")
+  )
   if (output=="Annotations") {
     if (type != "data" | name != "annomate") {
       stop("Query does not gives results that can be turned into Annotation objects.")
@@ -179,6 +180,7 @@ audioblast <- function(
 #' @param on.issue Function to call on error or warning. By default `stop` to raise
 #'   a standard R error. Setting to `warning` will instead a warning.
 #' @param quiet If true will not print progress.
+#' @return No return value, called for its side effect of downloading files.
 #' @export
 #' @importFrom utils download.file write.csv
 audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", quiet=FALSE, on.issue=.audioblastIssue) {
@@ -191,17 +193,24 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
   files <- d[, 'filename']
   names <- basename(files)
   if (skip.existing) {
-    files <- files[file.exists(names)==FALSE]
-    names <- names[file.exists(names)==FALSE]
+    #The files are written into dir, so that is where an existing copy would be.
+    #Looking in the working directory meant the skip never happened when dir was
+    #anywhere else, and could skip an unrelated file of the same name.
+    exists <- file.exists(file.path(dir, names))
+    files <- files[!exists]
+    names <- names[!exists]
   }
-  for (i in 1:length(files)) {
+  for (i in seq_along(files)) {
     tryCatch(download.file(files[i], destfile=paste(dir, names[i], sep="/"), quiet=quiet),
              error=function(e) on.issue(e), warning=function(w) on.issue(w))
   }
 }
 
 .audioblastIssue <- function(e) {
-  print("There was an issue downloading the requested file via audioblast.")
-  print(e)
-  print("If this issue continues please contact the audioblast team.")
+  warning(
+    "There was an issue downloading the requested file via audioblast.\n",
+    conditionMessage(e), "\n",
+    "If this issue continues please contact the audioblast team.",
+    call. = FALSE
+  )
 }

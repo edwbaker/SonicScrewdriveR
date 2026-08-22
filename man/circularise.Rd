@@ -9,6 +9,9 @@ circularise(values)
 \arguments{
 \item{values}{A vector if values}
 }
+\value{
+The input vector with its first value appended, so that it closes on itself.
+}
 \description{
 When plotting rings or horizons that are meant to cover the entirety of the time period in a
 dielPlot() or yearlyPlot() this function append the beginning values to the end to ensure an entire

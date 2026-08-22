@@ -22,7 +22,9 @@ pseudoWave(
 
 \item{offset}{This value is added to the  Wave channels}
 
-\item{seed}{Random seed for reproducible output. NA for no}
+\item{seed}{Random seed, so that the same PseudoWave gives the same samples
+every time. Pass NA for a fresh random sequence on each use. Setting a seed
+does not disturb the random numbers drawn elsewhere in the session.}
 
 \item{params}{List of additional parameters to pass to generating function}
 }
@@ -38,6 +40,8 @@ pw <- pseudoWave("noise", "white")
 
 pw <- pseudoWave("sine", params=list("f0"=440))
 
+\dontrun{
 pw <- pseudoWave("file", "myfile.wav")
+}
 
 }

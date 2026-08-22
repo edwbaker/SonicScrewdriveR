@@ -4,7 +4,7 @@
 \alias{naturalFrequency}
 \title{Calculate the natural frequency}
 \usage{
-naturalFrequency(L, C = "default", R)
+naturalFrequency(L, C = NULL, R)
 }
 \arguments{
 \item{L}{Inductance}
@@ -12,6 +12,9 @@ naturalFrequency(L, C = "default", R)
 \item{C}{Capacitance, by default IUPAC standard pressure.}
 
 \item{R}{Resistance}
+}
+\value{
+The natural frequency, in Hertz.
 }
 \description{
 Calculates the natural frequency given the inductance, capacitance and resistance. In the acoustic case

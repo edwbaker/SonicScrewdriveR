@@ -8,7 +8,8 @@ test_that("TimeRegion with samples", {
   expect_equal(tr@from, 0)
   expect_equal(tr@to, 10)
   expect_equal(tr@unit, "samples")
-  expect_equal(.timeRegion2samples(tr, 44100), c(0,10))
+  # Sample numbers start at one, as they do for every other unit.
+  expect_equal(.timeRegion2samples(tr, 44100), c(1,10))
 })
 
 test_that("TimeRegion with seconds", {
@@ -40,13 +41,13 @@ test_that("TimeRegion with hours", {
 
 test_that("Subsetting Wave by TimeRegion works", {
   w <- tuneR::sawtooth(440, duration=2*44100, samp.rate=44100, stereo=TRUE)
-  w <- w[.seconds(1,2)]
+  w <- w[region("seconds", 1, 2)]
   expect_equal(length(w@left), 44101)
   expect_equal(length(w@right), 44101)
 })
 
 test_that("0 and Inf are handled correctly", {
   w <- tuneR::sawtooth(440, duration=2*44100, samp.rate=44100, stereo=TRUE)
-  w <- w[.seconds(0,Inf)]
+  w <- w[region("seconds", 0, Inf)]
   expect_equal(length(w@left), 88200)
 })

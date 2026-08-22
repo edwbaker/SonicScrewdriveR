@@ -4,13 +4,15 @@
 \alias{ste}
 \title{Short term energy}
 \usage{
-ste(wave, method = "dietrich2004", ...)
+ste(wave, method = "dietrich2004", U = 120, ...)
 }
 \arguments{
 \item{wave}{A Wave object}
 
 \item{method}{Which method used to calculate the short term energy,
 by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.}
+
+\item{U}{Window length in samples, matching the pulse detection functions.}
 
 \item{...}{Other arguments to pass to ste method.}
 }

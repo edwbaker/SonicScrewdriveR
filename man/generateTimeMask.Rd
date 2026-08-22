@@ -16,6 +16,9 @@ of the time is masked.}
 
 \item{n.periods}{The number of waves to generate in the squarewave method.}
 }
+\value{
+The Wave or WaveMC object with the time mask applied.
+}
 \description{
 Given a \code{Wave}-like object (or a list of \code{Wave}-like objects), generate
 new \code{Wave}-like objects with time masking.

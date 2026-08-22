@@ -133,7 +133,7 @@ test_that("Reading files works", {
   expect_equal(length(w@left), 240000)
   expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
-  expect_equal(w@bit, 32)
+  expect_equal(w@bit, 16)
   expect_equal(w@pcm, TRUE)
   expect_equal(w@stereo, TRUE)
   rm(w)
@@ -142,7 +142,7 @@ test_that("Reading files works", {
   expect_equal(length(w@left), 48000)
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
-  expect_equal(w@bit, 32)
+  expect_equal(w@bit, 16)
   expect_equal(w@pcm, TRUE)
   expect_equal(w@stereo, TRUE)
   rm(w)
@@ -161,6 +161,46 @@ test_that("Reading files works", {
 
 test_that("readAudio rejects bad files", {
   expect_error(readAudio(system.file("extdata/CONFIG.TXT", package="sonicscrewdriver")), "Could not determine number of channels.")
+})
+
+test_that("audio read by the av package matches the same audio read as WAVE", {
+  skip_if_not_installed("av")
+
+  #AUDIOMOTH.flac is a lossless copy of AUDIOMOTH.WAV, so the two must give the
+  #same samples at the same bit depth despite taking different code paths.
+  wav <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"))
+  flac <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"))
+  expect_equal(flac@bit, wav@bit)
+  expect_equal(flac@samp.rate, wav@samp.rate)
+  expect_equal(flac@left, wav@left)
+})
+
+test_that("readAudio does not leave av attributes on the samples", {
+  skip_if_not_installed("av")
+
+  #read_audio_bin() attaches sample_rate and channels to what it returns.
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"))
+  expect_null(attributes(w@left))
+  expect_null(attributes(w@right))
+
+  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"))
+  expect_null(attributes(w@left))
+  expect_null(attributes(w@right))
+})
+
+test_that(".avBitdepth gives correct output", {
+  expect_equal(.avBitdepth("u8", 1), 8)
+  expect_equal(.avBitdepth("s16", 1), 16)
+  expect_equal(.avBitdepth("s16p", 1), 16)
+  expect_equal(.avBitdepth("s32", 1), 32)
+  expect_equal(.avBitdepth("flt", 1), 32)
+  expect_equal(.avBitdepth("fltp", 1), 32)
+  expect_equal(.avBitdepth("dbl", 1), 32)
+
+  #An unusable sample format falls back to inferring the depth from the samples.
+  expect_equal(.avBitdepth(NULL, 2^16/2), 16)
+  expect_equal(.avBitdepth(NA_character_, 2^16/2), 16)
+  expect_equal(.avBitdepth("notaformat", 2^16/2), 16)
 })
 
 test_that(".bitdepth gives correct output", {

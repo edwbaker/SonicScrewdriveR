@@ -3,7 +3,7 @@
 #' Reads and parses an AudioMoth configuration file.
 #'
 #' @param filename Path to the configuration file to read
-#' @return A data frame of matching annotations
+#' @return A data frame of the configuration settings, with columns Key and Value
 #' @export
 #' @importFrom utils read.csv
 #' @examples
@@ -14,7 +14,9 @@
 audiomothConfig <- function(filename) {
   f <- readLines(filename)
   c <- read.csv(textConnection(sub(":", "|", f)), header=FALSE, sep="|")
-  c[,1] <- trimws(c[,1])
+  #Both columns. Replacing the colon with a separator leaves a space at the front
+  #of every value, so comparing a value against a string never matched.
+  c[] <- lapply(c, trimws)
   colnames(c) <- c("Key", "Value")
   return(c)
 }
@@ -78,7 +80,6 @@ audiomothWave <- function(filename) {
 
   filter <- FALSE
   filter_limit <- FALSE
-    filter.limit <-
   if (regexpr("Low-pass filter applied", raw) != -1) {
     filter <- "Low-pass"
   }
@@ -98,7 +99,7 @@ audiomothWave <- function(filename) {
     ar <- regexpr("kHz",  raw) - 1
     bl <- regexpr("kHz and", raw) + 8
     br <- regexpr("kHz\\.", raw) - 1
-    filter_limit(paste0(substr(raw,al, ar),"-",substr(raw,bl,br)))
+    filter_limit <- paste0(substr(raw,al, ar),"-",substr(raw,bl,br))
   }
 
   cancelled <- FALSE

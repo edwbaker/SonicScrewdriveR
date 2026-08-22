@@ -10,7 +10,8 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' subtractSpectra(spec1, spec2)
+#' addSpectra(spec1, spec2)
+#' addSpectra(spec1, spec2, coerceNegative=TRUE)
 #' }
 #'
 addSpectra <- function(s1, s2, coerceNegative=TRUE) {

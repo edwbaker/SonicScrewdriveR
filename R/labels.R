@@ -43,30 +43,34 @@ labelReduction <- function(t) {
 }
 
 labelReductionExecute <- function(t) {
-  starts <- c(t$starts[[1]])
-  ends <- c(t$ends[[1]])
-  for (i in 2:length(t$starts)) {
-    overlap <- FALSE
-    for (j in 1:length(starts)) {
-      if (t$starts[[i]] >= starts[[j]] & t$starts[[i]] <= ends[[j]]) {
-        if (t$ends[[i]] >= ends[[j]]) {
-          ends[[j]] <- t$ends[[i]]
-          overlap <- TRUE
-        }
-      } else if (t$starts[[i]] <= starts[[j]] & t$ends[[i]] <= ends[[j]]) {
-        starts[[j]] <- starts[[i]]
-        overlap <- TRUE
-      } else if (t$starts[[i]] <= starts[[j]] & t$ends[[i]] >= ends[[j]]) {
-        starts[[j]] <- starts[[i]]
-        ends[[j]] <- ends[[i]]
-        overlap <- TRUE
-      }
-    }
-    if (overlap==FALSE) {
-      starts <- c(starts, t$starts[[i]])
-      ends <- c(ends, t$ends[[i]])
+  starts <- as.numeric(t$starts)
+  ends <- as.numeric(t$ends)
+  if (length(starts) == 0) {
+    return(list(starts=numeric(0), ends=numeric(0)))
+  }
+
+  #Sorting by start means a region can only ever overlap the one being built, so a
+  #single pass merges them. Comparing every pair previously read the accumulated
+  #regions with the index of the input, which ran off the end of the accumulator,
+  #and left a region wholly inside another to be added a second time.
+  o <- order(starts)
+  starts <- starts[o]
+  ends <- ends[o]
+
+  keep.starts <- starts[1]
+  keep.ends <- ends[1]
+  for (i in seq_along(starts)[-1]) {
+    last <- length(keep.starts)
+    if (starts[i] <= keep.ends[last]) {
+      keep.ends[last] <- max(keep.ends[last], ends[i])
+    } else {
+      keep.starts <- c(keep.starts, starts[i])
+      keep.ends <- c(keep.ends, ends[i])
     }
   }
+  starts <- keep.starts
+  ends <- keep.ends
+
   result <- list(starts=starts, ends=ends)
   return(result)
 }

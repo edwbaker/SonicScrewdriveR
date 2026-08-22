@@ -12,7 +12,7 @@ dielPlot(
   plot = NULL,
   rot = tzRot(0),
   method = "plotrix",
-  legend = F
+  legend = FALSE
 )
 }
 \arguments{
@@ -31,6 +31,9 @@ dielPlot(
 \item{method}{Plotting library to use}
 
 \item{legend}{Whether to show a legend}
+}
+\value{
+Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 }
 \description{
 A diel plot shows the times of night, twilight and the maximum altitude of the sun for a given date.

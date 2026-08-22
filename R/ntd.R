@@ -13,10 +13,15 @@
 #'
 
 ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {
+ #Each interval runs between one event and the next, so fewer than two events
+ #gives none. The count used to run backwards, indexing events with NA.
+ if (length(events) < 2) {
+   stop("ntd requires at least two events.")
+ }
  N <- length(events)-1
- k <- 1:(length(events)-1) / N
- Fk <- vector(length = length(events)-1)
- for (i in 1:(length(events)-1)) {
+ k <- seq_len(N) / N
+ Fk <- vector(length = N)
+ for (i in seq_len(N)) {
    wave_event <- tuneR::Wave(wave@left[events[i]:events[i+1]], samp.rate=wave@samp.rate, bit=wave@bit)
    if (argument=="wave") {
      Fk[i] <- do.call(FUN, c(list(wave=wave_event),...))

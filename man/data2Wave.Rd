@@ -24,7 +24,9 @@ data2Wave(
 
 \item{remove.offset}{If TRUE any DC offset is removed}
 
-\item{normalise}{IF TRUE the output Wave is normalised to -1:1}
+\item{normalise}{If TRUE the output Wave is normalised to the range implied by
+\code{unit}, which for the default of NULL is the range of the bit depth rather
+than -1:1.}
 }
 \value{
 A mono Wave object.

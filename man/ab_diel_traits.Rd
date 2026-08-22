@@ -17,6 +17,9 @@ ab_diel_traits(traits, date, lat, lon, overwrite = FALSE)
 
 \item{overwrite}{If TRUE then the function will overwrite any existing min/max.}
 }
+\value{
+The traits data frame, with value_min and value_max converted to numeric times of day.
+}
 \description{
 This function takes a traits dataset retrieved from audioblast and converts
 values such as "day" into a numeric time of day based on the date and location.

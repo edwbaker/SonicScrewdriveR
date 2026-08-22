@@ -13,6 +13,9 @@ dielFraction(t, input = "POSIX", unit = "radians")
 
 \item{unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
 }
+\value{
+The position of the time within the day, in radians or as a fraction of a day.
+}
 \description{
 Given an object that can be coerced to POSIXlt or is in a supported string
 format, return the fraction of a day represented by the object.

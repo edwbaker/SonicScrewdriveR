@@ -9,6 +9,9 @@ dielLabels(format = "clock24")
 \arguments{
 \item{format}{One of clock24 (default) or clock12}
 }
+\value{
+A character vector of eight labels, at three hourly intervals.
+}
 \description{
 Generates labels for a dielPlot() in 12- or 24-hour format. Labels are generated
 at three hourly intervals.

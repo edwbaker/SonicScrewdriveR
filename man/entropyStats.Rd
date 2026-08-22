@@ -7,10 +7,12 @@
 entropyStats(wave)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns one set of statistics per channel.}
 }
 \value{
-A list of spectral entropy types.
+A list of spectral entropy types. For multi-channel input, one such
+list per channel.
 }
 \description{
 Calculates the peak, centre, bandwidth and quality factor. The quality factor (Q) is calculated at both

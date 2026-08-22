@@ -27,9 +27,7 @@
 #' w <- sweptsine(100, 1e3, mode="log")
 #'
 sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="seconds", samp.rate=44100, output="wave", ...) {
-  if (!output %in% c("wave", "vector")) {
-    stop("output must be one of 'wave' or 'vector'")
-  }
+  .validateChoice(output, c("wave", "vector"), msg="output must be one of 'wave' or 'vector'")
   if (f1 <= f0) {
     stop("sweptsine: f1 must be greater than f0")
   }
@@ -41,13 +39,16 @@ sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="s
     stop("time.unit must be one of 'seconds' or 'samples'")
   }
 
+  #Duration in seconds, however sweep.time was specified
+  sweep.duration <- vector_length / samp.rate
+
   if (mode == "linear") {
-    w <- sweptsine.lin(f0, f1, sweep.time, samp.rate, vector_length)
+    w <- sweptsine.lin(f0, f1, sweep.duration, samp.rate, vector_length)
   } else if (mode == "log") {
     if (f0 <= 0) {
       stop("sweptsine: f0 must be greater than zero in logarithmic mode")
     }
-    w <- sweptsine.log(f0, f1, sweep.time, samp.rate, vector_length)
+    w <- sweptsine.log(f0, f1, sweep.duration, samp.rate, vector_length)
   } else {
     stop("sweptsine: mode must be one of 'linear' or 'log'")
   }
@@ -61,9 +62,9 @@ sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="s
 }
 
 sweptsine.lin <- function(f0, f1, sweep.time, samp.rate, vector_length) {
-  delta_f <- (f1 - f0) / vector_length
-  f <- seq(from=f0, by=delta_f, length=vector_length)
-  phi <- seq(from=0, by=pi*f/samp.rate, length=vector_length)
+  #Phase is the integral of the instantaneous frequency f0 + (f1-f0)*t/sweep.time
+  t <- seq(from=0, by=1/samp.rate, length=vector_length)
+  phi <- 2 * pi * (f0 * t + (f1 - f0) * t^2 / (2 * sweep.time))
   x <- sin(phi)
   return(x)
 }

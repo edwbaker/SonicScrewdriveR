@@ -10,6 +10,9 @@ pythonInstall(unattended = FALSE)
 \item{unattended}{If TRUE then the function will not prompt the user to install
 the environment in a non-interactive session.}
 }
+\value{
+No return value, called for its side effect of creating the Python environment.
+}
 \description{
 This function installs scikit-maad in the \code{sonicscrewdriver} environment using \code{reticulate}.
 }

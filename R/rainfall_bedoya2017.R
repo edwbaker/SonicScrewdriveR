@@ -1,12 +1,15 @@
 rainfall_bedoya2017 <- function(wave, Tmean=1e-6, Tsnr=3.5) {
   p <- seewave::meanspec(wave, f=wave@samp.rate, wl=512, PSD=TRUE, plot=FALSE, norm=FALSE, ovlp=0)
   a <- subset(p, p[,1] > 0.6 & p[,1] < 1.2)
-  mean_a <- mean(a[,2])
-  std_a <- stats::sd(a[,2])
-  if (nrow(a) == 1) {
+  #Checked before the statistics rather than after, and for any band too small to
+  #have a standard deviation rather than only for one of exactly one row. An empty
+  #band gave a mean of NaN, which was then compared against the thresholds.
+  if (nrow(a) < 2) {
     message("Not enough data to create standard deviation")
     return(NULL)
   }
+  mean_a <- mean(a[,2])
+  std_a <- stats::sd(a[,2])
   c <- mean_a/std_a
   if (mean_a > Tmean && c >Tsnr) {
     r <- mean_a

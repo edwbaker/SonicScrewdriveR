@@ -6,7 +6,9 @@
 #' @param samp.rate Sampling rate for Wave object
 #' @param bit Bit depth of Wave object
 #' @param remove.offset If TRUE any DC offset is removed
-#' @param normalise IF TRUE the output Wave is normalised to -1:1
+#' @param normalise If TRUE the output Wave is normalised to the range implied by
+#'   `unit`, which for the default of NULL is the range of the bit depth rather
+#'   than -1:1.
 #' @param unit See tuneR::normalize. If NULL this is handled automatically.
 #' @return A mono Wave object.
 #' @examples

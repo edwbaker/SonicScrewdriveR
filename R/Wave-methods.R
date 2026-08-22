@@ -1,7 +1,5 @@
 .concat <- function(object, ..., method) {
-  if (!method %in% c("bind", "noClick")) {
-    stop("Unknown concatenation method.")
-  }
+  .validateChoice(method, c("bind", "noClick"), msg="Unknown concatenation method.")
   objectTagged <- .isTagged(object)
   if (all(sapply(list(object, ...), inherits, "Wave"))) {
     allobjects <- untagWave(c(list(object), ...))
@@ -29,6 +27,12 @@
     } else {
       return(object2)
     }
+  }
+
+  #Mixed classes matched neither branch above, so nothing was concatenated and
+  #the first object came back unchanged.
+  if (!exists("object2", inherits=FALSE) && !objectTagged) {
+    stop("All objects must be Wave-like objects of the same type.")
   }
 
   # If tagged then get slots of objects concatenated

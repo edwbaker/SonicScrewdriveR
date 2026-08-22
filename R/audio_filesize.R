@@ -2,15 +2,19 @@
 #'
 #' Calculates the raw size of audio date at set sample rate, bit depth and duration.
 #'
-#' By default `humanBytes()` is used to convert the output to human readable format,
-#' however this can be changed by setting `output.unit` to "bits" or "bytes".
+#' The size is given in bits by default. Setting `output.unit` to "bytes" gives
+#' bytes, and to "human" passes the result through `humanBytes()`, whose choice of
+#' decimal or binary units is taken from `units`.
 #'
 #' @param samp.rate Sample rate
 #' @param bit.depth Bit depth
 #' @param channels The number of audio channels
 #' @param duration Duration of recording
-#' @param duration.unit One of seconds, minutes, hours, days
+#' @param duration.unit Any unit accepted by `convert2seconds()`, which is one of
+#'   seconds, minutes, hours, days, years, HHMM or POSIX.
 #' @param output.unit "human", "bits" or  "bytes"
+#' @param units Units used when output.unit is "human", either "decimal" or
+#'   "binary". See humanBytes().
 #' @export
 #' @return The size of the audio file in the specified unit
 #' @examples
@@ -20,7 +24,7 @@
 #' # One year of stereo 24-bit audio sampled at 96kHz
 #' audio_filesize(samp.rate=96000, bit.depth=24, channels=2, duration=1, duration.unit="years")
 #'
-audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1, duration.unit="seconds", output.unit="bits") {
+audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1, duration.unit="seconds", output.unit="bits", units="decimal") {
   duration <- convert2seconds(duration, duration.unit)
   bits <- samp.rate * bit.depth * duration * channels
   if (output.unit == "bits") {
@@ -28,7 +32,7 @@ audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1
   } else if (output.unit == "bytes") {
     return (convert2bytes(bits, "bits"))
   } else if (output.unit == "human") {
-    return (humanBytes(convert2bytes(bits, "bits")))
+    return (humanBytes(convert2bytes(bits, "bits"), units=units))
   } else {
     stop(paste("Unknown output unit:", output.unit))
   }

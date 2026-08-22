@@ -3,8 +3,8 @@ test_that("RH is numeric", {
 })
 
 test_that("RH is within limits", {
-  expect_error(validateRH(-0.1), "Realtive humidity must be between 0 and 100.")
-  expect_error(validateRH(100.1), "Realtive humidity must be between 0 and 100.")
+  expect_error(validateRH(-0.1), "Relative humidity must be between 0 and 100.")
+  expect_error(validateRH(100.1), "Relative humidity must be between 0 and 100.")
   expect_equal(validateRH(0), 0)
   expect_equal(validateRH(100), 100)
 })
@@ -175,4 +175,46 @@ test_that("validate time in seconds", {
   expect_equal(validateTimeInSeconds(1), 1)
   expect_error(validateTimeInSeconds(c(1,500), max_t = 400), "Time in Seconds cannot be longer than max_t")
   expect_equal(validateTimeInSeconds(c(1,500), max_t = 400, coerceMaximum=TRUE), c(1,400))
+})
+
+test_that("validate time in seconds checks every element", {
+  # Previously only the last element was compared against max_t, so an
+  # over-long time anywhere else in the vector passed silently.
+  expect_error(validateTimeInSeconds(c(500,1), max_t = 400), "Time in Seconds cannot be longer than max_t")
+  expect_equal(validateTimeInSeconds(c(500,1), max_t = 400, coerceMaximum=TRUE), c(400,1))
+  expect_error(validateTimeInSeconds(c(-1,1)), "Time in Seconds cannot be negative")
+  expect_equal(validateTimeInSeconds(c(-1,1), coerceNegative=TRUE), c(0,1))
+  expect_equal(validateTimeInSeconds(numeric(0)), numeric(0))
+  expect_equal(validateTimeInSeconds(numeric(0), max_t = 400), numeric(0))
+})
+
+test_that("validateIsWaveLike accepts Wave and WaveMC", {
+  w <- tuneR::sine(1000, duration=10)
+  expect_equal(validateIsWaveLike(w), w)
+  mc <- tuneR::WaveMC(w)
+  expect_equal(validateIsWaveLike(mc), mc)
+  expect_error(validateIsWaveLike("string"), "Expecting a Wave or WaveMC object")
+  expect_error(validateIsWaveLike(1), "Expecting a Wave or WaveMC object")
+})
+
+test_that("numeric validators accept vectors", {
+  # The validators tested a length-one condition, so a vector was an error rather
+  # than a set of values to check.
+  expect_equal(validateKelvin(c(0, 100)), c(0, 100))
+  expect_equal(validateRH(c(0, 50, 100)), c(0, 50, 100))
+  expect_equal(validateQ(c(1, 2)), c(1, 2))
+  expect_equal(validateDensity(c(1, 2)), c(1, 2))
+
+  expect_error(validateKelvin(c(1, -1)), "Temperatures must be above 0K.")
+  expect_error(validateRH(c(50, 101)), "Relative humidity must be between 0 and 100.")
+  expect_error(validateDutyCycle(c(0.5, 1.5)), "Duty cycle must be less than or equal to one.")
+})
+
+test_that("time in seconds passes NA through", {
+  expect_equal(validateTimeInSeconds(NA_real_), NA_real_)
+  expect_equal(validateTimeInSeconds(c(1, NA, 3)), c(1, NA, 3))
+  expect_equal(
+    validateTimeInSeconds(c(-1, NA, 500), coerceNegative=TRUE, max_t=400, coerceMaximum=TRUE),
+    c(0, NA, 400)
+  )
 })

@@ -9,6 +9,9 @@ referenceIntensity(unit = "watt_cm2")
 \arguments{
 \item{unit}{Unit to return, "watt_cm2"}
 }
+\value{
+The reference sound intensity, in the unit specified.
+}
 \description{
 Provides the standard reference intensity level.
 }

@@ -5,29 +5,24 @@
 #' adding a constant amount of time to the start or end of the object. This is achieved
 #' by either inserting silence and truncating the object to the original length, or by
 #' rotating the audio within the object.
-#' @param wave A Wave-like object or list of Wave-like objects.
+#' @param wave A Wave or WaveMC object, or a list of such objects.
 #' @param type The type of time-shift to apply. Either "silent" or "rotate".
-#' @param where Where to insert silence if `type` is "silent".
+#' @param where Where to insert silence if `type` is "silent". One of "start",
+#'   "end", or "both". If "both" two versions are generated for each amount.
 #' @param amount Vector of amount of time to shift by (seconds).
-#' @param output Return a list.
 #' @return A Wave-like object or list of Wave-like objects.
 #' @export
 generateTimeShift <- function(
     wave,
     type="silent",
     amount=c(1,2),
-    where="start",
-    output="list"
+    where="start"
 ) {
-  if (!type %in% c("silent", "rotate")) {
-    stop("Unknown value for type.")
-  }
-  if(!output %in% c("list")) {
-    stop("Unknown value for output.")
-  }
+  .validateChoice(type, c("silent", "rotate"), msg="Unknown value for type.")
+  .validateChoice(where, c("start", "end", "both"), msg="Unknown value for where.")
   if (is.list(wave)) {
     if (all(sapply(wave, inherits, c("Wave", "WaveMC")))) {
-      return(lapply(wave, generateTimeShift, type=type, amount=amount, output=output))
+      return(lapply(wave, generateTimeShift, type=type, amount=amount, where=where))
     } else {
       stop("All elements of wave must be Wave-like objects.")
     }
@@ -36,41 +31,57 @@ generateTimeShift <- function(
     stop("All elements of wave must be Wave-like objects.")
   }
   ret <- list()
+  original.length <- length(wave)
   if (type == "silent") {
-    if (inherits(wave, "Wave")) {
-      if (inherits(wave, "Wave")) {
-        original.length <- length(wave)
+    for (i in seq_along(amount)) {
+      insert <- .silence(wave, round(amount[i] * wave@samp.rate))
+      if (where %in% c("start", "both")) {
+        #Insertion at the start pushes the end of the wave off the end
+        ret[[length(ret)+1]] <- cutws(concat(insert, wave), to=original.length)
       }
-      for (i in 1:length(amount)) {
-        insert <- tuneR::silence(
-          duration = amount[i] * wave@samp.rate,
-          samp.rate = wave@samp.rate,
-          bit = wave@bit,
-          stereo = wave@stereo,
-          pcm = wave@pcm
-        )
-        if (where %in% c("start", "both")) {
-          nwave <- cutws(concat(insert, wave), to=original.length)
-          ret <- c(ret, nwave)
-        }
-        if (where %in% c("end", "both")) {
-          nwave <- cutws(
-            concat(wave, insert),
-            from= length(insert@left)+1
-          )
-          ret <- c(ret, nwave)
-        }
+      if (where %in% c("end", "both")) {
+        #Insertion at the end pushes the start of the wave off the start
+        ret[[length(ret)+1]] <- cutws(concat(wave, insert), from=length(insert)+1)
       }
     }
   }
   if (type == "rotate") {
-    if (inherits(wave, "Wave")) {
-      for (i in 1:length(amount)) {
-        offset <- amount[i] * wave@samp.rate
-        nwave <- concat(cutws(wave, from=length(wave)-offset+1), cutws(wave, to=length(wave)-offset))
-        ret <- c(ret, nwave)
+    for (i in seq_along(amount)) {
+      #A rotation repeats itself every whole wave, so a shift of more than the
+      #length of the wave is the same as its remainder. Taken literally it asked
+      #cutws() for a section running backwards, which failed on any recording
+      #shorter than the largest shift.
+      offset <- round(amount[i] * wave@samp.rate) %% original.length
+      if (offset == 0) {
+        ret[[length(ret)+1]] <- wave
+        next
       }
+      ret[[length(ret)+1]] <- concat(
+        cutws(wave, from=original.length-offset+1),
+        cutws(wave, to=original.length-offset)
+      )
     }
   }
   return(ret)
+}
+
+#' Silence of the same class, sample rate and channels as a wave
+#' @noRd
+.silence <- function(wave, samples) {
+  if (inherits(wave, "WaveMC")) {
+    data <- matrix(
+      0,
+      nrow=samples,
+      ncol=ncol(wave@.Data),
+      dimnames=list(NULL, colnames(wave@.Data))
+    )
+    return(tuneR::WaveMC(data, samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm))
+  }
+  return(tuneR::silence(
+    duration = samples,
+    samp.rate = wave@samp.rate,
+    bit = wave@bit,
+    stereo = wave@stereo,
+    pcm = wave@pcm
+  ))
 }

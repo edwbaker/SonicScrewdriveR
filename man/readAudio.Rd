@@ -25,3 +25,11 @@ This file is used to read an audio file and return a Wave object, it is an abstr
 function for various specific audio reading functions. If no existing method can be identified
 an attempt is made to use the av package to read the audio.
 }
+\details{
+Files read through the av package (which is everything that is not WAVE or
+MP3, e.g. FLAC) are returned at the bit depth the file was stored at, so that
+the same audio compares equal however it was read. The av package does not
+report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of
+a 24bit file are 256 times those \code{tuneR::readWave()} would give for the same
+audio stored as WAVE. Audio stored as floating point is returned as 32bit.
+}

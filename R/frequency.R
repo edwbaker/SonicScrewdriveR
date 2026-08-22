@@ -10,7 +10,7 @@
 #' @export
 #'
 frequencySound <- function(wl, s=soundSpeed(medium="air")) {
-  f <- validateWavelength(wl) / validateSpeed(s)
+  f <- validateSpeed(s) / validateWavelength(wl)
   return(validateFreq(f))
 }
 
@@ -30,10 +30,14 @@ frequencySound <- function(wl, s=soundSpeed(medium="air")) {
 #' @examples
 #' naturalFrequency(L=20,R=0.5)
 #' naturalFrequency(L=20,C=1/4,R=0.5)
+#' @return The natural frequency, in Hertz.
 #' @export
 #'
-naturalFrequency <- function(L, C="default", R) {
-  if (C=="default") {
+naturalFrequency <- function(L, C=NULL, R) {
+  #A NULL sentinel rather than a string, which could not be compared against a
+  #vector of capacitances without raising an error about the length of the
+  #condition, so these could not be vectorised.
+  if (is.null(C)) {
     C <- 100
   }
   F_nat <- sqrt((1/(L*C)) - R^2/(4*L^2)) / (2 * pi)
@@ -50,13 +54,14 @@ naturalFrequency <- function(L, C="default", R) {
 #' standard pressure.
 #'
 #' @param L Inductance
-#' @param C Capacitance, by default IUPAC standard pressure.
+#' @param C Capacitance, if NULL (the default) the IUPAC standard pressure is used.
 #' @importFrom utils data
 #' @examples
 #' f <- resonantFrequency(L=1)
+#' @return The resonant frequency, in Hertz.
 #' @export
 #'
-resonantFrequency <- function(L, C="default") {
+resonantFrequency <- function(L, C=NULL) {
   F_res <- naturalFrequency(L,C,0)
   return(validateFreq(F_res))
 }

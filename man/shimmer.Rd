@@ -10,11 +10,13 @@ shimmer(wave)
 \item{wave}{A Wave object}
 }
 \value{
-A vector of zero crossing locations
+The shimmer in decibels
 }
 \description{
-Jitter is a measure of the variability of amplitudes within periods in the waveform. Relative
-shimmer is scaled by the shimmer in the analysed waveform.
+Shimmer is a measure of the variability of amplitude between successive periods
+in the waveform. It is returned in decibels, as the mean absolute difference in
+level between the peak amplitudes of consecutive periods. A waveform of constant
+amplitude has a shimmer of zero.
 }
 \examples{
 \dontrun{

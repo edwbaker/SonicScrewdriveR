@@ -11,7 +11,7 @@ that it can include extended metadata and the results of analyses.
 \section{Slots}{
 
 \describe{
-\item{\code{metadata}}{A list for storing metdata.}
+\item{\code{metadata}}{A list for storing metadata.}
 
 \item{\code{analyses}}{A list for storing analyses.}
 }}
