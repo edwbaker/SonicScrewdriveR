@@ -1,4 +1,5 @@
 test_that("maad_temporal_median works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -18,6 +19,7 @@ test_that("maad_temporal_median works as expected", {
 })
 
 test_that("maad_temporal_entropy works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -40,6 +42,7 @@ test_that("maad_temporal_entropy works as expected", {
 })
 
 test_that("maad_temporal_activity works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -82,6 +85,7 @@ test_that("maad_temporal_activity works as expected", {
 })
 
 test_that("maad_temporal_events works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -129,6 +133,7 @@ test_that("maad_temporal_events works as expected", {
 })
 
 test_that("maad_acoustic_complexity_index works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -166,6 +171,7 @@ test_that("maad_acoustic_complexity_index works as expected", {
 })
 
 test_that("maad_frequency_entropy works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -203,6 +209,7 @@ test_that("maad_frequency_entropy works as expected", {
 })
 
 test_that("maad_number_of_peaks works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -234,6 +241,7 @@ test_that("maad_number_of_peaks works as expected", {
 })
 
 test_that("maad_spectral_activity works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -262,6 +270,7 @@ test_that("maad_spectral_activity works as expected", {
 })
 
 test_that("maad_spectral_entropy works as expected", {
+  skip_if_no_maad()
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -280,6 +289,7 @@ test_that("maad_spectral_entropy works as expected", {
 })
 
 test_that("maad_spectral_entropy takes a band of frequencies", {
+  skip_if_no_maad()
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
@@ -294,6 +304,7 @@ test_that("maad_spectral_entropy takes a band of frequencies", {
 })
 
 test_that("maad_spectral_entropy matches scikit-maad called directly", {
+  skip_if_no_maad()
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
   spectrogram <- maad_spectrogram(w)
@@ -309,6 +320,7 @@ test_that("maad_spectral_entropy matches scikit-maad called directly", {
 })
 
 test_that("maad_spectral_entropy separates a tone from noise", {
+  skip_if_no_maad()
   # The values are one minus an entropy, so an ordered spectrum scores high.
   tone <- tuneR::sine(2000, duration=8000, samp.rate=8000)
   noise <- tuneR::noise("white", duration=8000, samp.rate=8000)

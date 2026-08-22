@@ -1,4 +1,5 @@
 test_that("maad_power2dB works", {
+  skip_if_no_maad()
   maad <- getMaad()
   expect_equal(maad_power2dB(1, maad=maad), 0)
   expect_equal(maad_power2dB(3), 10*log10(3))

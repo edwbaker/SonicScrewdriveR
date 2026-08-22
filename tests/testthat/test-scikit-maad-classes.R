@@ -1,4 +1,5 @@
 test_that(".spectrogram_maad_power works as expected", {
+  skip_if_no_maad()
   f <- f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- readWave(f)
 
