@@ -76,7 +76,7 @@ a5 <- annotation(
 
 #### From audioblast database
 
-```{r, results=FALSE}
+```{r, eval=FALSE}
 # Fetch annotations from audioBlast as `Annotation` objects
 a <- audioblast("data", "annomate", source="bio.acousti.ca", id=10754, output="Annotations")
 ```
