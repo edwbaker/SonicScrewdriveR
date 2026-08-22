@@ -42,6 +42,7 @@ Suggests:
   soundecology,
   spelling,
   testthat (>= 3.0.0),
+  withr,
   WaveletComp
 VignetteBuilder: knitr
 URL: 

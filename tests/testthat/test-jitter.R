@@ -53,5 +53,8 @@ test_that("jitter returns NA when there are too few periods", {
 
 test_that("jitter rejects incorrect input", {
   expect_error(jitter("not a wave"), "Expecting a Wave object")
-  expect_null(jitter(periodic(rep.int(220, 10)), method="sonic"))
+  expect_error(
+    jitter(periodic(rep.int(220, 10)), method="sonic"),
+    "Unknown method for jitter: sonic"
+  )
 })

@@ -56,7 +56,9 @@ generateNoise <- function(
       noise.max <- max(abs(wave@.Data))
     }
   } else {
-    noise.max <- (2^n@bit/2)-1
+    #The bit slot of a floating point wave reads 32, so this gave a reference level
+    #of two thousand million for a wave that only holds values up to one.
+    noise.max <- .waveFullScale(n)
   }
   noise.level <- noise.max
   # Scale n by noise.level

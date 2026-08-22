@@ -2,14 +2,16 @@
 #'
 #' Calculates the raw size of audio date at set sample rate, bit depth and duration.
 #'
-#' By default `humanBytes()` is used to convert the output to human readable format,
-#' however this can be changed by setting `output.unit` to "bits" or "bytes".
+#' The size is given in bits by default. Setting `output.unit` to "bytes" gives
+#' bytes, and to "human" passes the result through `humanBytes()`, whose choice of
+#' decimal or binary units is taken from `units`.
 #'
 #' @param samp.rate Sample rate
 #' @param bit.depth Bit depth
 #' @param channels The number of audio channels
 #' @param duration Duration of recording
-#' @param duration.unit One of seconds, minutes, hours, days
+#' @param duration.unit Any unit accepted by `convert2seconds()`, which is one of
+#'   seconds, minutes, hours, days, years, HHMM or POSIX.
 #' @param output.unit "human", "bits" or  "bytes"
 #' @param units Units used when output.unit is "human", either "decimal" or
 #'   "binary". See humanBytes().

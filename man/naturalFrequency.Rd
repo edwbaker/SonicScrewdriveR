@@ -4,7 +4,7 @@
 \alias{naturalFrequency}
 \title{Calculate the natural frequency}
 \usage{
-naturalFrequency(L, C = "default", R)
+naturalFrequency(L, C = NULL, R)
 }
 \arguments{
 \item{L}{Inductance}

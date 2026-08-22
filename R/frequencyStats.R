@@ -41,86 +41,96 @@ frequencyStats <- function(
   y[x < lowcut] <- 0
 
   y<- y^2
-  a <- y >= 0.5*max(y)
-  b <- y >= 0.1*max(y)
-  r <- rle(a)
-  s <- rle(b)
-  l <- c(0,cumsum(r$lengths))
-  m <- c(0,cumsum(s$lengths))
-
-  regions <- r$lengths[which(r$values == TRUE)]
-  regions_l <- l[which(r$values == TRUE)]
-
-  regions_s <- s$lengths[which(s$values == TRUE)]
-  regions_l_s <- m[which(s$values == TRUE)]
-
-  peak_r <- max(which(regions_l < which(y==max(y))))
-  peak_q <- max(which(regions_l_s < which(y==max(y))))
-
-  longest <- which(regions == max(regions))
-  longest_s <- which(regions_s == max(regions_s))
-
-  min_3 <- x[regions_l[peak_r]]
-  max_3 <- x[regions_l[peak_r] + regions[peak_r]]
-
-  outer_min_3 <- x[]
-
-  longest_min_3 <- x[regions_l[longest]]
-  longest_max_3 <- x[regions_l[longest] + regions[longest]]
-
-  min_10 <- x[regions_l_s[peak_q]]
-  max_10 <- x[regions_l_s[peak_q] + regions_s[peak_q]]
-
-  longest_min_10 <- x[regions_l_s[longest_s]]
-  longest_max_10 <- x[regions_l_s[longest_s] + regions_s[longest_s]]
+  #With nothing above the low cut every threshold is zero, no bin exceeds it, and
+  #the outer statistics are taken over an empty set, which gives an infinite
+  #frequency and an error about the sample rate rather than about the spectrum.
+  if (max(y) == 0) {
+    stop("No signal above lowcut, so frequency statistics cannot be calculated.")
+  }
+  stats_3 <- .frequencyThresholdStats(x, y, 0.5, wave@samp.rate)
+  stats_10 <- .frequencyThresholdStats(x, y, 0.1, wave@samp.rate)
 
   if(warn) {
-    if (min_3 >= max_3) {
-      warning("-3dB: calculated max greater than or equal to min")
+    if (stats_3$min >= stats_3$max) {
+      warning("-3dB: calculated min is greater than or equal to max, so the region is a single bin")
     }
-    if (min_10 >= max_10) {
-      warning("-10dB: calculated max greater than or equal to min")
+    if (stats_10$min >= stats_10$max) {
+      warning("-10dB: calculated min is greater than or equal to max, so the region is a single bin")
     }
   }
 
   data <- list(
-    "-3dB" = list(
-      "min" = validateFreqIsPossible(min_3, samp.rate=wave@samp.rate),
-      "max" = validateFreqIsPossible(max_3, samp.rate=wave@samp.rate),
-      "longest_min" = validateFreqIsPossible(longest_min_3, samp.rate=wave@samp.rate),
-      "longest_max" = validateFreqIsPossible(longest_max_3, samp.rate=wave@samp.rate),
-      "peak" = validateFreqIsPossible(x[which(y==max(y))], samp.rate=wave@samp.rate),
-      "centre" = validateFreqIsPossible(mean(c(min_3,max_3)), samp.rate=wave@samp.rate),
-      "bandwidth" = validateBandwidthIsPossible(max_3 - min_3, samp.rate=wave@samp.rate),
-      "Q" = validateQ(x[which(y==max(y))] / (max_3 - min_3)),
-      "outer min" = validateFreqIsPossible(min(x[y > 0.5*max(y)]), samp.rate=wave@samp.rate),
-      "outer max" = validateFreqIsPossible(max(x[y > 0.5*max(y)]), samp.rate=wave@samp.rate),
-      "outer bandwidth" = validateBandwidthIsPossible(max(x[y > 0.5*max(y)]) - min(x[y > 0.5*max(y)]), samp.rate=wave@samp.rate)
-    ),
-    "-10dB" = list(
-      "min" = validateFreqIsPossible(min_10, samp.rate=wave@samp.rate),
-      "max" = validateFreqIsPossible(max_10, samp.rate=wave@samp.rate),
-      "longest_min" = validateFreqIsPossible(longest_min_10, samp.rate=wave@samp.rate),
-      "longest_max" = validateFreqIsPossible(longest_max_10, samp.rate=wave@samp.rate),
-      "peak" = validateFreqIsPossible(x[which(y==max(y))], samp.rate=wave@samp.rate),
-      "centre" = validateFreqIsPossible(mean(c(min_10,max_10)), samp.rate=wave@samp.rate),
-      "bandwidth" = validateBandwidthIsPossible(max_10 - min_10, samp.rate=wave@samp.rate),
-      "Q" = validateQ(x[which(y==max(y))] / (max_10 - min_10)),
-      "outer min" = validateFreqIsPossible(min(x[y > 0.1*max(y)]), samp.rate=wave@samp.rate),
-      "outer max" = validateFreqIsPossible(max(x[y > 0.1*max(y)]), samp.rate=wave@samp.rate),
-      "outer bandwidth" = validateBandwidthIsPossible(max(x[y > 0.1*max(y)]) - min(x[y > 0.1*max(y)]), samp.rate=wave@samp.rate)
-    ),
+    "-3dB" = stats_3,
+    "-10dB" = stats_10,
     "spectral flatness" = sfm(wave_spec)
   )
 
   if(plot) {
     plot(x,y, type="l")
-    abline(h=0.5*max(y), v=c(min_3,max_3), col="blue")
-    abline(h=0.1*max(y), v=c(min_10,max_10), col="green")
-    abline(v=c(max(x[y > 0.5*max(y)]), min(x[y > 0.5*max(y)])), col="red")
-    abline(v=c(max(x[y > 0.1*max(y)]), min(x[y > 0.1*max(y)])), col="purple")
+    abline(h=0.5*max(y), v=c(stats_3$min, stats_3$max), col="blue")
+    abline(h=0.1*max(y), v=c(stats_10$min, stats_10$max), col="green")
+    abline(v=c(stats_3$"outer max", stats_3$"outer min"), col="red")
+    abline(v=c(stats_10$"outer max", stats_10$"outer min"), col="purple")
     title(main="Bandwidth calculations", xlab="Frequency (kHz)", ylab="Amplitude")
   }
 
   return(data)
+}
+
+#' Frequency statistics at one amplitude threshold
+#'
+#' frequencyStats() reports the same eleven measurements at two thresholds. They
+#' were written out twice, with a second set of variable names, which is how the
+#' -3dB and -10dB blocks came to name the same quantity peak_r in one and peak_q
+#' in the other.
+#'
+#' @param x Frequencies of the spectrum, in kHz.
+#' @param y Squared amplitudes of the spectrum.
+#' @param threshold Proportion of the peak amplitude defining the region, 0.5 for
+#'   -3dB and 0.1 for -10dB.
+#' @param samp.rate Sample rate of the wave, used to check the results are possible.
+#' @return A list of eleven frequency statistics.
+#' @noRd
+.frequencyThresholdStats <- function(x, y, threshold, samp.rate) {
+  level <- threshold * max(y)
+  r <- rle(y >= level)
+  l <- c(0, cumsum(r$lengths))
+
+  regions <- r$lengths[which(r$values == TRUE)]
+  regions_l <- l[which(r$values == TRUE)]
+
+  #which.max() rather than which(y==max(y)), which returns every tied bin and so
+  #gave a vector where one frequency was meant.
+  peak.index <- which.max(y)
+  peak <- x[peak.index]
+
+  in.peak <- max(which(regions_l < peak.index))
+  longest <- which.max(regions)
+
+  #regions_l holds the bin before each region starts, so the first bin within a
+  #region is one further on. Reading the region's lower edge without that offset
+  #made every bandwidth one bin too wide and every centre half a bin too low.
+  min.f <- x[regions_l[in.peak] + 1]
+  max.f <- x[regions_l[in.peak] + regions[in.peak]]
+
+  longest.min <- x[regions_l[longest] + 1]
+  longest.max <- x[regions_l[longest] + regions[longest]]
+
+  #The outer statistics are taken over every bin above the threshold, not only
+  #those in the region containing the peak.
+  above <- x[y > level]
+
+  return(list(
+    "min" = validateFreqIsPossible(min.f, samp.rate=samp.rate),
+    "max" = validateFreqIsPossible(max.f, samp.rate=samp.rate),
+    "longest_min" = validateFreqIsPossible(longest.min, samp.rate=samp.rate),
+    "longest_max" = validateFreqIsPossible(longest.max, samp.rate=samp.rate),
+    "peak" = validateFreqIsPossible(peak, samp.rate=samp.rate),
+    "centre" = validateFreqIsPossible(mean(c(min.f, max.f)), samp.rate=samp.rate),
+    "bandwidth" = validateBandwidthIsPossible(max.f - min.f, samp.rate=samp.rate),
+    "Q" = validateQ(peak / (max.f - min.f)),
+    "outer min" = validateFreqIsPossible(min(above), samp.rate=samp.rate),
+    "outer max" = validateFreqIsPossible(max(above), samp.rate=samp.rate),
+    "outer bandwidth" = validateBandwidthIsPossible(max(above) - min(above), samp.rate=samp.rate)
+  ))
 }

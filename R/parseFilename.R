@@ -70,9 +70,7 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
       stop("Could not determine format of ", file)
     }
   }
-  if (!format %in% .knownFileFormats()) {
-    stop(paste("Unknown format:", format))
-  }
+  .validateChoice(format, .knownFileFormats(), msg=paste("Unknown format:", format))
   if (format %in% c("AudioMoth HEX", "AudioMoth")) {
     if (is.null(timezone)) {
       tz <- ""
@@ -115,7 +113,17 @@ parseFilename <- function(file, format=NULL, timezone=NULL) {
     datetime <- as.POSIXct(strptime(tools::file_path_sans_ext(basename(file)), "%Y%m%d_%H%M%S"), tz=timezone)
   }
   if (format == "timestamp") {
-    datetime <- as.POSIXct(as.numeric(tools::file_path_sans_ext(basename(file))), origin=as.POSIXct("1970-01-01"))
+    if (is.null(timezone)) {
+      timezone <- "UTC"
+    }
+    #A timestamp counts from the epoch in UTC wherever it is read. Taking the
+    #origin in whatever zone the session happened to be in moved the instant by
+    #that zone's offset, and the timezone argument was not used at all.
+    datetime <- as.POSIXct(
+      as.numeric(tools::file_path_sans_ext(basename(file))),
+      origin = as.POSIXct("1970-01-01", tz="UTC"),
+      tz = timezone
+    )
   }
   return(list(
     filename = file,

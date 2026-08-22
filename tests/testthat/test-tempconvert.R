@@ -31,3 +31,9 @@ test_that("error on incorrect unit convert2Kelvin", {
 test_that("nobody has created a working convert to Farenheit function", {
   expect_error(convert2Fahrenheit(0), "Implementation of this function is against the political beliefs of the author.")
 })
+
+test_that("temperature conversion accepts vectors", {
+  # validateKelvin() tested a length-one condition, so these were an error.
+  expect_equal(convert2Kelvin(c(0, 100), input="C"), c(273.15, 373.15))
+  expect_equal(convert2Celsius(c(273.15, 373.15), input="K"), c(0, 100))
+})

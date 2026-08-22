@@ -28,8 +28,6 @@ rainfallDetection <- function(
       channel.param = NULL
     ))
   }
-  if (method == "bedoya2017") {
-    return(rainfall_bedoya2017(wave,...))
-  }
-  stop("No valid method supplied.")
+  .validateChoice(method, c("bedoya2017"), msg="No valid method supplied.")
+  return(rainfall_bedoya2017(wave,...))
 }

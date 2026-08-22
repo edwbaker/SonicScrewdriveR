@@ -1,9 +1,14 @@
 scaleRGB <- function(vector, no.diff=255) {
-  if (length(unique(vector)) == 1) {
+  vector <- as.numeric(vector)
+  #The range is taken over the values that are present. A single missing value
+  #used to make the maximum and the minimum NA, which scaled the whole channel to
+  #NA and so blacked it out entirely.
+  low <- min(vector, na.rm=TRUE)
+  high <- max(vector, na.rm=TRUE)
+  if (!is.finite(low) || !is.finite(high) || low == high) {
     return(rep(no.diff, length(vector)))
   }
-  vector <- as.numeric(vector)
-  vector <- (255 / (max(vector) - min(vector))) * (vector - min(vector))
+  vector <- (255 / (high - low)) * (vector - low)
   vector[is.na(vector)] <- 0
   return(as.integer(vector))
 }
@@ -223,10 +228,7 @@ fcis <- function(
   if (length(indices) != 3) {
     stop("Three indices are required, one for each of the red, green and blue channels.")
   }
-  unknown <- indices[!indices %in% fcisIndexNames()]
-  if (length(unknown) > 0) {
-    stop(paste("Unknown index for fcis:", paste(unknown, collapse=", ")))
-  }
+  .validateChoice(indices, fcisIndexNames(), "index", "fcis", prep="for")
 
   if (is.character(x) && length(x) > 1) {
     columns <- unlist(

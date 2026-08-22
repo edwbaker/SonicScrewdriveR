@@ -11,7 +11,7 @@ yearlyPlot(
   limits = c(0, 2),
   plot = NULL,
   method = "plotrix",
-  legend = F
+  legend = FALSE
 )
 }
 \arguments{

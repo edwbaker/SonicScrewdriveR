@@ -11,14 +11,16 @@
 #'
 typicalVolume <- function(thing=NA_character_) {
   tv <- .typicalVolumes()
-  if (is.na(thing)) {
+  #Length safe, as is.na() on a vector gave a condition of length greater than
+  #one and on NULL a condition of length zero.
+  if (length(thing) == 0 || all(is.na(thing))) {
     return(tv)
   }
-  if (thing %in% tv[,1]) {
-    return(as.numeric(tv[tv$thing==thing,2]))
-  } else {
-    stop("Thing not found.")
+  missing <- setdiff(thing, tv$thing)
+  if (length(missing) > 0) {
+    stop(paste("Thing not found:", paste(missing, collapse=", ")))
   }
+  return(tv$dBA[match(thing, tv$thing)])
 }
 
 .typicalVolumes <- function() {
@@ -55,8 +57,7 @@ typicalVolume <- function(thing=NA_character_) {
     120,
     160
   )
-  ret <- as.data.frame(cbind(n, as.numeric(vals)))
-  colnames(ret) <- c("thing", "dBA")
-
-  return(ret)
+  #Built directly, as cbind() of the names and the values gives a character
+  #matrix and so a data frame whose dBA column holds strings.
+  return(data.frame(thing = n, dBA = vals, stringsAsFactors = FALSE))
 }

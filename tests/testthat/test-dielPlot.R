@@ -72,3 +72,14 @@ test_that("dielRings gives no warnings", {
   expect_silent(dielPlot(Sys.time(), lat=54, lon=0))
   expect_silent(dielRings("tom", "0000", "1200"))
 })
+
+test_that("dielPlot draws the date it is given whatever the session timezone", {
+  # The instants were built at local midnight and then relabelled as UTC, so a
+  # session east of UTC drew the previous day.
+  pdf(NULL)
+  on.exit({dev.off(); Sys.setenv(TZ="UTC")})
+  for (tz in c("UTC", "Australia/Sydney", "America/Los_Angeles")) {
+    Sys.setenv(TZ=tz)
+    expect_silent(dielPlot("2024-06-21", lat=54, lon=0))
+  }
+})

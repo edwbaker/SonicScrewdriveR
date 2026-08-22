@@ -79,7 +79,7 @@ windowing <- function(
     }
   }
 
-  if (bind.wave & typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
+  if (bind.wave && length(l) > 0 && typeof(l[[1]]) == "S4" && class(l[[1]])[[1]] == "Wave") {
     #tuneR::bind() copies everything it is given, so binding one window at a time
     #copies the whole of the output so far on every iteration. Collecting the parts
     #and binding them in a single call avoids that.

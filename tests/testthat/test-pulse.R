@@ -25,39 +25,43 @@ test_that("dirac pulse works", {
   expect_equal(2 * 2, 4)
 })
 
+# The amplitudes below were 2^bit, which for the default floating point wave is
+# 2^32 and far outside the range such a wave may hold. They also passed whatever
+# the value, as expect_equal() compares numbers that large by relative tolerance
+# and 2^32 and 2^32 - 1 are within it.
 test_that("dirac pulse works as expected", {
   p <- pulse("dirac", leading=0)
-  expect_equal(p@left[1], 2^p@bit - 1)
+  expect_equal(p@left[1], 1)
   expect_true(all(p@left[2:length(p@left)] == 0))
 
   p <- pulse("dirac", leading=1)
   expect_equal(p@left[1], 0)
-  expect_equal(p@left[2], 2^p@bit)
+  expect_equal(p@left[2], 1)
   expect_true(all(p@left[3:length(p@left)] == 0))
 
   p <- pulse("dirac", leading=1, stereo=TRUE)
   expect_equal(p@right[1], 0)
-  expect_equal(p@right[2], 2^p@bit)
+  expect_equal(p@right[2], 1)
   expect_true(all(p@right[3:length(p@right)] == 0))
 })
 
 test_that("square pulse works as expected", {
   p <- pulse("square", leading=0)
-  expect_equal(p@left[1], 2^p@bit - 1)
+  expect_equal(p@left[1], 1)
   expect_true(all(p@left[2:length(p@left)] == 0))
 
   p <- pulse("square", leading=1, pulse.length=2, stereo=TRUE)
   expect_equal(p@left[1], 0)
-  expect_true(all(p@left[2:3] == 2^p@bit))
+  expect_true(all(p@left[2:3] == 1))
   expect_true(all(p@left[4:length(p@left)] == 0))
   expect_equal(p@right[1], 0)
-  expect_true(all(p@right[2:3] == 2^p@bit))
+  expect_true(all(p@right[2:3] == 1))
   expect_true(all(p@right[4:length(p@left)] == 0))
 })
 
 test_that("invert pulse works as expected", {
   p <- pulse(leading=0, invert=TRUE)
-  expect_equal(p@left[1], -2^p@bit - 1)
+  expect_equal(p@left[1], -1)
   expect_true(all(p@left[2:length(p@left)] == 0))
 })
 

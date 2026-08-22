@@ -20,9 +20,7 @@ yearlyLabels <- function() {
 #' @return A numeric vector of label positions, in radians.
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
-  if (!format %in% c("months", "mid-months", "days")) {
-    stop(paste("Unknown format:",format))
-  }
+  .validateChoice(format, c("months", "mid-months", "days"), msg=paste("Unknown format:", format))
   if (.isLeapYear(year)) {
     FebDays <- 29
     YearDays <- 366
@@ -40,7 +38,8 @@ yearlyPositions <- function(year=2022, format="months") {
       ret <- 2*pi * days / YearDays
     }
     if (format == "mid-months") {
-      diffs <- diff(c(days, 360))
+      #The last month runs to the end of the year, which is not 360 days.
+      diffs <- diff(c(days, YearDays))
       days <- days + 0.5*diffs
       ret <- 2*pi * days / YearDays
     }
@@ -76,9 +75,7 @@ yearlyPositions <- function(year=2022, format="months") {
 #' @return The position of the date within the year, in radians or as a fraction of a year.
 #' @export
 yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
-  if(!input %in% c("POSIX", "day")) {
-    stop(paste("Unknown input:",input))
-  }
+  .validateChoice(input, c("POSIX", "day"), msg=paste("Unknown input:", input))
   if (.isLeapYear(year)) {
     dc <- 366
   } else {
@@ -106,7 +103,11 @@ yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
 #' @param rot Rotation of the origin (defaults to pi)
 #' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
-emptyYearly <- function(year=2022, method="plotix", rot=pi) {
+emptyYearly <- function(year=2022, method="plotrix", rot=pi) {
+  .validateChoice(method, .dielPlotMethods(), "method", "emptyYearly", prep="for")
+  if (!package.installed("plotrix")) {
+    stop("Plotrix must be installed to plot using Plotrix.")
+  }
   plotrix::radial.plot(
     lengths=0,
     radial.pos=0,
@@ -115,10 +116,10 @@ emptyYearly <- function(year=2022, method="plotix", rot=pi) {
     start=rot,
     label.pos = yearlyPositions(year=year),
     labels=yearlyLabels(),
-    clockwise=T,
+    clockwise=TRUE,
     poly.col=rgb(0.2,0.2,0.2,1),
     lty=0,
-    show.grid.labels =F
+    show.grid.labels =FALSE
   )
 }
 
@@ -136,29 +137,56 @@ emptyYearly <- function(year=2022, method="plotix", rot=pi) {
 #' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 #' @importFrom suncalc getSunlightPosition getSunlightTimes
-yearlyPlot <- function(year=2022, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=F) {
-  start <- as.POSIXlt(paste0(year,"-01-01"))
-  end <- as.POSIXlt(paste0(year,"-12-31"))
-  dates <- seq.POSIXt(from=start, to=end, by="day")
+yearlyPlot <- function(year=2022, lat, lon, limits=c(0,2), plot=NULL, method="plotrix", legend=FALSE) {
+  if (!is.null(plot)) {
+    warning("The plot argument of yearlyPlot() is not implemented, and is ignored.")
+  }
+  .validateChoice(method, .dielPlotMethods(), "method", "yearlyPlot", prep="for")
+  if (!package.installed("plotrix")) {
+    stop("Plotrix must be installed to plot using Plotrix.")
+  }
 
-  tim <- getSunlightTimes(date = as.Date(dates), lat = lat, lon = lon)
-  suntime <- as.numeric(difftime(tim$sunset, tim$sunrise, units="mins"))
-  suntime <- suntime / (24*60)
+  #Dates throughout. Building them as times in whatever zone the session was in
+  #and converting back with as.Date(), which reads them as UTC, moved every day
+  #by that zone's offset.
+  dates <- seq.Date(
+    as.Date(paste0(year, "-01-01")),
+    as.Date(paste0(year, "-12-31")),
+    by = "day"
+  )
 
-  night <- rep_len(1, length.out=length(dates))
+  tim <- getSunlightTimes(date = dates, lat = lat, lon = lon, tz = "UTC")
+  suntime <- as.numeric(difftime(tim$sunset, tim$sunrise, units="mins")) / (24*60)
 
-  if (method=="plotrix") {
-    #Scale for limits
-    night <- night * (limits[2]-limits[1])
-    suntime <- suntime * (limits[2]-limits[1])
+  #Above the polar circles the sun may not rise or set at all, and suncalc gives
+  #NA for both. Whether that is a day with no night or a night with no day is
+  #settled by where the sun is at noon. Left as NA these reached polygon(), which
+  #reads a missing coordinate as a break between sub-polygons and silently drew
+  #the wrong shape.
+  polar <- is.na(suntime)
+  if (any(polar)) {
+    altitude <- getSunlightPosition(date=tim$solarNoon[polar], lat=lat, lon=lon)$altitude
+    suntime[polar] <- ifelse(altitude > 0, 1, 0)
+  }
 
-    if (!package.installed("plotrix")){stop("Plotrix must be installed to plot using Plotrix.")}
-    emptyYearly()
-    angs <- (1:length(suntime))*2*pi/length(suntime)
-    angs[length(angs)] <- 2*pi
-    angs[1] <- 0
-    radialPolygon(NA,angs,limits[1],limits[1]+suntime,col=rgb(1,1,0.6, 0.6))
-    radialPolygon(angs,NA,limits[1]+suntime, limits[2], col=rgb(0.8,0.8,0.8,0.8))
+  #Scale for limits
+  suntime <- suntime * (limits[2]-limits[1])
+
+  emptyYearly(year=year)
+
+  #One angle per day, starting at zero, with the first day repeated at the end so
+  #that the ring closes. Counting from one put day one at zero but day two a whole
+  #extra day around the circle.
+  angs <- (0:length(suntime)) * 2*pi / length(suntime)
+  suntime <- circularise(suntime)
+
+  day.col <- rgb(1, 1, 0.6, 0.6)
+  night.col <- rgb(0.8, 0.8, 0.8, 0.8)
+  radialPolygon(NA, angs, limits[1], limits[1]+suntime, col=day.col)
+  radialPolygon(angs, NA, limits[1]+suntime, limits[2], col=night.col)
+
+  #Placed as dielPlot() places its own legend.
+  if (legend) {
+    .polarLegend(c("Day", "Night"), c(day.col, night.col))
   }
 }
-

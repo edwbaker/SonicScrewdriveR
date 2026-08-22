@@ -8,9 +8,10 @@ directionPlot <- function(angles,
 
 
   angles <- convert2radians(angles, input=angle.unit)
-  data <- data.frame(angles, speeds)
-  data <- rbind(data, data.frame(0, 0))
-  colnames(data) <- c("Angles", "Speeds")
+  #Named before the row is appended. data.frame(0, 0) names its columns X0 and
+  #X0.1, which match nothing, so rbind() failed for every input.
+  data <- data.frame(Angles=angles, Speeds=speeds)
+  data <- rbind(data, data.frame(Angles=0, Speeds=0))
 
   plot <- ggplot(data, aes_string(x = "Angles", y = "Speeds")) +
     coord_polar(start=pi) +

@@ -7,7 +7,6 @@ test_that("generateTimeShift rejects incorrect input", {
   # Both classes must actually be shifted, not silently skipped.
   expect_equal(lengths(generateTimeShift(w)), c(2, 2))
   expect_error(generateTimeShift(w, type="pitcher plant"), "Unknown value for type.")
-  expect_error(generateTimeShift(w, output="leaf insect"), "Unknown value for output.")
   expect_error(generateTimeShift(w, where="pitcher"), "Unknown value for where.")
 
   w <- list(

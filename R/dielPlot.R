@@ -10,9 +10,7 @@
 #' dielLabels()
 #' dielLabels("clock12")
 dielLabels <- function(format="clock24") {
-  if (!format %in% c("clock24", "clock12")) {
-    stop(paste("Unknown format for dielLabels:",format))
-  }
+  .validateChoice(format, c("clock24", "clock12"), "format", "dielLabels", prep="for")
   if (format=="clock24") {
     return(c("0000", "0300", "0600", "0900", "1200", "1500", "1800", "2100"))
   }
@@ -24,7 +22,7 @@ dielLabels <- function(format="clock24") {
 #' Generate positions of labels for a diel plot
 #'
 #' Generates positions for three-hourly labels of a dielPlot() in radians.
-#' @param format One of "3hours" (default), "hours", or "minutes"
+#' @param format One of "3hourly" (default), "hours", or "minutes"
 #' @return A numeric vector of label positions, in radians.
 #' @export
 #' @examples
@@ -32,18 +30,18 @@ dielLabels <- function(format="clock24") {
 #' dielPositions("hours")
 #' dielPositions("minutes")
 dielPositions <- function(format="3hourly") {
-  if (!format %in% c("3hourly", "hours", "minutes")) {
-    stop(paste("Unknown format for dielPositions:",format))
-  }
+  .validateChoice(format, c("3hourly", "hours", "minutes"), "format", "dielPositions", prep="for")
   if (format == "3hourly") {
     return(2*pi * c(0, 45, 90, 135, 180, 225, 270, 315)/360)
   }
+  #Counted from zero, so that there is a position at midnight. Counting from one
+  #left midnight out and repeated it at the end as 2*pi.
   if (format == "hours") {
-    return(2*pi * (1:24)/24)
+    return(2*pi * (0:23)/24)
   }
   if (format == "minutes") {
     mpd <- 24*60
-    return(2*pi * (1:mpd)/mpd)
+    return(2*pi * (0:(mpd-1))/mpd)
   }
 }
 
@@ -58,12 +56,8 @@ dielPositions <- function(format="3hourly") {
 #' @return The position of the time within the day, in radians or as a fraction of a day.
 #' @export
 dielFraction <- function(t, input="POSIX", unit="radians") {
-  if (!input %in% .convertable2seconds()) {
-    stop(paste("Unknown input for dielFraction:",input))
-  }
-  if (!unit %in% c("radians", "fraction")) {
-    stop(paste("Unknown output for dielFraction:",unit))
-  }
+  .validateChoice(input, .convertable2seconds(), "input", "dielFraction", prep="for")
+  .validateChoice(unit, c("radians", "fraction"), "output", "dielFraction", prep="for")
   s <- convert2seconds(t, input=input, origin="day")
   f <- s/(24*60*60)
   if (unit=="radians") {
@@ -84,9 +78,7 @@ dielFraction <- function(t, input="POSIX", unit="radians") {
 #' @return Called for its side effect of drawing a plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
 emptyDiel <- function(method="plotrix", rot=pi) {
-  if (!method %in% .dielPlotMethods()) {
-    stop(paste("Unknown method for emptyDiel:",method))
-  }
+  .validateChoice(method, .dielPlotMethods(), "method", "emptyDiel", prep="for")
   if (method == "plotrix") {
     plotrix::radial.plot(
       lengths=0,
@@ -137,14 +129,20 @@ dielPlot <- function(
     plot=NULL,
     rot=tzRot(0),
     method="plotrix",
-    legend=F
+    legend=FALSE
 ){
-  date <- as.POSIXlt(date)
-  times <- seq.POSIXt(from=date, by="min", length.out=60*24)
-  attr(times, 'tzone') <- "UTC"
+  #Built in UTC from the start. Taking local midnight and then relabelling the
+  #instants as UTC moved them by the session's offset, so a session east of UTC
+  #drew the previous day's twilight.
+  date <- as.Date(date)
+  times <- seq(
+    from = as.POSIXct(paste(date, "00:00:00"), tz="UTC"),
+    by = "min",
+    length.out = 60*24
+  )
   #Calculate night time from sun altitude above horizon
   pos <- getSunlightPosition(date = times, lat = lat, lon = lon, keep = c("altitude"))
-  tim <- getSunlightTimes(date = as.Date(times[1]), lat = lat, lon = lon)
+  tim <- getSunlightTimes(date = date, lat = lat, lon = lon, tz = "UTC")
   if (rot=="Solar Noon") {
     df <- dielFraction(tim$solarNoon)
     rot <- pi-(df-pi)
@@ -165,36 +163,33 @@ dielPlot <- function(
     leg <- c()
     col <- c()
 
-    if (is.null(plot) | "Civil Twilight" %in% plot) {
-      leg <- c(leg, "Civil Twilight")
-      col <- c(col, rgb(0.8,0.8,0.8,1))
-      if (!is.na(tim$sunrise)) {
-        radialPolygon(dielFraction(tim$sunset), dielFraction(tim$sunrise), limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), rot=rot)
+    #The three outer twilight bands differ only in their name, their grey, and
+    #which three sun events they read, so they are driven from a table. Night is
+    #written out below because it is not the same shape: it needs both of its
+    #events, and falls back on the sun's altitude rather than on a later event.
+    bands <- list(
+      list(name="Civil Twilight",         grey=0.8, start="sunset",       end="sunrise",      next.event="dawn"),
+      list(name="Nautical Twilight",      grey=0.6, start="dusk",         end="dawn",         next.event="nauticalDawn"),
+      list(name="Astronomical Twilight",  grey=0.4, start="nauticalDusk", end="nauticalDawn", next.event="night")
+    )
+    for (band in bands) {
+      if (!is.null(plot) & !band$name %in% plot) {
+        next
       }
-      if (is.na(tim$sunrise) & !is.na(tim$dawn)) {
-        radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.8,0.8,0.8,1), rot=rot)
+      band.col <- rgb(band$grey, band$grey, band$grey, 1)
+      leg <- c(leg, band$name)
+      col <- c(col, band.col)
+      if (!is.na(tim[[band$end]])) {
+        radialPolygon(
+          dielFraction(tim[[band$start]]), dielFraction(tim[[band$end]]),
+          limits[1], limits[2], col=band.col, rot=rot
+        )
       }
-    }
-    if (is.null(plot) | "Nautical Twilight" %in% plot) {
-      leg <- c(leg, "Nautical Twilight")
-      col <- c(col, rgb(0.6,0.6,0.6,1))
-      if (!is.na(tim$dawn)) {
-        radialPolygon(dielFraction(tim$dusk), dielFraction(tim$dawn),limits[1], limits[2], col=rgb(0.6,0.6,0.6,1), rot=rot)
-      }
-      if (is.na(tim$dawn) & !is.na(tim$nauticalDawn)) {
-        radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.6,0.6,0.6,1), rot=rot)
-      }
-    }
-    if (is.null(plot) |"Astronomical Twilight" %in% plot) {
-      leg <- c(leg, "Astronomical Twilight")
-      col <- c(col, rgb(0.4,0.4,0.4,1))
-      if (!is.na(tim$nauticalDawn)) {
-        radialPolygon(dielFraction(tim$nauticalDusk), dielFraction(tim$nauticalDawn), limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), rot=rot)
-      }
-      if (is.na(tim$nauticalDawn) & !is.na(tim$night)) {
-        radialPolygon(0, 2*pi,limits[1],limits[2], col=rgb(0.4,0.4,0.4,1), rot=rot)
+      if (is.na(tim[[band$end]]) & !is.na(tim[[band$next.event]])) {
+        radialPolygon(0, 2*pi, limits[1], limits[2], col=band.col, rot=rot)
       }
     }
+
     if (is.null(plot) |"Night" %in% plot) {
       leg <- c(leg, "Night")
       col <- c(col, rgb(0.2,0.2,0.2,1))
@@ -208,7 +203,9 @@ dielPlot <- function(
       }
     }
     if ("Nadir" %in% plot) {
-      radialPolygon(dielFraction(tim$nadir), dielFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1))
+      #rot was missing here alone, so the nadir marker was drawn unrotated while
+      #every other band on the plot was rotated.
+      radialPolygon(dielFraction(tim$nadir), dielFraction(tim$nadir),limits[1],limits[2], col=rgb(0,0,0,1), rot=rot)
     }
 
     if (is.null(plot) | "Sunrise" %in% plot) {
@@ -232,14 +229,7 @@ dielPlot <- function(
     }
 
     if (legend) {
-      legend(
-        -3,2.5,
-        leg,
-        col=col,
-        lty=1,
-        lwd=5,
-        bty = "n",
-        cex = 1)
+      .polarLegend(leg, col)
     }
   }
 }
@@ -254,30 +244,31 @@ dielPlot <- function(
 #' @param format Defaults to HHMM
 #' @param limits Region of a dielPlot() to plot rings. Defaults to c(1,2)
 #' @param legend Boolean. Whether to plot a legend.
+#' @param rot Rotation of the plot, which must match the dielPlot() being drawn on.
 #' @return Called for its side effect of drawing on the current plot. The return value is that of the underlying plotting function and should not be relied on.
 #' @export
-dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=T) {
+dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=c(1,2), legend=TRUE, rot=tzRot(0)) {
   cols <- rep_len(cols, length.out = length(names))
 
   #Convert to fractional circle
   starts <- dielFraction(starts, input=format)
   ends <- dielFraction(ends, input=format)
 
-  arc_step <- (limits[2] - limits[1]) / length(names)
-  arcs <- limits[1] + arc_step * (1:length(names)-1)
+  if (length(names) == 0) {
+    return(invisible(NULL))
+  }
 
-  for (i in 1:length(names)) {
-    radialPolygon(starts[i],ends[i], arcs[i],arcs[i]+0.1, col=cols[i])
+  arc_step <- (limits[2] - limits[1]) / length(names)
+  arcs <- limits[1] + arc_step * (seq_along(names) - 1)
+
+  #Each ring is as thick as the space allotted to it, so that the rings fill the
+  #region between the limits however many there are. A fixed thickness meant that
+  #more than ten rings overlapped one another and ran past limits[2].
+  for (i in seq_along(names)) {
+    radialPolygon(starts[i], ends[i], arcs[i], arcs[i]+arc_step, col=cols[i], rot=rot)
   }
 
   if (legend) {
-    legend(
-      -3.5,-1.75,
-      names,
-      col=cols,
-      lty=1,
-      lwd=5,
-      bty = "n",
-      cex = 0.75)
+    .polarLegend(names, cols, x=-3.5, y=-1.75, cex=0.75)
   }
 }

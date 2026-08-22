@@ -7,17 +7,15 @@
 #' @param maxval By default scales histogram within limits, specifying a maximum value here allows comparison between plots.
 #' @param presence.only Only show presence/absence not values.
 #' @param limits Limits of the plotting (see dielPlot()).
+#' @param rot Rotation of the plot, which must match the dielPlot() being drawn on.
 #' @return A data frame of start and end points of bins.
 #' @export
 #' @importFrom graphics hist
-dielHistogram <- function(times, by="hour", col="grey", maxval=NA, presence.only=FALSE, limits=c(1,2)) {
-  if (by=="hour") {
-    breaks <- seq(from=0,to=2*pi,by=(pi/12))
-  } else if (by=="15minute") {
-    breaks <- seq(from=0,to=2*pi,by=(pi/120))
-  } else if (by=="30minute") {
-    breaks <- seq(from=0,to=2*pi,by=(pi/60))
-  }
+dielHistogram <- function(times, by="hour", col="grey", maxval=NA, presence.only=FALSE, limits=c(1,2), rot=tzRot(0)) {
+  #One bin per interval over the whole circle, so an hour is 24 bins of 2pi/24.
+  minutes <- switch(by, hour = 60, `30minute` = 30, `15minute` = 15,
+                    stop(paste("Unknown value of by for dielHistogram:", by)))
+  breaks <- seq(from=0, to=2*pi, by=2*pi/(1440/minutes))
 
   angles <- cbind(breaks[-length(breaks)], breaks[-1])
   h <- hist(dielFraction(times), breaks=breaks, plot=F)
@@ -33,11 +31,11 @@ dielHistogram <- function(times, by="hour", col="grey", maxval=NA, presence.only
     data$value[which(data$value > 0)] <- 1
   }
 
-  for (i in 1:nrow(data)) {
+  for (i in seq_len(nrow(data))) {
     if (data$value[i]== 0) {
       next;
     }
-    radialPolygon(data$from[i],data$to[i], 1,1+data$value[i], col=col)
+    radialPolygon(data$from[i],data$to[i], 1,1+data$value[i], col=col, rot=rot)
   }
   return(data)
 }

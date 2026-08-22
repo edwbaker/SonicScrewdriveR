@@ -31,4 +31,34 @@ test_that("Human time", {
   expect_equal(humanTime(60*60*2), "2 hours")
   expect_equal(humanTime(60*60*24), "1 day")
   expect_equal(humanTime(60*60*24*2), "2 days")
+  expect_equal(humanTime(0), "0 seconds")
+  expect_equal(humanTime(0.5), "0.5 seconds")
+})
+
+test_that("humanTime is vectorised", {
+  # Previously this raised "the condition has length > 1".
+  expect_equal(
+    humanTime(c(1, 30, 90, 60*60*2)),
+    c("1 second", "30 seconds", "1.5 minutes", "2 hours")
+  )
+  expect_equal(length(humanTime(numeric(0))), 0)
+})
+
+test_that("humanTime rounds, and can be asked not to", {
+  expect_equal(humanTime(100), "1.667 minutes")
+  expect_equal(humanTime(100, digits=1), "1.7 minutes")
+  expect_equal(humanTime(100, digits=NULL), paste(100/60, "minutes"))
+})
+
+test_that("humanTime converts from other units", {
+  expect_equal(humanTime(1, unit="hours"), "1 hour")
+  expect_equal(humanTime(90, unit="minutes"), "1.5 hours")
+  expect_equal(humanTime(1, unit="days"), "1 day")
+})
+
+test_that("humanTime passes NA through", {
+  # humanBytes() already returned NA for NA; humanTime() aborted inside
+  # validateTimeInSeconds() instead.
+  expect_equal(humanTime(NA_real_), NA_character_)
+  expect_equal(humanTime(c(1, NA, 90)), c("1 second", NA, "1.5 minutes"))
 })

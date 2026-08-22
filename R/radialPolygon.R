@@ -26,7 +26,13 @@ radialPolygon <- function(
     ...
 ) {
 
-  if (length(angle1) == 1 & length(angle2) == 1) {
+  if (length(angle1) == 1 && length(angle2) == 1) {
+    #A sector that starts and ends at the same angle covers the whole circle. The
+    #angles were left equal, which collapsed the grid below to a single value and
+    #drew a two point polygon, which is to say nothing at all.
+    if (angle1 == angle2) {
+      angle2 <- angle1 + 2*pi
+    }
     while (angle1 > angle2) {
       angle2 <- angle2 + 2*pi
     }

@@ -11,13 +11,17 @@
 #' @export
 generateTimeMask <- function(wave, method="squarewave", dutyCycle=0.95, n.periods=10) {
   if (is(wave, "list")) {
-    if (all(sapply(wave, function(x) inherits(x, c("Wave", "WaveMC"))))) {
-      return(lapply(wave, generateTimeMask, method=method))
+    if (!all(sapply(wave, function(x) inherits(x, c("Wave", "WaveMC"))))) {
+      stop("wave must be a Wave-like object, or a list of such objects.")
     }
+    #Every argument is passed on. Forwarding only the method quietly gave each
+    #member of a list the default duty cycle and period count.
+    return(lapply(
+      wave, generateTimeMask,
+      method=method, dutyCycle=dutyCycle, n.periods=n.periods
+    ))
   }
-  if (!method %in% c("squarewave", "random")) {
-    stop(paste("Unknown method parameter to generateTimeMask:",method))
-  }
+  .validateChoice(method, c("squarewave", "random"), "method parameter", "generateTimeMask")
 
   wl <- length(wave)
 

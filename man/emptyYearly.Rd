@@ -4,7 +4,7 @@
 \alias{emptyYearly}
 \title{Create an empty yearly plot}
 \usage{
-emptyYearly(year = 2022, method = "plotix", rot = pi)
+emptyYearly(year = 2022, method = "plotrix", rot = pi)
 }
 \arguments{
 \item{year}{Year to plot (allows for leap years)}

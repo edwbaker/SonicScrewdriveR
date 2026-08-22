@@ -22,7 +22,7 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
   } else if (is(w, "WaveMC")) {
     channels <- w@dim[2]
   } else {
-    return(NULL)
+    stop("Expecting a Wave or WaveMC object.")
   }
   if (is.null(cl)) {
     ret <- lapply(1:channels, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)

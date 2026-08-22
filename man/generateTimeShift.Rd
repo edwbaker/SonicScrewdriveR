@@ -4,13 +4,7 @@
 \alias{generateTimeShift}
 \title{Generated time-shifted versions of a Wave-like object}
 \usage{
-generateTimeShift(
-  wave,
-  type = "silent",
-  amount = c(1, 2),
-  where = "start",
-  output = "list"
-)
+generateTimeShift(wave, type = "silent", amount = c(1, 2), where = "start")
 }
 \arguments{
 \item{wave}{A Wave or WaveMC object, or a list of such objects.}
@@ -21,8 +15,6 @@ generateTimeShift(
 
 \item{where}{Where to insert silence if \code{type} is "silent". One of "start",
 "end", or "both". If "both" two versions are generated for each amount.}
-
-\item{output}{Return a list.}
 }
 \value{
 A Wave-like object or list of Wave-like objects.

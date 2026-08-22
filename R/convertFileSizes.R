@@ -20,9 +20,7 @@ convert2bytes <- function(S, input="bits") {
     .fileSizeMultipliers("decimal"),
     .fileSizeMultipliers("binary")
   )
-  if (!input %in% names(units)) {
-    stop(paste("Unknown input to convert2bytes:", input))
-  }
+  .validateChoice(input, names(units), "input", "convert2bytes")
   return(S * units[[input]])
 }
 
@@ -78,20 +76,5 @@ fileSizeUnits <- function(units="decimal") {
 #' humanBytes(c(1, 1024, 1e6))
 #'
 humanBytes <- function(S, units="decimal", digits=3) {
-  multipliers <- .fileSizeMultipliers(units)
-
-  #findInterval() gives zero for sizes smaller than the first unit, and otherwise
-  #the position of the largest unit that applies.
-  unit <- findInterval(S, multipliers)
-  applies <- pmax(unit, 1)
-
-  value <- ifelse(unit == 0, S, S / multipliers[applies])
-  if (!is.null(digits)) {
-    value <- round(value, digits)
-  }
-  name <- ifelse(unit == 0, ifelse(S == 1, "byte", "bytes"), names(multipliers)[applies])
-
-  ret <- paste(value, name)
-  ret[is.na(S)] <- NA_character_
-  return(ret)
+  return(.humanUnits(S, .fileSizeMultipliers(units), "byte", pluralise="base", digits=digits))
 }

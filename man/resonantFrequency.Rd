@@ -4,12 +4,12 @@
 \alias{resonantFrequency}
 \title{Calculate the resonant frequency}
 \usage{
-resonantFrequency(L, C = "default")
+resonantFrequency(L, C = NULL)
 }
 \arguments{
 \item{L}{Inductance}
 
-\item{C}{Capacitance, by default IUPAC standard pressure.}
+\item{C}{Capacitance, if NULL (the default) the IUPAC standard pressure is used.}
 }
 \value{
 The resonant frequency, in Hertz.

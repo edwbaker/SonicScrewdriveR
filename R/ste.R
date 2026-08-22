@@ -5,6 +5,7 @@
 #' @param wave A Wave object
 #' @param method Which method used to calculate the short term energy,
 #' by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.
+#' @param U Window length in samples, matching the pulse detection functions.
 #' @param ... Other arguments to pass to ste method.
 #' @references
 #'   \insertAllCited{}
@@ -18,14 +19,14 @@
 ste <-  function(
   wave,
   method="dietrich2004",
+  U=120,
   ...
 ){
-  if (method == "dietrich2004") {
-    .ste_dietrich2004(wave, ...)
-  }
+  .validateChoice(method, c("dietrich2004"), "method", "ste", prep="for")
+  return(.ste_dietrich2004(wave, U=U, ...))
 }
 
-.ste_dietrich2004 <- function(wave, U) {
+.ste_dietrich2004 <- function(wave, U=120) {
   # The energy at sample i is the sum of abs(wave@left) over a window of U+1
   # samples centred on i, so a cumulative sum gives every value in one pass.
   # For odd U the window sits half a sample to the left of centre.

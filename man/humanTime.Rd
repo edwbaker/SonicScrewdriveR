@@ -4,17 +4,25 @@
 \alias{humanTime}
 \title{Converts time to human readable form}
 \usage{
-humanTime(S, unit = "seconds")
+humanTime(S, unit = "seconds", digits = 3)
 }
 \arguments{
-\item{S}{Time to convert in unit}
+\item{S}{Time to convert in unit. A vector may be given.}
 
 \item{unit}{The unit of time to convert}
+
+\item{digits}{Number of decimal places to round to, or NULL for no rounding.}
 }
 \value{
-String in human readable format
+String in human readable format, one for each value of S.
 }
 \description{
-Given an input of bytes calculates the result in a sensible output unit (e.g.
-minutes, hours).
+Given a time calculates the result in a sensible output unit (e.g. minutes,
+hours).
+}
+\examples{
+humanTime(90)
+humanTime(c(1, 90, 7200))
+humanTime(1, unit="hours")
+
 }

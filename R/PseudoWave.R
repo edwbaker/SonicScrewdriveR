@@ -5,8 +5,8 @@
 #' @slot subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
 #' @slot scale The Wave channels are multiplied by this value
 #' @slot offset This value is added to the  Wave channels
-#' @slot seed Random seed for reproducible output, NA for no seed
-#' @slot scale Logical. Whether to use the random seed value
+#' @slot seed Random seed, so that the same PseudoWave gives the same samples
+#'   every time. NA draws a fresh sequence on each use.
 #' @slot params List of additional parameters to pass to generating function
 setClass(
   "PseudoWave",
@@ -23,7 +23,7 @@ setClass(
     subtype = NA_character_,
     scale = 1,
     offset = 0,
-    seed = NA_integer_,
+    seed = 1,
     params = list()
   )
 )
@@ -37,7 +37,9 @@ setClass(
 #' @param subtype Subtype of PseudoWave (e.g. "white" if type is "noise")
 #' @param scale The Wave channels are multiplied by this value
 #' @param offset This value is added to the  Wave channels
-#' @param seed Random seed for reproducible output. NA for no
+#' @param seed Random seed, so that the same PseudoWave gives the same samples
+#'   every time. Pass NA for a fresh random sequence on each use. Setting a seed
+#'   does not disturb the random numbers drawn elsewhere in the session.
 #' @param params List of additional parameters to pass to generating function
 #' @return A PseudoWave object.
 #' @importFrom methods new
@@ -47,7 +49,9 @@ setClass(
 #'
 #' pw <- pseudoWave("sine", params=list("f0"=440))
 #'
+#' \dontrun{
 #' pw <- pseudoWave("file", "myfile.wav")
+#' }
 #'
 pseudoWave <- function(
     type=NA_character_,
@@ -60,6 +64,15 @@ pseudoWave <- function(
   if (is.na(type)) {
     stop("Type must be specified")
   }
+  if (!type %in% .pseudoWaveTypes()) {
+    stop(paste("Unsupported PseudoWave type:", type))
+  }
+  #A bare NA is logical, and the slot holds a number, so asking for a fresh
+  #sequence the obvious way would otherwise be rejected by the class.
+  if (length(seed) != 1) {
+    stop("A PseudoWave takes a single seed, or NA for a fresh sequence each time.")
+  }
+  seed <- as.numeric(seed)
   if (type=="file"){
     # params list must have file set
     if (is.na(subtype)) {
@@ -83,12 +96,25 @@ pseudoWave <- function(
 }
 
 depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
+  if (!pw@type %in% .pseudoWaveTypes()) {
+    stop(paste("Unsupported PseudoWave type:", pw@type))
+  }
   if (pw@type == "file") {
     w <- readAudio(pw@subtype)
     stereo <- w@stereo
+    #The file holds however many samples it holds, but the wave being operated on
+    #decides how many are wanted. Leaving them alone let the arithmetic recycle
+    #the file against the target, silently and however badly the lengths matched.
+    w@left <- rep_len(w@left, n)
+    if (stereo) {
+      w@right <- rep_len(w@right, n)
+    }
   }
   if (pw@type == "noise") {
-    if (!is.na(pw@seed)) {set.seed(pw@seed)}
+    if (!is.na(pw@seed)) {
+      .withSeed(pw@seed)
+      set.seed(pw@seed)
+    }
     w <- .depseudoNoise(pw@subtype, n, stereo, samp.rate, bit, pcm)
   }
   if (pw@type == "sine") {
@@ -222,3 +248,43 @@ setMethod("+", signature(e1 = "numeric", e2 = "PseudoWave"),
     return(e2)
   }
 )
+
+#' Types of PseudoWave that can be generated
+#'
+#' @return A character vector of the supported types.
+#' @noRd
+.pseudoWaveTypes <- function() {
+  return(c("file", "noise", "sine"))
+}
+
+#' Arrange for the caller's random stream to be restored
+#'
+#' set.seed() replaces the random stream of the whole session, so a PseudoWave
+#' asked for reproducible noise used to change every random number drawn after it.
+#' Called from the frame that is about to set the seed, this registers an exit
+#' handler on that frame which puts the stream back.
+#'
+#' @param seed The seed about to be set, used only to skip the work when there is
+#'   none.
+#' @return Called for its side effect.
+#' @noRd
+.withSeed <- function(seed) {
+  frame <- parent.frame()
+  if (exists(".Random.seed", envir=globalenv(), inherits=FALSE)) {
+    previous <- get(".Random.seed", envir=globalenv(), inherits=FALSE)
+    do.call(
+      "on.exit",
+      list(quote(assign(".Random.seed", previous, envir=globalenv())), add=TRUE),
+      envir = frame
+    )
+    assign("previous", previous, envir=frame)
+  } else {
+    #There was no stream before, so the one this creates is removed again.
+    do.call(
+      "on.exit",
+      list(quote(rm(".Random.seed", envir=globalenv())), add=TRUE),
+      envir = frame
+    )
+  }
+  return(invisible(NULL))
+}

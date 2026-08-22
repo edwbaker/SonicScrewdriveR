@@ -15,7 +15,7 @@ dayPhase(
 \arguments{
 \item{time}{A time object representing the start time of a recording}
 
-\item{duration}{Duration of recording}
+\item{duration}{Duration of recording in seconds}
 
 \item{lat}{Latitude of recording device}
 
@@ -30,4 +30,8 @@ Data frame of day phases with absolute timestamps and relative times within file
 Given a start time and (optionally) a duration returns the phase of day at a given
 location. This is primarily used to calculate phase of day information for soundscape
 recording projects.
+}
+\examples{
+dayPhase(time=as.POSIXct("2024-06-15 20:00:00", tz="UTC"), duration=40000)
+
 }

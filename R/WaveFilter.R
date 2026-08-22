@@ -38,13 +38,31 @@ setClass(
 #' @param cl Optional. If a cluster is specified, the filter will be applied in parallel.
 #' @return A filtered Wave or WaveMC object, or a list of such objects if given a list.
 #' @export
+#' @importFrom methods slot
 filterWave <- function(w, filt, cl=NULL) {
   if (inherits(w, c("TaggedWave", "TaggedWaveMC"))) {
-    fw <- do.call(match.fun(filt@func), c(list(w), filt@params))
+    #The filters dispatch on the class of the wave and know nothing of a
+    #TaggedWave, so the plain wave is filtered and the tags carried over to the
+    #result. Passing the tagged wave straight to a filter gave an error from
+    #seewave, and the plain wave a filter returned had no addProcess method.
+    plain <- untagWave(w)
+    if (.useAllChannels(plain)) {
+      fw <- tagWave(.filterAllChannels(plain, filt))
+    } else {
+      fw <- tagWave(do.call(match.fun(filt@func), c(list(plain), filt@params)))
+    }
+    #Every tag slot is carried across, so that adding one to the class does not
+    #quietly start losing it here.
+    for (tag in names(.tagSlots())) {
+      methods::slot(fw, tag) <- methods::slot(w, tag)
+    }
     fw <- addProcess(fw, filt@description)
     return(fw)
   }
   if (inherits(w, c("Wave", "WaveMC"))) {
+    if (.useAllChannels(w)) {
+      return(.filterAllChannels(w, filt))
+    }
     return(do.call(match.fun(filt@func), c(list(w), filt@params)))
   }
   if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
@@ -82,4 +100,40 @@ bandpass <- function( from, to, ...) {
   }
   filt <- new("WaveFilter", func=seewave::ffilter, params=list(from=from,to=to,output="Wave",...))
   return(filt)
+}
+
+#' Apply a filter to every channel of a multi-channel wave
+#'
+#' The filters read the left slot of a Wave, so passing a stereo Wave or a WaveMC
+#' straight to one returned only its first channel, silently discarding the rest.
+#' Each channel is filtered separately and the results put back together.
+#'
+#' @param w A stereo Wave or a WaveMC object.
+#' @param filt A WaveFilter object.
+#' @return A wave of the same class and channel count as the input.
+#' @noRd
+.filterAllChannels <- function(w, filt) {
+  filtered <- allChannels(
+    w,
+    function(channel) do.call(match.fun(filt@func), c(list(channel), filt@params)),
+    channel.param = NULL
+  )
+  #allChannels() wraps a result that is not a list in one.
+  filtered <- lapply(filtered, function(x) if (is.list(x)) x[[1]] else x)
+
+  if (inherits(w, "WaveMC")) {
+    return(tuneR::WaveMC(
+      do.call(cbind, lapply(filtered, function(x) x@left)),
+      samp.rate = w@samp.rate,
+      bit = w@bit,
+      pcm = w@pcm
+    ))
+  }
+  return(tuneR::Wave(
+    left = filtered[[1]]@left,
+    right = filtered[[2]]@left,
+    samp.rate = w@samp.rate,
+    bit = w@bit,
+    pcm = w@pcm
+  ))
 }

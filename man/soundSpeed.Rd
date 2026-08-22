@@ -66,7 +66,7 @@ soundSpeed(method="cramer", temp=14, pressure=3, RH=10)
 soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
 
 t <- 1:30
-s <- lapply(t, \(x){soundSpeed(method="cramer", temp=x)})
+s <- lapply(t, function(x){soundSpeed(method="cramer", temp=x)})
 }
 \references{
 \insertAllCited{}

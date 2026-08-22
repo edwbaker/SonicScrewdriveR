@@ -9,7 +9,8 @@ tSamples(time = 1, wave = NULL, samp.rate = NULL)
 \arguments{
 \item{time}{The duration in seconds}
 
-\item{wave}{A Wave object containing pulses}
+\item{wave}{A Wave object containing pulses. Its sample rate is used, so it
+cannot be given alongside samp.rate.}
 
 \item{samp.rate}{Integer sampling rate}
 }
