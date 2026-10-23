@@ -200,6 +200,30 @@
 - parseFilename() read a timestamp against an epoch taken in whatever timezone the
   session was in, and ignored its timezone argument, so the time was out by the
   local offset of the machine reading it.
+- parseFilename() returned a different instant for the same filename depending on
+  the timezone of the machine it ran on. The AudioMoth, Wildlife Acoustics SM2 and
+  Wildlife Acoustics SM3 formats took the wall clock in the filename to be in the
+  session timezone, while the YYYYMMDD and YYYYMMDD_HHMMSS formats took it to be
+  UTC, so the same recording parsed as two of its documented formats could be hours
+  apart. The timezone argument now states which timezone the clock of the recorder
+  was set to, for every format holding a wall clock, and defaults to "UTC". Results
+  no longer depend on the timezone of the analysis machine, but datetimes for
+  AudioMoth, SM2 and SM3 files will change on a machine that is not set to UTC.
+- parseFilename() with format="AudioMoth" ignored its timezone argument, as
+  seewave::audiomoth() does not use the timezone it is passed for the newer
+  YYYYMMDD_HHMMSS filenames. These are now read by parseFilename() itself, and
+  seewave::audiomoth() is still used for the hexadecimal filenames, where the
+  timezone only sets how the instant is displayed.
+- parseFilename() with timezone= on a Wildlife Acoustics SM2 or SM3 filename
+  relabelled the timezone of an instant that had already been read in the session
+  timezone, rather than reading the wall clock in the timezone asked for.
+- parseFilename() gave the error "a character vector argument expected" when given
+  a list of filenames together with a format other than "match".
+- parseFilename() with format="match" gave the error "Unknown format: match" when
+  no single format fitted every filename, and now reports what went wrong. Given a
+  single filename rather than a list, it now detects the format of that file.
+- parseFilename() raised an error on AudioMoth and Wildlife Acoustics filenames
+  given with a path rather than a bare filename.
 - generateNoise() with noise.ref="max" took its reference level from the bit slot of
   the wave, which reads 32 for a floating point wave, so the noise was referenced to
   two thousand million rather than to one. The two settings of noise.ref now agree
