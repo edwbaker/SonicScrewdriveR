@@ -21,13 +21,77 @@ audiomothConfig <- function(filename) {
   return(c)
 }
 
+#' Capture groups from an AudioMoth comment
+#'
+#' @param x The comment string to match against
+#' @param pattern A regular expression containing at least one capture group
+#' @return The capture groups of the first match, or NULL if there is no match
+#' @noRd
+audiomothMatch <- function(x, pattern) {
+  m <- regmatches(x, regexec(pattern, x, perl=TRUE))[[1]]
+  if (length(m) < 2) {
+    return(NULL)
+  }
+  return(m[-1])
+}
+
+#' A single field from an AudioMoth comment
+#'
+#' @param x The comment string to match against
+#' @param pattern A regular expression containing at least one capture group
+#' @return The first capture group of the first match, or NA if there is no match
+#' @noRd
+audiomothField <- function(x, pattern) {
+  m <- audiomothMatch(x, pattern)
+  if (is.null(m)) {
+    return(NA_character_)
+  }
+  return(m[1])
+}
+
 #' Read AudioMoth metadata from a wave file
 #'
 #' Reads and parses metadata stored in wave files produced by
 #' AudioMoth devices.
 #'
+#' The comment written into the wave header has been reworded several times
+#' across AudioMoth-Firmware-Basic releases, most significantly in 1.6.0, where
+#' "at medium gain setting while battery state was" became "at medium gain while
+#' battery was" and the filter and cancellation clauses were rephrased. Fields
+#' are matched by pattern rather than by position, so all wordings from 1.0
+#' onwards are read.
+#'
+#' Firmware from 1.5.0 can be configured with a deployment ID, which the
+#' firmware writes in place of the device serial number. Such files have a
+#' \code{deployment_id} and no \code{serial}.
+#'
+#' Firmware before 1.4.0 wrote a gain index rather than a gain name, so
+#' \code{gain} is a number ("0" to "4") for files from those versions.
+#'
 #' @param filename Path to the wave file to read
-#' @return A list of extracted parameters
+#' @return A list of extracted parameters:
+#' \describe{
+#'   \item{raw}{The comment string the other fields were read from}
+#'   \item{start_time}{Recording start time, as \code{"HH:MM:SS"}}
+#'   \item{start_date}{Recording start date, as \code{"DD/MM/YYYY"}}
+#'   \item{time_zone}{Time zone of the start time, e.g. \code{"UTC"} or
+#'     \code{"UTC+1"}}
+#'   \item{serial}{The device serial number, or NA for a deployment ID file}
+#'   \item{deployment_id}{The configured deployment ID, or NA if none was set}
+#'   \item{gain}{Gain setting, one of "low", "low-medium", "medium",
+#'     "medium-high" or "high"}
+#'   \item{voltage}{Battery voltage in volts, or "<2.5" or ">4.9" where the
+#'     firmware reported only that the battery was outside the measured range}
+#'   \item{temperature}{Temperature in degrees Celsius, or NA for firmware
+#'     before 1.4.0, which did not record it}
+#'   \item{external_mic}{Whether an external microphone was used}
+#'   \item{filter}{"Low-pass", "Band-pass", "High-pass", or FALSE if no filter
+#'     was applied}
+#'   \item{filter.limit}{Filter frequency in kHz, two values separated by a
+#'     hyphen for a band-pass filter, or FALSE if no filter was applied}
+#'   \item{cancelled}{Why the recording stopped early, or FALSE if it ran to
+#'     completion}
+#' }
 #' @export
 #' @examples
 #' \dontrun{
@@ -41,79 +105,79 @@ audiomothWave <- function(filename) {
   if (length(raw)==0) {
     return(list())
   }
+  raw <- raw[1]
 
-  r <- regexpr("[0-2][0-9]:[0-6][0-9]:[0-6][0-9]", raw)
-  start_time <- substr(raw, r, r+attr(r, "match.length")-1)
+  start_time <- audiomothField(raw, "([0-2][0-9]:[0-6][0-9]:[0-6][0-9])")
+  start_date <- audiomothField(raw, "([0-3][0-9]/[0-1][0-9]/[0-9]{4})")
+  time_zone <- audiomothField(raw, "\\((UTC[^)]*)\\)")
 
-  r <- regexpr("[0-3][0-9]/[0-1][0-9]/[0-9]{4}", raw)
-  start_date <- substr(raw, r, r+attr(r, "match.length")-1)
+  # The firmware writes either the device serial number ("by AudioMoth <id>")
+  # or, where a deployment ID has been configured, that ID in its place
+  # ("during deployment <id>"). Only one of the two is ever present.
+  serial <- audiomothField(raw, "by AudioMoth ([0-9A-F]{16})")
+  deployment_id <- audiomothField(raw, "during deployment ([0-9A-F]{16})")
 
-  r <- regexpr("\\(", raw)
-  l <- regexpr("\\)", raw)
-  time_zone <- substr(raw,r+1,l-1)
+  # Up to 1.5.0 the gain was followed by "gain setting while battery state
+  # was", from 1.6.0 by "gain while battery was". Before 1.4.0 the gain was
+  # written as an index instead of a name.
+  gain <- audiomothField(raw, "at (low-medium|medium-high|low|medium|high) gain")
+  if (is.na(gain)) {
+    gain <- audiomothField(raw, "at gain setting ([0-9]+) while")
+  }
 
-  r <- regexpr("AudioMoth", raw) + 10
-  serial <- substr(raw, r, r+16)
-
-  r <- regexpr("AudioMoth [0-9|A-Z]{16} at ", raw) + 30
-  l <- regexpr("gain setting", raw) - r -2
-  gain <- substr(raw, r, r+l)
-
-  if ( regexpr("less than 2\\.5V", raw) != -1) {
+  if (grepl("less than 2\\.5V", raw)) {
     voltage <- "<2.5"
-  } else if (regexpr("greater than 4\\.9V", raw) != -1) {
+  } else if (grepl("greater than 4\\.9V", raw)) {
     voltage <- ">4.9"
   } else {
-    r <- regexpr("[0-9].[0-9]V", raw)
-    voltage <- substr(raw, r, r+2)
+    voltage <- audiomothField(raw, "battery(?: state)? was ([0-9]\\.[0-9])V")
   }
 
-  r <- regexpr("[-+]?[0-9]+[\\.]+[0-9]+[C]", raw)
-  if (r != -1) {
-    temp <- substr(raw, r, r+attr(r, "match.length")-2)
-  } else {
-    temp <- NA
-  }
+  temp <- audiomothField(raw, "temperature was ([-+]?[0-9]+\\.[0-9]+)C")
 
-  r <- regexpr("using external microphone", raw)
-  external_mic <- if (r == -1) FALSE else TRUE
+  external_mic <- grepl("using external microphone", raw)
 
+  # Up to 1.5.0: "Low-pass filter applied with cut-off frequency of 5.0kHz.",
+  # from 1.6.0: "Low-pass filter with frequency of 5.0kHz applied." Reading the
+  # frequency out of the filter clause itself keeps it from picking up the
+  # frequency trigger, which firmware from 1.7.0 writes earlier in the comment
+  # and which also carries a value in kHz.
   filter <- FALSE
   filter_limit <- FALSE
-  if (regexpr("Low-pass filter applied", raw) != -1) {
-    filter <- "Low-pass"
+  m <- audiomothMatch(
+    raw,
+    "(Low|High)-pass filter (?:applied )?with (?:cut-off )?frequency of ([0-9]+\\.[0-9]+)kHz"
+  )
+  if (!is.null(m)) {
+    filter <- paste0(m[1], "-pass")
+    filter_limit <- m[2]
   }
-  if (regexpr("Band-pass filter applied", raw) != -1) {
+  m <- audiomothMatch(
+    raw,
+    paste0(
+      "Band-pass filter (?:applied )?with (?:cut-off )?frequencies of ",
+      "([0-9]+\\.[0-9]+)kHz and ([0-9]+\\.[0-9]+)kHz"
+    )
+  )
+  if (!is.null(m)) {
     filter <- "Band-pass"
-  }
-  if (regexpr("High-pass filter applied", raw) != -1) {
-    filter <- "High-pass"
-  }
-  if (is.element(filter, c("Low-pass", "High-pass"))) {
-    r <- regexpr("frequency of", raw) + 13
-    l <- regexpr("kHz", raw) - 1
-    filter_limit <- substr(raw,r,l)
-  }
-  if (filter == "Band-pass") {
-    al <- regexpr("frequencies of", raw) + 15
-    ar <- regexpr("kHz",  raw) - 1
-    bl <- regexpr("kHz and", raw) + 8
-    br <- regexpr("kHz\\.", raw) - 1
-    filter_limit <- paste0(substr(raw,al, ar),"-",substr(raw,bl,br))
+    filter_limit <- paste0(m[1], "-", m[2])
   }
 
+  # Up to 1.5.0 the clause read "Recording cancelled before completion due to
+  # <reason>", from 1.6.0 "Recording stopped due to <reason>" or, for the
+  # magnetic switch, "Recording stopped by <reason>". The switch reason was
+  # reworded in 1.6.0 and is reported under its original name.
   cancelled <- FALSE
-  if (regexpr("microphone change.", raw) != -1) {
-    cancelled <- "microphone change"
-  }
-  if (regexpr("change of switch position.", raw) != -1) {
-    cancelled <- "change of switch position"
-  }
-  if (regexpr("low voltage.", raw) != -1) {
-    cancelled <- "low voltage"
-  }
-  if (regexpr("file size limit.", raw) != -1) {
-    cancelled <- "file size limit"
+  reason <- audiomothField(
+    raw,
+    "Recording (?:cancelled before completion|stopped) (?:due to|by) ([^.]+)\\."
+  )
+  if (!is.na(reason)) {
+    if (reason == "switch position change") {
+      reason <- "change of switch position"
+    }
+    cancelled <- reason
   }
 
   ret = list(
@@ -122,6 +186,7 @@ audiomothWave <- function(filename) {
     "start_date" = start_date,
     "time_zone" = time_zone,
     "serial" = serial,
+    "deployment_id" = deployment_id,
     "gain" = gain,
     "voltage" = voltage,
     "temperature" = temp,
