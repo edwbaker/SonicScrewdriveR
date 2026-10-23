@@ -1,4 +1,3 @@
-Sys.setenv(TZ='UTC')
 
 # Sussex coast, the package defaults.
 LAT <- 50.1
@@ -144,3 +143,34 @@ test_that("daysPhases rejects an unknown period", {
   # Previously ret was never assigned and the error named ret rather than period.
   expect_error(daysPhases(period="dog"), "Unknown period for daysPhases: dog")
 })
+
+test_that("dayPhases uses the day of the timezone it is given, not of UTC", {
+  # 2024-12-15 08:00 in Sydney is 2024-12-14 21:00 UTC, so the two zones
+  # disagree about the date. as.Date() reads a POSIXct in UTC unless told
+  # otherwise, so the phases returned were the previous day's.
+  syd <- as.POSIXct("2024-12-15 08:00:00", tz="Australia/Sydney")
+  fromTime <- dayPhases(syd, lat=LAT, lon=LON, tz="Australia/Sydney")
+  fromDate <- dayPhases(as.Date("2024-12-15"), lat=LAT, lon=LON, tz="Australia/Sydney")
+  expect_equal(as.numeric(fromTime$Start), as.numeric(fromDate$Start), tolerance=0)
+
+  # The same the other way round: 2024-12-15 20:00 in New York is already
+  # 2024-12-16 in UTC.
+  ny <- as.POSIXct("2024-12-15 20:00:00", tz="America/New_York")
+  expect_equal(
+    as.numeric(dayPhases(ny, lat=LAT, lon=LON, tz="America/New_York")$Start),
+    as.numeric(dayPhases(as.Date("2024-12-15"), lat=LAT, lon=LON, tz="America/New_York")$Start),
+    tolerance=0
+  )
+})
+
+for (tz in sessionTimezones) {
+  test_that(paste0("dayPhases gives the same phases in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      d <- dayPhases(as.Date("2024-12-15"), lat=LAT, lon=LON, tz="UTC")
+      expect_equal(as.numeric(d$Start[1]), 1734241624, tolerance=0)
+      # An instant carrying no timezone of its own.
+      fromNaive <- dayPhases(naiveTime(1734300000), lat=LAT, lon=LON, tz="UTC")
+      expect_equal(as.numeric(fromNaive$Start), as.numeric(d$Start), tolerance=0)
+    })
+  })
+}

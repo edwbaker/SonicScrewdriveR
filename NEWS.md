@@ -61,6 +61,11 @@
   in the timezone of the machine, and so is a different moment on each machine
   before these functions ever see it. Give as.POSIXct() a tz, or pass the string
   itself, to get the same answer everywhere.
+- dayPhases() and daysPhases() took the calendar day of a time in UTC rather than
+  in the timezone they were given, so for a recorder far enough east or west that
+  the two disagree they returned the phases of the wrong day. A recording made at
+  08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
+  day's phases.
 - readAudio() returns audio read through the av package (e.g. FLAC) at the bit
   depth of the source file, rather than at a bit depth inferred from the decoded
   samples. Audio read this way now compares equal to the same audio read from a
