@@ -66,6 +66,10 @@
   the two disagree they returned the phases of the wrong day. A recording made at
   08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
   day's phases.
+- The tests of convert2seconds() and dayPhases() compared values the size of an
+  epoch with the tolerance expect_equal() allows, which is relative and so comes
+  to about 25 seconds at a present-day date. They passed whether or not the
+  seconds were right, and now compare exactly.
 - readAudio() returns audio read through the av package (e.g. FLAC) at the bit
   depth of the source file, rather than at a bit depth inferred from the decoded
   samples. Audio read this way now compares equal to the same audio read from a
