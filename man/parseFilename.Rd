@@ -4,7 +4,7 @@
 \alias{parseFilename}
 \title{Parse a filename}
 \usage{
-parseFilename(file, format = NULL, timezone = NULL)
+parseFilename(file, format = NULL, timezone = "UTC")
 }
 \arguments{
 \item{file}{A filename (or list of filenames).}
@@ -15,10 +15,12 @@ and a list of filenames is given then an attempt will be made to find a format
 that matches all files. This may give incorrect results if the filename is
 ambiguous (see Details).}
 
-\item{timezone}{Optionally set a timezone.}
+\item{timezone}{The timezone the clock of the recorder was set to, defaults
+to "UTC" (see Details).}
 }
 \value{
-A list of file, type of match, datetime.
+A list of file, type of match, datetime. If a list of filenames is
+given then a list of such lists is returned.
 \cr\cr
 It is possible to determine additional properties from some files, these will
 be added to the list.
@@ -37,22 +39,38 @@ and the "match" format is specified then an effort will be made to determine
 the most likely format that applies to all filenames.
 }
 
+\subsection{Timezones}{
+
+Most supported formats write a wall clock (e.g. 20200609_191730) into the
+filename, with no indication of the timezone the clock of the recorder was
+set to. The \code{timezone} argument states which timezone that wall clock
+belongs to, and defaults to UTC, which is what AudioMoth devices use unless
+they are configured otherwise. The datetime returned is therefore the same
+instant whatever timezone the machine running the analysis is set to.
+
+The 'AudioMoth HEX' and 'timestamp' formats are exceptions: these encode an
+instant rather than a wall clock, so for them \code{timezone} only sets the
+timezone the datetime is displayed in.
+}
+
 \subsection{Supported formats}{
 \itemize{
 \item \strong{AudioMoth} - The newer format for AudioMoth devices consists of a
-standard YYYYMMDD_HHMMSS.wav format. Specifying 'AudioMoth' forces a call
-to the \code{audiomoth()} function from the \code{seewave} package
-\insertCite{seewave2008}{sonicscrewdriver}.
+standard YYYYMMDD_HHMMSS.wav format. An eight character hexadecimal
+filename given this format is treated as 'AudioMoth HEX'.
 \item \strong{AudioMoth HEX} - Older format for AudioMoth devices consisting of eight
-hexadecimal characters. Conversion is handled by a call to
-\code{seewave::audiomoth()}.
+hexadecimal characters giving the number of seconds since
+1970-01-01 00:00:00 UTC. Conversion is handled by a call to the
+\code{audiomoth()} function from the \code{seewave} package
+\insertCite{seewave2008}{sonicscrewdriver}.
 \item \strong{timestamp} - A standard date-time format. Uses the R standard origin of
 1970-01-01 00:00:00 UTC.
 \item \strong{Wildlife Acoustics SM2} - Can also be used for Wildlife Acoustics SM4
-devices. Conversion is handled by a call to \code{seewave::songmeter()}.
-\item \strong{Wildlife Acoustics SM3} - Conversion is handled by a call to
+devices. The filename is split by a call to \code{seewave::songmeter()}.
+\item \strong{Wildlife Acoustics SM3} - The filename is split by a call to
 \code{seewave::songmeter()}.
 \item \strong{YYYYMMDD_HHMMSS} - A standard date-time format.
+\item \strong{YYYYMMDD} - A standard date format, the time is taken to be midnight.
 }
 }
 }
