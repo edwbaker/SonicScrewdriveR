@@ -12,11 +12,12 @@ withSessionTimezone <- function(tz, code) {
   force(code)
 }
 
-# Comparing the epoch seconds rather than the POSIXct objects themselves, as
-# expect_equal() on a POSIXct allows a relative tolerance that is larger than a
-# second for present-day datetimes.
+# Comparing the epoch seconds rather than the POSIXct objects themselves, and
+# with tolerance=0. The tolerance expect_equal() allows is relative, which for a
+# present-day datetime comes to about 25 seconds, so a comparison left at the
+# default would pass whether or not the seconds are right.
 expect_instant <- function(parsed, epoch) {
-  expect_equal(as.numeric(parsed$datetime), as.numeric(epoch))
+  expect_equal(as.numeric(parsed$datetime), as.numeric(epoch), tolerance=0)
 }
 
 test_that(".detectFormat() correctly identifies formats", {
@@ -133,11 +134,12 @@ for (tz in sessionTimezones) {
         datetime= as.POSIXct(1708529883, origin=as.POSIXct("1970-01-01", tz="UTC"), tz="GMT")
       )
       expect_equal(parseFilename(files, timezone="GMT"), data)
-      expect_equal(as.numeric(parseFilename(files, timezone="GMT")$datetime), 1708529883)
+      expect_instant(parseFilename(files, timezone="GMT"), 1708529883)
       # The instant is the same wherever it is read.
       expect_equal(
         as.numeric(parseFilename(files, timezone="America/New_York")$datetime),
-        as.numeric(parseFilename(files, timezone="UTC")$datetime)
+        as.numeric(parseFilename(files, timezone="UTC")$datetime),
+        tolerance=0
       )
     })
   })
