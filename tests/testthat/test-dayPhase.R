@@ -22,7 +22,10 @@ test_that("dayPhases gives contiguous phases in order", {
   expect_false(anyNA(solar$Start))
   expect_true(all(diff(as.numeric(solar$Start)) > 0))
   # Each phase ends where the next begins, and the night runs into the next day.
-  expect_equal(as.numeric(solar$End[1:9]), as.numeric(solar$Start[2:10]))
+  # tolerance=0 because the tolerance expect_equal() allows is relative, and at
+  # epoch scale it comes to about 25 seconds, which would hide a gap between one
+  # phase and the next.
+  expect_equal(as.numeric(solar$End[1:9]), as.numeric(solar$Start[2:10]), tolerance=0)
   expect_gt(as.numeric(solar$End[10]), as.numeric(solar$Start[10]))
 })
 
