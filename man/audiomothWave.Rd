@@ -10,11 +10,47 @@ audiomothWave(filename)
 \item{filename}{Path to the wave file to read}
 }
 \value{
-A list of extracted parameters
+A list of extracted parameters:
+\describe{
+\item{raw}{The comment string the other fields were read from}
+\item{start_time}{Recording start time, as "HH:MM:SS"}
+\item{start_date}{Recording start date, as "DD/MM/YYYY"}
+\item{time_zone}{Time zone of the start time, e.g. "UTC" or "UTC+1"}
+\item{serial}{The device serial number, or NA for a deployment ID file}
+\item{deployment_id}{The configured deployment ID, or NA if none was set}
+\item{gain}{Gain setting, one of "low", "low-medium", "medium",
+"medium-high" or "high"}
+\item{voltage}{Battery voltage in volts, or "<2.5" or ">4.9" where the
+firmware reported only that the battery was outside the measured range}
+\item{temperature}{Temperature in degrees Celsius, or NA for firmware
+before 1.4.0, which did not record it}
+\item{external_mic}{Whether an external microphone was used}
+\item{filter}{"Low-pass", "Band-pass", "High-pass", or FALSE if no filter
+was applied}
+\item{filter.limit}{Filter frequency in kHz, two values separated by a
+hyphen for a band-pass filter, or FALSE if no filter was applied}
+\item{cancelled}{Why the recording stopped early, or FALSE if it ran to
+completion}
+}
 }
 \description{
 Reads and parses metadata stored in wave files produced by
 AudioMoth devices.
+}
+\details{
+The comment written into the wave header has been reworded several times
+across AudioMoth-Firmware-Basic releases, most significantly in 1.6.0, where
+"at medium gain setting while battery state was" became "at medium gain while
+battery was" and the filter and cancellation clauses were rephrased. Fields
+are matched by pattern rather than by position, so all wordings from 1.0
+onwards are read.
+
+Firmware from 1.5.0 can be configured with a deployment ID, which the
+firmware writes in place of the device serial number. Such files have a
+\code{deployment_id} and no \code{serial}.
+
+Firmware before 1.4.0 wrote a gain index rather than a gain name, so
+\code{gain} is a number ("0" to "4") for files from those versions.
 }
 \examples{
 \dontrun{

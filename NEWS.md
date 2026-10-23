@@ -78,6 +78,22 @@
 - convert2Pascals(), convert2dyne_cm2() and convert2degrees() and their counterparts
   now share one table of conversion factors for each family of units, so a factor
   cannot be right in one direction and wrong in its inverse.
+- audiomothWave() read its fields by counting characters from fixed phrases in the
+  AudioMoth comment, so the rewording in AudioMoth-Firmware-Basic 1.6.0 left gain
+  empty and filter, filter.limit and cancelled FALSE for every recording made since
+  May 2022. Fields are now matched by pattern, and all comment wordings from
+  firmware 1.0 onwards are read. Recordings cancelled by the magnetic switch or an
+  SD card write error are also now reported, as is the gain index written by
+  firmware before 1.4.0.
+- audiomothWave() returned a fragment of the recording timestamp as the serial
+  number of recordings made with a deployment ID configured, as those files carry
+  the deployment ID in place of the serial number. The deployment ID is now
+  returned as deployment_id and serial is NA for such files.
+- audiomothWave() returned a serial number with a trailing space, so comparing it
+  against a 16 character serial number was always FALSE.
+- audiomothWave() took filter.limit from the frequency trigger rather than the
+  filter on recordings that used both, as it looked for the first frequency in the
+  comment rather than the one in the filter clause.
 - audiomothWave() raised an error on recordings made with a band-pass filter. The
   two cut-off frequencies are now returned as filter.limit, as they already were
   for low-pass and high-pass recordings.
