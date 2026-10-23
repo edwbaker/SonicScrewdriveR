@@ -13,7 +13,10 @@ test_that("Test conversions", {
   expect_equal(convert2seconds("1200", input="HHMM"), 60*60*12)
   expect_equal(convert2seconds(1200, input="HHMM"), 60*60*12)
   expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="day"), 60*60*12)
-  expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="unix"), 1707652800)
+  # tolerance=0 because the tolerance expect_equal() allows is relative, and at
+  # an epoch of this size it comes to about 25 seconds, so the comparison would
+  # pass whether or not the seconds are right.
+  expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="unix"), 1707652800, tolerance=0)
   expect_equal(convert2seconds("0000", input="HHMM"), 0)
   expect_equal(convert2seconds("0100", input="HHMM"), 60*60)
   expect_equal(convert2seconds(0100, input="HHMM"), 60*60)
