@@ -11,7 +11,8 @@ dielHistogram(
   maxval = NA,
   presence.only = FALSE,
   limits = c(1, 2),
-  rot = tzRot(0)
+  rot = tzRot(0),
+  timezone = NULL
 )
 }
 \arguments{
@@ -28,6 +29,10 @@ dielHistogram(
 \item{limits}{Limits of the plotting (see dielPlot()).}
 
 \item{rot}{Rotation of the plot, which must match the dielPlot() being drawn on.}
+
+\item{timezone}{The timezone to read the times in, which decides which bin
+each falls in. The default, NULL, uses the timezone the times themselves
+carry, and UTC for times that carry none.}
 }
 \value{
 A data frame of start and end points of bins.

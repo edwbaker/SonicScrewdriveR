@@ -53,12 +53,15 @@ dielPositions <- function(format="3hourly") {
 #' @param t Object to be converted to a fraction
 #' @param input One of POSIX (default) or HHMM
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param timezone The timezone to read the time in, which decides where in the
+#'   day it falls. The default, NULL, uses the timezone the time itself carries,
+#'   and UTC for a time that carries none (such as the output of `Sys.time()`).
 #' @return The position of the time within the day, in radians or as a fraction of a day.
 #' @export
-dielFraction <- function(t, input="POSIX", unit="radians") {
+dielFraction <- function(t, input="POSIX", unit="radians", timezone=NULL) {
   .validateChoice(input, .convertable2seconds(), "input", "dielFraction", prep="for")
   .validateChoice(unit, c("radians", "fraction"), "output", "dielFraction", prep="for")
-  s <- convert2seconds(t, input=input, origin="day")
+  s <- convert2seconds(t, input=input, origin="day", timezone=timezone)
   f <- s/(24*60*60)
   if (unit=="radians") {
     return(2*pi*f)

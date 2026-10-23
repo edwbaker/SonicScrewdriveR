@@ -1,4 +1,3 @@
-Sys.setenv(TZ='UTC')
 
 test_that("Reject invalid input", {
   expect_error(convert2seconds(1, "dog"), "Unknown input to convert2seconds: dog")
@@ -62,3 +61,28 @@ test_that("humanTime passes NA through", {
   expect_equal(humanTime(NA_real_), NA_character_)
   expect_equal(humanTime(c(1, NA, 90)), c("1 second", NA, "1.5 minutes"))
 })
+
+for (tz in sessionTimezones) {
+  test_that(paste0("convert2seconds reads a POSIX time the same way in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      # 2024-12-16 03:20:00 UTC, as an instant carrying no timezone of its own.
+      # This used to be read in the session's zone, so the seconds since the
+      # start of the day moved with the machine.
+      expect_equal(convert2seconds(naiveTime(1734319200), "POSIX", origin="day"), 12000)
+      # A time that carries a timezone is read in that timezone.
+      expect_equal(
+        convert2seconds(as.POSIXct("2024-12-16 03:20:00", tz="Australia/Sydney"), "POSIX", origin="day"),
+        12000
+      )
+      # Naming a timezone overrides the one the time carries.
+      expect_equal(
+        convert2seconds(as.POSIXct("2024-12-16 03:20:00", tz="UTC"), "POSIX", origin="day",
+                        timezone="Australia/Sydney"),
+        51600
+      )
+      # An epoch is the same number of seconds wherever it is read.
+      expect_equal(convert2seconds(naiveTime(1734319200), "POSIX", origin="unix"), 1734319200,
+                   tolerance=0)
+    })
+  })
+}
