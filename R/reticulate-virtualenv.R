@@ -11,6 +11,20 @@
 #' pythonInstall()
 #' pythonInstall(unattended=TRUE)
 #' }
+#' Python versions the sonicscrewdriver environment can be built on
+#'
+#' The machine learning packages the environment holds lag new Python releases
+#' by a good while, and until they catch up a newer Python cannot install them
+#' at all. This is the constraint passed to `reticulate::virtualenv_starter()`,
+#' and is what to widen once they publish for a newer one.
+#'
+#' @return A version constraint, in the form `virtualenv_starter()` takes.
+#' @keywords internal
+#' @noRd
+.pythonVersions <- function() {
+  return("<=3.12")
+}
+
 pythonInstall <- function(unattended=FALSE) {
   if (!package.installed("reticulate")) {
     stop("The reticulate package is required to create the `sonicscrewdriver` environment.")
@@ -28,7 +42,22 @@ pythonInstall <- function(unattended=FALSE) {
 
   .useUtf8Locale()
   if (!reticulate::virtualenv_exists(envname = "sonicscrewdriver")) {
-    reticulate::virtualenv_create(envname = "sonicscrewdriver", packages=NULL)
+    #The environment is built from the newest Python on the machine unless one
+    #is named, and the packages below are not published for a Python as soon as
+    #it is released: numpy is built from source and fails, and tensorflow offers
+    #only a release candidate, which pip passes over. A Python they are
+    #published for is therefore asked for by name.
+    #Looking for a starter reads every Python it can see, and warns about any it
+    #cannot, such as the stub Windows leaves in WindowsApps. Those are not the
+    #one being chosen, so the warnings are not passed on.
+    starter <- suppressWarnings(reticulate::virtualenv_starter(.pythonVersions()))
+    if (is.null(starter)) {
+      stop(paste0(
+        "No Python ", .pythonVersions(), " was found, and the packages the ",
+        "`sonicscrewdriver` environment needs are not published for newer ones."
+      ))
+    }
+    reticulate::virtualenv_create(envname = "sonicscrewdriver", packages=NULL, python=starter)
   }
   reticulate::virtualenv_install("sonicscrewdriver", c("scikit-maad", "numpy==1.26.4", "librosa", "tensorflow", "birdnetlib"))
 }

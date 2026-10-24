@@ -48,6 +48,12 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- pythonInstall() built the `sonicscrewdriver` environment on whichever Python
+  was newest, and the machine learning packages it installs lag new Python
+  releases: on Python 3.14 and 3.15 numpy was built from source and failed, and
+  the only tensorflow published was a release candidate, which pip passes over.
+  It now asks for a Python the packages are published for, and says so plainly
+  if the machine has none, rather than failing part way through pip.
 - writeAudio() and .writeAudioFlac() failed with "FLAC program was not found" on
   Windows unless the flac program was in C:/Program Files/FLAC, which is the only
   place seewave::wav2flac() looks there. A flac elsewhere on the PATH, such as the

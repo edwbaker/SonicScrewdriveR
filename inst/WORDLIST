@@ -135,11 +135,13 @@ ndsi
 noClick
 nsd
 ntd
+numpy
 org
 oscillogram
 parseFilename
 pbapply
 plotix
+pythonInstall
 pseudoWave
 pulseDetection
 pulseIntervals
@@ -173,6 +175,7 @@ suncalc
 sweptsine
 tSamples
 tdoa
+tensorflow
 timezone
 tmax
 tmin
