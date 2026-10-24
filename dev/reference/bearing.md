@@ -145,20 +145,20 @@ mics <- rbind(c(0, 0), c(1, 0), c(0, 1))
 # A sound arriving from the east reaches the eastern microphone first
 bearing(c(0, -1/343, 0), mics)
 #> $azimuth
-#> [1] -3.020411e-14
+#> [1] -2.862499e-14
 #> 
 #> $elevation
 #> [1] NA
 #> 
 #> $direction
 #>      [,1]          [,2]
-#> [1,]    1 -5.271612e-16
+#> [1,]    1 -4.996004e-16
 #> 
 #> $cone
 #> [1] NA
 #> 
 #> $residual
-#> [1] 3.220923e-16
+#> [1] 2.662221e-16
 #> 
 #> $magnitude
 #> [1] 1
