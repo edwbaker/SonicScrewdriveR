@@ -48,6 +48,12 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- generateNoise() could send samples outside the range the format holds. The
+  noise was scaled by its largest positive sample rather than by its largest
+  either way, so noise with a deeper trough than peak went past the level asked
+  for, and an unsigned 8 bit wave holding a zero gave noise.ref="file" a
+  reference of 128 where only 127 is available above the centre. Both are
+  bounded now, so the result stays within the format.
 - convert2seconds(), dielFraction(), yearlyFraction() and dielHistogram() read a
   time that carries no timezone of its own in the timezone of the machine they
   ran on, so the same moment fell at a different point of the day, and sometimes

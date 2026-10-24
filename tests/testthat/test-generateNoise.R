@@ -220,3 +220,28 @@ test_that("noise mixing preserves the unsigned 8-bit silence offset", {
   # zero would have passed the very check the baseline needs.
   expect_lt(abs(mean(out@left) - 128), 10)
 })
+
+test_that("noise keeps an 8-bit wave that reaches both ends inside the range", {
+  # An unsigned 8 bit wave reaches 128 below its centre but only 127 above it,
+  # so a wave holding a zero gave noise.ref="file" a reference of 128, and the
+  # loudest noise took the loudest sample past the end of the range. Seed 24
+  # produced -33.5 before the reference was capped at the headroom.
+  w <- Wave(left=c(0L, 255L, rep(128L, 98)), samp.rate=8000, bit=8L)
+  set.seed(24)
+  out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="file")
+  expect_gte(min(out@left), 0)
+  expect_lte(max(out@left), 255)
+})
+
+test_that("noise is scaled by its deepest sample either way", {
+  # The noise was scaled by its largest positive sample, so noise whose trough
+  # is deeper than its peak went past the level asked for in the negative
+  # direction. Against a wave already at full negative scale that leaves the
+  # format: seed 24 reached -41350 in a 16 bit wave before the scaling used the
+  # largest sample either way.
+  w <- Wave(left=c(-32767L, rep(0L, 99)), samp.rate=8000, bit=16L)
+  set.seed(24)
+  out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="max")
+  expect_gte(min(out@left), -32768)
+  expect_lte(max(out@left), 32767)
+})
