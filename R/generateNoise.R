@@ -54,12 +54,13 @@ generateNoise <- function(
       n@left <- n@left + nw@left
     }
   }
+  wave.offset <- if (wave@bit == 8) 128 else 0
   if (noise.ref=="file") {
     if (inherits(wave, "Wave")) {
-      noise.max <- max(abs(c(wave@left, wave@right)))
+      noise.max <- max(abs(c(wave@left, wave@right) - wave.offset))
     }
     if (inherits(wave, "WaveMC")) {
-      noise.max <- max(abs(wave@.Data))
+      noise.max <- max(abs(wave@.Data - wave.offset))
     }
   } else {
     #The noise is added to the samples of the wave, so full scale is the wave's,
@@ -74,14 +75,14 @@ generateNoise <- function(
   noise.frac = 1 / (1/noise.ratio - 1)
 
   if (inherits(wave, c("Wave"))) {
-    wave@left <- (wave@left + noise.frac * n@left) / (1 + noise.frac)
+    wave@left <- (wave@left - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     if (wave@stereo) {
-      wave@right <- (wave@right + noise.frac * n@left) / (1 + noise.frac)
+      wave@right <- (wave@right - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     }
   }
   if (inherits(wave, c("WaveMC"))) {
     for (i in 1:ncol(wave@.Data)) {
-      wave@.Data[,i] <- (wave@.Data[,i] + noise.frac * n@left) / (1 + noise.frac)
+      wave@.Data[,i] <- (wave@.Data[,i] - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     }
   }
   if (.isTagged(wave)) {

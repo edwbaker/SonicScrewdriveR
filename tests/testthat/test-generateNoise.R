@@ -187,3 +187,13 @@ test_that("noise referenced to the format is in the units of the wave", {
   # the original, which only reaches 100.
   expect_gt(max(abs(out@left)), 1000)
 })
+
+test_that("noise mixing preserves the unsigned 8-bit silence offset", {
+  w <- Wave(left=rep(128L, 1000), samp.rate=44100, bit=8L)
+  set.seed(1)
+  out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="max")
+
+  expect_gte(min(out@left), 0)
+  expect_lte(max(out@left), 255)
+  expect_equal(mean(out@left), 128, tolerance=10)
+})
