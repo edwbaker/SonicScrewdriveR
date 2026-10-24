@@ -78,7 +78,7 @@ a5 <- annotation(
 
 ```{r, eval=FALSE}
 # Fetch annotations from audioBlast as `Annotation` objects
-a <- audioblast("data", "annomate", source="bio.acousti.ca", id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
 ```
 
 ### Generating annotations

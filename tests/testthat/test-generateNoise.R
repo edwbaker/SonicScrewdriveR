@@ -155,3 +155,35 @@ test_that("the reference for the noise level agrees for a full scale wave", {
   set.seed(1); b <- generateNoise(w, "white", FALSE, 0.25, noise.ref="max", output="list")
   expect_equal(a@left, b@left)
 })
+
+test_that("noise can be added to a wave of any resolution", {
+  # tuneR::noise() only makes floating point waves, which may be 32 or 64 bit,
+  # and it was asked for one at the resolution of the wave being augmented. A
+  # 16 bit recording, which is what readAudio() gives for most files, therefore
+  # failed with "Float (non pcm) Wave objects must have a resolution of either
+  # 32 or 64 bit" before it added any noise.
+  for (bit in c(8L, 16L, 24L, 32L)) {
+    w <- Wave(left=round(sin(seq(0, 100, length.out=1000)) * 100), samp.rate=44100, bit=bit)
+    expect_no_error(generateNoise(w, "white", noise.ratio=0.1))
+    expect_no_error(generateNoise(w, c("white", "pink"), noise.ratio=0.1))
+  }
+})
+
+test_that("the resolution of the noise does not reach the wave it is added to", {
+  w <- Wave(left=round(sin(seq(0, 100, length.out=1000)) * 100), samp.rate=44100, bit=16L)
+  out <- generateNoise(w, "white", noise.ratio=0.1)
+  expect_equal(out@bit, w@bit)
+  expect_equal(out@pcm, w@pcm)
+})
+
+test_that("noise referenced to the format is in the units of the wave", {
+  # Full scale belongs to the wave the noise is added to, not to the noise,
+  # which is floating point and so full scale at one. Taking it from the noise
+  # made the noise added to a 16 bit recording thirty thousand times too quiet.
+  w <- Wave(left=round(sin(seq(0, 100, length.out=1000)) * 100), samp.rate=44100, bit=16L)
+  set.seed(1)
+  out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="max")
+  # Half the mix is noise referenced to 32767, so the result leaves the range of
+  # the original, which only reaches 100.
+  expect_gt(max(abs(out@left)), 1000)
+})

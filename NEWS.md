@@ -70,6 +70,17 @@
   epoch with the tolerance expect_equal() allows, which is relative and so comes
   to about 25 seconds at a present-day date. They passed whether or not the
   seconds were right, and now compare exactly.
+- generateNoise() failed with "Float (non pcm) Wave objects must have a resolution
+  of either 32 or 64 bit" for a wave that was not 32 or 64 bit, which is most of
+  them, as readAudio() now gives a 16 bit wave for a 16 bit file. The noise was
+  asked for at the resolution of the wave being augmented, and tuneR::noise()
+  only makes floating point waves, which may only be 32 or 64 bit. The noise is
+  now made at 32 bit whatever the wave is; only its samples are used, and they
+  are scaled to the wave, so its resolution does not reach the result.
+- generateNoise() with noise.ref="max" referenced the noise to the full scale of
+  the noise rather than of the wave it is added to. The noise is floating point
+  and so full scale at one, which made the noise added to a 16 bit recording
+  thirty thousand times quieter than asked for.
 - audioblast() raised "must have 'max' > 'min'" for a query that matched nothing,
   unless it was called with quiet=TRUE. Such a query used to come back without a
   data field and now comes back with an empty one and a last page of zero, which
