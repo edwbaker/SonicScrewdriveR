@@ -231,6 +231,18 @@ test_that("noise keeps an 8-bit wave that reaches both ends inside the range", {
   out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="file")
   expect_gte(min(out@left), 0)
   expect_lte(max(out@left), 255)
+
+  # The range on its own does not hold the cap in place: without it each sample
+  # moves by at most half of one, and only the occasional seed leaves 0..255.
+  # A wave that reaches both ends is at the full scale of the format, so the
+  # two references are the same number once the cap is applied and the same
+  # noise comes out of each. Without the cap the file reference is 128 against
+  # the 127 of max, and they differ.
+  set.seed(24)
+  byFile <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="file")
+  set.seed(24)
+  byFormat <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="max")
+  expect_equal(byFile@left, byFormat@left, tolerance=0)
 })
 
 test_that("noise is scaled by its deepest sample either way", {
