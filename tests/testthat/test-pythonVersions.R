@@ -4,7 +4,9 @@ test_that("the environment is built on a Python the packages are published for",
   # machine learning packages it holds lag new releases, so on a runner that had
   # moved to 3.14 or 3.15 numpy was built from source and failed, and the only
   # tensorflow offered was a release candidate, which pip passes over.
-  starter <- reticulate::virtualenv_starter(.pythonVersions())
+  # Suppressed as in pythonInstall(): looking for a starter reads every Python
+  # it can see and warns about any it cannot, such as the stub in WindowsApps.
+  starter <- suppressWarnings(reticulate::virtualenv_starter(.pythonVersions()))
   skip_if(is.null(starter), "no Python within the constraint is installed")
   reported <- system2(starter, "--version", stdout=TRUE, stderr=TRUE)
   version <- numeric_version(sub("^Python ", "", reported[[1]]))
@@ -16,5 +18,5 @@ test_that("an impossible constraint is reported rather than ignored", {
   # virtualenv_starter() returns NULL rather than raising when nothing matches,
   # so without a check the environment would quietly be built on the newest
   # Python again, which is what failed.
-  expect_null(reticulate::virtualenv_starter("<=2.0"))
+  expect_null(suppressWarnings(reticulate::virtualenv_starter("<=2.0")))
 })
