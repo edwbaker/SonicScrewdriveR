@@ -48,6 +48,11 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- writeAudio() and .writeAudioFlac() failed with "FLAC program was not found" on
+  Windows unless the flac program was in C:/Program Files/FLAC, which is the only
+  place seewave::wav2flac() looks there. A flac elsewhere on the PATH, such as the
+  one Rtools installs, is now passed to it, so writing FLAC works wherever the
+  program is.
 - audioblast() raised "must have 'max' > 'min'" for a query that matched nothing,
   unless it was called with quiet=TRUE. Such a query used to come back without a
   data field and now comes back with an empty one and a last page of zero, which

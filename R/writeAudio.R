@@ -117,6 +117,32 @@ writeAudio <- function(wave, file, mime="auto", ...) {
   return(file)
 }
 
+#' Where seewave should look for the flac program
+#'
+#' On unix seewave::wav2flac() runs whichever flac is on the PATH, but on Windows
+#' it looks only in C:/Program Files/FLAC and reports the program as missing
+#' otherwise. A flac installed anywhere else, as the one Rtools ships is, then
+#' goes unused. Where the PATH has one and the place seewave looks does not, it
+#' is pointed at the one on the PATH.
+#'
+#' @return A list to pass to wav2flac() as further arguments, empty where
+#'   seewave can find the program by itself.
+#' @keywords internal
+#' @noRd
+.flacExe <- function() {
+  if (.Platform$OS.type != "windows") {
+    return(list())
+  }
+  if (file.exists("C:/Program Files/FLAC/flac.exe")) {
+    return(list())
+  }
+  path <- Sys.which("flac")
+  if (!nzchar(path)) {
+    return(list())
+  }
+  return(list(path2exe=dirname(path), exename=basename(path)))
+}
+
 #' Write a wave as FLAC using the flac program
 #'
 #' @param wave A Wave or WaveMC object.
@@ -132,7 +158,7 @@ writeAudio <- function(wave, file, mime="auto", ...) {
   #has to be moved to where it was asked for.
   out <- paste0(tools::file_path_sans_ext(tmp), ".flac")
   on.exit(unlink(out), add=TRUE)
-  seewave::wav2flac(tmp, overwrite=TRUE)
+  do.call(seewave::wav2flac, c(list(tmp, overwrite=TRUE), .flacExe()))
   if (!file.exists(out)) {
     stop("FLAC conversion failed, is the flac program installed?")
   }
