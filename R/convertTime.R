@@ -35,7 +35,7 @@ convert2seconds <- function(T, input="minutes", origin="day", timezone=NULL) {
       #Which day a moment falls in, and how far through it, depends on the zone
       #it is read in. Breaking it down without naming one read a time carrying
       #no timezone in the session's, so the answer moved with the machine.
-      t <- unclass(as.POSIXlt(T, tz=.timezoneOf(T, timezone)))
+      t <- unclass(as.POSIXlt(.asInstant(T), tz=.timezoneOf(T, timezone)))
       s <- (t$sec + 60*t$min + 3600*t$hour)
     }
     if (origin == "unix") {
@@ -43,6 +43,19 @@ convert2seconds <- function(T, input="minutes", origin="day", timezone=NULL) {
     }
   }
   return(validateTimeInSeconds(s))
+}
+
+#A time already broken down into its parts is returned unchanged by
+#as.POSIXlt(), whatever timezone that is asked for, so a POSIXlt ignored the
+#timezone it was given. Turning it back into an instant first, by the zone it
+#carries, leaves it to be read in the zone asked for like any other. A string
+#is left alone, as as.POSIXlt() reads it in the zone named rather than in the
+#session's, which is what keeps a written-out time the same everywhere.
+.asInstant <- function(t) {
+  if (inherits(t, "POSIXlt")) {
+    return(as.POSIXct(t))
+  }
+  return(t)
 }
 
 #Which timezone to read a time in: the one the caller named, else the one the

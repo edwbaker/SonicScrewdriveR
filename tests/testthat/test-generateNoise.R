@@ -215,5 +215,8 @@ test_that("noise mixing preserves the unsigned 8-bit silence offset", {
 
   expect_gte(min(out@left), 0)
   expect_lte(max(out@left), 255)
-  expect_equal(mean(out@left), 128, tolerance=10)
+  # Compared as an absolute deviation: expect_equal()'s tolerance is relative,
+  # so tolerance=10 here allowed anything within ten times 128, and a mean of
+  # zero would have passed the very check the baseline needs.
+  expect_lt(abs(mean(out@left) - 128), 10)
 })

@@ -112,3 +112,16 @@ for (tz in sessionTimezones) {
     })
   })
 }
+
+for (tz in sessionTimezones) {
+  test_that(paste0("yearlyFraction reads a POSIXlt in the timezone asked for in session ", tz), {
+    withSessionTimezone(tz, {
+      # The last evening of 2023 in UTC is already New Year's Day in Sydney, so
+      # the day of the year depends on which zone the time is read in. A POSIXlt
+      # used to ignore the timezone argument entirely.
+      lt <- as.POSIXlt("2023-12-31 20:00:00", tz="UTC")
+      expect_equal(yearlyFraction(lt, year=2023, unit="fraction"), 364/365)
+      expect_equal(yearlyFraction(lt, year=2023, unit="fraction", timezone="Australia/Sydney"), 0)
+    })
+  })
+}

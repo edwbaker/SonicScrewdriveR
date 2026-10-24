@@ -89,7 +89,7 @@ yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians", timezone
     #Which day of the year a moment falls on depends on the zone it is read in.
     #Breaking it down without naming one read a time carrying no timezone in the
     #session's, so a moment near midnight moved a day with the machine.
-    t <- unclass(as.POSIXlt(t, tz=.timezoneOf(t, timezone)))
+    t <- unclass(as.POSIXlt(.asInstant(t), tz=.timezoneOf(t, timezone)))
     f <- t$yday/dc
   } else if (input=="day") {
     f <- t/dc

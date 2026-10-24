@@ -89,3 +89,22 @@ for (tz in sessionTimezones) {
     })
   })
 }
+
+for (tz in sessionTimezones) {
+  test_that(paste0("convert2seconds reads a POSIXlt in the timezone asked for in session ", tz), {
+    withSessionTimezone(tz, {
+      # as.POSIXlt() returns a time that is already broken down unchanged,
+      # whatever timezone it is asked for, so a POSIXlt used to ignore the
+      # timezone argument and answer in the one it carried.
+      lt <- as.POSIXlt("2024-12-16 03:20:00", tz="UTC")
+      expect_equal(convert2seconds(lt, "POSIX", origin="day"), 12000)
+      expect_equal(
+        convert2seconds(lt, "POSIX", origin="day", timezone="Australia/Sydney"),
+        51600
+      )
+      # dielFraction() reads its times through the same path.
+      expect_equal(dielFraction(lt, unit="fraction"), 12000/86400)
+      expect_equal(dielFraction(lt, unit="fraction", timezone="Australia/Sydney"), 51600/86400)
+    })
+  })
+}
