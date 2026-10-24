@@ -11,43 +11,6 @@
 #' pythonInstall()
 #' pythonInstall(unattended=TRUE)
 #' }
-#' Python versions the sonicscrewdriver environment can be built on
-#'
-#' The machine learning packages the environment holds lag new Python releases
-#' by a good while, and until they catch up a newer Python cannot install them
-#' at all. This is the constraint passed to `reticulate::virtualenv_starter()`,
-#' and is what to widen once they publish for a newer one.
-#'
-#' @return A version constraint, in the form `virtualenv_starter()` takes.
-#' @keywords internal
-#' @noRd
-.pythonVersions <- function() {
-  return("<=3.12")
-}
-
-#' The Python to build the sonicscrewdriver environment on
-#'
-#' Looking for a starter reads every Python it can see, and warns about any it
-#' cannot, such as the stub Windows leaves in WindowsApps. Those are not the one
-#' being chosen, so the warnings are not passed on. Nothing matching the
-#' constraint returns NULL rather than raising, which would leave the
-#' environment to be built on the newest Python again, so it is reported here.
-#'
-#' @param versions The version constraint to satisfy.
-#' @return The path of a Python the packages can be installed on.
-#' @keywords internal
-#' @noRd
-.pythonStarter <- function(versions=.pythonVersions()) {
-  starter <- suppressWarnings(reticulate::virtualenv_starter(versions))
-  if (is.null(starter)) {
-    stop(paste0(
-      "No Python ", versions, " was found, and the packages the ",
-      "`sonicscrewdriver` environment needs are not published for newer ones."
-    ))
-  }
-  return(starter)
-}
-
 pythonInstall <- function(unattended=FALSE) {
   if (!package.installed("reticulate")) {
     stop("The reticulate package is required to create the `sonicscrewdriver` environment.")
@@ -80,6 +43,45 @@ pythonInstall <- function(unattended=FALSE) {
     )
   }
   reticulate::virtualenv_install("sonicscrewdriver", c("scikit-maad", "numpy==1.26.4", "librosa", "tensorflow", "birdnetlib"))
+}
+
+#' Python versions the sonicscrewdriver environment can be built on
+#'
+#' The machine learning packages the environment holds lag new Python releases
+#' by a good while, and until they catch up a newer Python cannot install them
+#' at all. The lower bound is there because the numpy the environment pins needs
+#' at least 3.9, so an older Python would get as far as pip and fail there. This
+#' is the constraint passed to `reticulate::virtualenv_starter()`, and is what to
+#' widen once the packages publish for a newer one.
+#'
+#' @return A version constraint, in the form `virtualenv_starter()` takes.
+#' @keywords internal
+#' @noRd
+.pythonVersions <- function() {
+  return(">=3.9,<=3.12")
+}
+
+#' The Python to build the sonicscrewdriver environment on
+#'
+#' Looking for a starter reads every Python it can see, and warns about any it
+#' cannot, such as the stub Windows leaves in WindowsApps. Those are not the one
+#' being chosen, so the warnings are not passed on. Nothing matching the
+#' constraint returns NULL rather than raising, which would leave the
+#' environment to be built on the newest Python again, so it is reported here.
+#'
+#' @param versions The version constraint to satisfy.
+#' @return The path of a Python the packages can be installed on.
+#' @keywords internal
+#' @noRd
+.pythonStarter <- function(versions=.pythonVersions()) {
+  starter <- suppressWarnings(reticulate::virtualenv_starter(versions))
+  if (is.null(starter)) {
+    stop(paste0(
+      "No Python ", versions, " was found, and the packages the ",
+      "`sonicscrewdriver` environment needs are not published for newer ones."
+    ))
+  }
+  return(starter)
 }
 
 #' Name an available UTF-8 locale
