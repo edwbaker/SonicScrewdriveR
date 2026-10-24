@@ -37,3 +37,14 @@ readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
 ## Value
 
 A Wave object
+
+## Details
+
+Files read through the av package (which is everything that is not WAVE
+or MP3, e.g. FLAC) are returned at the bit depth the file was stored at,
+so that the same audio compares equal however it was read. The av
+package does not report a bit depth of 24, and returns 24bit audio as
+32bit, so the samples of a 24bit file are 256 times those
+[`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html) would
+give for the same audio stored as WAVE. Audio stored as floating point
+is returned as 32bit.

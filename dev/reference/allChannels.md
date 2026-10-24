@@ -46,4 +46,5 @@ allChannels(
 
 ## Value
 
-A list of outputs.
+A list with one entry per channel, whatever the class and channel count
+of the input. Each entry is itself a list.

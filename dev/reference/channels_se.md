@@ -14,3 +14,7 @@ channels_se(...)
 - ...:
 
   Export from a bioacoustic index function from the soundecology package
+
+## Value
+
+A list containing the value calculated for the left channel.

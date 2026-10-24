@@ -58,6 +58,11 @@ windowing(
 
   Additional parameters to FUN
 
+## Value
+
+A list of the results of FUN for each window, or a single Wave object if
+bind.wave is TRUE.
+
 ## Examples
 
 ``` r

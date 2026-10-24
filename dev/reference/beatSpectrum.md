@@ -19,11 +19,11 @@ beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 
 - min_period:
 
-  the minimal rythmicity period expected, in seconds
+  the minimal rhythmicity period expected, in seconds
 
 - max_period:
 
-  the maximal rythmicity period expected, in seconds
+  the maximal rhythmicity period expected, in seconds
 
 - dj:
 

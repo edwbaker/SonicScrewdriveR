@@ -27,3 +27,7 @@ generateTimeMask(wave, method = "squarewave", dutyCycle = 0.95, n.periods = 10)
 - n.periods:
 
   The number of waves to generate in the squarewave method.
+
+## Value
+
+The Wave or WaveMC object with the time mask applied.

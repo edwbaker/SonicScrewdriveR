@@ -16,7 +16,11 @@ convert2dyne_cm2(P, input = "kPa")
 
 - input:
 
-  The unit of the pressure to convert, allowed values are "kPa", "P".
+  The unit of the pressure to convert, allowed values are "Pa", "kPa".
+
+## Value
+
+The numeric value in dyne per square centimetre.
 
 ## Examples
 

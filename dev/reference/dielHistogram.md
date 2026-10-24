@@ -12,7 +12,9 @@ dielHistogram(
   col = "grey",
   maxval = NA,
   presence.only = FALSE,
-  limits = c(1, 2)
+  limits = c(1, 2),
+  rot = tzRot(0),
+  timezone = NULL
 )
 ```
 
@@ -20,7 +22,7 @@ dielHistogram(
 
 - times:
 
-  A vector of times that can be pocessed by dielFraction().
+  A vector of times that can be processed by dielFraction().
 
 - by:
 
@@ -43,6 +45,16 @@ dielHistogram(
 - limits:
 
   Limits of the plotting (see dielPlot()).
+
+- rot:
+
+  Rotation of the plot, which must match the dielPlot() being drawn on.
+
+- timezone:
+
+  The timezone to read the times in, which decides which bin each falls
+  in. The default, NULL, uses the timezone the times themselves carry,
+  and UTC for times that carry none.
 
 ## Value
 

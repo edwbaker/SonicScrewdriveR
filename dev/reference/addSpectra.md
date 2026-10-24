@@ -31,6 +31,7 @@ A spectrum of s1+s2
 
 ``` r
 if (FALSE) { # \dontrun{
-subtractSpectra(spec1, spec2)
+addSpectra(spec1, spec2)
+addSpectra(spec1, spec2, coerceNegative=TRUE)
 } # }
 ```

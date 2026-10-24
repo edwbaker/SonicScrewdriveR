@@ -6,7 +6,7 @@ string format, return the fraction of a day represented by the object.
 ## Usage
 
 ``` r
-dielFraction(t, input = "POSIX", unit = "radians")
+dielFraction(t, input = "POSIX", unit = "radians", timezone = NULL)
 ```
 
 ## Arguments
@@ -23,3 +23,15 @@ dielFraction(t, input = "POSIX", unit = "radians")
 
   If set to radians outputs a position around a circle. If set to
   fraction outputs the raw fraction.
+
+- timezone:
+
+  The timezone to read the time in, which decides where in the day it
+  falls. The default, NULL, uses the timezone the time itself carries,
+  and UTC for a time that carries none (such as the output of
+  [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html)).
+
+## Value
+
+The position of the time within the day, in radians or as a fraction of
+a day.

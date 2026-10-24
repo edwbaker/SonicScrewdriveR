@@ -16,7 +16,8 @@ tSamples(time = 1, wave = NULL, samp.rate = NULL)
 
 - wave:
 
-  A Wave object containing pulses
+  A Wave object containing pulses. Its sample rate is used, so it cannot
+  be given alongside samp.rate.
 
 - samp.rate:
 

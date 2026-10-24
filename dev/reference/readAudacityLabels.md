@@ -18,3 +18,7 @@ readAudacityLabels(file, output = "annotations")
 - output:
 
   One of "annotations" or "data.frame".
+
+## Value
+
+A list of Annotation objects, or a data frame if output is "data.frame".

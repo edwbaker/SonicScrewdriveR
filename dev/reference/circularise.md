@@ -15,3 +15,8 @@ circularise(values)
 - values:
 
   A vector if values
+
+## Value
+
+The input vector with its first value appended, so that it closes on
+itself.

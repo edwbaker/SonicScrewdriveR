@@ -1,6 +1,7 @@
 # Converting code to work with SonicScrewdriveR
 
 ``` r
+
 library(sonicscrewdriver)
 ```
 
@@ -18,6 +19,7 @@ convert their code to work with SonicScrewdriveR.
 ### TaggedWave and TaggedWaveMC
 
 ``` r
+
 # Generate a `Wave` and `TaggedWave` sine
 w <- tuneR::sine(440)
 tw <- tagWave(w)
@@ -27,6 +29,7 @@ If we try to use a function that expects a `Wave` object with a
 `TaggedWave` object, we will get an error.
 
 ``` r
+
 # This will fail
 seewave::oscillo(tw)
 #> Error in `seewave::oscillo()`:
@@ -37,6 +40,7 @@ As an end user you can use the `untagWave` function to convert a
 `TaggedWave` object to a `Wave` object.
 
 ``` r
+
 # This will work
 seewave::oscillo(untagWave(tw))
 ```
@@ -49,6 +53,7 @@ To fix this in your own function or package you can make use of
 alternative methods.
 
 ``` r
+
 # Methods that fail
 is(w, "Wave")
 class(w) == "Wave"
@@ -70,6 +75,7 @@ If you want to add a process to a `TaggedWave` object you can use the
 functions that are aware of the Tagged versions.
 
 ``` r
+
 # End user using non-Tagged aware function
 seewave::oscillo(untag(tw))
 addProcess(tw, "seewave::oscillo")

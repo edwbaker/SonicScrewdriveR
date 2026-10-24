@@ -26,6 +26,11 @@ filterWave(w, filt, cl = NULL)
   Optional. If a cluster is specified, the filter will be applied in
   parallel.
 
+## Value
+
+A filtered Wave or WaveMC object, or a list of such objects if given a
+list.
+
 ## Details
 
 Supported filters include those from the seewave package.

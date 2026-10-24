@@ -1,6 +1,6 @@
 # Generate positions of labels for a yearly plot
 
-Generates positions for monthly labels of a dielPlot() in radians. The
+Generates positions for monthly labels of a yearlyPlot() in radians. The
 positions can either be for the start of the month, or middle of the
 month.
 
@@ -19,6 +19,10 @@ yearlyPositions(year = 2022, format = "months")
 - format:
 
   One of months, mid-months, days
+
+## Value
+
+A numeric vector of label positions, in radians.
 
 ## Details
 

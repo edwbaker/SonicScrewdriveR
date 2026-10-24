@@ -14,3 +14,8 @@ validateIsWave(wave)
 - wave:
 
   Object to test
+
+## Value
+
+The Wave object unchanged. An error is raised if it is not a Wave
+object.

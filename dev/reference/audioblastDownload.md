@@ -42,3 +42,7 @@ audioblastDownload(
 
   Function to call on error or warning. By default `stop` to raise a
   standard R error. Setting to `warning` will instead a warning.
+
+## Value
+
+No return value, called for its side effect of downloading files.

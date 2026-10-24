@@ -63,3 +63,8 @@ radialPolygon(
 - ...:
 
   Other parameters passed to polygon()
+
+## Value
+
+No return value, called for its side effect of drawing a polygon on the
+current plot.

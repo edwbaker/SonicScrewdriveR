@@ -14,6 +14,10 @@ referenceIntensity(unit = "watt_cm2")
 
   Unit to return, "watt_cm2"
 
+## Value
+
+The reference sound intensity, in the unit specified.
+
 ## Examples
 
 ``` r

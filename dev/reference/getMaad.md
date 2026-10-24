@@ -8,3 +8,8 @@ object between function calls.
 ``` r
 getMaad()
 ```
+
+## Value
+
+The scikit-maad Python module, with its sound and features submodules
+attached.

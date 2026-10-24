@@ -16,6 +16,11 @@ pythonInstall(unattended = FALSE)
   If TRUE then the function will not prompt the user to install the
   environment in a non-interactive session.
 
+## Value
+
+No return value, called for its side effect of creating the Python
+environment.
+
 ## Examples
 
 ``` r

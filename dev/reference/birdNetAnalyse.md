@@ -39,6 +39,10 @@ birdNetAnalyse(
 
   One of "data.frame" or "Annotation".
 
+## Value
+
+A list of Annotation objects, or a data frame if output is "data.frame".
+
 ## References
 
 Kahl S, Wood CM, Eibl M, Klinck H (2021). “BirdNET: A deep learning

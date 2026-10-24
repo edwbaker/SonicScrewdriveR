@@ -36,7 +36,9 @@ pseudoWave(
 
 - seed:
 
-  Random seed for reproducible output. NA for no
+  Random seed, so that the same PseudoWave gives the same samples every
+  time. Pass NA for a fresh random sequence on each use. Setting a seed
+  does not disturb the random numbers drawn elsewhere in the session.
 
 - params:
 
@@ -53,6 +55,7 @@ pw <- pseudoWave("noise", "white")
 
 pw <- pseudoWave("sine", params=list("f0"=440))
 
+if (FALSE) { # \dontrun{
 pw <- pseudoWave("file", "myfile.wav")
-#> Error in pseudoWave("file", "myfile.wav"): File does not exist
+} # }
 ```

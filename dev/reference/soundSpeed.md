@@ -48,6 +48,10 @@ soundSpeed(
 
   Additional parameters passed to the method.
 
+## Value
+
+The speed of sound in the medium, in metres per second.
+
 ## Details
 
 The speed of sound can be calculated using the following methods:
@@ -79,7 +83,7 @@ The speed of sound can be calculated using the following methods:
 Cramer O (1993). “The variation of the specific heat ratio and the speed
 of sound in air with temperature, pressure, humidity, and CO2
 concentration.” *The Journal of the Acoustical Society of America*,
-**93**(5), 2510–2516. ISSN 0001-4966,
+**93**(5), 2510–2516. ISSN 0001-4966.
 [doi:10.1121/1.405827](https://doi.org/10.1121/1.405827) .  
   
 Sueur J, Aubin T, Simonis C (2008). “Seewave, a free modular tool for
@@ -94,10 +98,10 @@ soundSpeed(medium="sea water")
 #> [1] 1500
 
 soundSpeed(method="cramer", temp=14, pressure=3, RH=10)
-#> [1] 342.682
+#> [1] 342.6482
 soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10)
-#> [1] 342.682
+#> [1] 342.6482
 
 t <- 1:30
-s <- lapply(t, \(x){soundSpeed(method="cramer", temp=x)})
+s <- lapply(t, function(x){soundSpeed(method="cramer", temp=x)})
 ```

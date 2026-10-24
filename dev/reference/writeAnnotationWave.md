@@ -18,3 +18,7 @@ writeAnnotationWave(annotation, wave = NULL)
 
   (Optional) A Wave object, if not given will load the wave file from
   Annotation filename.
+
+## Value
+
+No return value, called for its side effect of writing a Wave file.

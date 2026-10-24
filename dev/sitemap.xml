@@ -34,6 +34,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/autoBandPass.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/bandpass.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/bearing.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatComplexity.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatSpectrum.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/birdNetAnalyse.html</loc></url>
@@ -53,7 +54,6 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/cutws.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/data2Wave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dayPhase.html</loc></url>
-<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dayPhases.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/daysPhases.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/defaultCluster.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/dielFraction.html</loc></url>
@@ -71,6 +71,9 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/emptyDiel.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/emptyYearly.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/entropyStats.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcis.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcisIndexNames.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/fileSizeUnits.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/filterWave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/frequencySound.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/frequencyStats.html</loc></url>
@@ -104,6 +107,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/parseFilename.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pd_dietrich2004.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pd_simple.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/plot.fcis.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-PseudoWave-numeric-method.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-numeric-PseudoWave-method.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/pseudoWave.html</loc></url>
@@ -137,6 +141,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/sweptsine.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/tSamples.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagWave.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/tdoa.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/times-PseudoWave-numeric-method.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/times-numeric-PseudoWave-method.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/typicalVolume.html</loc></url>
@@ -144,9 +149,11 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/untagWave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/upsample.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/validateIsWave.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavelength.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAnnotationWave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudacityLabels.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudio.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyFraction.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyLabels.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyPlot.html</loc></url>

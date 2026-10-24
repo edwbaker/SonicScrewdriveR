@@ -15,6 +15,10 @@ dielLabels(format = "clock24")
 
   One of clock24 (default) or clock12
 
+## Value
+
+A character vector of eight labels, at three hourly intervals.
+
 ## Examples
 
 ``` r

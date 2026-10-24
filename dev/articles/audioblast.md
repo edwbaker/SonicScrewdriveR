@@ -1,6 +1,7 @@
 # Using audioBlast with R
 
 ``` r
+
 library(sonicscrewdriver)
 ```
 

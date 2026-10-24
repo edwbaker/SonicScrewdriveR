@@ -1,6 +1,7 @@
 # Managing audio in R
 
 ``` r
+
 library(sonicscrewdriver)
 ```
 
@@ -17,6 +18,7 @@ which can read audio files in a variety of formats, including WAV, MP3,
 and FLAC.
 
 ``` r
+
 filename <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
 w <- readAudio(filename)
 ```
@@ -49,6 +51,7 @@ we first define a simple function that draws a rectangle around the
 windowed region of a sound file.
 
 ``` r
+
 drawWindow <- function( wave, start, window.length) {
   rect(start, -1, start+window.length, 1, col= rgb(0,0,1.0,alpha=0.5))
 }
@@ -58,6 +61,7 @@ We can then show the windows generated if the `window.length` is 44100
 samples, and the `window.overlap` is 0.
 
 ``` r
+
 # Create a 5 second sine wave of 1Hz
 w <- tuneR::sine(1, duration=5*44100)
 
@@ -77,6 +81,7 @@ The `window.overlap` parameter can be adjusted so that the windows
 overlap by a certain number of samples.
 
 ``` r
+
 plot(w@left, type="l", xlab="Time (samples)", ylab="Amplitude")
 
 windowing(w, window.length=44100, window.overlap = 44100/2, FUN=drawWindow)
@@ -88,6 +93,7 @@ Alternatively, a negative value of `window.overlap` can be used to take
 regularly-spaced samples from the audio file.
 
 ``` r
+
 plot(w@left, type="l", xlab="Time (samples)", ylab="Amplitude")
 
 windowing(w, window.length=44100, window.overlap = -44100, FUN=drawWindow)
@@ -104,6 +110,7 @@ In the example below we use
 to add noise to sections of a sine wave.
 
 ``` r
+
 w <- tuneR::sine(1, duration=5*44100)
 
 addNoise <- function(w, start, window.length) {

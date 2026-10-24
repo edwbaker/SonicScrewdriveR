@@ -42,7 +42,7 @@ Allard HA (1957). “The stridulations of some crickets in the Dominican
 Republic.” *Journal Washington Academy of Sciences*, **47**, 150–152.  
   
 Dolbear AE (1897). “The Cricket as a Thermometer.” *The American
-Naturalist*, **31**(371), 970–971. ISSN 00030147, 15375323,
+Naturalist*, **31**(371), 970–971. ISSN 00030147, 15375323.
 <http://www.jstor.org/stable/2453256>.  
   
 Fulton BB (1925). “Physiological variation in the snowy tree cricket,
@@ -57,7 +57,7 @@ Entomological Society of America*, **55**, 303–322.
   
 Walker TJ, Collins N (2010). “New World thermometer crickets: the
 Oecanthus rileyi species group and a new species from North America.”
-*Journal of Orthoptera Research*, **19**(2). ISSN 10826467, 19372426,
+*Journal of Orthoptera Research*, **19**(2). ISSN 10826467, 19372426.
 <http://www.jstor.org/stable/25822725>.
 
 ## Examples

@@ -31,3 +31,8 @@ ab_diel_traits(traits, date, lat, lon, overwrite = FALSE)
 - overwrite:
 
   If TRUE then the function will overwrite any existing min/max.
+
+## Value
+
+The traits data frame, with value_min and value_max converted to numeric
+times of day.

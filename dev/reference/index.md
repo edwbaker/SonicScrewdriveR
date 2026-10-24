@@ -45,6 +45,8 @@
   : Automatic Band Pass Filter
 - [`bandpass()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/bandpass.md)
   : Simple bandpass filter
+- [`bearing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/bearing.md)
+  : Estimate the direction a sound arrived from
 - [`beatComplexity()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatComplexity.md)
   : Beat spectrum complexity
 - [`beatSpectrum()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatSpectrum.md)
@@ -66,7 +68,7 @@
 - [`convert2Pascals()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/convert2Pascals.md)
   : Convert pressure to Pascals
 - [`convert2bytes()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/convert2bytes.md)
-  : Convert bits to bytes
+  : Convert file sizes to bytes
 - [`convert2degrees()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/convert2degrees.md)
   : Convert angle to degrees
 - [`convert2dyne_cm2()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/convert2dyne_cm2.md)
@@ -83,8 +85,6 @@
   : Convert data into a Wave object
 - [`dayPhase()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dayPhase.md)
   : Phase of day
-- [`dayPhases()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dayPhases.md)
-  : Phases of day
 - [`daysPhases()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/daysPhases.md)
   : Phases of days
 - [`defaultCluster()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/defaultCluster.md)
@@ -121,6 +121,12 @@
   : Create an empty yearly plot
 - [`entropyStats()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/entropyStats.md)
   : Various measurements of frequency values for a Wave object
+- [`fcis()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcis.md)
+  : False-colour index spectrogram
+- [`fcisIndexNames()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcisIndexNames.md)
+  : Per-frequency-bin acoustic indices
+- [`fileSizeUnits()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fileSizeUnits.md)
+  : Units used for file sizes
 - [`filterWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/filterWave.md)
   : Apply a WaveFilter object to a Wave object
 - [`frequencySound()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/frequencySound.md)
@@ -185,6 +191,8 @@
   : Pulse detection using Dietrich (2004)
 - [`pd_simple()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pd_simple.md)
   : Simplified pulse detection using Dietrich (2004)
+- [`plot(`*`<fcis>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plot.fcis.md)
+  : Plot a false-colour index spectrogram
 - [`` `+`( ``*`<PseudoWave>`*`,`*`<numeric>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-PseudoWave-numeric-method.md)
   : PseudoWave scalar addition
 - [`` `+`( ``*`<numeric>`*`,`*`<PseudoWave>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-numeric-PseudoWave-method.md)
@@ -251,6 +259,8 @@
   : Samples per time period
 - [`tagWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagWave.md)
   : Tag a Wave or WaveMC object
+- [`tdoa()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tdoa.md)
+  : Time differences of arrival between channels
 - [`` `*`( ``*`<PseudoWave>`*`,`*`<numeric>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/times-PseudoWave-numeric-method.md)
   : PseudoWave scalar manipulation
 - [`` `*`( ``*`<numeric>`*`,`*`<PseudoWave>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/times-numeric-PseudoWave-method.md)
@@ -265,12 +275,16 @@
   : Upsample a wave
 - [`validateIsWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/validateIsWave.md)
   : Check an object is a Wave object
+- [`wavelength()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavelength.md)
+  : Get the wavelength from frequency and speed of sound
 - [`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)
   : Windowing Function for Wave Objects
 - [`writeAnnotationWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAnnotationWave.md)
   : Save a time region defined by an Annotation object as a Wave file
 - [`writeAudacityLabels()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudacityLabels.md)
   : Write an Audacity label file
+- [`writeAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudio.md)
+  : Write an audio file
 - [`yearlyFraction()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyFraction.md)
   : Calculate the fraction of a year given by a value
 - [`yearlyLabels()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyLabels.md)

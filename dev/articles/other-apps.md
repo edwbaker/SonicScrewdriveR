@@ -1,6 +1,7 @@
 # Interacting with other tools
 
 ``` r
+
 library(sonicscrewdriver)
 ```
 
@@ -59,11 +60,13 @@ function takes a list of sound files and analyses them using the
 results of the analysis or a list of `Annotation` objects.
 
 ``` r
+
 # Install the Python environment
 pythonInstall()
 ```
 
 ``` r
+
 # Analyse sound files using BirdNET-Analyzer
 f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
 birdNetAnalyse(f, lat=51.5, lon=0.1, date=as.Date("2021-01-01"))
@@ -83,11 +86,13 @@ The functions provided accept standard Wave-like objects (i.e. `tuneR`
 this package).
 
 ``` r
+
 # Install the Python environment
 pythonInstall()
 ```
 
 ``` r
+
 f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
 w <- readWave(f)
 
@@ -108,6 +113,7 @@ annotations from BioAcoustica are made available through the
 First we will download the audio file and annotations from audioBlast.
 
 ``` r
+
 # Find the file on audioblast
 data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
 
@@ -122,8 +128,9 @@ about the audio file retrieved from audioBlast.
 Next, we will download the annotations for this file from audioBlast.
 
 ``` r
+
 # Fetch annotations from audioBlast as `Annotation` objects
-a <- audioblast("data", "annomate", source="bio.acousti.ca", id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
 ```
 
 This has downloaded the annotations from audioBlast and converted them
@@ -135,6 +142,7 @@ In this case, we will convert the `Annotation` objects to an Audacity
 label file.
 
 ``` r
+
 # Convert the annotations to an Audacity label file
 writeAudacityLabels(a, "mole_cricket/annotations.txt")
 ```
@@ -143,6 +151,7 @@ When we are finished, we can tidy our workspace by removing the
 `mole_cricket` directory.
 
 ``` r
+
 unlink("mole_cricket", recursive=TRUE)
 ```
 
@@ -157,6 +166,7 @@ Get the output of the BirdNET Analyzer as a list of `Annotation`
 objects.
 
 ``` r
+
 # Analyse sound files using BirdNET-Analyzer
 f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
 annotations <- birdNetAnalyse(f, output="Annotation")
@@ -165,6 +175,7 @@ annotations <- birdNetAnalyse(f, output="Annotation")
 Convert the `Annotation` objects to an Audacity label file.
 
 ``` r
+
 # Convert the annotations to an Audacity label file
 writeAudacityLabels(annotations, "birdnet_annotations.txt")
 ```
@@ -172,5 +183,6 @@ writeAudacityLabels(annotations, "birdnet_annotations.txt")
 Cleaning up the workspace.
 
 ``` r
+
 unlink("birdnet_annotations.txt")
 ```

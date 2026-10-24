@@ -1,7 +1,8 @@
 # Cut wave by samples
 
-Extract a section of a Wave object based on sample positions. This
-function will automatically detect if a Wave object is stereo.
+Extract a section of a Wave or WaveMC object based on sample positions.
+This function will automatically detect if a Wave object is stereo, and
+returns the same class of object it was given.
 
 ## Usage
 
@@ -13,7 +14,7 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 
 - wave:
 
-  A Wave object
+  A Wave or WaveMC object
 
 - from:
 
@@ -29,7 +30,7 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 
 ## Value
 
-A Wave object
+A Wave or WaveMC object
 
 ## Examples
 

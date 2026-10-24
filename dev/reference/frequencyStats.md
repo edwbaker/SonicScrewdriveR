@@ -14,7 +14,8 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns one set of statistics per channel.
 
 - wave_spec:
 
@@ -31,3 +32,8 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 - plot:
 
   IF TRUE displays values
+
+## Value
+
+A list of frequency statistics, with an entry for each of the -3dB and
+-10dB thresholds.

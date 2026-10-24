@@ -12,7 +12,8 @@ audio_filesize(
   channels = 1,
   duration = 1,
   duration.unit = "seconds",
-  output.unit = "bits"
+  output.unit = "bits",
+  units = "decimal"
 )
 ```
 
@@ -36,11 +37,18 @@ audio_filesize(
 
 - duration.unit:
 
-  One of seconds, minutes, hours, days
+  Any unit accepted by
+  [`convert2seconds()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/convert2seconds.md),
+  which is one of seconds, minutes, hours, days, years, HHMM or POSIX.
 
 - output.unit:
 
   "human", "bits" or "bytes"
+
+- units:
+
+  Units used when output.unit is "human", either "decimal" or "binary".
+  See humanBytes().
 
 ## Value
 
@@ -48,10 +56,10 @@ The size of the audio file in the specified unit
 
 ## Details
 
-By default
-[`humanBytes()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanBytes.md)
-is used to convert the output to human readable format, however this can
-be changed by setting `output.unit` to "bits" or "bytes".
+The size is given in bits by default. Setting `output.unit` to "bytes"
+gives bytes, and to "human" passes the result through
+[`humanBytes()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanBytes.md),
+whose choice of decimal or binary units is taken from `units`.
 
 ## Examples
 

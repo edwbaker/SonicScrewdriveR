@@ -8,7 +8,7 @@ air resistance and related quantities. All units are SI.
 ## Usage
 
 ``` r
-naturalFrequency(L, C = "default", R)
+naturalFrequency(L, C = NULL, R)
 ```
 
 ## Arguments
@@ -24,6 +24,10 @@ naturalFrequency(L, C = "default", R)
 - R:
 
   Resistance
+
+## Value
+
+The natural frequency, in Hertz.
 
 ## Details
 

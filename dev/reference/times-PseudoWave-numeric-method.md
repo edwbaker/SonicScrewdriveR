@@ -18,3 +18,7 @@ e1 * e2
 - e2:
 
   Input 2
+
+## Value
+
+A PseudoWave object with its scale multiplied by e2.

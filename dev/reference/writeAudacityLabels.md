@@ -21,6 +21,10 @@ writeAudacityLabels(annotations, file)
 
   Path to the Audacity label file.
 
+## Value
+
+No return value, called for its side effect of writing a label file.
+
 ## References
 
 Sueur J, Aubin T, Simonis C (2008). “Seewave, a free modular tool for

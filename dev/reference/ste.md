@@ -5,7 +5,7 @@ Computes the short term energy of a Wave.
 ## Usage
 
 ``` r
-ste(wave, method = "dietrich2004", ...)
+ste(wave, method = "dietrich2004", U = 120, ...)
 ```
 
 ## Arguments
@@ -18,6 +18,10 @@ ste(wave, method = "dietrich2004", ...)
 
   Which method used to calculate the short term energy, by default
   "dietrich2004" to use (Dietrich et al. 2004) .
+
+- U:
+
+  Window length in samples, matching the pulse detection functions.
 
 - ...:
 

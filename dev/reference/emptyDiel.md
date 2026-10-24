@@ -18,3 +18,8 @@ emptyDiel(method = "plotrix", rot = pi)
 - rot:
 
   Rotation of the origin (defaults to pi)
+
+## Value
+
+Called for its side effect of drawing a plot. The return value is that
+of the underlying plotting function and should not be relied on.

@@ -23,11 +23,8 @@ object when operated on.
 
 - `seed`:
 
-  Random seed for reproducible output, NA for no seed
-
-- `scale`:
-
-  Logical. Whether to use the random seed value
+  Random seed, so that the same PseudoWave gives the same samples every
+  time. NA draws a fresh sequence on each use.
 
 - `params`:
 

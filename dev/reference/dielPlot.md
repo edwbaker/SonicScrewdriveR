@@ -14,7 +14,7 @@ dielPlot(
   plot = NULL,
   rot = tzRot(0),
   method = "plotrix",
-  legend = F
+  legend = FALSE
 )
 ```
 
@@ -51,3 +51,8 @@ dielPlot(
 - legend:
 
   Whether to show a legend
+
+## Value
+
+Called for its side effect of drawing a plot. The return value is that
+of the underlying plotting function and should not be relied on.

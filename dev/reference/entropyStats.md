@@ -14,11 +14,13 @@ entropyStats(wave)
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns one set of statistics per channel.
 
 ## Value
 
-A list of spectral entropy types.
+A list of spectral entropy types. For multi-channel input, one such list
+per channel.
 
 ## Examples
 

@@ -45,3 +45,7 @@ pd_simple(
 - psi:
 
   Psi
+
+## Value
+
+A list of input values plus the onset and offset times of pulses.

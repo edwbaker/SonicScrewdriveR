@@ -18,3 +18,7 @@ x[i]
 - i:
 
   TimeRegion object
+
+## Value
+
+A Wave object containing only the samples within the time region.

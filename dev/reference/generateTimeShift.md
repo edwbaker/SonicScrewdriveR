@@ -10,20 +10,14 @@ object.
 ## Usage
 
 ``` r
-generateTimeShift(
-  wave,
-  type = "silent",
-  amount = c(1, 2),
-  where = "start",
-  output = "list"
-)
+generateTimeShift(wave, type = "silent", amount = c(1, 2), where = "start")
 ```
 
 ## Arguments
 
 - wave:
 
-  A Wave-like object or list of Wave-like objects.
+  A Wave or WaveMC object, or a list of such objects.
 
 - type:
 
@@ -35,11 +29,8 @@ generateTimeShift(
 
 - where:
 
-  Where to insert silence if `type` is "silent".
-
-- output:
-
-  Return a list.
+  Where to insert silence if `type` is "silent". One of "start", "end",
+  or "both". If "both" two versions are generated for each amount.
 
 ## Value
 

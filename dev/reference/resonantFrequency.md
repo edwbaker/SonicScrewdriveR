@@ -8,7 +8,7 @@ resistance and related quantities. All units are SI.
 ## Usage
 
 ``` r
-resonantFrequency(L, C = "default")
+resonantFrequency(L, C = NULL)
 ```
 
 ## Arguments
@@ -19,7 +19,12 @@ resonantFrequency(L, C = "default")
 
 - C:
 
-  Capacitance, by default IUPAC standard pressure.
+  Capacitance, if NULL (the default) the IUPAC standard pressure is
+  used.
+
+## Value
+
+The resonant frequency, in Hertz.
 
 ## Details
 

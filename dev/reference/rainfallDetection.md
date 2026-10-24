@@ -14,7 +14,8 @@ rainfallDetection(wave, method = "bedoya2017", ...)
 
 - wave:
 
-  A Wave object to detect rainfall in
+  A Wave object to detect rainfall in. Stereo Wave and WaveMC objects
+  are passed to allChannels(), which returns one value per channel.
 
 - method:
 
@@ -26,7 +27,8 @@ rainfallDetection(wave, method = "bedoya2017", ...)
 
 ## Value
 
-Numeric value from the rainfall detection algorithm chosen.
+Numeric value from the rainfall detection algorithm chosen. For
+multi-channel input, a list of such values.
 
 ## Examples
 

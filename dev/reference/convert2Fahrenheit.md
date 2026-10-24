@@ -18,6 +18,11 @@ convert2Fahrenheit(temp, input)
 
   The unit of the temperature to convert, allowed values are "K", "C".
 
+## Value
+
+No return value, this conversion is not implemented and the function
+raises an error.
+
 ## Examples
 
 ``` r

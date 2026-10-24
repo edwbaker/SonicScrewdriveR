@@ -12,7 +12,8 @@ dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns a list with one duty cycle per channel.
 
 - limit:
 
@@ -30,7 +31,7 @@ dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
 ## Value
 
 A numerical value for the duty cycle between 0 and 1 (or 0 and 100% if
-percentage output).
+percentage output). For multi-channel input, a list of such values.
 
 ## Examples
 

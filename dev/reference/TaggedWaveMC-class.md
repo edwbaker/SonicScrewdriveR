@@ -7,7 +7,7 @@ so that it can include extended metadata and the results of analyses.
 
 - `metadata`:
 
-  A list for storing metdata.
+  A list for storing metadata.
 
 - `analyses`:
 

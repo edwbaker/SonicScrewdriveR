@@ -12,7 +12,8 @@ dielRings(
   cols = "grey",
   format = "HHMM",
   limits = c(1, 2),
-  legend = T
+  legend = TRUE,
+  rot = tzRot(0)
 )
 ```
 
@@ -45,3 +46,13 @@ dielRings(
 - legend:
 
   Boolean. Whether to plot a legend.
+
+- rot:
+
+  Rotation of the plot, which must match the dielPlot() being drawn on.
+
+## Value
+
+Called for its side effect of drawing on the current plot. The return
+value is that of the underlying plotting function and should not be
+relied on.

@@ -39,7 +39,9 @@ data2Wave(
 
 - normalise:
 
-  IF TRUE the output Wave is normalised to -1:1
+  If TRUE the output Wave is normalised to the range implied by `unit`,
+  which for the default of NULL is the range of the bit depth rather
+  than -1:1.
 
 ## Value
 

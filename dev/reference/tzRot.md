@@ -18,3 +18,7 @@ tzRot(tz, init = pi)
 - init:
 
   Initial rotation. Defaults to pi.
+
+## Value
+
+The rotation of the plot, in radians.

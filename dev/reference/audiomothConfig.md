@@ -16,7 +16,7 @@ audiomothConfig(filename)
 
 ## Value
 
-A data frame of matching annotations
+A data frame of the configuration settings, with columns Key and Value
 
 ## Examples
 

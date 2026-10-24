@@ -1,6 +1,7 @@
 # Augmenting audio data in R with SonicScrewdriveR
 
 ``` r
+
 library(sonicscrewdriver)
 ```
 
@@ -25,6 +26,7 @@ In order to demonstrate the data augmentation process, we will use the
 `sonicscrewdriver` package to generate a Dirac pulse.
 
 ``` r
+
 # Generate a Dirac pulse
 p <- pulse("dirac")
 
@@ -46,6 +48,7 @@ In this example we will add two different amounts of white noise to the
 Dirac pulse.
 
 ``` r
+
 augmented <- c(
   generateNoise(p, "white", noise.ratio=0.1),
   generateNoise(p, "white", noise.ratio=0.3)
@@ -70,6 +73,7 @@ To demonstrate time shifting we will generate the sum of a sine wave and
 a Dirac pulse.
 
 ``` r
+
 p1 <- tuneR::sine(440, duration=44100*3)
 p2 <- pulse("dirac", duration=44100*3)
 
@@ -83,6 +87,7 @@ seewave::oscillo(p)
 Time shifting by inserting silence.
 
 ``` r
+
 # Rotate the audio data by one second
 rotated <- generateTimeShift(p, amount=1)
 
@@ -94,6 +99,7 @@ seewave::oscillo(rotated[[1]])
 Alternatively, we can rotate the audio data.
 
 ``` r
+
 # Rotate the audio data by one second
 rotated <- generateTimeShift(p, type="rotate", amount=1)
 
@@ -112,6 +118,7 @@ function to mask a section of the audio data.
 To demonstrate time masking we first generate a sine wave.
 
 ``` r
+
 # Generate a sine wave
 w <- tuneR::sine(1000, duration=100)
 
@@ -126,6 +133,7 @@ example below we use a duty cycle of 0.95, which means that 5% of the
 audio data will be set to zero.
 
 ``` r
+
 # Mask the audio data
 masked <- generateTimeMask(w, method="random", dutyCycle=0.95)
 
@@ -140,6 +148,7 @@ and the `dutyCycle` parameter controls the duty cycle of the square
 wave.
 
 ``` r
+
 # Mask the audio data
 masked <- generateTimeMask(w, method="squarewave", dutyCycle=0.5, n.periods=5)
 
@@ -156,6 +165,7 @@ example, you can add noise to the audio data and then rotate the audio
 data.
 
 ``` r
+
 # Load some test audio data
 f <- system.file("extdata", "AUDIOMOTH.flac", package="sonicscrewdriver")
 w <- readAudio(f)
@@ -177,6 +187,7 @@ augmented versions of an input, and then two different time-shifted
 versions of each of those, yielding six augmented versions.
 
 ``` r
+
 # Load some test audio data
 f <- system.file("extdata", "AUDIOMOTH.flac", package="sonicscrewdriver")
 w <- readAudio(f)
@@ -201,6 +212,7 @@ The same approach can be used with a list of initial `Wave`-like
 objects.
 
 ``` r
+
 # Load some test audio data
 f <- system.file("extdata", "AUDIOMOTH.flac", package="sonicscrewdriver")
 w <- list(

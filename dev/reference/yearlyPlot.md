@@ -12,7 +12,7 @@ yearlyPlot(
   limits = c(0, 2),
   plot = NULL,
   method = "plotrix",
-  legend = F
+  legend = FALSE
 )
 ```
 
@@ -45,3 +45,8 @@ yearlyPlot(
 - legend:
 
   Whether to show a legend
+
+## Value
+
+Called for its side effect of drawing a plot. The return value is that
+of the underlying plotting function and should not be relied on.
