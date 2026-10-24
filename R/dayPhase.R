@@ -56,7 +56,10 @@ dayPhase <- function(time=Sys.time(), duration=40000, lat=50.1, lon=1.83, tz="UT
 #'   moon is always up or always down.
 #' @noRd
 dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
-  date <- as.Date(time)
+  #as.Date() reads a POSIXct in UTC unless told otherwise, so a moment that
+  #falls on one day where the recorder stands and on another in UTC was given
+  #the phases of the UTC day rather than of the day asked for.
+  date <- as.Date(time, tz=tz)
   sc <- getSunlightTimes(date, lat=lat, lon=lon, tz=tz)
   #The night phase runs into the next day, so that day is needed to end it.
   scn <- getSunlightTimes(date + 1, lat=lat, lon=lon, tz=tz)
@@ -173,7 +176,9 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 daysPhases <- function(date=Sys.Date(), period="year", plot=FALSE, lat=50.1, lon=1.83, tz="UTC") {
   halfwidth <- switch(period, year = 180, month = 15,
                       stop(paste("Unknown period for daysPhases:", period)))
-  dates <- seq.Date(as.Date(date) - halfwidth, as.Date(date) + halfwidth, by = 1)
+  #As in dayPhases(), the day is the one where the recorder stands.
+  centre <- as.Date(date, tz=tz)
+  dates <- seq.Date(centre - halfwidth, centre + halfwidth, by = 1)
 
   ret <- getSunlightTimes(date = dates, lat = lat, lon = lon, tz = tz)
   mi <- getMoonIllumination(date = dates)

@@ -6,10 +6,13 @@
 #' @param input The unit of time to convert, allowed values are "minutes",
 #'   "hours", "days", "years", "HHMM".
 #' @param origin For POSIX whether to return relative to start of day ("day") or Unix epoch ("unix")
+#' @param timezone The timezone to read a POSIX time in, which decides when its
+#'   day starts. The default, NULL, uses the timezone the time itself carries,
+#'   and UTC for a time that carries none (such as the output of `Sys.time()`).
 #' @export
 #' @return The numeric value in seconds
 #'
-convert2seconds <- function(T, input="minutes", origin="day") {
+convert2seconds <- function(T, input="minutes", origin="day", timezone=NULL) {
   .validateChoice(input, .convertable2seconds(), "input", "convert2seconds")
   factors <- .secondMultipliers()
   if (input %in% names(factors)) {
@@ -29,7 +32,10 @@ convert2seconds <- function(T, input="minutes", origin="day") {
   if (input == "POSIX") {
     .validateChoice(origin, c("day", "unix"), "origin", "convert2seconds")
     if (origin == "day") {
-      t <- unclass(as.POSIXlt(T))
+      #Which day a moment falls in, and how far through it, depends on the zone
+      #it is read in. Breaking it down without naming one read a time carrying
+      #no timezone in the session's, so the answer moved with the machine.
+      t <- unclass(as.POSIXlt(.asInstant(T), tz=.timezoneOf(T, timezone)))
       s <- (t$sec + 60*t$min + 3600*t$hour)
     }
     if (origin == "unix") {
@@ -37,6 +43,34 @@ convert2seconds <- function(T, input="minutes", origin="day") {
     }
   }
   return(validateTimeInSeconds(s))
+}
+
+#A time already broken down into its parts is returned unchanged by
+#as.POSIXlt(), whatever timezone that is asked for, so a POSIXlt ignored the
+#timezone it was given. Turning it back into an instant first, by the zone it
+#carries, leaves it to be read in the zone asked for like any other. A string
+#is left alone, as as.POSIXlt() reads it in the zone named rather than in the
+#session's, which is what keeps a written-out time the same everywhere.
+.asInstant <- function(t) {
+  if (inherits(t, "POSIXlt")) {
+    return(as.POSIXct(t))
+  }
+  return(t)
+}
+
+#Which timezone to read a time in: the one the caller named, else the one the
+#time carries, else UTC. A POSIXct built from an instant, as Sys.time() and
+#as.POSIXct() on a plain number both are, carries no timezone, and reading one
+#of those without naming a zone is what let the session's zone decide.
+.timezoneOf <- function(t, timezone=NULL) {
+  if (!is.null(timezone)) {
+    return(timezone)
+  }
+  tz <- attr(t, "tzone")
+  if (is.null(tz) || !nzchar(tz[[1]])) {
+    return("UTC")
+  }
+  return(tz[[1]])
 }
 
 .convertable2seconds <- function() {

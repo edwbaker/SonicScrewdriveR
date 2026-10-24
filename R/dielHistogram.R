@@ -8,17 +8,20 @@
 #' @param presence.only Only show presence/absence not values.
 #' @param limits Limits of the plotting (see dielPlot()).
 #' @param rot Rotation of the plot, which must match the dielPlot() being drawn on.
+#' @param timezone The timezone to read the times in, which decides which bin
+#'   each falls in. The default, NULL, uses the timezone the times themselves
+#'   carry, and UTC for times that carry none.
 #' @return A data frame of start and end points of bins.
 #' @export
 #' @importFrom graphics hist
-dielHistogram <- function(times, by="hour", col="grey", maxval=NA, presence.only=FALSE, limits=c(1,2), rot=tzRot(0)) {
+dielHistogram <- function(times, by="hour", col="grey", maxval=NA, presence.only=FALSE, limits=c(1,2), rot=tzRot(0), timezone=NULL) {
   #One bin per interval over the whole circle, so an hour is 24 bins of 2pi/24.
   minutes <- switch(by, hour = 60, `30minute` = 30, `15minute` = 15,
                     stop(paste("Unknown value of by for dielHistogram:", by)))
   breaks <- seq(from=0, to=2*pi, by=2*pi/(1440/minutes))
 
   angles <- cbind(breaks[-length(breaks)], breaks[-1])
-  h <- hist(dielFraction(times), breaks=breaks, plot=F)
+  h <- hist(dielFraction(times, timezone=timezone), breaks=breaks, plot=F)
 
   if (is.na(maxval)) {
     maxval <- max(h$counts)

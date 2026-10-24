@@ -1,4 +1,3 @@
-Sys.setenv(TZ='UTC')
 
 test_that("Reject invalid input", {
   expect_error(convert2seconds(1, "dog"), "Unknown input to convert2seconds: dog")
@@ -14,7 +13,10 @@ test_that("Test conversions", {
   expect_equal(convert2seconds("1200", input="HHMM"), 60*60*12)
   expect_equal(convert2seconds(1200, input="HHMM"), 60*60*12)
   expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="day"), 60*60*12)
-  expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="unix"), 1707652800)
+  # tolerance=0 because the tolerance expect_equal() allows is relative, and at
+  # an epoch of this size it comes to about 25 seconds, so the comparison would
+  # pass whether or not the seconds are right.
+  expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="unix"), 1707652800, tolerance=0)
   expect_equal(convert2seconds("0000", input="HHMM"), 0)
   expect_equal(convert2seconds("0100", input="HHMM"), 60*60)
   expect_equal(convert2seconds(0100, input="HHMM"), 60*60)
@@ -62,3 +64,47 @@ test_that("humanTime passes NA through", {
   expect_equal(humanTime(NA_real_), NA_character_)
   expect_equal(humanTime(c(1, NA, 90)), c("1 second", NA, "1.5 minutes"))
 })
+
+for (tz in sessionTimezones) {
+  test_that(paste0("convert2seconds reads a POSIX time the same way in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      # 2024-12-16 03:20:00 UTC, as an instant carrying no timezone of its own.
+      # This used to be read in the session's zone, so the seconds since the
+      # start of the day moved with the machine.
+      expect_equal(convert2seconds(naiveTime(1734319200), "POSIX", origin="day"), 12000)
+      # A time that carries a timezone is read in that timezone.
+      expect_equal(
+        convert2seconds(as.POSIXct("2024-12-16 03:20:00", tz="Australia/Sydney"), "POSIX", origin="day"),
+        12000
+      )
+      # Naming a timezone overrides the one the time carries.
+      expect_equal(
+        convert2seconds(as.POSIXct("2024-12-16 03:20:00", tz="UTC"), "POSIX", origin="day",
+                        timezone="Australia/Sydney"),
+        51600
+      )
+      # An epoch is the same number of seconds wherever it is read.
+      expect_equal(convert2seconds(naiveTime(1734319200), "POSIX", origin="unix"), 1734319200,
+                   tolerance=0)
+    })
+  })
+}
+
+for (tz in sessionTimezones) {
+  test_that(paste0("convert2seconds reads a POSIXlt in the timezone asked for in session ", tz), {
+    withSessionTimezone(tz, {
+      # as.POSIXlt() returns a time that is already broken down unchanged,
+      # whatever timezone it is asked for, so a POSIXlt used to ignore the
+      # timezone argument and answer in the one it carried.
+      lt <- as.POSIXlt("2024-12-16 03:20:00", tz="UTC")
+      expect_equal(convert2seconds(lt, "POSIX", origin="day"), 12000)
+      expect_equal(
+        convert2seconds(lt, "POSIX", origin="day", timezone="Australia/Sydney"),
+        51600
+      )
+      # dielFraction() reads its times through the same path.
+      expect_equal(dielFraction(lt, unit="fraction"), 12000/86400)
+      expect_equal(dielFraction(lt, unit="fraction", timezone="Australia/Sydney"), 51600/86400)
+    })
+  })
+}

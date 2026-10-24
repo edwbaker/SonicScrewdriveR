@@ -93,3 +93,35 @@ test_that("yearlyPlot says so when an argument does nothing", {
   expect_warning(yearlyPlot(2024, lat=50, lon=0, plot="night"), "not implemented")
   expect_error(yearlyPlot(2024, lat=50, lon=0, method="dog"), "Unknown method")
 })
+
+for (tz in sessionTimezones) {
+  test_that(paste0("yearlyFraction places an instant the same way in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      # 2024-01-01 00:00:00 UTC, the first moment of the year, as an instant
+      # carrying no timezone. Read in a zone behind UTC this falls in the year
+      # before, and read in one ahead it is already well into New Year's Day.
+      expect_equal(yearlyFraction(naiveTime(1704067200), year=2024, unit="fraction"), 0)
+      # The last day of the year, where the same shift ran off the other end.
+      expect_equal(yearlyFraction(naiveTime(1735603200), year=2024, unit="fraction"), 365/366)
+      # A time carrying a timezone is read in it.
+      expect_equal(
+        yearlyFraction(as.POSIXct("2024-01-01 00:00:00", tz="Australia/Sydney"),
+                       year=2024, unit="fraction"),
+        0
+      )
+    })
+  })
+}
+
+for (tz in sessionTimezones) {
+  test_that(paste0("yearlyFraction reads a POSIXlt in the timezone asked for in session ", tz), {
+    withSessionTimezone(tz, {
+      # The last evening of 2023 in UTC is already New Year's Day in Sydney, so
+      # the day of the year depends on which zone the time is read in. A POSIXlt
+      # used to ignore the timezone argument entirely.
+      lt <- as.POSIXlt("2023-12-31 20:00:00", tz="UTC")
+      expect_equal(yearlyFraction(lt, year=2023, unit="fraction"), 364/365)
+      expect_equal(yearlyFraction(lt, year=2023, unit="fraction", timezone="Australia/Sydney"), 0)
+    })
+  })
+}

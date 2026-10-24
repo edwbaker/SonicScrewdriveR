@@ -97,3 +97,42 @@ test_that("FLAC can be written without the av package", {
   expect_gt(file.size(f), 0)
   unlink(f)
 })
+
+test_that("the flac program is found when it is not where seewave looks", {
+  # seewave::wav2flac() runs whichever flac is on the PATH on unix, but on
+  # Windows looks only in C:/Program Files/FLAC, so the flac Rtools ships went
+  # unused and writing FLAC failed with "FLAC program was not found". The
+  # arguments let each case be checked wherever the tests run.
+  here <- normalizePath(tempdir(), winslash="/")
+  program <- file.path(here, "flac.exe")
+
+  # Away from Windows seewave finds the program itself.
+  expect_equal(.flacExe(os="unix", expected=program, path=program), list())
+
+  # On Windows, where seewave looks and the program is there.
+  existing <- normalizePath(tempfile(fileext=".exe"), winslash="/", mustWork=FALSE)
+  writeLines("", existing)
+  on.exit(unlink(existing), add=TRUE)
+  expect_equal(.flacExe(os="windows", expected=existing, path=program), list())
+
+  # On Windows, where seewave looks and the program is not there, but the PATH
+  # has one. This is the case that used to fail.
+  missing <- file.path(here, "no-flac-here.exe")
+  found <- .flacExe(os="windows", expected=missing, path=program)
+  expect_named(found, c("path2exe", "exename"))
+  expect_equal(found$path2exe, here)
+  expect_equal(found$exename, "flac.exe")
+
+  # On Windows with no flac anywhere, there is nothing to point seewave at and
+  # it reports the program as missing, as it should.
+  expect_equal(.flacExe(os="windows", expected=missing, path=""), list())
+})
+
+test_that("the flac program is looked for in the real places by default", {
+  # The defaults are what the package actually uses, so they are checked to be
+  # the places seewave and the system know about rather than only the arguments.
+  defaults <- formals(.flacExe)
+  expect_equal(defaults$expected, "C:/Program Files/FLAC/flac.exe")
+  expect_equal(deparse(defaults$os), ".Platform$OS.type")
+  expect_equal(deparse(defaults$path), "Sys.which(\"flac\")")
+})

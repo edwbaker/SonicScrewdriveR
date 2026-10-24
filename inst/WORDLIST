@@ -21,11 +21,13 @@ HHMMSS
 IUPAC
 MoleFracCO
 Oecanthus
+POSIXct
 POSIXlt
 PseudoWave
 QUT
 R's
 Respeaker
+Rtools
 STP
 Sarlis
 Seeed
@@ -134,11 +136,13 @@ ndsi
 noClick
 nsd
 ntd
+numpy
 org
 oscillogram
 parseFilename
 pbapply
 plotix
+pythonInstall
 pseudoWave
 pulseDetection
 pulseIntervals
@@ -172,6 +176,7 @@ suncalc
 sweptsine
 tSamples
 tdoa
+tensorflow
 timezone
 tmax
 tmin
@@ -188,7 +193,9 @@ validateTimeInSeconds
 vineae
 writeAudacityLabels
 writeAudio
+writeAudioFlac
 writeWave
+yearlyFraction
 yearlyPlot
 yearlyPositions
 zerocross

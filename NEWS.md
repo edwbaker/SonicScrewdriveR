@@ -48,6 +48,50 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- convert2seconds(), dielFraction(), yearlyFraction() and dielHistogram() read a
+  time that carries no timezone of its own in the timezone of the machine they
+  ran on, so the same moment fell at a different point of the day, and sometimes
+  on a different day of the year, depending on where the analysis was done. A
+  time carrying no timezone is now read as UTC, which is how dielPlot() draws its
+  bands, so points and bands agree. These functions take a new timezone argument
+  for reading a time in a stated zone instead. A time that carries a timezone,
+  such as the output of parseFilename() or of suncalc, is read in that timezone
+  as before, so plots built from those are unchanged.
+  Note that as.POSIXct("2024-06-15 12:00") with no tz argument reads the string
+  in the timezone of the machine, and so is a different moment on each machine
+  before these functions ever see it. Give as.POSIXct() a tz, or pass the string
+  itself, to get the same answer everywhere.
+- dayPhases() and daysPhases() took the calendar day of a time in UTC rather than
+  in the timezone they were given, so for a recorder far enough east or west that
+  the two disagree they returned the phases of the wrong day. A recording made at
+  08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
+  day's phases.
+- The tests of convert2seconds() and dayPhases() compared values the size of an
+  epoch with the tolerance expect_equal() allows, which is relative and so comes
+  to about 25 seconds at a present-day date. They passed whether or not the
+  seconds were right, and now compare exactly.
+- generateNoise() failed with "Float (non pcm) Wave objects must have a resolution
+  of either 32 or 64 bit" for a wave that was not 32 or 64 bit, which is most of
+  them, as readAudio() now gives a 16 bit wave for a 16 bit file. The noise was
+  asked for at the resolution of the wave being augmented, and tuneR::noise()
+  only makes floating point waves, which may only be 32 or 64 bit. The noise is
+  now made at 32 bit whatever the wave is; only its samples are used, and they
+  are scaled to the wave, so its resolution does not reach the result.
+- generateNoise() with noise.ref="max" referenced the noise to the full scale of
+  the noise rather than of the wave it is added to. The noise is floating point
+  and so full scale at one, which made the noise added to a 16 bit recording
+  thirty thousand times quieter than asked for.
+- pythonInstall() built the `sonicscrewdriver` environment on whichever Python
+  was newest, and the machine learning packages it installs lag new Python
+  releases: on Python 3.14 and 3.15 numpy was built from source and failed, and
+  the only tensorflow published was a release candidate, which pip passes over.
+  It now asks for a Python the packages are published for, and says so plainly
+  if the machine has none, rather than failing part way through pip.
+- writeAudio() and .writeAudioFlac() failed with "FLAC program was not found" on
+  Windows unless the flac program was in C:/Program Files/FLAC, which is the only
+  place seewave::wav2flac() looks there. A flac elsewhere on the PATH, such as the
+  one Rtools installs, is now passed to it, so writing FLAC works wherever the
+  program is.
 - audioblast() raised "must have 'max' > 'min'" for a query that matched nothing,
   unless it was called with quiet=TRUE. Such a query used to come back without a
   data field and now comes back with an empty one and a last page of zero, which

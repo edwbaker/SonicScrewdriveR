@@ -40,7 +40,13 @@ test_that("dielFraction gives expected output", {
   expect_equal(dielFraction(0, "minutes", "radians"), 0)
   expect_equal(dielFraction(12, "hours", "fraction"), 0.5)
   expect_equal(dielFraction(12, "hours", "radians"), pi)
-  expect_equal(dielFraction(as.POSIXct("1985-02-11 12:00"), "POSIX", "fraction"), 0.5)
+  # dielPlot() draws its bands in UTC, so a time is placed on the dial by where
+  # it falls in UTC. Written as a string, or with its timezone given, noon is
+  # half way round wherever the test runs. as.POSIXct() without a timezone reads
+  # the string in the session's zone, which is a different moment on each
+  # machine, so it is not used here.
+  expect_equal(dielFraction("1985-02-11 12:00", "POSIX", "fraction"), 0.5)
+  expect_equal(dielFraction(as.POSIXct("1985-02-11 12:00", tz="UTC"), "POSIX", "fraction"), 0.5)
   expect_equal(dielFraction(24, "hours", "fraction"), 1)
   expect_equal(dielFraction(24, "hours", "radians"), 2*pi)
 })
@@ -83,3 +89,28 @@ test_that("dielPlot draws the date it is given whatever the session timezone", {
     expect_silent(dielPlot("2024-06-21", lat=54, lon=0))
   }
 })
+
+for (tz in sessionTimezones) {
+  test_that(paste0("dielFraction places an instant the same way in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      # 2024-12-16 03:20:00 UTC as an instant carrying no timezone of its own,
+      # which used to be read in the session's zone and so moved around the dial
+      # with the machine.
+      expect_equal(dielFraction(naiveTime(1734319200), unit="fraction"), 12000/86400)
+      # A time carrying a timezone is read in it, whatever the session is.
+      expect_equal(
+        dielFraction(as.POSIXct("2024-12-16 03:20:00", tz="Australia/Sydney"), unit="fraction"),
+        12000/86400
+      )
+      # Naming a timezone overrides the one the time carries.
+      expect_equal(
+        dielFraction(as.POSIXct("2024-12-16 03:20:00", tz="UTC"), unit="fraction",
+                     timezone="Australia/Sydney"),
+        51600/86400
+      )
+      # suncalc labels its output UTC, so the bands of a plot are unaffected.
+      tim <- suncalc::getSunlightTimes(as.Date("2024-06-21"), lat=54, lon=0, tz="UTC")
+      expect_equal(dielFraction(tim$solarNoon, unit="fraction"), 0.5021528, tolerance=1e-6)
+    })
+  })
+}
