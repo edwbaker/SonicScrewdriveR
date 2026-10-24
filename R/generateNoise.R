@@ -67,6 +67,10 @@ generateNoise <- function(
     if (inherits(wave, "WaveMC")) {
       noise.max <- max(abs(wave@.Data - wave.offset))
     }
+    #An unsigned 8 bit wave reaches 128 below its centre but only 127 above it,
+    #so a wave holding a zero gives a reference of 128 and the loudest noise
+    #then takes the loudest sample past the end of the range.
+    noise.max <- min(noise.max, wave.amplitude)
   } else {
     #The noise is added to the samples of the wave, so full scale is the wave's,
     #not the noise's. The noise is always floating point, which is full scale at
@@ -75,8 +79,11 @@ generateNoise <- function(
     noise.max <- wave.amplitude
   }
   noise.level <- noise.max
-  # Scale n by noise.level
-  n@left <- n@left * noise.level / max(n@left)
+  # Scale n by noise.level, by the largest sample either way rather than the
+  # largest positive one. Noise whose deepest trough is lower than its highest
+  # peak was scaled so that the trough went past the level asked for, and with
+  # the level now being full scale that is far enough to leave the format.
+  n@left <- n@left * noise.level / max(abs(n@left))
   noise.frac = 1 / (1/noise.ratio - 1)
 
   if (inherits(wave, c("Wave"))) {
