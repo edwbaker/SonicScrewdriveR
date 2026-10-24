@@ -1,0 +1,40 @@
+# Copilot code review runs in an environment of its own, which holds nothing but
+# a checkout unless a job named copilot-setup-steps says otherwise. Without R in
+# it a review can only read the diff, and reports that it could not run anything
+# to check what it found. The steps below are the ones R-CMD-check uses, so a
+# review can load the package and run its tests.
+#
+# Copilot looks for this file first and falls back to copilot-setup-steps.yml,
+# which the cloud agent also uses. It is here under its own name so that changing
+# what a review can do does not change what the agent can do.
+name: Copilot code review setup
+
+on:
+  workflow_dispatch:
+  # So that a change to the file is checked by the same steps Copilot will run,
+  # rather than only being found the next time a review happens.
+  pull_request:
+    paths: ['.github/workflows/copilot-code-review.yml']
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # The vignettes are rmarkdown, which needs pandoc to build.
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Without the dependencies, Rscript exists but library(sonicscrewdriver)
+      # does not load, so nothing worth checking can be run.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
