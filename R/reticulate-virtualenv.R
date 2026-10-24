@@ -22,7 +22,7 @@
 #' @keywords internal
 #' @noRd
 .pythonVersions <- function() {
-  return("<=3.12")
+  return(">=3.9,<=3.12")
 }
 
 #' The Python to build the sonicscrewdriver environment on
