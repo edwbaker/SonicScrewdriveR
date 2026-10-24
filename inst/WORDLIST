@@ -21,6 +21,7 @@ HHMMSS
 IUPAC
 MoleFracCO
 Oecanthus
+POSIXct
 POSIXlt
 PseudoWave
 QUT
@@ -75,6 +76,7 @@ corenv
 cramer
 csv
 dBA
+datetimes
 dayPhase
 dayPhases
 daysPhases
@@ -188,6 +190,7 @@ vineae
 writeAudacityLabels
 writeAudio
 writeWave
+yearlyFraction
 yearlyPlot
 yearlyPositions
 zerocross
