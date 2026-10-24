@@ -54,19 +54,25 @@ generateNoise <- function(
       n@left <- n@left + nw@left
     }
   }
+  wave.offset <- if (wave@bit == 8) 128 else 0
+  #The reference is a peak either side of that centre. .waveFullScale() gives
+  #the span of the format, which for 8 bit is the whole unsigned 0 to 255 rather
+  #than the 127 either side of 128, and scaling noise to the span sent an 8 bit
+  #wave outside the range it can hold.
+  wave.amplitude <- if (wave@bit == 8) 127 else .waveFullScale(wave)
   if (noise.ref=="file") {
     if (inherits(wave, "Wave")) {
-      noise.max <- max(abs(c(wave@left, wave@right)))
+      noise.max <- max(abs(c(wave@left, wave@right) - wave.offset))
     }
     if (inherits(wave, "WaveMC")) {
-      noise.max <- max(abs(wave@.Data))
+      noise.max <- max(abs(wave@.Data - wave.offset))
     }
   } else {
     #The noise is added to the samples of the wave, so full scale is the wave's,
     #not the noise's. The noise is always floating point, which is full scale at
     #one, and taking the reference from it made the noise added to a 16 bit
     #recording thirty thousand times quieter than asked for.
-    noise.max <- .waveFullScale(wave)
+    noise.max <- wave.amplitude
   }
   noise.level <- noise.max
   # Scale n by noise.level
@@ -74,14 +80,14 @@ generateNoise <- function(
   noise.frac = 1 / (1/noise.ratio - 1)
 
   if (inherits(wave, c("Wave"))) {
-    wave@left <- (wave@left + noise.frac * n@left) / (1 + noise.frac)
+    wave@left <- (wave@left - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     if (wave@stereo) {
-      wave@right <- (wave@right + noise.frac * n@left) / (1 + noise.frac)
+      wave@right <- (wave@right - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     }
   }
   if (inherits(wave, c("WaveMC"))) {
     for (i in 1:ncol(wave@.Data)) {
-      wave@.Data[,i] <- (wave@.Data[,i] + noise.frac * n@left) / (1 + noise.frac)
+      wave@.Data[,i] <- (wave@.Data[,i] - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     }
   }
   if (.isTagged(wave)) {

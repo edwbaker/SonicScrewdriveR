@@ -163,9 +163,29 @@ test_that("noise can be added to a wave of any resolution", {
   # failed with "Float (non pcm) Wave objects must have a resolution of either
   # 32 or 64 bit" before it added any noise.
   for (bit in c(8L, 16L, 24L, 32L)) {
-    w <- Wave(left=round(sin(seq(0, 100, length.out=1000)) * 100), samp.rate=44100, bit=bit)
+    # 8 bit is unsigned and sits about 128, the rest sit about zero, so the
+    # samples are built about the centre of the format rather than always about
+    # zero, which for 8 bit would not be a wave that could be written.
+    centre <- if (bit == 8L) 128 else 0
+    w <- Wave(left=round(centre + sin(seq(0, 100, length.out=1000)) * 100),
+              samp.rate=44100, bit=bit)
     expect_no_error(generateNoise(w, "white", noise.ratio=0.1))
     expect_no_error(generateNoise(w, c("white", "pink"), noise.ratio=0.1))
+  }
+})
+
+test_that("noise keeps an unsigned 8-bit wave inside the range it can hold", {
+  # The reference for noise.ref="max" was the span of the format, 0 to 255,
+  # rather than the 127 either side of the 128 centre, so a wave with anything
+  # in it came back with samples below zero and above 255. A silent wave does
+  # not show it: the noise alone just fits.
+  w <- Wave(left=round(128 + sin(seq(0, 100, length.out=1000)) * 100),
+            samp.rate=44100, bit=8L)
+  for (ref in c("file", "max")) {
+    set.seed(1)
+    out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref=ref)
+    expect_gte(min(out@left), 0)
+    expect_lte(max(out@left), 255)
   }
 })
 
@@ -186,4 +206,14 @@ test_that("noise referenced to the format is in the units of the wave", {
   # Half the mix is noise referenced to 32767, so the result leaves the range of
   # the original, which only reaches 100.
   expect_gt(max(abs(out@left)), 1000)
+})
+
+test_that("noise mixing preserves the unsigned 8-bit silence offset", {
+  w <- Wave(left=rep(128L, 1000), samp.rate=44100, bit=8L)
+  set.seed(1)
+  out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="max")
+
+  expect_gte(min(out@left), 0)
+  expect_lte(max(out@left), 255)
+  expect_equal(mean(out@left), 128, tolerance=10)
 })
