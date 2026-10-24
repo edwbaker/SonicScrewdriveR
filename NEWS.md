@@ -48,6 +48,28 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- convert2seconds(), dielFraction(), yearlyFraction() and dielHistogram() read a
+  time that carries no timezone of its own in the timezone of the machine they
+  ran on, so the same moment fell at a different point of the day, and sometimes
+  on a different day of the year, depending on where the analysis was done. A
+  time carrying no timezone is now read as UTC, which is how dielPlot() draws its
+  bands, so points and bands agree. These functions take a new timezone argument
+  for reading a time in a stated zone instead. A time that carries a timezone,
+  such as the output of parseFilename() or of suncalc, is read in that timezone
+  as before, so plots built from those are unchanged.
+  Note that as.POSIXct("2024-06-15 12:00") with no tz argument reads the string
+  in the timezone of the machine, and so is a different moment on each machine
+  before these functions ever see it. Give as.POSIXct() a tz, or pass the string
+  itself, to get the same answer everywhere.
+- dayPhases() and daysPhases() took the calendar day of a time in UTC rather than
+  in the timezone they were given, so for a recorder far enough east or west that
+  the two disagree they returned the phases of the wrong day. A recording made at
+  08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
+  day's phases.
+- The tests of convert2seconds() and dayPhases() compared values the size of an
+  epoch with the tolerance expect_equal() allows, which is relative and so comes
+  to about 25 seconds at a present-day date. They passed whether or not the
+  seconds were right, and now compare exactly.
 - audioblast() raised "must have 'max' > 'min'" for a query that matched nothing,
   unless it was called with quiet=TRUE. Such a query used to come back without a
   data field and now comes back with an empty one and a last page of zero, which

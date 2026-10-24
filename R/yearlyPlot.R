@@ -72,9 +72,13 @@ yearlyPositions <- function(year=2022, format="months") {
 #' @param year Year to calculate fractions of (allows for leap years)
 #' @param input One of POSIXlt (default)
 #' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param timezone The timezone to read the time in, which decides which day of
+#'   the year it falls on. The default, NULL, uses the timezone the time itself
+#'   carries, and UTC for a time that carries none (such as the output of
+#'   `Sys.time()`).
 #' @return The position of the date within the year, in radians or as a fraction of a year.
 #' @export
-yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
+yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians", timezone=NULL) {
   .validateChoice(input, c("POSIX", "day"), msg=paste("Unknown input:", input))
   if (.isLeapYear(year)) {
     dc <- 366
@@ -82,7 +86,10 @@ yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
     dc <- 365
   }
   if (input=="POSIX") {
-    t <- unclass(as.POSIXlt(t))
+    #Which day of the year a moment falls on depends on the zone it is read in.
+    #Breaking it down without naming one read a time carrying no timezone in the
+    #session's, so a moment near midnight moved a day with the machine.
+    t <- unclass(as.POSIXlt(t, tz=.timezoneOf(t, timezone)))
     f <- t$yday/dc
   } else if (input=="day") {
     f <- t/dc

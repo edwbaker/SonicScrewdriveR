@@ -1,24 +1,5 @@
-# parseFilename() should return the same instant whatever timezone the machine
-# running the analysis is set to, so the tests below that involve a datetime are
-# repeated in several session timezones rather than pinning the session to UTC.
-sessionTimezones <- c("UTC", "America/New_York", "Australia/Sydney")
-
-withSessionTimezone <- function(tz, code) {
-  old <- Sys.getenv("TZ", unset=NA)
-  Sys.setenv(TZ=tz)
-  on.exit({
-    if (is.na(old)) Sys.unsetenv("TZ") else Sys.setenv(TZ=old)
-  })
-  force(code)
-}
-
-# Comparing the epoch seconds rather than the POSIXct objects themselves, and
-# with tolerance=0. The tolerance expect_equal() allows is relative, which for a
-# present-day datetime comes to about 25 seconds, so a comparison left at the
-# default would pass whether or not the seconds are right.
-expect_instant <- function(parsed, epoch) {
-  expect_equal(as.numeric(parsed$datetime), as.numeric(epoch), tolerance=0)
-}
+# sessionTimezones, withSessionTimezone() and expect_instant() are in
+# helper-timezone.R, as the time tests of several functions use them.
 
 test_that(".detectFormat() correctly identifies formats", {
   expect_equal(
