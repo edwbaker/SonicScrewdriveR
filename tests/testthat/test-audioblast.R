@@ -41,7 +41,10 @@ test_that("audioblast works with real data", {
   expect_false(any(data2$id %in% data$id))
 
   data <- audioblast("standalone", "analysis", "fetch_analysis_counts", source="unp", id="nhm-unp-1-1588606870", )
-  expect_equal(names(data), c("counts", "total"))
+  # audioBLAST adds fields to its responses as it grows, and has since added
+  # "unavailable" to this one, so the fields asked for are checked to be there
+  # rather than to be all that is there.
+  expect_true(all(c("counts", "total") %in% names(data)))
 
   expect_true(is.null(audioblast("data", "recordings", source="unp", deployment="horsefly", )))
 })

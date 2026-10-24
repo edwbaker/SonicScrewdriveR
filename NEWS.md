@@ -48,6 +48,11 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- audioblast() raised "must have 'max' > 'min'" for a query that matched nothing,
+  unless it was called with quiet=TRUE. Such a query used to come back without a
+  data field and now comes back with an empty one and a last page of zero, which
+  was taken as a page of results to fetch and so as a progress bar of no length.
+  A query matching nothing returns NULL, as it did before.
 - readAudio() returns audio read through the av package (e.g. FLAC) at the bit
   depth of the source file, rather than at a bit depth inferred from the decoded
   samples. Audio read this way now compares equal to the same audio read from a

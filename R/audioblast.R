@@ -81,7 +81,11 @@ audioblast <- function(
   }
   tryCatch({
     res <- jsonlite::fromJSON(URLencode(url))
-    if (is.null(res$data)) {
+    #A query matching nothing used to come back without a data field at all, and
+    #now comes back with an empty one and a last page of zero. Either way there
+    #is nothing to return, and carrying on built a progress bar of no length,
+    #which is an error rather than an empty bar.
+    if (is.null(res$data) || NROW(res$data) == 0) {
       return(NULL)
     }
     ret <- res$data
