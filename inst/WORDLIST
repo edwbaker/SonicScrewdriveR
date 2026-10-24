@@ -26,6 +26,7 @@ PseudoWave
 QUT
 R's
 Respeaker
+Rtools
 STP
 Sarlis
 Seeed
@@ -188,6 +189,7 @@ validateTimeInSeconds
 vineae
 writeAudacityLabels
 writeAudio
+writeAudioFlac
 writeWave
 yearlyPlot
 yearlyPositions
