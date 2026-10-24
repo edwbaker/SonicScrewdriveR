@@ -125,18 +125,27 @@ writeAudio <- function(wave, file, mime="auto", ...) {
 #' goes unused. Where the PATH has one and the place seewave looks does not, it
 #' is pointed at the one on the PATH.
 #'
+#' The three things it depends on are arguments so that every branch can be
+#' tested on any machine, rather than only the one the test happens to run on.
+#'
+#' @param os The operating system type, as `.Platform$OS.type` gives it.
+#' @param expected Where seewave looks for the program on Windows.
+#' @param path Where the program is on the PATH, or "" if it is not there.
 #' @return A list to pass to wav2flac() as further arguments, empty where
 #'   seewave can find the program by itself.
 #' @keywords internal
 #' @noRd
-.flacExe <- function() {
-  if (.Platform$OS.type != "windows") {
+.flacExe <- function(
+  os = .Platform$OS.type,
+  expected = "C:/Program Files/FLAC/flac.exe",
+  path = Sys.which("flac")
+) {
+  if (os != "windows") {
     return(list())
   }
-  if (file.exists("C:/Program Files/FLAC/flac.exe")) {
+  if (file.exists(expected)) {
     return(list())
   }
-  path <- Sys.which("flac")
   if (!nzchar(path)) {
     return(list())
   }
