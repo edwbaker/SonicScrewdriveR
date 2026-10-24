@@ -34,17 +34,23 @@ generateNoise <- function(
     }
   }
   duration <- length(wave)
+  #tuneR::noise() always returns a floating point wave, which may only be 32 or
+  #64 bit, so it is built at 32 rather than at the resolution of the wave the
+  #noise is for. Giving it the resolution of a 16 bit recording was an error.
+  #Only the samples of the noise are used, and they are scaled to the wave
+  #below, so its resolution does not reach the result.
+  noise.bit <- 32
   if (length(noise) == 1) {
     n <- tuneR::noise(
       noise,
       duration=duration,
       samp.rate=wave@samp.rate,
-      bit=wave@bit
+      bit=noise.bit
     )
   } else {
-    n <- tuneR::silence(duration=duration, samp.rate=wave@samp.rate, bit=wave@bit)
+    n <- tuneR::silence(duration=duration, samp.rate=wave@samp.rate, bit=noise.bit, pcm=FALSE)
     for (i in 1:length(noise)) {
-      nw <- tuneR::noise(noise[i], duration=duration, samp.rate=wave@samp.rate, bit=wave@bit)
+      nw <- tuneR::noise(noise[i], duration=duration, samp.rate=wave@samp.rate, bit=noise.bit)
       n@left <- n@left + nw@left
     }
   }
@@ -56,9 +62,11 @@ generateNoise <- function(
       noise.max <- max(abs(wave@.Data))
     }
   } else {
-    #The bit slot of a floating point wave reads 32, so this gave a reference level
-    #of two thousand million for a wave that only holds values up to one.
-    noise.max <- .waveFullScale(n)
+    #The noise is added to the samples of the wave, so full scale is the wave's,
+    #not the noise's. The noise is always floating point, which is full scale at
+    #one, and taking the reference from it made the noise added to a 16 bit
+    #recording thirty thousand times quieter than asked for.
+    noise.max <- .waveFullScale(wave)
   }
   noise.level <- noise.max
   # Scale n by noise.level
