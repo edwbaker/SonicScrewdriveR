@@ -81,6 +81,17 @@
   the noise rather than of the wave it is added to. The noise is floating point
   and so full scale at one, which made the noise added to a 16 bit recording
   thirty thousand times quieter than asked for.
+- pythonInstall() built the `sonicscrewdriver` environment on whichever Python
+  was newest, and the machine learning packages it installs lag new Python
+  releases: on Python 3.14 and 3.15 numpy was built from source and failed, and
+  the only tensorflow published was a release candidate, which pip passes over.
+  It now asks for a Python the packages are published for, and says so plainly
+  if the machine has none, rather than failing part way through pip.
+- writeAudio() and .writeAudioFlac() failed with "FLAC program was not found" on
+  Windows unless the flac program was in C:/Program Files/FLAC, which is the only
+  place seewave::wav2flac() looks there. A flac elsewhere on the PATH, such as the
+  one Rtools installs, is now passed to it, so writing FLAC works wherever the
+  program is.
 - audioblast() raised "must have 'max' > 'min'" for a query that matched nothing,
   unless it was called with quiet=TRUE. Such a query used to come back without a
   data field and now comes back with an empty one and a last page of zero, which

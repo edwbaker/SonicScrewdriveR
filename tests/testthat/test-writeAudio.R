@@ -97,3 +97,21 @@ test_that("FLAC can be written without the av package", {
   expect_gt(file.size(f), 0)
   unlink(f)
 })
+
+test_that("the flac program is found when it is not where seewave looks", {
+  # seewave::wav2flac() runs whichever flac is on the PATH on unix, but on
+  # Windows looks only in C:/Program Files/FLAC, so the flac Rtools ships went
+  # unused and writing FLAC failed with "FLAC program was not found".
+  if (.Platform$OS.type != "windows") {
+    expect_equal(.flacExe(), list())
+    skip("the program is found by seewave itself away from Windows")
+  }
+  if (file.exists("C:/Program Files/FLAC/flac.exe")) {
+    expect_equal(.flacExe(), list())
+    skip("seewave looks where the program is")
+  }
+  skip_if(Sys.which("flac") == "", "the flac program is not installed")
+  where <- .flacExe()
+  expect_named(where, c("path2exe", "exename"))
+  expect_true(file.exists(file.path(where$path2exe, where$exename)))
+})
