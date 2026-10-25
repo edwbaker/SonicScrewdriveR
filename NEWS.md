@@ -116,6 +116,11 @@
   of the recording. A start with no end now reads to the end of the file, as does an
   end point beyond the recording, which before this returned samples padded with NA
   when counted in samples.
+- readAudio() returned only the left channel of a stereo file read as MP3 when
+  the section wanted was given in seconds, minutes or hours, as seewave::cutw()
+  returns a single channel per call. The same section counted in samples kept
+  both channels, so the result depended on the units asked for. Both channels are
+  now returned whatever the units.
 - corWaveMC() now returns the time differences between channels that its
   documentation has always promised. Each event is now a list holding the corenv
   results for every channel in `correlations` and the delays in `delays`, where
