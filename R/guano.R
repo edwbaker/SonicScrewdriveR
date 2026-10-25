@@ -160,7 +160,21 @@
       parsed <- number(value)
       if (is.numeric(parsed)) as.integer(parsed) else parsed
     },
-    position = number(strsplit(value, "[[:space:]]+")[[1]]),
+    position = {
+      # The specification gives a position as a latitude and a longitude.
+      # Anything else is not one, and reading it as numbers would both accept
+      # it and alter it: a third number written back as 99.0 where it was 99.
+      parsed <- number(strsplit(trimws(value), "[[:space:]]+")[[1]])
+      if (is.numeric(parsed) && length(parsed) != 2) {
+        warning(
+          "The GUANO field '", key, "' is not a latitude and a longitude, ",
+          "keeping it as text."
+        )
+        value
+      } else {
+        parsed
+      }
+    },
     list = trimws(strsplit(value, ",", fixed=TRUE)[[1]]),
     multiline = gsub("\\n", "\n", value, fixed=TRUE),
     datetime = .guanoDatetime(value),

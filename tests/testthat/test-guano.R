@@ -580,3 +580,26 @@ test_that("Arguments that name one thing are refused several", {
   expect_error(guanoWrite(guanoCreate(Make="x"), f, output=c(tempfile(), tempfile())), "single string")
   expect_error(guanoWrite(guanoCreate(Make="x"), c(f, f)), "single string")
 })
+
+test_that("A position is a latitude and a longitude, or it is text", {
+  position <- function(value) {
+    suppressWarnings(
+      guanoParse(paste0("GUANO|Version:1.0\nLoc Position:", value))[["Loc Position"]]
+    )
+  }
+  expect_equal(position("51.496401 -0.122456"), c(51.496401, -0.122456))
+
+  # Anything else is not a position. Reading it as numbers would accept it and
+  # alter it, writing a third number of 99 back as 99.0.
+  expect_identical(position("51.5"), "51.5")
+  expect_identical(position("51.5 -0.1 99"), "51.5 -0.1 99")
+  expect_identical(position(""), "")
+  expect_warning(
+    guanoParse("GUANO|Version:1.0\nLoc Position:51.5"),
+    "latitude and a longitude"
+  )
+
+  # What is kept as text is written back as the text it was.
+  g <- suppressWarnings(guanoParse("GUANO|Version:1.0\nLoc Position:51.5 -0.1 99"))
+  expect_true(grepl("Loc Position:51.5 -0.1 99", as.character(g), fixed=TRUE))
+})

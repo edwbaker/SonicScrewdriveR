@@ -32,6 +32,12 @@
   return(as.raw(floor(x / 256^(seq_len(size) - 1L)) %% 256))
 }
 
+# How much of an INFO list is read to find the comment in it. The list a
+# recorder writes is a few hundred bytes, the one AudioMoth writes 436, so this
+# is far more than any of them need; it is here so that a size read from a file
+# that is wrong, or made wrong on purpose, cannot ask for an unbounded read.
+.WAV_INFO_READ <- 65536L
+
 #' Find the ICMT field within the body of an INFO list
 #'
 #' @param body The body of a LIST chunk
@@ -96,7 +102,7 @@
   if (is.null(chunk) || chunk$size < 4) {
     return("")
   }
-  return(.infoComment(read(chunk$start, min(chunk$size, 65536))))
+  return(.infoComment(read(chunk$start, min(chunk$size, .WAV_INFO_READ))))
 }
 
 #' Check that an argument is one value and not several
