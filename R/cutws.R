@@ -6,7 +6,8 @@
 #'
 #' @param wave A Wave or WaveMC object
 #' @param from First sample to return
-#' @param to Last sample to return
+#' @param to Last sample to return. A value beyond the end of the wave is cut
+#'   to the final sample.
 #' @param plot If TRUE shows the cut region within the original waveform
 #' @return A Wave or WaveMC object
 #' @export
@@ -24,15 +25,18 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   if (!is.numeric(from) | !is.numeric(to) | !(as.integer(from)==from) | !(as.integer(to) == to)) {
     stop("In cutws both from and to must be integers")
   }
+  if (to > length(wave)) {
+    to <- length(wave)
+  }
   if (from > to){
     stop("In cutws to must be greater than from")
   }
   if (inherits(wave, "WaveMC")) {
     cutwave <- tuneR::WaveMC(wave@.Data[from:to, , drop=FALSE], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
   } else if (wave@stereo) {
-    cutwave <- tuneR::Wave(wave@left[from:to], right=wave@right[from:to], samp.rate=wave@samp.rate, bit=wave@bit)
+    cutwave <- tuneR::Wave(wave@left[from:to], right=wave@right[from:to], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
   } else {
-    cutwave <- tuneR::Wave(wave@left[from:to], samp.rate=wave@samp.rate, bit=wave@bit)
+    cutwave <- tuneR::Wave(wave@left[from:to], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
   }
 
   if (plot) {

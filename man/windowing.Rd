@@ -47,7 +47,7 @@ if the 'pbapply' package is installed.
 }
 \examples{
 \dontrun{
-windowing(wave, window.length=1000, FUN=duration, window.overlap=0, bind.wave=TRUE)
+windowing(wave, window.length=1000, FUN=function(w, ...) length(w), window.overlap=0)
 }
 }
 \keyword{wave}

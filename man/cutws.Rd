@@ -11,7 +11,8 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 
 \item{from}{First sample to return}
 
-\item{to}{Last sample to return}
+\item{to}{Last sample to return. A value beyond the end of the wave is cut
+to the final sample.}
 
 \item{plot}{If TRUE shows the cut region within the original waveform}
 }

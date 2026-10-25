@@ -210,3 +210,14 @@ test_that("a wave of exactly one window length is analysed once", {
                       FUN=function(wave, start, window.length) 1)
   expect_equal(length(counts), 1)
 })
+
+test_that("complete.windows=FALSE hands FUN the shorter final window, not NA padding", {
+  w <- tuneR::Wave(rep(1, 1000), samp.rate=48000, bit=16)
+  means <- windowing(w, window.length=300, window.overlap=0, complete.windows=FALSE,
+                     FUN=function(wave, start, window.length) mean(wave@left))
+  expect_equal(unlist(means), c(1, 1, 1, 1))
+
+  lengths <- windowing(w, window.length=300, window.overlap=0, complete.windows=FALSE,
+                       FUN=function(wave, start, window.length) length(wave))
+  expect_equal(unlist(lengths), c(300, 300, 300, 100))
+})
