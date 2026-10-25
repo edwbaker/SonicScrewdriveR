@@ -48,13 +48,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     wave <- tryCatch({
       wave <- readMP3(file)
       if (units=="samples") {
-        return(cutws(wave, fromS, to))
+        return(cutws(wave, fromS, min(to, length(wave))))
       }
       if (from==0 && to==Inf) {
         return(wave)
       }
       from <- convert2seconds(from, input=units)
-      to <- convert2seconds(to, input=units)
+      to <- .cutEnd(to, units, wave)
       return(cutw(wave,from=from, to=to, output="Wave"))
     },
     error=function(cond){
@@ -103,22 +103,45 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     }
 
     if (units == "samples") {
-      return(cutws(wave,from=fromS, to=to))
+      return(cutws(wave,from=fromS, to=min(to, length(wave))))
     } else {
       if (from==0 & to == Inf) {
         return(wave)
       }
+      to <- .cutEnd(to, units, wave)
       if (channels == 1) {
-        return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
+        return(cutw(wave, from=convert2seconds(from, units), to=to, output="Wave"))
       }
       if (channels == 2) {
-        left <- cutw(wave, channel=1, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave")
-        right <- cutw(wave, channel=2, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave")
+        left <- cutw(wave, channel=1, from=convert2seconds(from, units), to=to, output="Wave")
+        right <- cutw(wave, channel=2, from=convert2seconds(from, units), to=to, output="Wave")
         return(stereo(left, right))
       }
     }
   }
   stop("File could not be processed")
+}
+
+#' End point of a cut, in seconds, within the audio in hand
+#'
+#' readAudio()'s `to` defaults to Inf, and `seewave::cutw()` rejects an end
+#' point past the end of the recording, so reading from a non-zero start with no
+#' end has to be cut to the end of the wave rather than at the Inf it was given.
+#' An end point beyond the recording is treated the same way, giving the audio
+#' that is there instead of an error.
+#'
+#' @param to End point as given to readAudio().
+#' @param units The units `to` is given in.
+#' @param wave The Wave object being cut.
+#' @return The end point in seconds, no later than the end of the wave.
+#' @keywords internal
+#' @noRd
+.cutEnd <- function(to, units, wave) {
+  end <- length(wave) / wave@samp.rate
+  if (is.infinite(to)) {
+    return(end)
+  }
+  return(min(convert2seconds(to, units), end))
 }
 
 .bitdepth <- function(v) {

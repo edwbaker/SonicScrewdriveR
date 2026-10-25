@@ -159,6 +159,53 @@ test_that("Reading files works", {
 
 })
 
+test_that("readAudio reads to the end of the file given a start and no end", {
+  #to defaults to Inf, which seewave::cutw() rejects as an end point past the
+  #end of the recording, so a start with no end used to fail for every format
+  #not read by readWave().
+  files <- c("AUDIOMOTH.WAV", "AUDIOMOTH.mp3", "AUDIOMOTH.flac", "STEREO.WAV", "STEREO.flac")
+  for (file in files) {
+    path <- system.file("extdata", file, package="sonicscrewdriver")
+    whole <- readAudio(path)
+    expect_equal(length(readAudio(path, from=1)@left), length(whole) - whole@samp.rate)
+    expect_equal(
+      length(readAudio(path, from=1/60, units="minutes")@left),
+      length(whole) - whole@samp.rate
+    )
+    expect_equal(
+      length(readAudio(path, from=whole@samp.rate+1, units="samples")@left),
+      length(whole) - whole@samp.rate
+    )
+  }
+})
+
+test_that("readAudio reads to the end of the file given an end beyond it", {
+  files <- c("AUDIOMOTH.WAV", "AUDIOMOTH.mp3", "AUDIOMOTH.flac", "STEREO.WAV", "STEREO.flac")
+  for (file in files) {
+    path <- system.file("extdata", file, package="sonicscrewdriver")
+    whole <- readAudio(path)
+    #An end point past the end of the recording gives the audio that is there,
+    #rather than an error or samples padded with NA.
+    w <- readAudio(path, from=1, to=3600)
+    expect_equal(length(w@left), length(whole) - whole@samp.rate)
+    expect_false(anyNA(w@left))
+
+    w <- readAudio(path, from=whole@samp.rate+1, to=length(whole)*2, units="samples")
+    expect_equal(length(w@left), length(whole) - whole@samp.rate)
+    expect_false(anyNA(w@left))
+  }
+})
+
+test_that("readAudio gives the same audio from a start with no end however it was read", {
+  skip_if_not_installed("av")
+
+  #AUDIOMOTH.flac is a lossless copy of AUDIOMOTH.WAV, so cutting the two at the
+  #same point must give the same samples despite taking different code paths.
+  wav <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from=1)
+  flac <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=1)
+  expect_equal(flac@left, wav@left)
+})
+
 test_that("readAudio rejects bad files", {
   expect_error(readAudio(system.file("extdata/CONFIG.TXT", package="sonicscrewdriver")), "Could not determine number of channels.")
 })

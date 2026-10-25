@@ -110,6 +110,12 @@
   not report a bit depth of 24.
 - readAudio() no longer leaves the sample_rate and channels attributes attached
   by av::read_audio_bin() on the samples of the Wave object it returns.
+- readAudio() raised "result would be too long a vector" when given a start point
+  but no end point, for every format not read by readWave() (e.g. FLAC, MP3). The
+  end point defaults to Inf, which seewave::cutw() rejects as a point past the end
+  of the recording. A start with no end now reads to the end of the file, as does an
+  end point beyond the recording, which before this returned samples padded with NA
+  when counted in samples.
 - corWaveMC() now returns the time differences between channels that its
   documentation has always promised. Each event is now a list holding the corenv
   results for every channel in `correlations` and the delays in `delays`, where
