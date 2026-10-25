@@ -429,3 +429,27 @@ test_that("readAudio returns a Wave for mono and stereo files", {
     }
   }
 })
+
+test_that(".mcChannelNames names channels by position", {
+  expect_equal(.mcChannelNames(1), "FL")
+  expect_equal(.mcChannelNames(4), c("FL", "FR", "FC", "LF"))
+  expect_equal(.mcChannelNames(18), tuneR::MCnames$name)
+
+  #More channels than tuneR has names for are numbered from where its names run
+  #out, so the audio can still be read.
+  n <- nrow(tuneR::MCnames)
+  expect_equal(.mcChannelNames(n + 2), c(tuneR::MCnames$name, "C19", "C20"))
+  expect_length(.mcChannelNames(n + 2), n + 2)
+})
+
+test_that(".avWaveMC refuses fewer samples than channels", {
+  #matrix() would otherwise recycle a truncated frame into a full one, inventing
+  #samples in the channels it did not reach.
+  expect_error(.avWaveMC(1:3, 4, 8000, 16), "Fewer samples than channels")
+
+  #A frame that is short of its last channels is dropped rather than filled in.
+  w <- .avWaveMC(1:9, 4, 8000, 16)
+  expect_s4_class(w, "WaveMC")
+  expect_equal(length(w), 2)
+  expect_equal(unname(w@.Data), matrix(1:8, ncol=4, byrow=TRUE))
+})
