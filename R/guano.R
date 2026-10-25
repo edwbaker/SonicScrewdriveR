@@ -60,13 +60,25 @@
   # what is written back, depend on where the file was opened, and shift it at
   # a daylight saving change. The form a value was written in is kept, so that
   # one naming no zone is not given one it never had.
+  # The shape of each form is checked before it is read, as as.POSIXct() is
+  # content with a value that merely begins with one: without this, a time of
+  # 25:00:00 would be read as the date alone and the hour quietly dropped,
+  # rather than kept as the text it is.
+  clock <- "[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?"
   forms <- list(
-    list(format="%Y-%m-%dT%H:%M:%OS%z", zone="utc"),
-    list(format="%Y-%m-%dT%H:%M:%OSZ", zone="utc"),
-    list(format="%Y-%m-%dT%H:%M:%OS", zone="local"),
-    list(format="%Y-%m-%d", zone="date")
+    list(shape=paste0("^[0-9]{4}-[0-9]{2}-[0-9]{2}T", clock, "[+-][0-9]{4}$"),
+         format="%Y-%m-%dT%H:%M:%OS%z", zone="utc"),
+    list(shape=paste0("^[0-9]{4}-[0-9]{2}-[0-9]{2}T", clock, "Z$"),
+         format="%Y-%m-%dT%H:%M:%OSZ", zone="utc"),
+    list(shape=paste0("^[0-9]{4}-[0-9]{2}-[0-9]{2}T", clock, "$"),
+         format="%Y-%m-%dT%H:%M:%OS", zone="local"),
+    list(shape="^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+         format="%Y-%m-%d", zone="date")
   )
   for (form in forms) {
+    if (!grepl(form$shape, text)) {
+      next
+    }
     parsed <- as.POSIXct(text, format=form$format, tz="UTC")
     if (!is.na(parsed)) {
       if (form$zone != "utc") {
@@ -283,8 +295,15 @@ as.character.guano <- function(x, ...) {
   if (anyDuplicated(names(fields))) {
     stop("A GUANO field name must not be used more than once.")
   }
-  if (any(grepl("\n", names(fields), fixed=TRUE))) {
+  # A field is a line, and a name ends at its first colon, so a newline in
+  # either part or a colon in a name would be read back as something other
+  # than what was written: a value holding a newline would become fields of
+  # its own, and could rewrite the ones around it.
+  if (any(grepl("[\r\n]", names(fields)))) {
     stop("A GUANO field name must not contain a newline.")
+  }
+  if (any(grepl(":", names(fields), fixed=TRUE))) {
+    stop("A GUANO field name must not contain a colon, which ends the name.")
   }
   # The specification requires that GUANO|Version is the first field.
   order <- c(which(names(fields) == "GUANO|Version"), which(names(fields) != "GUANO|Version"))
@@ -295,6 +314,14 @@ as.character.guano <- function(x, ...) {
     function(i) .guanoFormatValue(names(fields)[i], fields[[i]]),
     character(1)
   )
+  # Note escapes the newlines it is allowed to hold, so anything left here
+  # would be read back as a field of its own rather than as part of a value.
+  if (any(grepl("[\r\n]", values))) {
+    stop(
+      "A GUANO value must not contain a newline: ",
+      names(fields)[grepl("[\r\n]", values)][1]
+    )
+  }
   return(paste(paste0(names(fields), ":", values), collapse="\n"))
 }
 

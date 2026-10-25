@@ -540,3 +540,32 @@ test_that("A file that cannot be read is told apart from one holding nothing", {
   writeLines("not a wave file at all, by any measure", notAWave)
   expect_length(guano(notAWave), 0)
 })
+
+test_that("A timestamp is read only where the whole field is one", {
+  stamp <- function(value) {
+    suppressWarnings(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value))[["Timestamp"]])
+  }
+  # as.POSIXct() is content with a value that merely begins with a form it
+  # knows, which would read a time of 25:00:00 as the date and drop the hour.
+  expect_identical(stamp("2020-11-03T25:00:00Z"), "2020-11-03T25:00:00Z")
+  expect_identical(stamp("2020-11-03rubbish"), "2020-11-03rubbish")
+
+  expect_s3_class(stamp("2020-11-03T11:24:30Z"), "POSIXct")
+  expect_s3_class(stamp("2020-11-03"), "POSIXct")
+  expect_s3_class(stamp("2020-11-03T11:24:30+01:00"), "POSIXct")
+})
+
+test_that("A value cannot carry a field of its own into the file", {
+  # A field is a line and a name ends at its first colon, so a newline in a
+  # value would be read back as fields of its own and could rewrite others.
+  expect_error(
+    as.character(guanoCreate(Make="Original", "User|Comment"="first\nMake:Replaced")),
+    "must not contain a newline"
+  )
+  expect_error(as.character(guanoCreate("Bad:Key"="x")), "must not contain a colon")
+
+  # Note escapes the newlines it is allowed to hold, and is unaffected.
+  text <- as.character(guanoCreate(Note="first\nsecond"))
+  expect_true(grepl("Note:first\\nsecond", text, fixed=TRUE))
+  expect_identical(guanoParse(text)[["Note"]], "first\nsecond")
+})

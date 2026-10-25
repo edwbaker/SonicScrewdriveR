@@ -41,7 +41,15 @@ windowing <- function(
     # would never be reached. Reading each window from the file separately
     # would also expand the whole recording again for every window, so it is
     # expanded once here instead.
-    wave <- readAudio(wave)
+    #
+    # The naming convention is only a convention, and an ordinary recording can
+    # meet it, so a file that is not a triggered recording keeps the filename
+    # it had and is windowed as any other file is. Reading it here instead
+    # would hand a WaveMC to a branch that takes only a Wave.
+    expanded <- tryCatch(audiomothExpand(wave), unsupportedWav=function(cond) NULL)
+    if (!is.null(expanded)) {
+      wave <- expanded
+    }
   }
 
   if (typeof(wave) == "character") {

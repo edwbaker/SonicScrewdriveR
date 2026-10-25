@@ -597,3 +597,28 @@ test_that("A recording cut short is not refused for the size it claims", {
   expect_gt(length(wave@left), 0)
   expect_lt(length(wave@left), length(w@left))
 })
+
+test_that("A plan for a recording of billions of bytes is counted in doubles", {
+  # 4194304 blocks is 2GiB, beyond what the product of two whole numbers can
+  # be counted in, which would otherwise give NA and refuse the recording.
+  plan <- .audiomothExpandPlan(numeric(4194304L), 0)
+  expect_equal(plan$total, 2147483648)
+  expect_false(any(is.na(plan$to)))
+})
+
+test_that("Windowing a file that only looks like a triggered recording still works", {
+  # The naming convention is only a convention, and an ordinary recording can
+  # meet it: anything ending in t.wav does.
+  expect_true(.isTWavName("test.wav"))
+
+  channels <- matrix(as.integer(stats::rnorm(4 * 8000, sd=1000)), ncol=4)
+  colnames(channels) <- tuneR::MCnames$name[1:4]
+  mc <- tuneR::WaveMC(channels, samp.rate=8000, bit=16)
+  f <- file.path(tempdir(), "test.wav")
+  on.exit(unlink(f))
+  tuneR::writeWave(mc, f)
+
+  starts <- unlist(windowing(f, window.length=1000, window.overlap=0,
+                             FUN=function(wave, start, window.length) start))
+  expect_equal(length(starts), 8)
+})

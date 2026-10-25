@@ -112,7 +112,10 @@
       step <- step + 1L
       source[step] <- "blocks"
       from[step] <- (starts[k] - 1) * .AM_BLOCK_SIZE + 1
-      to[step] <- ends[k] * .AM_BLOCK_SIZE
+      # Both of these are whole numbers, and a recording of 2GB or more holds
+      # more blocks than their product can be counted in, so the arithmetic is
+      # done in doubles rather than silently giving NA.
+      to[step] <- as.numeric(ends[k]) * .AM_BLOCK_SIZE
       size[step] <- to[step] - from[step] + 1
     } else {
       # Runs of encoded blocks are rare, and almost always a single block.
