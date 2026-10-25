@@ -229,7 +229,7 @@
   as the test for whether to bind the results looked at the first of them before
   checking there were any.
 - pseudoWave()'s example for type="file" named a file that cannot exist, so R CMD
-  check failed on it. It is now marked as not run.
+  check failed on it. It now names a file the package ships.
 - TimeRegion regions given in minutes or hours started at the sample for that many
   seconds, as the multiplier was applied only to the end of the region. Regions
   given in samples now start at sample one, as they do for every other unit, and an
