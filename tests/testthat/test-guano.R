@@ -351,3 +351,30 @@ test_that("Numbers are written to the precision they were read at", {
     expect_equal(back[["Length"]], 12.3456789)
   }
 })
+
+test_that("A fractional second keeps the zeros inside it", {
+  stamp <- function(value) {
+    text <- as.character(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))
+    sub(".*Timestamp:", "", strsplit(text, "\n")[[1]][2])
+  }
+  # Trimming the trailing zeros must not take the zeros within the fraction,
+  # which would change the time rather than tidy it.
+  expect_identical(stamp("2020-11-03T11:24:30.101234Z"), "2020-11-03T11:24:30.101234Z")
+  expect_identical(stamp("2020-11-03T11:24:30.1002Z"), "2020-11-03T11:24:30.1002Z")
+  expect_identical(stamp("2020-11-03T11:24:30.010001Z"), "2020-11-03T11:24:30.010001Z")
+  expect_identical(stamp("2020-11-03T11:24:30.100000Z"), "2020-11-03T11:24:30.1Z")
+})
+
+test_that("Numbers are written with a dot whatever the session uses", {
+  g <- guanoParse("GUANO|Version:1.0\nLength:12.5\nLoc Position:51.496401 -0.122456")
+
+  original <- options(OutDec=",")
+  on.exit(options(original))
+  text <- as.character(g)
+  options(original)
+
+  expect_false(grepl("12,5", text, fixed=TRUE))
+  back <- guanoParse(text)
+  expect_identical(back[["Length"]], 12.5)
+  expect_equal(back[["Loc Position"]], c(51.496401, -0.122456))
+})

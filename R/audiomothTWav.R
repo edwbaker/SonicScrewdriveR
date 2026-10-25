@@ -202,7 +202,19 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   tail <- readBin(con, "raw", n=tailBytes)
   close(con)
 
-  info <- .wavFormat(if (nBlocks > 0L) blocks else tail, total=size)
+  info <- tryCatch(
+    .wavFormat(if (nBlocks > 0L) blocks else tail, total=size),
+    unsupportedWav = function(cond) {
+      # A header longer than the whole blocks read above does not appear in
+      # them, so it is read again from the whole file. Only a file whose header
+      # is unusually long reaches this, as the one AudioMoth writes is 488
+      # bytes, but the application note warns that it may grow.
+      if (tailBytes == 0L || nBlocks == 0L) {
+        stop(cond)
+      }
+      .wavFormat(c(blocks, tail), total=size)
+    }
+  )
   if (info$format != 1) {
     .unsupportedWav("Only PCM files can be expanded.")
   }
@@ -229,6 +241,15 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 
   dim(blocks) <- c(.AM_BLOCK_SIZE, nBlocks)
   counts <- .audiomothBlockCounts(blocks)
+
+  # Only the audio can hold an encoded block. A chunk written after it, such as
+  # GUANO, is binary, and were some 512 bytes of it to read as an encoded block
+  # it would be replaced by silence and counted into the audio.
+  blockStart <- (seq_len(nBlocks) - 1) * .AM_BLOCK_SIZE + 1
+  outside <- blockStart < info$dataStart |
+    blockStart + .AM_BLOCK_SIZE - 1 > info$dataStart + info$dataSize - 1
+  counts[outside] <- 0
+
   plan <- .audiomothExpandPlan(counts, tailBytes)
   outSize <- plan$total
   expanded <- outSize - size
@@ -243,10 +264,13 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
     )
   }
 
-  # The chunk sizes still describe the unexpanded file. Adding the number of
-  # bytes gained, rather than measuring back from the end of the file, keeps any
-  # chunk written after the audio data, such as GUANO, correct.
-  blocks[5:8] <- .uintToRaw(info$riffSize + expanded, 4L)
+  # The chunk sizes still describe the unexpanded file. The RIFF size covers
+  # every chunk, so it is taken from the length of the file written, which is
+  # also right where the recording was cut short and the size it declared was
+  # never true. The data size counts only the audio, so the bytes gained are
+  # added to it rather than measured back from the end of the file, which keeps
+  # any chunk written after the audio, such as GUANO, correct.
+  blocks[5:8] <- .uintToRaw(outSize - 8, 4L)
   blocks[(info$dataStart - 4L):(info$dataStart - 1L)] <-
     .uintToRaw(info$dataSize + expanded, 4L)
 

@@ -155,7 +155,10 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 .cutAudio <- function(wave, from, to, units, fromS) {
   metadata <- attr(wave, "guano")
   if (units == "samples") {
-    cut <- cutws(wave, from=fromS, to=to)
+    # cutws() indexes the samples directly, so an end past the last of them
+    # would pad the result with NA rather than stop at the end of the
+    # recording.
+    cut <- cutws(wave, from=fromS, to=min(to, length(wave)))
   } else if (from == 0 && to == Inf) {
     cut <- wave
   } else {

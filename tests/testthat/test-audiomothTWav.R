@@ -414,3 +414,87 @@ test_that("A file this package cannot expand is told apart from a failure to exp
   expect_true(read@stereo)
   expect_equal(read@left, stereo@left)
 })
+
+test_that("A header longer than the first block is still read", {
+  # The AudioMoth header is 488 bytes, but the application note warns that the
+  # comment and artist fields may grow, which would put the data chunk beyond
+  # the first 512-byte block.
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  header <- c(
+    charToRaw("RIFF"), .uintToRaw(564L, 4L), charToRaw("WAVE"),
+    charToRaw("fmt "), .uintToRaw(16L, 4L),
+    .uintToRaw(1L, 2L), .uintToRaw(1L, 2L),
+    .uintToRaw(8000L, 4L), .uintToRaw(16000L, 4L),
+    .uintToRaw(2L, 2L), .uintToRaw(16L, 2L),
+    charToRaw("LIST"), .uintToRaw(500L, 4L), raw(500),
+    charToRaw("data"), .uintToRaw(20L, 4L)
+  )
+  con <- file(f, "wb")
+  writeBin(c(header, writeBin(rep(777L, 10), raw(), size=2L, endian="little")), con)
+  close(con)
+
+  expect_equal(as.integer(audiomothExpand(f)@left), rep(777L, 10))
+})
+
+test_that("A chunk after the audio is not mistaken for an omitted period", {
+  w <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  out <- tempfile(fileext=".WAV")
+  on.exit(unlink(c(f, out)))
+  audiomothCompress(w, f, threshold=1)
+
+  # Put a chunk after the audio whose contents read exactly as an encoded
+  # block, aligned so that it falls on a 512-byte boundary of the file.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  payload <- .audiomothEncodedBlock(2)
+  padding <- raw((512 - (length(bytes) + 8) %% 512) %% 512)
+  bytes <- c(
+    bytes,
+    charToRaw("padd"), .uintToRaw(length(padding), 4L), padding,
+    charToRaw("junk"), .uintToRaw(length(payload), 4L), payload
+  )
+  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
+  con <- file(f, "wb")
+  writeBin(bytes, con)
+  close(con)
+
+  # The audio is unchanged, and the chunk is carried over rather than expanded.
+  expect_equal(length(audiomothExpand(f)@left), length(w@left))
+  audiomothExpand(f, out)
+  ids <- vapply(.wavChunks(readBin(out, "raw", n=file.size(out)))$chunks,
+                function(chunk) chunk$id, character(1))
+  expect_true(all(c("data", "junk") %in% ids))
+})
+
+test_that("A recording cut short is given sizes that match the file written", {
+  w <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  out <- tempfile(fileext=".WAV")
+  on.exit(unlink(c(f, out)))
+
+  audiomothCompress(w, f, threshold=1)
+  bytes <- readBin(f, "raw", n=file.size(f))
+  con <- file(f, "wb")
+  writeBin(bytes[seq_len(length(bytes) - 5000)], con)
+  close(con)
+
+  suppressWarnings(audiomothExpand(f, out))
+
+  # The sizes a truncated recording declares were never true, so they have to
+  # describe the file as written rather than as it said it would be.
+  written <- readBin(out, "raw", n=file.size(out))
+  info <- .wavChunks(written)
+  expect_equal(info$riffSize + 8, length(written))
+  data <- .wavFindChunk(info$chunks, "data")
+  expect_lte(data$start + data$size - 1, length(written))
+})
+
+test_that("A sample range past the end stops at the end of the recording", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  wave <- readAudio(f, from=49900, to=50000, units="samples")
+
+  expect_equal(length(wave@left), 9)
+  expect_false(any(is.na(wave@left)))
+})

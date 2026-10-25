@@ -81,20 +81,29 @@
   # The specification allows a fractional second, and the parser reads one, so
   # dropping it here would move the start of a recording whenever metadata was
   # read and written back. A whole second is still written as one.
+  #
+  # The fraction is built from microseconds rather than trimmed out of what
+  # format() gives, which would both leave the floating point nearest the value
+  # written out in full and, were the zeros it dropped not anchored to the end,
+  # take them from the middle of the fraction and change the time.
   seconds <- as.numeric(x)
-  clock <- if (isTRUE(abs(seconds - round(seconds)) > 1e-6)) {
-    "%H:%M:%OS6"
-  } else {
-    "%H:%M:%S"
+  whole <- floor(seconds)
+  micro <- round((seconds - whole) * 1e6)
+  if (micro >= 1e6) {
+    whole <- whole + 1
+    micro <- 0
   }
-  trim <- function(stamp) sub("(\\.[0-9]*[1-9])0+", "\\1", stamp)
+  fraction <- if (micro == 0) "" else sub("0+$", "", sprintf(".%06d", micro))
 
   tz <- attr(x, "tzone")
-  if (!is.null(tz) && tz %in% c("UTC", "GMT")) {
-    return(trim(format(x, paste0("%Y-%m-%dT", clock, "Z"), tz="UTC")))
+  utc <- !is.null(tz) && tz %in% c("UTC", "GMT")
+  at <- .POSIXct(whole, tz=if (is.null(tz)) "" else tz)
+
+  if (utc) {
+    return(paste0(format(at, "%Y-%m-%dT%H:%M:%S", tz="UTC"), fraction, "Z"))
   }
-  offset <- sub("([+-][0-9]{2})([0-9]{2})", "\\1:\\2", format(x, "%z"))
-  return(paste0(trim(format(x, paste0("%Y-%m-%dT", clock))), offset))
+  offset <- sub("([+-][0-9]{2})([0-9]{2})", "\\1:\\2", format(at, "%z"))
+  return(paste0(format(at, "%Y-%m-%dT%H:%M:%S"), fraction, offset))
 }
 
 #' Read a field value according to its defined type
@@ -145,7 +154,12 @@
   # it, by a distance depending on options(digits). Fifteen significant digits
   # carry a double through a round trip without printing the noise that the
   # seventeen needed to be exact would.
-  number <- function(x) format(x, scientific=FALSE, trim=TRUE, digits=15)
+  # The decimal mark is given as well, since format() otherwise follows
+  # options(OutDec), and a session set to a comma would write a number that
+  # guanoParse() could not read back as one.
+  number <- function(x) {
+    format(x, scientific=FALSE, trim=TRUE, digits=15, decimal.mark=".")
+  }
   formatted <- switch(
     type,
     float = number(value),
