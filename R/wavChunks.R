@@ -98,11 +98,21 @@
   if (is.null(info)) {
     return("")
   }
-  chunk <- .wavFindChunk(info$chunks, "LIST")
-  if (is.null(chunk) || chunk$size < 4) {
-    return("")
+  # A file may hold more than one list: one of cue labels and one of
+  # information, in either order, and a list of information need not hold a
+  # comment. Taking the first and looking no further would miss the comment
+  # behind any of those, and a triggered recording whose comment was missed is
+  # read as the shortened thing on disk.
+  for (chunk in info$chunks) {
+    if (chunk$id != "LIST" || chunk$size < 4) {
+      next
+    }
+    comment <- .infoComment(read(chunk$start, min(chunk$size, .WAV_INFO_READ)))
+    if (nzchar(comment)) {
+      return(comment)
+    }
   }
-  return(.infoComment(read(chunk$start, min(chunk$size, .WAV_INFO_READ))))
+  return("")
 }
 
 #' Check that an argument is one value and not several

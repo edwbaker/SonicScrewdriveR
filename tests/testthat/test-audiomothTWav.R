@@ -941,3 +941,44 @@ test_that("The comment is found wherever the file holds it", {
   expect_gt(.wavFindChunk(.wavChunks(bytes)$chunks, "LIST")$start, 4096)
   expect_true(.isTriggeredRecording(f))
 })
+
+test_that("The comment is found behind another list", {
+  w <- omittedFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1000, segment=1024)
+  bytes <- readBin(f, "raw", n=file.size(f))
+
+  # A file may hold a list of cue labels as well as one of information, in
+  # either order, and a list of information need not hold a comment. Each
+  # inserted list takes 512 bytes, so the omitted periods stay where they are.
+  insert <- function(kind, extra=raw(0)) {
+    body <- c(charToRaw(kind), extra)
+    body <- c(body, raw(512 - 8 - length(body)))
+    chunk <- c(charToRaw("LIST"), .uintToRaw(length(body), 4L), body)
+    with <- c(bytes[1:36], chunk, bytes[37:length(bytes)])
+    with[5:8] <- .uintToRaw(length(with) - 8, 4L)
+    path <- tempfile(fileext=".wav")
+    con <- file(path, "wb")
+    writeBin(with, con)
+    close(con)
+    path
+  }
+
+  labels <- insert("adtl")
+  on.exit(unlink(labels), add=TRUE)
+  expect_true(.isTriggeredRecording(labels))
+  expect_equal(length(readAudio(labels)@left), length(w@left))
+
+  noComment <- insert("INFO", c(charToRaw("IART"), .uintToRaw(8L, 4L),
+                                charToRaw("someone"), as.raw(0)))
+  on.exit(unlink(noComment), add=TRUE)
+  expect_true(.isTriggeredRecording(noComment))
+  expect_equal(length(readAudio(noComment)@left), length(w@left))
+
+  # And a recording that is not a triggered one is still not taken for one.
+  ordinary <- tempfile(fileext=".wav")
+  on.exit(unlink(ordinary), add=TRUE)
+  tuneR::writeWave(w, ordinary)
+  expect_false(.isTriggeredRecording(ordinary))
+})
