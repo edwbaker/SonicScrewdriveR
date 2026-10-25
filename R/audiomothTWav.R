@@ -17,14 +17,46 @@
 .AM_IART_SIZE <- 32L
 .AM_LIST_SIZE <- 436L
 
-#' Does a filename follow the AudioMoth convention for triggered recordings?
+# How far into a file the comment is looked for. The header AudioMoth writes is
+# 488 bytes and holds the comment well inside that, but the application note
+# warns that the fields it holds may grow.
+.AM_COMMENT_SCAN <- 4096
+
+#' Was a recording made on a trigger?
 #'
-#' @param file A filename
+#' AudioMoth devices name a triggered recording with a T before the extension,
+#' but a name is only a convention: an ordinary recording can meet it, as
+#' anything ending in t.wav does, and a triggered one can be renamed. What the
+#' device does record is the trigger itself, in the comment it writes into the
+#' header, and it writes that only where a trigger was set.
+#'
+#' Only the start of the file is read, as that is where the comment is, so this
+#' costs the same whatever the recording is worth in bytes.
+#'
+#' A recording whose trigger never fired carries the comment and holds nothing
+#' to expand, which costs an expansion that returns it unchanged. A recording
+#' whose comment has been stripped is not recognised, and [audiomothExpand()]
+#' will still expand it if it is called directly.
+#'
+#' @param file Path to a wave file
 #' @return A logical value
 #' @keywords internal
 #' @noRd
-.isTWavName <- function(file) {
-  grepl("T\\.WAV$", file, ignore.case=TRUE)
+.isTriggeredRecording <- function(file) {
+  if (!isTRUE(file.exists(file))) {
+    return(FALSE)
+  }
+  size <- file.size(file)
+  if (is.na(size) || size < 12) {
+    return(FALSE)
+  }
+  head <- readBin(file, "raw", n=min(size, .AM_COMMENT_SCAN))
+  # The header holds bytes that are not text, so the comment is read as bytes
+  # rather than as characters of any encoding.
+  text <- rawToChar(head[as.integer(head) != 0L])
+  return(grepl(
+    "Amplitude threshold was|Frequency trigger", text, useBytes=TRUE
+  ))
 }
 
 #' Find the encoded blocks of a T.WAV file
@@ -187,6 +219,10 @@
 #' }
 #'
 audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
+  file <- .oneValue(file, "file")
+  if (!is.null(output)) {
+    output <- .oneValue(output, "output")
+  }
   if (!file.exists(file)) {
     stop("File does not exist: ", file)
   }
@@ -195,6 +231,16 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   }
 
   size <- file.size(file)
+  # Finding the blocks that were left out means looking at all of them, so the
+  # recording is read whole however it is then written. R reads at most as many
+  # bytes at once as a whole number counts, which is said plainly here rather
+  # than left to fail further down without saying why.
+  if (size > .Machine$integer.max) {
+    stop(
+      "The recording is ", round(size / 2^30, 1),
+      "GB, which is more than can be read in one go."
+    )
+  }
   nBlocks <- size %/% .AM_BLOCK_SIZE
   tailBytes <- size - nBlocks * .AM_BLOCK_SIZE
 
@@ -433,6 +479,11 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #' expanding the file gives silence in its place, as it would for a recording
 #' the device had made with that threshold.
 #'
+#' The threshold is recorded in the comment the file carries, in the wording an
+#' AudioMoth device uses, so that the file says what was done to it. There is
+#' nothing else in a wave file to tell a triggered recording from any other,
+#' and it is what [readAudio()] reads to know that the file needs expanding.
+#'
 #' The first and last segments are never omitted, as the first holds the file
 #' header and the last may be shorter than a whole segment. Where these fall
 #' below the threshold they are written as silence, which is what AudioMoth
@@ -446,7 +497,8 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #'   longer than the 488-byte header. The default of 32768 is what current
 #'   AudioMoth firmware uses.
 #' @param comment Comment string to store in the header, as read by
-#'   [audiomothWave()]
+#'   [audiomothWave()]. The threshold is recorded after it, as an AudioMoth
+#'   device records it, which is how [readAudio()] knows to expand the file.
 #' @param artist Artist string to store in the header
 #' @param guano GUANO metadata to store in the file, as a guano object from
 #'   [guano()] or [guanoCreate()], or NULL for none
@@ -484,6 +536,8 @@ audiomothCompress <- function(
   if (!is.numeric(threshold) || length(threshold) != 1 || threshold < 0) {
     stop("threshold must be a single non-negative amplitude.")
   }
+  file <- .oneValue(file, "file")
+  segment <- .oneValue(segment, "segment", numeric=TRUE)
   if (segment %% .AM_BLOCK_SIZE != 0) {
     stop("segment must be a multiple of ", .AM_BLOCK_SIZE, " bytes.")
   }
@@ -493,6 +547,11 @@ audiomothCompress <- function(
   if (file.exists(file) && !overwrite) {
     stop("File already exists, use overwrite=TRUE to replace it: ", file)
   }
+  # Each of these goes into a field of the header that holds one string, and
+  # anything else would be compared and written a piece at a time, which fails
+  # in ways that say nothing about what was given.
+  comment <- .oneValue(comment, "comment")
+  artist <- .oneValue(artist, "artist")
 
   samples <- wave@left
   n <- length(samples)
@@ -553,6 +612,36 @@ audiomothCompress <- function(
   parts <- parts[seq_len(used)]
   metadata <- if (is.null(guano)) raw(0) else .guanoChunk(guano)
   dataSize <- sum(vapply(parts, length, numeric(1)))
+
+  # The threshold is recorded in the comment, as a device records it, so that
+  # the file says what was done to it. It is how a triggered recording is told
+  # from any other, there being nothing else in a wave file to tell them apart,
+  # and a recording written without it could not be read back as one.
+  #
+  # A comment that records a trigger already, as one copied from a device does,
+  # is left as it is rather than made to say it twice.
+  records <- grepl(
+    "Amplitude threshold was|Frequency trigger", comment, useBytes=TRUE
+  )
+  if (threshold > 0 && !records) {
+    recorded <- paste0(
+      " Amplitude threshold was ", format(threshold, scientific=FALSE), "."
+    )
+    # The comment field holds a fixed number of bytes, and what will not fit is
+    # cut from the end of it. The threshold has to survive that, as the file
+    # could not be read back as a triggered recording without it, so a comment
+    # too long to hold both is cut instead.
+    room <- .AM_ICMT_SIZE - nchar(recorded, type="bytes")
+    given <- charToRaw(enc2utf8(as.character(comment)))
+    if (length(given) > room) {
+      warning(
+        "Comment was truncated to ", room,
+        " bytes to leave room for the amplitude threshold."
+      )
+      given <- given[seq_len(room)]
+    }
+    comment <- trimws(paste0(rawToChar(given), recorded))
+  }
 
   con <- file(file, "wb")
   on.exit(close(con))

@@ -24,10 +24,14 @@
 #' a 24bit file are 256 times those `tuneR::readWave()` would give for the same
 #' audio stored as WAVE. Audio stored as floating point is returned as 32bit.
 #'
-#' A file named following the AudioMoth convention for triggered recordings,
-#' ending in T.WAV, is expanded by [audiomothExpand()] as it is read, so that
-#' the periods that did not trigger a recording are returned as silence and the
-#' timing of the triggered recordings is preserved.
+#' A recording made on a trigger is expanded by [audiomothExpand()] as it is
+#' read, so that the periods that did not trigger a recording are returned as
+#' silence and the timing of the triggered recordings is preserved. Such a
+#' recording is recognised by the trigger AudioMoth records in the comment it
+#' writes into the header, rather than by the T before its extension: a name is
+#' only a convention, which an ordinary recording can meet and a triggered one
+#' can be renamed out of. A file whose comment has been lost can still be
+#' expanded by calling [audiomothExpand()] on it.
 #'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
@@ -51,7 +55,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     fromS <- from
   }
 
-  if (mime == "audio/x-wav" && .isTWavName(file)) {
+  if (mime == "audio/x-wav" && .isTriggeredRecording(file)) {
     # An AudioMoth triggered recording reads as a valid WAV file, so it has to
     # be expanded before readWave() gets to it. A file that is not one of those
     # at all falls through to be read normally, but a failure to expand a

@@ -641,9 +641,8 @@ test_that("A plan for a recording of billions of bytes is counted in doubles", {
 
 test_that("Windowing a file that only looks like a triggered recording still works", {
   # The naming convention is only a convention, and an ordinary recording can
-  # meet it: anything ending in t.wav does.
-  expect_true(.isTWavName("test.wav"))
-
+  # meet it: anything ending in t.wav does. What marks a triggered recording
+  # is the trigger its comment records, which such a file does not have.
   channels <- matrix(as.integer(stats::rnorm(4 * 8000, sd=1000)), ncol=4)
   colnames(channels) <- tuneR::MCnames$name[1:4]
   mc <- tuneR::WaveMC(channels, samp.rate=8000, bit=16)
@@ -672,4 +671,94 @@ test_that("A recording can be expanded over itself whatever its length", {
 
   long <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
   expect_equal(expandInPlace(long), 32768)
+})
+
+test_that("A triggered recording is known by its comment, not its name", {
+  w <- twavFixture()
+
+  # Written with a threshold, the comment records it, as a device records it.
+  triggered <- file.path(tempdir(), "nothing_like_the_convention.dat")
+  on.exit(unlink(triggered))
+  audiomothCompress(w, triggered, threshold=1000, segment=1024)
+  expect_true(.isTriggeredRecording(triggered))
+  header <- readBin(triggered, "raw", n=512)
+  expect_true(grepl(
+    "Amplitude threshold was 1000",
+    rawToChar(header[as.integer(header) != 0L]),
+    fixed = TRUE, useBytes = TRUE
+  ))
+
+  # An ordinary recording whose name meets the convention is not one.
+  ordinary <- file.path(tempdir(), "notatriggeredrecordingT.WAV")
+  on.exit(unlink(ordinary), add=TRUE)
+  tuneR::writeWave(w, ordinary)
+  expect_false(.isTriggeredRecording(ordinary))
+  expect_equal(readAudio(ordinary)@left, w@left)
+
+  # Written with no threshold, nothing was left out and nothing is recorded.
+  untriggered <- tempfile(fileext="T.WAV")
+  on.exit(unlink(untriggered), add=TRUE)
+  audiomothCompress(w, untriggered, threshold=0, segment=1024)
+  expect_false(.isTriggeredRecording(untriggered))
+
+  # A file that is not there, or is far too short, is not one either.
+  expect_false(.isTriggeredRecording(tempfile()))
+})
+
+test_that("A triggered recording is expanded whatever it is called", {
+  w <- twavFixture()
+  f <- file.path(tempdir(), "renamed_by_someone.wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1000, segment=1024)
+
+  # The file on disk holds less than the recording it stands for.
+  expect_lt(length(tuneR::readWave(f)@left), length(w@left))
+  # Read through readAudio() it is expanded, although its name says nothing.
+  expect_equal(length(readAudio(f)@left), length(w@left))
+})
+
+test_that("A comment or artist that is not a single string is refused", {
+  w <- twavFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+
+  # Each goes into a field holding one string, and anything else would be
+  # compared and written a piece at a time.
+  expect_error(audiomothCompress(w, f, threshold=1, comment=c("a", "b")), "single string")
+  expect_error(audiomothCompress(w, f, threshold=1, comment=character(0)), "single string")
+  expect_error(audiomothCompress(w, f, threshold=1, comment=NA), "single string")
+  expect_error(audiomothCompress(w, f, threshold=1, artist=c("a", "b")), "single string")
+
+  # A number is a single value and is written as the text of it.
+  expect_silent(audiomothCompress(w, f, threshold=1, comment=42, overwrite=TRUE))
+})
+
+test_that("A comment that already records the trigger is not made to say it twice", {
+  w <- twavFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+
+  audiomothCompress(
+    w, f, threshold=1000, segment=1024,
+    comment="Recorded by a device. Amplitude threshold was 1000."
+  )
+  header <- readBin(f, "raw", n=512)
+  text <- rawToChar(header[as.integer(header) != 0L])
+  expect_equal(
+    lengths(regmatches(text, gregexpr("Amplitude threshold was", text, useBytes=TRUE))),
+    1L
+  )
+  expect_true(.isTriggeredRecording(f))
+})
+
+test_that("Arguments that name one thing are refused several", {
+  w <- twavFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1, segment=1024)
+
+  expect_error(audiomothCompress(w, tempfile(), threshold=1, segment=c(1024, 2048)), "single number")
+  expect_error(audiomothCompress(w, tempfile(), threshold=1, segment="1024"), "single number")
+  expect_error(audiomothExpand(c(f, f)), "single string")
+  expect_error(audiomothExpand(f, output=c(tempfile(), tempfile())), "single string")
 })

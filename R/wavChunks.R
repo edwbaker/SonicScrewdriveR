@@ -32,6 +32,29 @@
   return(as.raw(floor(x / 256^(seq_len(size) - 1L)) %% 256))
 }
 
+#' Check that an argument is one value and not several
+#'
+#' Several of these arguments name a file, or go into a field of a header that
+#' holds one value. Given a vector, the code reading them compares or writes a
+#' piece at a time and fails in ways that say nothing about what was given, so
+#' they are checked where they come in.
+#'
+#' @param x The value given
+#' @param name What to call it
+#' @param numeric TRUE to require a number rather than a string
+#' @return The value, as one string or number
+#' @keywords internal
+#' @noRd
+.oneValue <- function(x, name, numeric=FALSE) {
+  if (length(x) != 1 || is.na(x)) {
+    stop(name, " must be a single ", if (numeric) "number." else "string.")
+  }
+  if (numeric && !is.numeric(x)) {
+    stop(name, " must be a single number.")
+  }
+  return(if (numeric) as.numeric(x) else as.character(x))
+}
+
 #' Report a file this package cannot treat as an AudioMoth recording
 #'
 #' Raised where a file is not a wave file at all, or is not the mono 16-bit PCM

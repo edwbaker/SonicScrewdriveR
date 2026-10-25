@@ -569,3 +569,14 @@ test_that("A value cannot carry a field of its own into the file", {
   expect_true(grepl("Note:first\\nsecond", text, fixed=TRUE))
   expect_identical(guanoParse(text)[["Note"]], "first\nsecond")
 })
+
+test_that("Arguments that name one thing are refused several", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  expect_error(guanoCreate(Make="x", version=c("1.0", "2.0")), "single string")
+  expect_error(guanoWrite(guanoCreate(Make="x"), f, output=c(tempfile(), tempfile())), "single string")
+  expect_error(guanoWrite(guanoCreate(Make="x"), c(f, f)), "single string")
+})

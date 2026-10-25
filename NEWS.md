@@ -6,11 +6,15 @@
   silence so that the timing of the triggered recordings is preserved. It gives
   either a Wave object or an ordinary wave file, and its output is identical to
   that of the reference implementation published by Open Acoustic Devices.
-  readAudio() expands a file named following the T.WAV convention as it reads
-  it, so existing code works on triggered recordings unchanged.
+  readAudio() and windowing() expand a triggered recording as they read it, so
+  existing code works on them unchanged. One is recognised by the trigger
+  AudioMoth records in the comment it writes into the header, rather than by
+  the T before its extension, as a name is only a convention: an ordinary
+  recording can meet it and a triggered one can be renamed out of it.
 - audiomothCompress() writes a Wave as a T.WAV file, leaving out the segments
   whose peak amplitude falls below an amplitude threshold, as an AudioMoth
-  device does.
+  device does, and records that threshold in the file's comment as a device
+  records it.
 - guano() reads GUANO metadata, the format used by many bioacoustic recorders
   and by current AudioMoth firmware, from a wave file or from a Wave object it
   is attached to. guanoCreate() and guanoParse() build it, guanoWrite() writes

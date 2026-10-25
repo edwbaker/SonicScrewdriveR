@@ -46,13 +46,13 @@ for (f in list.files(pattern="T\\.WAV$")) {
 }
 ```
 
-`readAudio()` recognises the `T.WAV` naming convention and expands such a file as it reads it, so no change is needed to code that already uses it.
+`readAudio()` recognises a triggered recording and expands it as it reads it, so no change is needed to code that already uses it. It is recognised by the trigger AudioMoth records in the comment it writes into the header, rather than by the `T` before the extension: a name is only a convention, which an ordinary recording can meet and a triggered one can be renamed out of. `windowing()` reads such a file the same way, so windows are scheduled over the recording rather than over what is left of it on disk.
 
 ```{r, eval=FALSE}
 w <- readAudio("20201103_112430T.WAV", from=60, to=120, units="seconds")
 ```
 
-`audiomothCompress()` goes the other way, writing a Wave as a triggered file and leaving out the segments whose peak amplitude falls below a threshold. Audio left out is not recoverable, as it is not recoverable on the device.
+`audiomothCompress()` goes the other way, writing a Wave as a triggered file and leaving out the segments whose peak amplitude falls below a threshold. Audio left out is not recoverable, as it is not recoverable on the device. The threshold is recorded in the file's comment, as a device records it, which is what lets the file be read back as a triggered recording.
 
 ```{r, eval=FALSE}
 audiomothCompress(w, "20201103_112430T.WAV", threshold=1000)

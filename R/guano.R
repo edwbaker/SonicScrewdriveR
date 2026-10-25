@@ -273,6 +273,7 @@ guanoParse <- function(text) {
 #' )
 #'
 guanoCreate <- function(..., version="1.0") {
+  version <- .oneValue(version, "version")
   fields <- list(...)
   if (length(fields) > 0L && (is.null(names(fields)) || any(!nzchar(names(fields))))) {
     stop("Every field must be named.")
@@ -511,12 +512,11 @@ guanoWrite <- function(x, file, output=NULL) {
   if (!inherits(x, "guano")) {
     stop("x must be a guano object, see guano() and guanoCreate().")
   }
+  file <- .oneValue(file, "file")
   if (!file.exists(file)) {
     stop("File does not exist: ", file)
   }
-  if (is.null(output)) {
-    output <- file
-  }
+  output <- if (is.null(output)) file else .oneValue(output, "output")
 
   bytes <- readBin(file, "raw", n=file.size(file))
   info <- .wavChunks(bytes)

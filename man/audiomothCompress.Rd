@@ -28,7 +28,8 @@ longer than the 488-byte header. The default of 32768 is what current
 AudioMoth firmware uses.}
 
 \item{comment}{Comment string to store in the header, as read by
-\code{\link[=audiomothWave]{audiomothWave()}}}
+\code{\link[=audiomothWave]{audiomothWave()}}. The threshold is recorded after it, as an AudioMoth
+device records it, which is how \code{\link[=readAudio]{readAudio()}} knows to expand the file.}
 
 \item{artist}{Artist string to store in the header}
 
@@ -50,6 +51,11 @@ expanding the file gives silence in its place, as it would for a recording
 the device had made with that threshold.
 }
 \details{
+The threshold is recorded in the comment the file carries, in the wording an
+AudioMoth device uses, so that the file says what was done to it. There is
+nothing else in a wave file to tell a triggered recording from any other,
+and it is what \code{\link[=readAudio]{readAudio()}} reads to know that the file needs expanding.
+
 The first and last segments are never omitted, as the first holds the file
 header and the last may be shorter than a whole segment. Where these fall
 below the threshold they are written as silence, which is what AudioMoth

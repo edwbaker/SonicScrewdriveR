@@ -33,7 +33,7 @@ windowing <- function(
   complete.windows=TRUE,
   cluster=NULL,
   ...){
-  if (typeof(wave) == "character" && .isTWavName(wave)) {
+  if (typeof(wave) == "character" && .isTriggeredRecording(wave)) {
     # An AudioMoth triggered recording holds neither the length nor the timing
     # of the recording it stands for, so the file on disk cannot be used to
     # schedule the windows: it would give the length with the periods that did
@@ -42,10 +42,10 @@ windowing <- function(
     # would also expand the whole recording again for every window, so it is
     # expanded once here instead.
     #
-    # The naming convention is only a convention, and an ordinary recording can
-    # meet it, so a file that is not a triggered recording keeps the filename
-    # it had and is windowed as any other file is. Reading it here instead
-    # would hand a WaveMC to a branch that takes only a Wave.
+    # A recording whose comment records a trigger can still be one this package
+    # cannot expand, a multichannel one for instance, and that keeps the
+    # filename it had and is windowed as any other file is. Reading it here
+    # instead would hand a WaveMC to a branch that takes only a Wave.
     expanded <- tryCatch(audiomothExpand(wave), unsupportedWav=function(cond) NULL)
     if (!is.null(expanded)) {
       wave <- expanded
