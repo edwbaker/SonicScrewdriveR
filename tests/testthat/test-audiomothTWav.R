@@ -242,3 +242,131 @@ test_that("readAudio still reads an ordinary file named like a triggered one", {
   tuneR::writeWave(w, f)
   expect_equal(readAudio(f)@left, w@left)
 })
+
+test_that("A wave shorter than one segment is written and read back", {
+  # The whole recording fits in the first segment, which also holds the header,
+  # so there is nothing that could be left out and no encoded block.
+  w <- tuneR::Wave(left=as.integer(rep(c(-5000L, 5000L), 100)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  audiomothCompress(w, f, threshold=1000)
+  expect_equal(file.size(f), 488 + 2 * length(w@left))
+  expect_equal(audiomothExpand(f)@left, w@left)
+})
+
+test_that("A recording cut short is expanded with a warning", {
+  w <- twavFixture()
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1000, segment=1024)
+
+  # Cut the file in half, as a flat battery or a full card would.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  con <- file(f, "wb")
+  writeBin(bytes[seq_len(length(bytes) %/% 2)], con)
+  close(con)
+
+  expect_warning(wave <- audiomothExpand(f), "truncated")
+  expect_s4_class(wave, "Wave")
+  expect_gt(length(wave@left), 0)
+})
+
+test_that("Files that are not mono 16-bit PCM are rejected", {
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  eight <- tuneR::Wave(left=as.integer(rep(100L, 2000)), samp.rate=8000, bit=8)
+  tuneR::writeWave(eight, f)
+  expect_error(audiomothExpand(f), "16-bit")
+})
+
+test_that("A comment too long for the header is truncated with a warning", {
+  w <- twavFixture()
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  expect_warning(
+    audiomothCompress(w, f, threshold=1000, segment=1024,
+                      comment=strrep("a", 400)),
+    "truncated"
+  )
+  # The header is still the length the format gives it, so the file still
+  # expands to the length it was written from.
+  expect_equal(length(audiomothExpand(f)@left), length(w@left))
+  # The comment was cut to fit, so the header is the length the format gives
+  # it and the audio still starts at byte 489.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  expect_equal(.wavFormat(bytes)$dataStart, 489)
+})
+
+test_that("A wave with nothing in it is rejected", {
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  empty <- tuneR::Wave(left=integer(0), samp.rate=8000, bit=16)
+  expect_error(audiomothCompress(empty, f, threshold=1), "no samples")
+})
+
+test_that("An encoded block cannot describe an impossible period", {
+  expect_error(.audiomothEncodedBlock(0), "between 1")
+  expect_error(.audiomothEncodedBlock(2^32), "between 1")
+})
+
+test_that("A file that is not a wave file is reported", {
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  con <- file(f, "wb")
+  writeBin(charToRaw(strrep("not a wave file ", 40)), con)
+  close(con)
+  expect_error(audiomothExpand(f), "RIFF")
+
+  con <- file(f, "wb")
+  writeBin(c(charToRaw("RIFF"), .uintToRaw(100, 4L), charToRaw("JUNK"), raw(100)), con)
+  close(con)
+  expect_error(audiomothExpand(f), "WAVE")
+
+  con <- file(f, "wb")
+  writeBin(charToRaw("RIFF"), con)
+  close(con)
+  expect_error(audiomothExpand(f), "too short")
+})
+
+test_that("A wave file that is not PCM is rejected", {
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  # IEEE float, which is format 3 rather than 1.
+  header <- c(
+    charToRaw("RIFF"), .uintToRaw(36 + 400, 4L), charToRaw("WAVE"),
+    charToRaw("fmt "), .uintToRaw(16L, 4L),
+    .uintToRaw(3L, 2L), .uintToRaw(1L, 2L),
+    .uintToRaw(8000L, 4L), .uintToRaw(32000L, 4L),
+    .uintToRaw(4L, 2L), .uintToRaw(16L, 2L),
+    charToRaw("data"), .uintToRaw(400L, 4L)
+  )
+  con <- file(f, "wb")
+  writeBin(c(header, raw(400)), con)
+  close(con)
+
+  expect_error(audiomothExpand(f), "PCM")
+})
+
+test_that("A wave file with no audio in it is reported", {
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  # A header with a format chunk but no data chunk at all.
+  header <- c(
+    charToRaw("RIFF"), .uintToRaw(28 + 512, 4L), charToRaw("WAVE"),
+    charToRaw("fmt "), .uintToRaw(16L, 4L),
+    .uintToRaw(1L, 2L), .uintToRaw(1L, 2L),
+    .uintToRaw(8000L, 4L), .uintToRaw(16000L, 4L),
+    .uintToRaw(2L, 2L), .uintToRaw(16L, 2L)
+  )
+  con <- file(f, "wb")
+  writeBin(c(header, charToRaw("LIST"), .uintToRaw(512L, 4L), raw(512)), con)
+  close(con)
+
+  expect_error(audiomothExpand(f), "DATA chunk")
+})

@@ -227,3 +227,103 @@ test_that("Metadata prints", {
   expect_output(print(guanoCreate(Make="X")), "GUANO|Version", fixed=TRUE)
   expect_output(print(guanoParse("")), "no GUANO metadata")
 })
+
+test_that("A timestamp away from UTC is written with its offset", {
+  stamp <- as.POSIXct("2020-11-03 11:24:30", tz="Europe/Paris")
+  g <- guanoCreate(Timestamp=stamp)
+  written <- as.character(g)
+
+  expect_match(written, "Timestamp:2020-11-03T11:24:30+01:00", fixed=TRUE)
+  # And it reads back as the same moment.
+  expect_equal(as.numeric(guanoParse(written)[["Timestamp"]]), as.numeric(stamp))
+})
+
+test_that("Metadata subsets as metadata and formats as its text", {
+  g <- guanoCreate(Make="X", Model="Y", Samplerate=8000)
+
+  part <- g[1:2]
+  expect_s3_class(part, "guano")
+  expect_identical(names(part), c("GUANO|Version", "Make"))
+
+  expect_identical(format(g), as.character(g))
+})
+
+test_that("A field given twice is read as the last of them", {
+  expect_warning(
+    g <- guanoParse("GUANO|Version:1.0\nMake:First\nMake:Second"),
+    "more than once"
+  )
+  expect_identical(g[["Make"]], "Second")
+  expect_length(g, 2)
+})
+
+test_that("A line with an empty key is skipped", {
+  g <- guanoParse("GUANO|Version:1.0\n:orphaned\nMake:X")
+  expect_identical(names(g), c("GUANO|Version", "Make"))
+})
+
+test_that("Metadata reads from raw bytes, and passes through unchanged", {
+  f <- system.file("extdata/AUDIOMOTH_GUANO.WAV", package="sonicscrewdriver")
+  bytes <- readBin(f, "raw", n=file.size(f))
+
+  fromRaw <- guano(bytes)
+  expect_identical(unclass(fromRaw), unclass(guano(f)))
+  # Given metadata, guano() hands it straight back.
+  expect_identical(guano(fromRaw), fromRaw)
+})
+
+test_that("Anything that is not a wave file carries no metadata", {
+  expect_length(guano(charToRaw("not a wave file at all, by any measure")), 0)
+})
+
+test_that("An empty block of text is metadata with nothing in it", {
+  g <- guanoParse("")
+  expect_length(g, 0)
+  # Writing it still produces the version field the specification requires.
+  expect_identical(as.character(g), "GUANO|Version:1.0")
+})
+
+test_that("Metadata is replaced in place when another chunk follows it", {
+  w <- tuneR::Wave(left=as.integer(stats::rnorm(1000, sd=1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  # Put metadata in, then a chunk after it, so that replacing the metadata has
+  # to carry what follows across rather than simply truncating the file.
+  guanoWrite(guanoCreate(Make="First", Note="a longer note than the next one"), f)
+  bytes <- readBin(f, "raw", n=file.size(f))
+  trailing <- c(charToRaw("junk"), .uintToRaw(8, 4L), charToRaw("12345678"))
+  con <- file(f, "wb")
+  writeBin(c(bytes, trailing), con)
+  close(con)
+  # The RIFF size has to count the chunk just added.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
+  con <- file(f, "wb")
+  writeBin(bytes, con)
+  close(con)
+
+  guanoWrite(guanoCreate(Make="Second"), f)
+
+  expect_identical(guano(f)[["Make"]], "Second")
+  ids <- vapply(.wavChunks(readBin(f, "raw", n=file.size(f)))$chunks,
+                function(c) c$id, character(1))
+  expect_equal(sum(ids == "guan"), 1)
+  expect_true("junk" %in% ids)
+  expect_equal(tuneR::readWave(f)@left, w@left)
+})
+
+test_that("Writing metadata to a file that is not there is reported", {
+  expect_error(guanoWrite(guanoCreate(Make="X"), tempfile()), "does not exist")
+})
+
+test_that("A name used twice cannot be written", {
+  g <- guanoCreate(Make="X")
+  names(g) <- c("Make", "Make")
+  expect_error(as.character(g), "more than once")
+
+  g <- guanoCreate(Make="X")
+  names(g)[2] <- "Bad\nName"
+  expect_error(as.character(g), "newline")
+})
