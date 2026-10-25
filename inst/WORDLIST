@@ -19,6 +19,7 @@ Gryllotalpa
 HHMM
 HHMMSS
 IUPAC
+Inf
 MoleFracCO
 OAD
 Oecanthus
@@ -79,6 +80,7 @@ corWaveMC
 corenv
 cramer
 csv
+cutw
 dBA
 datetimes
 dayPhase

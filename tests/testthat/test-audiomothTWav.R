@@ -538,3 +538,28 @@ test_that("Windowing a triggered recording to its end stops at the last sample",
   # The last window runs past the end of the recording and stops at it.
   expect_equal(sum(lengths), 49908)
 })
+
+test_that("A triggered recording reads from a start point with no end", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+
+  # readAudio()'s `to` defaults to Inf, which seewave::cutw() will not take as
+  # an end point, so a triggered recording has to be cut through the same
+  # helper as every other format rather than be given Inf.
+  wave <- readAudio(f, from=1)
+  expect_equal(length(wave@left), 41908)
+  expect_false(any(is.na(wave@left)))
+
+  expect_equal(length(readAudio(f, from=1, to=2)@left), 8000)
+  expect_equal(length(readAudio(f, from=0, to=10)@left), 49908)
+})
+
+test_that("Metadata is carried onto a section of a triggered recording", {
+  w <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1, guano=guanoCreate(Make="Open Acoustic Devices"))
+
+  expect_identical(guano(readAudio(f))[["Make"]], "Open Acoustic Devices")
+  expect_identical(guano(readAudio(f, from=1, to=2))[["Make"]], "Open Acoustic Devices")
+  expect_identical(guano(readAudio(f, from=1, to=100, units="samples"))[["Make"]], "Open Acoustic Devices")
+})
