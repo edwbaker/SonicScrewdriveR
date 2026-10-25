@@ -48,14 +48,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     wave <- tryCatch({
       wave <- readMP3(file)
       if (units=="samples") {
-        return(cutws(wave, fromS, to))
+        return(cutws(wave, fromS, min(to, length(wave))))
       }
       if (from==0 && to==Inf) {
         return(wave)
       }
-      from <- convert2seconds(from, input=units)
-      to <- convert2seconds(to, input=units)
-      return(cutw(wave,from=from, to=to, output="Wave"))
+      return(.cutSeconds(wave, from, to, units))
     },
     error=function(cond){
     })
@@ -103,22 +101,65 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     }
 
     if (units == "samples") {
-      return(cutws(wave,from=fromS, to=to))
+      return(cutws(wave,from=fromS, to=min(to, length(wave))))
     } else {
       if (from==0 & to == Inf) {
         return(wave)
       }
-      if (channels == 1) {
-        return(cutw(wave, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave"))
-      }
-      if (channels == 2) {
-        left <- cutw(wave, channel=1, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave")
-        right <- cutw(wave, channel=2, from=convert2seconds(from, units), to=convert2seconds(to, units), output="Wave")
-        return(stereo(left, right))
-      }
+      return(.cutSeconds(wave, from, to, units))
     }
   }
   stop("File could not be processed")
+}
+
+#' Cut a wave for readAudio(), in time units
+#'
+#' Shared by the MP3 and av paths of readAudio() so that both cut at the same
+#' point and both keep every channel. `seewave::cutw()` returns one channel per
+#' call, so a stereo wave is cut a channel at a time and recombined, which a
+#' single call would silently reduce to mono.
+#'
+#' @param wave The Wave object to cut.
+#' @param from Start point as given to readAudio().
+#' @param to End point as given to readAudio().
+#' @param units The units `from` and `to` are given in.
+#' @return A Wave object holding the section asked for, with as many channels as
+#'   it was given.
+#' @keywords internal
+#' @noRd
+.cutSeconds <- function(wave, from, to, units) {
+  from <- convert2seconds(from, input=units)
+  to <- .cutEnd(to, units, wave)
+  if (wave@stereo) {
+    left <- cutw(wave, channel=1, from=from, to=to, output="Wave")
+    right <- cutw(wave, channel=2, from=from, to=to, output="Wave")
+    return(stereo(left, right))
+  }
+  return(cutw(wave, from=from, to=to, output="Wave"))
+}
+
+#' End point of a cut, in seconds, within the audio in hand
+#'
+#' readAudio()'s `to` defaults to Inf, and `seewave::cutw()` rejects an end
+#' point past the end of the recording, so reading from a non-zero start with no
+#' end has to be cut to the end of the wave rather than at the Inf it was given.
+#' An end point beyond the recording is treated the same way, giving the audio
+#' that is there instead of an error.
+#'
+#' @param to End point as given to readAudio().
+#' @param units The units `to` is given in.
+#' @param wave The Wave object being cut.
+#' @return The end point in seconds, no later than the end of the wave.
+#' @keywords internal
+#' @noRd
+.cutEnd <- function(to, units, wave) {
+  end <- length(wave) / wave@samp.rate
+  #is.infinite() alone would also take -Inf, which convert2seconds() rejects as
+  #a negative time and which must keep being rejected.
+  if (is.infinite(to) && to > 0) {
+    return(end)
+  }
+  return(min(convert2seconds(to, units), end))
 }
 
 .bitdepth <- function(v) {
