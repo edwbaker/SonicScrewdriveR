@@ -591,12 +591,14 @@ guanoWrite <- function(x, file, output=NULL) {
     as.numeric(length(head)) + length(chunk) + length(tail) - 8, 4L
   )
 
-  con <- file(output, "wb")
-  on.exit(close(con))
-  writeBin(head, con)
-  writeBin(chunk, con)
-  if (length(tail) > 0L) {
-    writeBin(tail, con)
-  }
-  return(invisible(output))
+  # Written beside the recording and put in its place once whole, so that a
+  # write which fails part way through cannot lose a recording that was only
+  # having one field of its metadata changed.
+  return(.writeAtomically(output, function(con) {
+    writeBin(head, con)
+    writeBin(chunk, con)
+    if (length(tail) > 0L) {
+      writeBin(tail, con)
+    }
+  }))
 }

@@ -403,3 +403,32 @@
   fits <- cumsum(nchar(characters, type="bytes")) <= bytes
   return(paste0(characters[fits], collapse=""))
 }
+
+#' Write a file without destroying what is already there
+#'
+#' Opening a file to write empties it, so a write that fails part way through
+#' leaves nothing of what was there before. That matters most where a file is
+#' written over itself: putting one field of metadata into a recording should
+#' not be able to lose the recording.
+#'
+#' The bytes go to a file beside the one being written, which takes its place
+#' only once it is whole. The two are in the same directory so that they are on
+#' the same volume, where taking its place is a rename rather than a copy.
+#'
+#' @param path Where the file is to end up
+#' @param write A function given a connection to write to
+#' @return The path (invisibly)
+#' @keywords internal
+#' @noRd
+.writeAtomically <- function(path, write) {
+  part <- tempfile(tmpdir=dirname(path), fileext=".part")
+  on.exit(unlink(part), add=TRUE)
+
+  con <- file(part, "wb")
+  tryCatch(write(con), finally=close(con))
+
+  if (!file.rename(part, path)) {
+    stop("Could not put the written file in place of: ", path)
+  }
+  return(invisible(path))
+}

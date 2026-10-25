@@ -285,10 +285,7 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
     # written over itself, which copying cannot do.
     bytes <- .audiomothRepair(c(blocks, tail), info, 0)
     if (!is.null(output)) {
-      out <- file(output, "wb")
-      on.exit(close(out))
-      writeBin(bytes, out)
-      return(invisible(output))
+      return(.writeAtomically(output, function(out) writeBin(bytes, out)))
     }
     return(.audiomothWave(bytes, info, 0))
   }
@@ -332,17 +329,16 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   if (!is.null(output)) {
     # Streaming the expansion keeps a recording that expands to more than memory
     # can hold out of memory.
-    out <- file(output, "wb")
-    on.exit(close(out))
-    for (step in seq_along(plan$source)) {
-      switch(
-        plan$source[step],
-        blocks = writeBin(blocks[plan$from[step]:plan$to[step]], out),
-        tail = writeBin(tail, out),
-        blank = .writeZeros(out, plan$size[step])
-      )
-    }
-    return(invisible(output))
+    return(.writeAtomically(output, function(out) {
+      for (step in seq_along(plan$source)) {
+        switch(
+          plan$source[step],
+          blocks = writeBin(blocks[plan$from[step]:plan$to[step]], out),
+          tail = writeBin(tail, out),
+          blank = .writeZeros(out, plan$size[step])
+        )
+      }
+    }))
   }
 
   if (outSize > .Machine$integer.max) {
@@ -656,14 +652,13 @@ audiomothCompress <- function(
     dataSize, wave@samp.rate, comment, artist, length(metadata)
   )
 
-  con <- file(file, "wb")
-  on.exit(close(con))
-  writeBin(header, con)
-  for (part in parts) {
-    writeBin(part, con)
-  }
-  if (length(metadata) > 0L) {
-    writeBin(metadata, con)
-  }
-  return(invisible(file))
+  return(.writeAtomically(file, function(con) {
+    writeBin(header, con)
+    for (part in parts) {
+      writeBin(part, con)
+    }
+    if (length(metadata) > 0L) {
+      writeBin(metadata, con)
+    }
+  }))
 }

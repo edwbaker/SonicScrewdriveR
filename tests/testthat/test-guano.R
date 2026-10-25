@@ -603,3 +603,21 @@ test_that("A position is a latitude and a longitude, or it is text", {
   g <- suppressWarnings(guanoParse("GUANO|Version:1.0\nLoc Position:51.5 -0.1 99"))
   expect_true(grepl("Loc Position:51.5 -0.1 99", as.character(g), fixed=TRUE))
 })
+
+test_that("A write that fails part way leaves the recording as it was", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 20000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+  guanoWrite(guanoCreate(Make="X"), f)
+  size <- file.size(f)
+
+  # Opening a file to write empties it, so putting one field of metadata into
+  # a recording could otherwise lose the recording.
+  invisible(interrupted(guanoWrite(guanoCreate(Make="Y"), f)))
+
+  expect_equal(file.size(f), size)
+  expect_equal(length(tuneR::readWave(f)@left), 20000)
+  expect_identical(guano(f)[["Make"]], "X")
+  expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
+})

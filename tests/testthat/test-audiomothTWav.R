@@ -982,3 +982,22 @@ test_that("The comment is found behind another list", {
   tuneR::writeWave(w, ordinary)
   expect_false(.isTriggeredRecording(ordinary))
 })
+
+test_that("A write that fails part way leaves the recording as it was", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 20000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1000, segment=1024)
+  size <- file.size(f)
+
+  invisible(interrupted(
+    audiomothCompress(w, f, threshold=1, segment=1024, overwrite=TRUE)
+  ))
+  expect_equal(file.size(f), size)
+
+  # Expanding a recording over itself is the same hazard.
+  invisible(interrupted(audiomothExpand(f, output=f, overwrite=TRUE)))
+  expect_equal(file.size(f), size)
+  expect_equal(length(audiomothExpand(f)@left), 20000)
+  expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
+})
