@@ -55,16 +55,23 @@
   }
   # R does not accept the colon that ISO 8601 puts in a numeric UTC offset.
   text <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", value)
-  formats <- c(
-    "%Y-%m-%dT%H:%M:%OS%z",
-    "%Y-%m-%dT%H:%M:%OSZ",
-    "%Y-%m-%dT%H:%M:%OS",
-    "%Y-%m-%d"
+  # Every form is read in UTC, including those that name no zone: reading those
+  # in the zone of the machine would make the moment a recording was made, and
+  # what is written back, depend on where the file was opened, and shift it at
+  # a daylight saving change. The form a value was written in is kept, so that
+  # one naming no zone is not given one it never had.
+  forms <- list(
+    list(format="%Y-%m-%dT%H:%M:%OS%z", zone="utc"),
+    list(format="%Y-%m-%dT%H:%M:%OSZ", zone="utc"),
+    list(format="%Y-%m-%dT%H:%M:%OS", zone="local"),
+    list(format="%Y-%m-%d", zone="date")
   )
-  for (format in formats) {
-    tz <- if (grepl("Z$|%z", format)) "UTC" else ""
-    parsed <- as.POSIXct(text, format=format, tz=tz)
+  for (form in forms) {
+    parsed <- as.POSIXct(text, format=form$format, tz="UTC")
     if (!is.na(parsed)) {
+      if (form$zone != "utc") {
+        attr(parsed, "guanoZone") <- form$zone
+      }
       return(parsed)
     }
   }
@@ -95,11 +102,24 @@
   }
   fraction <- if (micro == 0) "" else sub("0+$", "", sprintf(".%06d", micro))
 
+  # A POSIXlt carries its zone as three strings, the zone and the names of its
+  # standard and summer time, so only the first of them names the zone and
+  # using the vector whole would raise an error rather than compare.
   tz <- attr(x, "tzone")
-  utc <- !is.null(tz) && tz %in% c("UTC", "GMT")
-  at <- .POSIXct(whole, tz=if (is.null(tz)) "" else tz)
+  tz <- if (length(tz) == 0L) "" else tz[1]
+  at <- .POSIXct(whole, tz=tz)
 
-  if (utc) {
+  # A value read from a field that named no zone is written back as it was
+  # read, rather than given the zone of the machine it was read on.
+  zone <- attr(x, "guanoZone")
+  if (identical(zone, "date")) {
+    return(format(at, "%Y-%m-%d", tz="UTC"))
+  }
+  if (identical(zone, "local")) {
+    return(paste0(format(at, "%Y-%m-%dT%H:%M:%S", tz="UTC"), fraction))
+  }
+
+  if (tz %in% c("UTC", "GMT")) {
     return(paste0(format(at, "%Y-%m-%dT%H:%M:%S", tz="UTC"), fraction, "Z"))
   }
   offset <- sub("([+-][0-9]{2})([0-9]{2})", "\\1:\\2", format(at, "%z"))
@@ -448,6 +468,19 @@ guanoWrite <- function(x, file, output=NULL) {
   info <- .wavChunks(bytes)
   existing <- .wavFindChunk(info$chunks, "guan")
   chunk <- .guanoChunk(x)
+
+  # A recording cut short declares more audio than it holds. Metadata written
+  # after it would fall inside the audio the file claims to have, where no
+  # reader, this one included, would find it. The size is corrected to the
+  # audio that is actually there, which is the only size that was ever true.
+  data <- .wavFindChunk(info$chunks, "data")
+  if (!is.null(data) && isTRUE(data$truncated)) {
+    warning(
+      "DATA chunk runs past the end of the file, which may be truncated. ",
+      "Its size has been corrected to the audio the file holds."
+    )
+    bytes[(data$start - 4L):(data$start - 1L)] <- .uintToRaw(data$size, 4L)
+  }
 
   if (is.null(existing)) {
     head <- bytes

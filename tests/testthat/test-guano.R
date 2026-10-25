@@ -378,3 +378,65 @@ test_that("Numbers are written with a dot whatever the session uses", {
   expect_identical(back[["Length"]], 12.5)
   expect_equal(back[["Loc Position"]], c(51.496401, -0.122456))
 })
+
+test_that("A timestamp given as a POSIXlt is written rather than raising", {
+  # A POSIXlt carries its zone as three strings, the zone and the names of its
+  # standard and summer time, which cannot be compared as one value.
+  local <- as.POSIXlt(as.POSIXct("2020-07-03 11:24:30", tz="Europe/Paris"))
+  expect_length(attr(local, "tzone"), 3)
+
+  g <- guanoCreate(Timestamp=local)
+  expect_match(as.character(g), "Timestamp:2020-07-03T11:24:30+02:00", fixed=TRUE)
+  expect_output(print(g), "Timestamp", fixed=TRUE)
+})
+
+test_that("A timestamp naming no zone is not given one", {
+  stamp <- function(value) {
+    text <- as.character(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))
+    sub(".*Timestamp:", "", strsplit(text, "\n")[[1]][2])
+  }
+  # A field that named no zone must come back as it went in, whatever zone the
+  # machine reading it is in.
+  expect_identical(stamp("2020-11-03T11:24:30"), "2020-11-03T11:24:30")
+  expect_identical(stamp("2020-11-03"), "2020-11-03")
+  expect_identical(stamp("2020-11-03T11:24:30.1002"), "2020-11-03T11:24:30.1002")
+
+  # One that did name a zone still does.
+  expect_identical(stamp("2020-11-03T11:24:30Z"), "2020-11-03T11:24:30Z")
+})
+
+test_that("A timestamp naming no zone does not depend on the machine", {
+  original <- Sys.getenv("TZ", unset=NA)
+  on.exit(if (is.na(original)) Sys.unsetenv("TZ") else Sys.setenv(TZ=original))
+
+  read <- function(zone) {
+    Sys.setenv(TZ=zone)
+    guanoParse("GUANO|Version:1.0\nTimestamp:2020-11-03T11:24:30")[["Timestamp"]]
+  }
+  expect_equal(as.numeric(read("UTC")), as.numeric(read("Australia/Sydney")))
+  expect_equal(as.numeric(read("UTC")), as.numeric(read("America/Los_Angeles")))
+})
+
+test_that("Metadata written to a recording cut short can be read back", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  # Cut the audio short without correcting the size the file declares, as a
+  # flat battery or a full card would.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  con <- file(f, "wb")
+  writeBin(bytes[seq_len(length(bytes) - 1744)], con)
+  close(con)
+
+  expect_warning(guanoWrite(guanoCreate(Make="X"), f), "truncated")
+
+  # Without the declared size being corrected the metadata would sit inside
+  # the audio the file claims to hold, where nothing would find it.
+  expect_identical(guano(f)[["Make"]], "X")
+  info <- .wavChunks(readBin(f, "raw", n=file.size(f)))
+  expect_false(is.null(.wavFindChunk(info$chunks, "guan")))
+  expect_equal(info$riffSize + 8, file.size(f))
+  expect_gt(length(tuneR::readWave(f)@left), 0)
+})
