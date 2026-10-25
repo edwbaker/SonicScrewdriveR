@@ -235,22 +235,20 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
     # The header reaches past the last whole 512-byte block, so no block after
     # it could be an encoded block and there is nothing to expand. A recording
     # of a few samples is the usual way to arrive here.
+    #
+    # The sizes are still put right, as they are for a recording that is
+    # expanded: a short recording can have been cut short as well, and writing
+    # it out with the sizes it came with would leave the file saying it holds
+    # more than it does. Writing rather than copying also means the file can be
+    # written over itself, which copying cannot do.
+    bytes <- .audiomothRepair(c(blocks, tail), info, 0)
     if (!is.null(output)) {
-      # Asked to write over the file it was given, there is nothing to do:
-      # the file already holds what expanding it would produce. Copying it
-      # onto itself would fail, which a longer recording expanded in place
-      # does not.
-      same <- normalizePath(output, winslash="/", mustWork=FALSE) ==
-        normalizePath(file, winslash="/", mustWork=FALSE)
-      # file.copy() reports a failure, such as a directory that is not there,
-      # by returning FALSE, so saying nothing here would hand back the path of
-      # a file that was never written.
-      if (!same && !file.copy(file, output, overwrite=TRUE)) {
-        stop("Could not write the output file: ", output)
-      }
+      out <- file(output, "wb")
+      on.exit(close(out))
+      writeBin(bytes, out)
       return(invisible(output))
     }
-    return(.audiomothWave(c(blocks, tail), info, 0))
+    return(.audiomothWave(bytes, info, 0))
   }
 
   dim(blocks) <- c(.AM_BLOCK_SIZE, nBlocks)
@@ -274,19 +272,17 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   # written, not the ones the file declares: a recording cut short can declare
   # a RIFF size far larger than anything it holds, and refusing it on that
   # would turn away a recording that expands perfectly well.
-  if (outSize - 8 >= 2^32 || info$dataSize + expanded >= 2^32) {
+  # Nothing was left out of a recording that holds no encoded block, so it is
+  # written back as it is, and a file already on disk is not refused for a size
+  # it already has. Only a recording that grows has to be described anew.
+  if (expanded > 0 && (outSize - 8 >= 2^32 || info$dataSize + expanded >= 2^32)) {
     stop(
       "The expanded recording would be ", round(outSize / 2^30, 1),
       "GB, which is more than a WAV file can describe."
     )
   }
 
-  # The chunk sizes still describe the unexpanded file. The RIFF size covers
-  # every chunk, so it is taken from the length of the file written, which is
-  # also right where the recording was cut short and the size it declared was
-  # never true. The data size counts only the audio, so the bytes gained are
-  # added to it rather than measured back from the end of the file, which keeps
-  # any chunk written after the audio, such as GUANO, correct.
+  # The chunk sizes still describe the unexpanded file.
   blocks[5:8] <- .uintToRaw(outSize - 8, 4L)
   blocks[(info$dataStart - 4L):(info$dataStart - 1L)] <-
     .uintToRaw(info$dataSize + expanded, 4L)
@@ -328,6 +324,28 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   }
 
   return(.audiomothWave(bytes, info, expanded))
+}
+
+#' Put the sizes of a wave file right after it has been expanded
+#'
+#' The RIFF size covers every chunk, so it is taken from the length of the file
+#' in hand, which is also right where the recording was cut short and the size
+#' it declared was never true. The data size counts only the audio, so the
+#' bytes gained are added to the size the data chunk actually has, which keeps
+#' any chunk written after the audio, such as GUANO, correct.
+#'
+#' @param bytes A raw vector holding a whole WAV file
+#' @param info Chunk positions from .wavFormat(), describing the file before it
+#'   was expanded
+#' @param expanded The number of bytes the expansion added
+#' @return The bytes, with the sizes in the header put right
+#' @keywords internal
+#' @noRd
+.audiomothRepair <- function(bytes, info, expanded) {
+  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
+  bytes[(info$dataStart - 4L):(info$dataStart - 1L)] <-
+    .uintToRaw(info$dataSize + expanded, 4L)
+  return(bytes)
 }
 
 #' Build a Wave from the bytes of an expanded recording

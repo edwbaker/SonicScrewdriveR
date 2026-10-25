@@ -570,12 +570,45 @@ test_that("A file that could not be written is reported rather than returned", {
   on.exit(unlink(f))
   audiomothCompress(w, f, threshold=1)
 
-  # Short enough to be copied rather than expanded, which is the path that
-  # could hand back the name of a file it never wrote.
+  # Short enough to need no expansion, which is the path that could hand back
+  # the name of a file it never wrote. It fails as the expanding path does,
+  # when the file cannot be opened to write.
   expect_lt(file.size(f), 512)
   missing <- file.path(tempfile(), "not", "there.WAV")
-  expect_error(suppressWarnings(audiomothExpand(f, missing)), "Could not write")
+  expect_error(suppressWarnings(audiomothExpand(f, missing)))
   expect_false(file.exists(missing))
+
+  # And a recording long enough to be expanded fails in the same way.
+  long <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
+  g <- tempfile(fileext="T.WAV")
+  on.exit(unlink(g), add=TRUE)
+  audiomothCompress(long, g, threshold=1)
+  expect_error(suppressWarnings(audiomothExpand(g, missing)))
+  expect_false(file.exists(missing))
+})
+
+test_that("A recording cut short keeps no size it never had, however short", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  out <- tempfile(fileext=".WAV")
+  on.exit(unlink(c(f, out)))
+  audiomothCompress(w, f, threshold=1)
+
+  # Cut it to the header plus ten samples, leaving a file that declares far
+  # more audio than it holds and is too short to hold a whole block of it.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  con <- file(f, "wb")
+  writeBin(bytes[1:508], con)
+  close(con)
+
+  suppressWarnings(audiomothExpand(f, out))
+  written <- readBin(out, "raw", n=file.size(out))
+  info <- .wavChunks(written)
+  data <- .wavFindChunk(info$chunks, "data")
+
+  expect_equal(info$riffSize + 8, length(written))
+  expect_equal(data$size, 20)
+  expect_equal(data$start + data$size - 1, length(written))
 })
 
 test_that("A recording cut short is not refused for the size it claims", {

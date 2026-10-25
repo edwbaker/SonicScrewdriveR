@@ -386,7 +386,10 @@ print.guano <- function(x, ...) {
 #' Read the GUANO metadata of a WAV file held as raw bytes
 #' @noRd
 .guanoFromBytes <- function(bytes) {
-  info <- tryCatch(.wavChunks(bytes), error=function(e) NULL)
+  # Only a file this package cannot make sense of as a wave file holds no
+  # metadata as far as this is concerned. Anything else is raised, as it is
+  # when the metadata is read from a file rather than from bytes in hand.
+  info <- tryCatch(.wavChunks(bytes), unsupportedWav=function(cond) NULL)
   if (is.null(info)) {
     return(.guanoObject(list()))
   }
@@ -568,7 +571,11 @@ guanoWrite <- function(x, file, output=NULL) {
     head <- c(head, raw(1))
   }
 
-  head[5:8] <- .uintToRaw(length(head) + length(chunk) + length(tail) - 8, 4L)
+  # length() gives a whole number, and a recording of 2GB or more is longer
+  # than their sum can be counted in, so the size is added up in doubles.
+  head[5:8] <- .uintToRaw(
+    as.numeric(length(head)) + length(chunk) + length(tail) - 8, 4L
+  )
 
   con <- file(output, "wb")
   on.exit(close(con))
