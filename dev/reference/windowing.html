@@ -118,7 +118,7 @@ processed unless it has a length equal to window.length.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="fu">windowing</span><span class="op">(</span><span class="va">wave</span>, window.length<span class="op">=</span><span class="fl">1000</span>, FUN<span class="op">=</span><span class="va">duration</span>, window.overlap<span class="op">=</span><span class="fl">0</span>, bind.wave<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">windowing</span><span class="op">(</span><span class="va">wave</span>, window.length<span class="op">=</span><span class="fl">1000</span>, FUN<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">w</span>, <span class="va">...</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span>, window.overlap<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

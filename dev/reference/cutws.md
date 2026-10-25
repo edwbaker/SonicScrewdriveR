@@ -22,7 +22,8 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 
 - to:
 
-  Last sample to return
+  Last sample to return. A value beyond the end of the wave is cut to
+  the final sample.
 
 - plot:
 
