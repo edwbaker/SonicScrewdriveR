@@ -20,6 +20,94 @@
   return(invisible(NULL))
 }
 
+#' Replace a forwarded dots argument with the values it stands for
+#'
+#' A wrapper that forwards its own arguments, as `f(...)` or as `lapply(x, f,
+#' unit="cm")` does, leaves the dots unexpanded in the call, so a former name
+#' passed that way cannot be seen in the call itself. The dots are forced in the
+#' frame that holds them, where their promises belong, and spliced in as values.
+#' Forcing them there rather than substituting their expressions matters: an
+#' expression written in the caller of the wrapper means nothing in the frame the
+#' wrapper calls from.
+#'
+#' @param call The call to rewrite.
+#' @param env The frame the call was made from, which holds the dots.
+#' @return The call with any dots replaced by the values they carry.
+#' @keywords internal
+#' @noRd
+.spliceDots <- function(call, env) {
+  dots <- tryCatch(eval(quote(list(...)), env), error=function(cond) NULL)
+  if (is.null(dots)) {
+    return(call)
+  }
+  parts <- as.list(call)
+  out <- list()
+  for (i in seq_along(parts)) {
+    if (identical(parts[[i]], quote(...))) {
+      out <- c(out, dots)
+    } else {
+      out <- c(out, parts[i])
+    }
+  }
+  return(as.call(out))
+}
+
+#' Which formals a call supplies by name
+#'
+#' `match.call()` names every argument, including the ones given positionally,
+#' so it cannot say which were named. That distinction is needed: a former name
+#' and the argument that replaced it are only in conflict when both were asked
+#' for by name, whereas the replacement being filled by a positional argument is
+#' the ordinary case the rewriting exists to correct.
+#'
+#' @param call The call, with any dots already spliced in.
+#' @param target The function being called.
+#' @return The names of the formals the call supplies by name, abbreviated names
+#'   resolved to the formal they match.
+#' @keywords internal
+#' @noRd
+.namedSupplies <- function(call, target) {
+  nms <- names(call)
+  if (is.null(nms)) {
+    return(character(0))
+  }
+  given <- nms[nzchar(nms)]
+  if (length(given) == 0) {
+    return(character(0))
+  }
+  fmls <- names(formals(target))
+  #pmatch() takes an exact match before a partial one, as argument matching does.
+  resolved <- fmls[pmatch(given, fmls)]
+  return(resolved[!is.na(resolved)])
+}
+
+#' The signature a function had before its unit arguments were renamed
+#'
+#' Every new argument took the position of the one it replaced, and the former
+#' names were kept as formals at the end of the list, so dropping those and
+#' putting the former names back gives the signature as it was.
+#'
+#' @param target The function as it is now.
+#' @param renamed A named character vector mapping each former argument name to
+#'   the argument that replaced it.
+#' @return A function with the former signature and an empty body, for
+#'   `match.call()` to match against.
+#' @keywords internal
+#' @noRd
+.signatureBefore <- function(target, renamed) {
+  fmls <- formals(target)
+  fmls <- fmls[!names(fmls) %in% names(renamed)]
+  back <- names(renamed)
+  names(back) <- unname(renamed)
+  nms <- names(fmls)
+  hit <- nms %in% names(back)
+  nms[hit] <- back[nms[hit]]
+  names(fmls) <- nms
+  before <- function() NULL
+  formals(before) <- fmls
+  return(before)
+}
+
 #' Accept the former name of a renamed argument
 #'
 #' A former name cannot occupy the same position as the argument that replaced
@@ -30,11 +118,19 @@
 #' earlier than it did before the rename, and "hours" arrives as the time rather
 #' than its unit.
 #'
-#' Rewriting the call with the former names replaced by the new ones, and
-#' evaluating that instead, leaves the matching to R. Because each new argument
-#' took the position of the one it replaced, the rewritten call binds exactly as
-#' the original did. The former names are still formals, so a misspelled
-#' argument remains an error rather than being absorbed by a `...`.
+#' Which arguments were supplied is therefore taken from `match.call()` rather
+#' than from the call as written, so that a former name is seen however it
+#' arrives: in full, abbreviated to a name that matches it and nothing else, or
+#' forwarded through another function's dots. The arguments are then matched
+#' against the signature as it was before the rename and the former names
+#' replaced, so that the rewritten call binds exactly as the original did and
+#' the matching is left to R rather than reconstructed.
+#'
+#' The former names remain formals, so a misspelled argument is still an error
+#' rather than being absorbed by a dots argument. The cost is that an
+#' abbreviation that now matches both a former name and the argument that
+#' replaced it, such as inpu for both input and input.unit, is ambiguous and
+#' raises an error where it used to match the former name.
 #'
 #' @param call The call to the function, from `sys.call()`.
 #' @param env The environment to evaluate the rewritten call in, from
@@ -48,19 +144,74 @@
 #' @keywords internal
 #' @noRd
 .withRenamedArgs <- function(call, env, renamed, fn) {
-  given <- names(call)
-  if (is.null(given)) {
-    return(NULL)
+  target <- sys.function(-1)
+  if (any(vapply(as.list(call), identical, logical(1), quote(...)))) {
+    call <- .spliceDots(call, env)
   }
-  #Only an exact name is rewritten. A partial match such as inp= is left for R
-  #to resolve against the formals, which still include the former names.
-  used <- intersect(given, names(renamed))
+
+  #A former name is only ever given by name, and resolving the names the call
+  #gives sees it whichever way it arrives: in full, abbreviated to a name that
+  #matches it and nothing else, or forwarded through another function's dots.
+  named <- .namedSupplies(call, target)
+  used <- intersect(named, names(renamed))
+
+  #A former name filled by a positional argument, which takes more arguments
+  #than the signature had before the rename, was an unused argument then.
+  actual <- match.call(target, call, expand.dots=TRUE, envir=env)
+  stray <- setdiff(intersect(names(actual), names(renamed)), named)
+  if (length(stray) > 0) {
+    stop(
+      "unused argument", if (length(stray) > 1) "s" else "", " in ", fn, "()",
+      call.=FALSE
+    )
+  }
   if (length(used) == 0) {
     return(NULL)
   }
+
+  clash <- intersect(named, unname(renamed[used]))
+  if (length(clash) > 0) {
+    stop(
+      fn, "() was given both ", paste(used, collapse=", "), " and ",
+      paste(clash, collapse=", "), ", which are the same argument. Give only ",
+      paste(unique(unname(renamed[used])), collapse=", "), ".",
+      call.=FALSE
+    )
+  }
+
   for (old in used) {
     .deprecatedArg(old, renamed[[old]], fn)
   }
-  names(call)[match(used, given)] <- renamed[used]
-  return(list(eval(call, env)))
+
+  #The signature as it was knows only the former names, so a call that mixes a
+  #former name with a name that is current, as convert2seconds(T=1,
+  #input.unit="minutes") does, has to have its current names put back first.
+  #Resolving each name to a formal also settles any abbreviation.
+  fmls <- names(formals(target))
+  back <- names(renamed)
+  names(back) <- unname(renamed)
+  nms <- names(call)
+  if (!is.null(nms)) {
+    for (i in seq_along(nms)) {
+      if (!nzchar(nms[i])) {
+        next
+      }
+      at <- pmatch(nms[i], fmls)
+      if (is.na(at)) {
+        next
+      }
+      nms[i] <- if (fmls[at] %in% names(back)) back[[fmls[at]]] else fmls[at]
+    }
+    names(call) <- nms
+  }
+
+  before <- match.call(
+    .signatureBefore(target, renamed), call, expand.dots=TRUE, envir=env
+  )
+  nms <- names(before)
+  hit <- nms %in% names(renamed)
+  nms[hit] <- renamed[nms[hit]]
+  names(before) <- nms
+  before[[1]] <- call[[1]]
+  return(list(eval(before, env)))
 }

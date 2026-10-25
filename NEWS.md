@@ -66,6 +66,13 @@
   convert2seconds() did not list "seconds" or "POSIX"; dielFraction() gave its input
   as POSIX or HHMM, where it accepts every unit convert2seconds() does; and
   yearlyFraction() gave its input as POSIXlt, where it accepts "POSIX" or "day".
+- while a former name and the argument that replaced it are both arguments, an
+  abbreviation of the former name that also abbreviates the new one matches both
+  and raises an error rather than being guessed. This affects the former input
+  only, which is a prefix of input.unit, so `convert2Pascals(1, inp="kPa")` is now
+  an error where it used to be accepted; the name in full, and any abbreviation
+  of the new name, both work. The former unit and units are unaffected, as
+  neither is a prefix of the argument that replaced it.
 
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each

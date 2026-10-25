@@ -236,3 +236,93 @@ test_that("a partially matched argument name still resolves", {
   expect_equal(convert2seconds(1, input.u="hours"), 3600)
   expect_equal(wavelength(1000, speed=343, output.u="cm"), 34.3)
 })
+
+#A former name reaches a function in more ways than being written out in the
+#call: abbreviated to a name that matches it and nothing else, or forwarded
+#through the dots of a wrapper, which is what lapply() does with its extra
+#arguments. Each must be seen, and give what the name in full gives.
+test_that("a former name is seen when abbreviated", {
+  expect_warning(x <- wavelength(1000, speed=343, uni="cm"), "unit argument of wavelength")
+  expect_equal(x, 34.3)
+
+  expect_warning(x <- humanTime(1, uni="hours"), "unit argument of humanTime")
+  expect_equal(x, "1 hour")
+
+  expect_warning(x <- referencePressure(uni="dyne_cm2"), "unit argument of referencePressure")
+  expect_equal(x, 0.0002)
+
+  expect_warning(x <- region(uni="seconds", from=0, to=10), "unit argument of region")
+  expect_equal(c(x@from, x@to), c(0, 10))
+  expect_equal(x@unit, "seconds")
+})
+
+test_that("a former name is seen when forwarded through dots", {
+  through <- function(...) wavelength(1000, speed=343, ...)
+  expect_warning(x <- through(unit="cm"), "unit argument of wavelength")
+  expect_equal(x, 34.3)
+
+  #The value lives in a frame beyond the one the call is made from, so its
+  #promise has to be forced where it belongs rather than re-evaluated.
+  outer <- function() {
+    u <- "cm"
+    through(unit=u)
+  }
+  expect_warning(x <- outer(), "unit argument of wavelength")
+  expect_equal(x, 34.3)
+
+  secs <- function(...) convert2seconds(1, ...)
+  expect_warning(x <- secs(input="hours"), "input argument of convert2seconds")
+  expect_equal(x, 3600)
+
+  #A former name mixed with a positional argument, both arriving through dots.
+  expect_warning(
+    x <- (function(...) convert2seconds(...))(T=1, "hours"),
+    "T argument of convert2seconds"
+  )
+  expect_equal(x, 3600)
+})
+
+test_that("a former name is seen when passed through lapply", {
+  expect_warning(
+    x <- lapply(1000, wavelength, speed=343, unit="cm"),
+    "unit argument of wavelength"
+  )
+  expect_equal(x[[1]], 34.3)
+
+  expect_warning(
+    x <- lapply(1, convert2seconds, input="hours"),
+    "input argument of convert2seconds"
+  )
+  expect_equal(x[[1]], 3600)
+})
+
+test_that("a former name and the argument replacing it cannot both be given", {
+  expect_error(
+    wavelength(1000, 343, output.unit="m", unit="cm"),
+    "same argument"
+  )
+  expect_error(
+    suppressWarnings(dielFraction(6, input.unit="hours", input="minutes")),
+    "same argument"
+  )
+})
+
+test_that("an argument beyond the former signature is still unused", {
+  #convert2Pascals(P, input) took two arguments, so a third was an error.
+  expect_error(convert2Pascals(1, "kPa", "Pa"), "unused argument")
+})
+
+test_that("the new names behave as they did, whichever way they are given", {
+  expect_equal(convert2seconds(1, "hours"), 3600)
+  expect_equal(convert2seconds(1, input.u="hours"), 3600)
+  expect_equal(do.call(convert2seconds, list(1, input.unit="hours")), 3600)
+  expect_equal(convert2seconds(c(1, 2), input.unit="hours"), c(3600, 7200))
+  expect_equal(convert2seconds(2*3, input.unit="hours"), 21600)
+})
+
+test_that("an abbreviation matching both names is ambiguous", {
+  #input is a prefix of input.unit, so while both are formals an abbreviation
+  #of the former name matches two arguments. R reports it rather than guessing.
+  expect_error(convert2seconds(1, inp="hours"), "matches multiple formal arguments")
+  expect_error(convert2Pascals(1, inp="kPa"), "matches multiple formal arguments")
+})
