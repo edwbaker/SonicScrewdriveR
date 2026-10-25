@@ -40,8 +40,6 @@ pw <- pseudoWave("noise", "white")
 
 pw <- pseudoWave("sine", params=list("f0"=440))
 
-\dontrun{
-pw <- pseudoWave("file", "myfile.wav")
-}
+pw <- pseudoWave("file", system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"))
 
 }
