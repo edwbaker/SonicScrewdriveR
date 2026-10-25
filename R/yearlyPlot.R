@@ -82,13 +82,11 @@ yearlyPositions <- function(year=2022, format="months") {
 #' @export
 yearlyFraction <- function(t, year=2022, input.unit="POSIX", output.unit="radians",
                            timezone=NULL, input, unit) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "yearlyFraction")
-    input.unit <- input
-  }
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "output.unit", "yearlyFraction")
-    output.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit", unit="output.unit"), "yearlyFraction"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .validateChoice(input.unit, c("POSIX", "day"), msg=paste("Unknown input:", input.unit))
   if (.isLeapYear(year)) {

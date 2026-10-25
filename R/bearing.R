@@ -99,9 +99,11 @@
 #' bearing(c(0, -0.5/343), rbind(c(0, 0), c(1, 0)))
 #'
 bearing <- function(delays, positions, speed=NULL, output.unit="degrees", unit) {
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "output.unit", "bearing")
-    output.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "bearing"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   if (is.data.frame(delays)) {
     if (!all(c("channel", "delay") %in% names(delays))) {

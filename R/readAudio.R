@@ -39,9 +39,11 @@
 #' @importFrom mime guess_type
 readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
                       units) {
-  if (!missing(units)) {
-    .deprecatedArg("units", "input.unit", "readAudio")
-    input.unit <- units
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(units="input.unit"), "readAudio"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   if (mime == "auto") {
     mime <- guess_type(file)

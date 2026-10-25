@@ -11,9 +11,11 @@
 #' @export
 #'
 referencePressure <- function(output.unit="Pa", unit) {
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "output.unit", "referencePressure")
-    output.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "referencePressure"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   if (!output.unit %in% c("Pa", "dyne_cm2")) {
     stop(paste("Unknown unit to referencePressure:",output.unit))
@@ -38,9 +40,11 @@ referencePressure <- function(output.unit="Pa", unit) {
 #' @export
 #'
 referenceIntensity <- function(output.unit="watt_cm2", unit) {
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "output.unit", "referenceIntensity")
-    output.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "referenceIntensity"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   if (!output.unit %in% c("watt_cm2")) {
     stop(paste("Unknown unit to referenceIntensity:",output.unit))

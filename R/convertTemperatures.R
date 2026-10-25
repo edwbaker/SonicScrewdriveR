@@ -13,9 +13,11 @@
 #' convert2Kelvin(15, input.unit="F")
 #'
 convert2Kelvin <- function(temp, input.unit="C", input) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "convert2Kelvin")
-    input.unit <- input
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2Kelvin"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   if (input.unit == "C") {
     K <- 273.15 + temp
@@ -49,9 +51,11 @@ convert2Kelvin <- function(temp, input.unit="C", input) {
 #' convert2Celsius(15, input.unit="F")
 #'
 convert2Celsius <- function(temp, input.unit="K", input) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "convert2Celsius")
-    input.unit <- input
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2Celsius"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   if (input.unit == "K") {
     validateKelvin(temp)

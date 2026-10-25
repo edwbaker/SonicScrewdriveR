@@ -15,9 +15,11 @@
 #' @importFrom tuneR readWave
 readRespeaker6 <- function(filename, from=1, to=Inf, input.unit="samples",
                            header=FALSE, units) {
-  if (!missing(units)) {
-    .deprecatedArg("units", "input.unit", "readRespeaker6")
-    input.unit <- units
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(units="input.unit"), "readRespeaker6"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   #With header=TRUE readWave() gives a plain list describing the file, which has
   #no channels to select from, so it is returned as it comes.

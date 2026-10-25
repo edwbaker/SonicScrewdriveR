@@ -28,9 +28,11 @@ setClass(
 #' @return A TimeRegion object.
 #' @export
 region <- function(input.unit, from=0, to=Inf, unit) {
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "input.unit", "region")
-    input.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="input.unit"), "region"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .validateChoice(
     input.unit, c("samples", "seconds", "minutes", "hours"),

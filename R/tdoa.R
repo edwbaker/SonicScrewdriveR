@@ -98,9 +98,11 @@ tdoa <- function(
   interpolate=TRUE,
   units
 ) {
-  if (!missing(units)) {
-    .deprecatedArg("units", "input.unit", "tdoa")
-    input.unit <- units
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(units="input.unit"), "tdoa"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   validateIsWaveLike(wave)
   wave <- untagWave(wave)

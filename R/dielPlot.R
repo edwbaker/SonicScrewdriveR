@@ -63,13 +63,11 @@ dielPositions <- function(format="3hourly") {
 #' @export
 dielFraction <- function(t, input.unit="POSIX", output.unit="radians", timezone=NULL,
                          input, unit) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "dielFraction")
-    input.unit <- input
-  }
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "output.unit", "dielFraction")
-    output.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit", unit="output.unit"), "dielFraction"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .validateChoice(input.unit, .convertable2seconds(), "input.unit", "dielFraction", prep="for")
   .validateChoice(output.unit, c("radians", "fraction"), "output.unit", "dielFraction", prep="for")

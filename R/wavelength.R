@@ -15,9 +15,11 @@
 #'
 wavelength <- function(frequency, speed=soundSpeed(medium="air"), output.unit="m",
                        unit) {
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "output.unit", "wavelength")
-    output.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "wavelength"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .convertLinear(
     speed/frequency, "m", output.unit, .wavelengthMultipliers(),

@@ -13,9 +13,11 @@
 #' convert2Pascals(10, input.unit="dyne_cm2")
 #'
 convert2Pascals <- function(P, input.unit="kPa", input) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "convert2Pascals")
-    input.unit <- input
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2Pascals"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .convertLinear(P, input.unit, "Pa", .pressureMultipliers(),
                  what="input.unit", fn="convert2Pascals")
@@ -40,9 +42,11 @@ convert2kPascals <- function(P, input.unit="kPa") {
 #' convert2dyne_cm2(1, input.unit="Pa")
 #' convert2dyne_cm2(1, input.unit="kPa")
 convert2dyne_cm2 <- function(P, input.unit="kPa", input) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "convert2dyne_cm2")
-    input.unit <- input
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2dyne_cm2"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .convertLinear(P, input.unit, "dyne_cm2", .pressureMultipliers(),
                  what="input.unit", fn="convert2dyne_cm2")

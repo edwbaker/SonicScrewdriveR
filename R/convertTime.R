@@ -16,13 +16,11 @@
 #'
 convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL,
                             T, input) {
-  if (!missing(T)) {
-    .deprecatedArg("T", "t", "convert2seconds")
-    t <- T
-  }
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "convert2seconds")
-    input.unit <- input
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(T="t", input="input.unit"), "convert2seconds"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   .validateChoice(input.unit, .convertable2seconds(), "input.unit", "convert2seconds")
   factors <- .secondMultipliers()
@@ -126,9 +124,11 @@ convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL
 #' humanTime(1, input.unit="hours")
 #'
 humanTime <- function(S, input.unit="seconds", digits=3, unit) {
-  if (!missing(unit)) {
-    .deprecatedArg("unit", "input.unit", "humanTime")
-    input.unit <- unit
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="input.unit"), "humanTime"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   S <- convert2seconds(S, input.unit)
   return(.humanUnits(S, .timeUnitMultipliers(), "second", pluralise="all", digits=digits))

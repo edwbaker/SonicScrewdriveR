@@ -161,3 +161,78 @@ test_that("the unit arguments that are not units of measurement are unchanged", 
   expect_equal(humanBytes(1024, units="binary"), "1 KiB")
   expect_equal(humanBytes(1000, units="decimal"), "1 kB")
 })
+
+#A former name given by keyword no longer occupies the position it used to, so
+#a call that mixes it with positional arguments is the case where a shim read
+#in the function body bound them one place too early. These calls are written
+#as they would have been before the rename, and must give what they gave then.
+test_that("a former name mixed with positional arguments binds as it used to", {
+  expect_warning(x <- convert2seconds(T=1, "hours"), "T argument of convert2seconds")
+  expect_equal(x, 3600)
+
+  expect_warning(x <- convert2seconds(T=90, "seconds"), "T argument of convert2seconds")
+  expect_equal(x, 90)
+
+  expect_warning(x <- region(unit="seconds", 0, 10), "unit argument of region")
+  expect_equal(x@from, 0)
+  expect_equal(x@to, 10)
+  expect_equal(x@unit, "seconds")
+
+  #digits is the argument after the renamed one, so it is the one that moved.
+  expect_warning(x <- humanTime(95, unit="seconds", 1), "unit argument of humanTime")
+  expect_equal(x, humanTime(95, input.unit="seconds", digits=1))
+
+  #output.unit is the argument after the renamed one here.
+  expect_warning(
+    x <- dielFraction(6, input="hours", "fraction"),
+    "input argument of dielFraction"
+  )
+  expect_equal(x, 0.25)
+
+  expect_warning(
+    x <- yearlyFraction(73, 2022, input="day", "fraction"),
+    "input argument of yearlyFraction"
+  )
+  expect_equal(x, 73/365)
+})
+
+test_that("a former name mixed with positionals binds as it used to, for waves", {
+  f <- system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver")
+
+  #header is the argument after the renamed one, and selects an entirely
+  #different kind of return value.
+  expect_warning(
+    h <- readRespeaker6(f, 1, 100, units="samples", TRUE),
+    "units argument of readRespeaker6"
+  )
+  expect_true(is.list(h))
+  expect_false(inherits(h, "WaveMC"))
+
+  #method is the argument after the renamed one.
+  w <- twoChannelWave()
+  expect_warning(
+    d <- tdoa(w, 1, 0, 0.05, units="seconds", "cc"),
+    "units argument of tdoa"
+  )
+  expect_equal(d, tdoa(w, 1, 0, 0.05, input.unit="seconds", method="cc"))
+})
+
+test_that("both former names at once bind as they used to", {
+  expect_warning(x <- convert2seconds(T=1, input="hours"))
+  expect_equal(x, 3600)
+
+  expect_warning(x <- dielFraction(6, input="hours", unit="fraction"))
+  expect_equal(x, 0.25)
+})
+
+test_that("a misspelled argument is still an error, not silently ignored", {
+  expect_error(convert2Pascals(1, inpt="kPa"))
+  expect_error(convert2seconds(1, inpt="hours"))
+  expect_error(wavelength(1000, speed=343, untis="cm"))
+  expect_error(region("seconds", form=0, to=1))
+})
+
+test_that("a partially matched argument name still resolves", {
+  expect_equal(convert2seconds(1, input.u="hours"), 3600)
+  expect_equal(wavelength(1000, speed=343, output.u="cm"), 34.3)
+})

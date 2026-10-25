@@ -15,9 +15,11 @@
 #' convert2bytes(1, input.unit="KiB")
 #'
 convert2bytes <- function(S, input.unit="bits", input) {
-  if (!missing(input)) {
-    .deprecatedArg("input", "input.unit", "convert2bytes")
-    input.unit <- input
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2bytes"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
   multipliers <- c(
     bits = 1/8,
