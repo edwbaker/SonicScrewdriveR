@@ -32,10 +32,10 @@
 #' @keywords internal
 #' @noRd
 .dotExpressions <- function(env) {
-  return(tryCatch(
-    eval(quote(as.list(substitute(list(...)))[-1]), env),
-    error=function(cond) NULL
-  ))
+  if (!.hasDots(env)) {
+    return(NULL)
+  }
+  return(eval(quote(as.list(substitute(list(...)))[-1]), env))
 }
 
 #' The values a forwarded dots argument stands for
@@ -51,10 +51,13 @@
 #' @keywords internal
 #' @noRd
 .dotValues <- function(env) {
-  return(tryCatch(
-    eval(quote(list(...)), env),
-    error=function(cond) NULL
-  ))
+  if (!.hasDots(env)) {
+    return(NULL)
+  }
+  #Not guarded: an argument that fails has to fail here, once. Treating it as an
+  #absent dots argument would leave it in the call to be evaluated a second
+  #time, so one that fails only the first time would appear to succeed.
+  return(eval(quote(list(...)), env))
 }
 
 #' Replace a forwarded dots argument with what it stands for
@@ -276,6 +279,22 @@
   hit <- nms %in% names(renamed)
   nms[hit] <- renamed[nms[hit]]
   names(before) <- nms
-  before[[1]] <- call[[1]]
+  #The function itself, not the expression that chose it: evaluating
+  #pick()(1, input="hours") again would call pick() a second time, which may
+  #count, fail, or hand back a different function.
+  before[[1]] <- target
   return(list(eval(before, env)))
+}
+
+#' Whether a frame has a dots argument
+#'
+#' Asked of the frame itself rather than by trying to read the dots, so that a
+#' frame without them is told apart from one whose arguments fail when evaluated.
+#'
+#' @param env The frame to look at.
+#' @return TRUE if the frame has a dots argument.
+#' @keywords internal
+#' @noRd
+.hasDots <- function(env) {
+  return(exists("...", envir=env, inherits=FALSE))
 }

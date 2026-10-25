@@ -372,3 +372,46 @@ test_that("a misspelled argument forwarded through dots is still unused", {
   expect_error((function(...) convert2Pascals(1, ...))(inpt="kPa"))
   expect_error((function(...) wavelength(1000, 343, ...))(untis="cm"))
 })
+
+#Rewriting the call must not turn a failure into a second attempt, nor work out
+#again which function was being called.
+test_that("a forwarded argument that fails, fails once", {
+  evaluated <- 0
+  flaky <- function() {
+    evaluated <<- evaluated + 1
+    if (evaluated == 1) {
+      stop("boom")
+    }
+    1
+  }
+  forward <- function(...) convert2seconds(...)
+  expect_error(suppressWarnings(forward(flaky(), input="hours")), "boom")
+  expect_equal(evaluated, 1)
+})
+
+test_that("the expression that chose the function is evaluated once", {
+  chosen <- 0
+  pick <- function() {
+    chosen <<- chosen + 1
+    convert2seconds
+  }
+  expect_warning(x <- pick()(1, input="hours"), "input argument of convert2seconds")
+  expect_equal(x, 3600)
+  expect_equal(chosen, 1)
+
+  #A selector that answers differently the second time would otherwise run the
+  #wrong function entirely.
+  times <- 0
+  switcher <- function() {
+    times <<- times + 1
+    if (times == 1) convert2seconds else function(...) "wrong function"
+  }
+  expect_warning(x <- switcher()(1, input="hours"))
+  expect_equal(x, 3600)
+})
+
+test_that("a frame with no dots is not taken for a failing one", {
+  expect_equal(convert2seconds(1, input.unit="hours"), 3600)
+  expect_warning(x <- convert2seconds(1, input="hours"))
+  expect_equal(x, 3600)
+})
