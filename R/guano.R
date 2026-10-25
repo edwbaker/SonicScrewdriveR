@@ -119,7 +119,7 @@
   # using the vector whole would raise an error rather than compare.
   tz <- attr(x, "tzone")
   tz <- if (length(tz) == 0L) "" else tz[1]
-  at <- .POSIXct(whole, tz=tz)
+  at <- as.POSIXct(whole, origin="1970-01-01", tz=tz)
 
   # A value read from a field that named no zone is written back as it was
   # read, rather than given the zone of the machine it was read on.

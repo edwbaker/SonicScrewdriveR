@@ -41,6 +41,11 @@
   if (!isTRUE(file.exists(file))) {
     return(FALSE)
   }
+  # A directory is reported as a file of some size on some platforms, and
+  # opening one to read raises rather than giving nothing.
+  if (!isTRUE(file.info(file)$isdir == FALSE)) {
+    return(FALSE)
+  }
   size <- file.size(file)
   if (is.na(size) || size < 12) {
     return(FALSE)
@@ -440,7 +445,10 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   pad <- function(string, len) {
     string <- as.character(string)
     if (nchar(string, type="bytes") > len) {
-      warning("String was truncated to ", len, " bytes to fit the WAV header.")
+      warning(
+        "String was truncated to fit within ", len,
+        " bytes of the WAV header."
+      )
       string <- .cutToBytes(string, len)
     }
     bytes <- charToRaw(enc2utf8(string))
@@ -637,8 +645,8 @@ audiomothCompress <- function(
     room <- .AM_ICMT_SIZE - nchar(recorded, type="bytes")
     if (nchar(comment, type="bytes") > room) {
       warning(
-        "Comment was truncated to ", room,
-        " bytes to leave room for the amplitude threshold."
+        "Comment was truncated to fit within ", room,
+        " bytes, to leave room for the amplitude threshold."
       )
       comment <- .cutToBytes(comment, room)
     }

@@ -1001,3 +1001,28 @@ test_that("A write that fails part way leaves the recording as it was", {
   expect_equal(length(audiomothExpand(f)@left), 20000)
   expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
 })
+
+test_that("Something that is not a file is not a triggered recording", {
+  # A directory is reported as a file of some size on some platforms, where
+  # opening one to read raises rather than giving nothing.
+  d <- tempfile()
+  dir.create(d)
+  on.exit(unlink(d, recursive=TRUE))
+  expect_false(.isTriggeredRecording(d))
+  expect_false(.isTriggeredRecording(tempfile()))
+})
+
+test_that("Truncation says what it did when characters are wider than a byte", {
+  w <- twavFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+
+  # Three-byte characters cannot fill 32 bytes exactly, so 30 are kept, and
+  # the warning says the field it fits within rather than a count it did not
+  # truncate to.
+  expect_equal(nchar(.cutToBytes(strrep("\u20ac", 20), 32), type="bytes"), 30)
+  expect_warning(
+    audiomothCompress(w, f, threshold=0, segment=1024, artist=strrep("\u20ac", 20)),
+    "within 32 bytes"
+  )
+})
