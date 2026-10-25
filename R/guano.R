@@ -327,11 +327,17 @@ print.guano <- function(x, ...) {
 #' The block is padded with a space to an even number of bytes, as RIFF chunks
 #' must be word aligned and the specification allows whitespace padding.
 #' @noRd
-.guanoChunk <- function(x) {
+.guanoChunk <- function(x, size=NULL) {
   if (!inherits(x, "guano")) {
     stop("guano must be a guano object, see guano() and guanoCreate().")
   }
   body <- charToRaw(enc2utf8(as.character(x)))
+  if (!is.null(size)) {
+    if (size < length(body)) {
+      stop("The metadata does not fit in the ", size, " bytes asked for.")
+    }
+    body <- c(body, charToRaw(strrep(" ", size - length(body))))
+  }
   if (length(body) %% 2L == 1L) {
     body <- c(body, charToRaw(" "))
   }
@@ -488,6 +494,24 @@ guanoWrite <- function(x, file, output=NULL) {
   # reader, this one included, would find it. The size is corrected to the
   # audio that is actually there, which is the only size that was ever true.
   data <- .wavFindChunk(info$chunks, "data")
+
+  # Where the metadata is held before the audio, replacing it with a chunk of a
+  # different size moves the audio within the file. An AudioMoth triggered
+  # recording marks its omitted periods with blocks found by their position in
+  # the file, counted in 512 byte blocks from the start of it, so moving the
+  # audio by anything else loses them: the recording still holds every sample
+  # it did, but expanding it no longer restores the periods left out, and the
+  # timing of everything after the first of them is wrong. Keeping the size
+  # difference to whole blocks leaves them where they were. The specification
+  # allows the padding this takes.
+  if (!is.null(existing) && !is.null(data) && existing$start < data$start) {
+    held <- 8 + existing$size + (existing$size %% 2)
+    needed <- held + .AM_BLOCK_SIZE * ceiling((length(chunk) - held) / .AM_BLOCK_SIZE)
+    if (needed != length(chunk)) {
+      chunk <- .guanoChunk(x, size=needed - 8)
+    }
+  }
+
   if (!is.null(data) && isTRUE(data$truncated)) {
     warning(
       "DATA chunk runs past the end of the file, which may be truncated. ",

@@ -490,3 +490,38 @@ test_that("Reading metadata from a path gives what reading the bytes gives", {
   writeLines("not a wave file at all", f)
   expect_length(guano(f), 0)
 })
+
+test_that("Replacing metadata held before the audio keeps the omitted periods", {
+  # The specification allows the metadata chunk anywhere in the file. Where it
+  # comes before the audio, replacing it with a chunk of a different size moves
+  # the audio, and an AudioMoth triggered recording marks its omitted periods
+  # by their position in the file, so moving it by anything but whole 512-byte
+  # blocks loses them.
+  source <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  bytes <- readBin(source, "raw", n=file.size(source))
+  data <- .wavFindChunk(.wavChunks(bytes)$chunks, "data")
+
+  body <- charToRaw(as.character(guanoCreate(Make="X")))
+  body <- c(body, charToRaw(strrep(" ", 512 - 8 - length(body))))
+  chunk <- c(charToRaw("guan"), .uintToRaw(length(body), 4L), body)
+  at <- data$start - 9L
+  bytes <- c(bytes[1:at], chunk, bytes[(at + 1L):length(bytes)])
+  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
+
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  con <- file(f, "wb")
+  writeBin(bytes, con)
+  close(con)
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(chunk) chunk$id, character(1))
+  expect_equal(ids, c("fmt ", "LIST", "guan", "data"))
+  expect_equal(length(audiomothExpand(f)@left), 49908)
+
+  # Longer than what it replaces, and shorter, both leave the audio where it is.
+  for (value in c("A much longer value than the one it replaces, by far", "s")) {
+    guanoWrite(guanoCreate(Make=value), f)
+    expect_identical(guano(f)[["Make"]], value)
+    expect_equal(length(audiomothExpand(f)@left), 49908)
+  }
+})
