@@ -326,3 +326,49 @@ test_that("an abbreviation matching both names is ambiguous", {
   expect_error(convert2seconds(1, inp="hours"), "matches multiple formal arguments")
   expect_error(convert2Pascals(1, inp="kPa"), "matches multiple formal arguments")
 })
+
+#A call that uses none of the former names must behave exactly as it would
+#without any of the compatibility handling, which includes evaluating its
+#arguments lazily and in the same order. Settling which names were given must
+#therefore force nothing.
+test_that("a call using the current names forces its arguments as it would anyway", {
+  orderOf <- function(expr) {
+    seen <- character(0)
+    mark <- function(n, v) {
+      seen[[length(seen) + 1]] <<- n
+      v
+    }
+    eval(expr, list2env(list(mark=mark), parent=environment()))
+    seen
+  }
+  through <- quote(
+    (function(...) convert2seconds(...))(mark("time", 1), input.unit=mark("unit", "hours"))
+  )
+  plain <- quote(convert2seconds(mark("time", 1), input.unit=mark("unit", "hours")))
+  expect_equal(orderOf(through), orderOf(plain))
+
+  #The same thing seen through the result: the unit here depends on whether the
+  #time has been evaluated yet.
+  wrapped <- function(...) convert2seconds(...)
+  x <- 1
+  through.result <- wrapped({x <- 2; 1}, input.unit=if (x == 1) "hours" else "minutes")
+  x <- 1
+  plain.result <- convert2seconds({x <- 2; 1}, input.unit=if (x == 1) "hours" else "minutes")
+  expect_equal(through.result, plain.result)
+  expect_equal(plain.result, 3600)
+})
+
+test_that("an argument the function does not use is left unevaluated", {
+  touched <- FALSE
+  convert2seconds(1, input.unit="hours", timezone={touched <<- TRUE; NULL})
+  expect_false(touched)
+
+  touched <- FALSE
+  expect_warning(convert2seconds(1, input="hours"))
+  expect_false(touched)
+})
+
+test_that("a misspelled argument forwarded through dots is still unused", {
+  expect_error((function(...) convert2Pascals(1, ...))(inpt="kPa"))
+  expect_error((function(...) wavelength(1000, 343, ...))(untis="cm"))
+})
