@@ -370,3 +370,47 @@ test_that("A wave file with no audio in it is reported", {
 
   expect_error(audiomothExpand(f), "DATA chunk")
 })
+
+test_that("A recording of a few samples survives a round trip", {
+  # Short enough that the file has no whole 512-byte block after its header,
+  # so there is no block that could hold an encoded period.
+  w <- tuneR::Wave(left=as.integer(rep(1000L, 10)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  out <- tempfile(fileext=".WAV")
+  on.exit(unlink(c(f, out)))
+
+  audiomothCompress(w, f, threshold=1)
+  expect_lt(file.size(f), 512)
+
+  expect_equal(audiomothExpand(f)@left, w@left)
+  audiomothExpand(f, out)
+  expect_equal(tuneR::readWave(out)@left, w@left)
+})
+
+test_that("A size too large for a WAV header is refused rather than wrapped", {
+  expect_error(.uintToRaw(2^32, 4L), "does not fit")
+  expect_error(.uintToRaw(-1, 4L), "does not fit")
+  expect_error(.uintToRaw(2^16, 2L), "does not fit")
+  expect_equal(.uintToRaw(2^32 - 1, 4L), as.raw(c(255, 255, 255, 255)))
+})
+
+test_that("A file this package cannot expand is told apart from a failure to expand", {
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  stereo <- tuneR::Wave(
+    left = as.integer(stats::rnorm(1000, sd=1000)),
+    right = as.integer(stats::rnorm(1000, sd=1000)),
+    samp.rate = 8000, bit = 16
+  )
+  tuneR::writeWave(stereo, f)
+
+  # readAudio() reads such a file by its ordinary means rather than failing.
+  expect_s3_class(
+    tryCatch(audiomothExpand(f), error=function(e) e),
+    "unsupportedWav"
+  )
+  read <- readAudio(f)
+  expect_true(read@stereo)
+  expect_equal(read@left, stereo@left)
+})

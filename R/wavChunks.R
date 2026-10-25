@@ -20,7 +20,34 @@
 #' @keywords internal
 #' @noRd
 .uintToRaw <- function(x, size) {
-  as.raw(floor(as.numeric(x) / 256^(seq_len(size) - 1L)) %% 256)
+  x <- as.numeric(x)
+  # Taking the value modulo the field would quietly write a wrapped size, which
+  # makes a file that no reader can make sense of.
+  if (is.na(x) || x < 0 || x >= 256^size) {
+    stop(
+      "A value of ", format(x, scientific=FALSE),
+      " does not fit in the ", size, " bytes a WAV header allows for it."
+    )
+  }
+  return(as.raw(floor(x / 256^(seq_len(size) - 1L)) %% 256))
+}
+
+#' Report a file this package cannot treat as an AudioMoth recording
+#'
+#' Raised where a file is not a wave file at all, or is not the mono 16-bit PCM
+#' an AudioMoth device writes. [readAudio()] reads such a file by its ordinary
+#' means, so it is told apart from a failure to expand a recording that really
+#' is a triggered one, which must not be passed over.
+#'
+#' @param ... Parts of the message
+#' @return Nothing, called for the condition it raises
+#' @keywords internal
+#' @noRd
+.unsupportedWav <- function(...) {
+  stop(structure(
+    class = c("unsupportedWav", "error", "condition"),
+    list(message = paste0(...), call = NULL)
+  ))
 }
 
 #' Does a run of bytes hold a given ASCII identifier?
@@ -66,13 +93,13 @@
 .wavChunks <- function(bytes, total=length(bytes)) {
   n <- length(bytes)
   if (n < 12L) {
-    stop("File is too short to be a WAV file.")
+    .unsupportedWav("File is too short to be a WAV file.")
   }
   if (!.rawIs(bytes[1:4], "RIFF")) {
-    stop("Could not find RIFF chunk ID.")
+    .unsupportedWav("Could not find RIFF chunk ID.")
   }
   if (!.rawIs(bytes[9:12], "WAVE")) {
-    stop("Could not find WAVE ID.")
+    .unsupportedWav("Could not find WAVE ID.")
   }
 
   chunks <- list()
@@ -134,13 +161,13 @@
   fmt <- .wavFindChunk(info$chunks, "fmt ")
   data <- .wavFindChunk(info$chunks, "data")
   if (is.null(fmt)) {
-    stop("Could not find FMT chunk ID.")
+    .unsupportedWav("Could not find FMT chunk ID.")
   }
   if (is.null(data)) {
-    stop("Could not find DATA chunk ID.")
+    .unsupportedWav("Could not find DATA chunk ID.")
   }
   if (fmt$size < 16) {
-    stop("FMT chunk is too short.")
+    .unsupportedWav("FMT chunk is too short.")
   }
 
   at <- fmt$start

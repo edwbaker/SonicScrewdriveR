@@ -204,19 +204,27 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 
   info <- .wavFormat(if (nBlocks > 0L) blocks else tail, total=size)
   if (info$format != 1) {
-    stop("Only PCM files can be expanded.")
+    .unsupportedWav("Only PCM files can be expanded.")
   }
   if (info$channels != 1) {
-    stop("Only mono files can be expanded.")
+    .unsupportedWav("Only mono files can be expanded.")
   }
   if (info$bits != 16) {
-    stop("Only 16-bit files can be expanded.")
+    .unsupportedWav("Only 16-bit files can be expanded.")
   }
   if (info$dataTruncated) {
     warning("DATA chunk runs past the end of the file, which may be truncated.")
   }
+
   if (info$dataStart - 1 > nBlocks * .AM_BLOCK_SIZE) {
-    stop("File is too short to hold any audio data.")
+    # The header reaches past the last whole 512-byte block, so no block after
+    # it could be an encoded block and there is nothing to expand. A recording
+    # of a few samples is the usual way to arrive here.
+    if (!is.null(output)) {
+      file.copy(file, output, overwrite=TRUE)
+      return(invisible(output))
+    }
+    return(.audiomothWave(c(blocks, tail), info, 0))
   }
 
   dim(blocks) <- c(.AM_BLOCK_SIZE, nBlocks)
@@ -224,6 +232,16 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   plan <- .audiomothExpandPlan(counts, tailBytes)
   outSize <- plan$total
   expanded <- outSize - size
+
+  # A WAV file records its sizes in four bytes, so it cannot describe one of
+  # 4GB or more. Writing such a file would wrap the sizes and leave something
+  # no reader could make sense of.
+  if (info$riffSize + expanded >= 2^32 || info$dataSize + expanded >= 2^32) {
+    stop(
+      "The expanded recording would be ", round(outSize / 2^30, 1),
+      "GB, which is more than a WAV file can describe."
+    )
+  }
 
   # The chunk sizes still describe the unexpanded file. Adding the number of
   # bytes gained, rather than measuring back from the end of the file, keeps any
@@ -268,7 +286,20 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
     }
   }
 
-  dataEnd <- min(info$dataStart + info$dataSize + expanded - 1, outSize)
+  return(.audiomothWave(bytes, info, expanded))
+}
+
+#' Build a Wave from the bytes of an expanded recording
+#'
+#' @param bytes A raw vector holding a whole WAV file
+#' @param info Chunk positions from .wavFormat(), describing the file before it
+#'   was expanded
+#' @param expanded The number of bytes the expansion added
+#' @return A Wave object, carrying any GUANO metadata as an attribute
+#' @keywords internal
+#' @noRd
+.audiomothWave <- function(bytes, info, expanded) {
+  dataEnd <- min(info$dataStart + info$dataSize + expanded - 1, length(bytes))
   samples <- readBin(
     bytes[info$dataStart:dataEnd], "integer",
     n=(dataEnd - info$dataStart + 1) %/% 2, size=2L, signed=TRUE, endian="little"

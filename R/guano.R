@@ -78,12 +78,23 @@
   if (!inherits(x, "POSIXt")) {
     return(as.character(x))
   }
+  # The specification allows a fractional second, and the parser reads one, so
+  # dropping it here would move the start of a recording whenever metadata was
+  # read and written back. A whole second is still written as one.
+  seconds <- as.numeric(x)
+  clock <- if (isTRUE(abs(seconds - round(seconds)) > 1e-6)) {
+    "%H:%M:%OS6"
+  } else {
+    "%H:%M:%S"
+  }
+  trim <- function(stamp) sub("(\\.[0-9]*[1-9])0+", "\\1", stamp)
+
   tz <- attr(x, "tzone")
   if (!is.null(tz) && tz %in% c("UTC", "GMT")) {
-    return(format(x, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"))
+    return(trim(format(x, paste0("%Y-%m-%dT", clock, "Z"), tz="UTC")))
   }
   offset <- sub("([+-][0-9]{2})([0-9]{2})", "\\1:\\2", format(x, "%z"))
-  return(paste0(format(x, "%Y-%m-%dT%H:%M:%S"), offset))
+  return(paste0(trim(format(x, paste0("%Y-%m-%dT", clock))), offset))
 }
 
 #' Read a field value according to its defined type
@@ -129,7 +140,12 @@
     return(paste(as.character(value), collapse=" "))
   }
 
-  number <- function(x) format(x, scientific=FALSE, trim=TRUE)
+  # format() otherwise writes as many digits as the session is set to display,
+  # so reading a position of six decimal places and writing it back would move
+  # it, by a distance depending on options(digits). Fifteen significant digits
+  # carry a double through a round trip without printing the noise that the
+  # seventeen needed to be exact would.
+  number <- function(x) format(x, scientific=FALSE, trim=TRUE, digits=15)
   formatted <- switch(
     type,
     float = number(value),

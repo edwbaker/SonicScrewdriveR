@@ -327,3 +327,27 @@ test_that("A name used twice cannot be written", {
   names(g)[2] <- "Bad\nName"
   expect_error(as.character(g), "newline")
 })
+
+test_that("A fractional second is kept, and a whole one is not invented", {
+  stamp <- function(value) {
+    text <- as.character(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))
+    sub(".*Timestamp:", "", strsplit(text, "\n")[[1]][2])
+  }
+  expect_identical(stamp("2020-11-03T11:24:30.123456Z"), "2020-11-03T11:24:30.123456Z")
+  expect_identical(stamp("2020-11-03T11:24:30.5Z"), "2020-11-03T11:24:30.5Z")
+  expect_identical(stamp("2020-11-03T11:24:30Z"), "2020-11-03T11:24:30Z")
+})
+
+test_that("Numbers are written to the precision they were read at", {
+  g <- guanoParse("GUANO|Version:1.0\nLoc Position:51.496401 -0.122456\nLength:12.3456789")
+
+  # What is written must not depend on how the session displays numbers.
+  original <- options(digits=7)
+  on.exit(options(original))
+  for (digits in c(3, 7, 15)) {
+    options(digits=digits)
+    back <- guanoParse(as.character(g))
+    expect_equal(back[["Loc Position"]], c(51.496401, -0.122456))
+    expect_equal(back[["Length"]], 12.3456789)
+  }
+})

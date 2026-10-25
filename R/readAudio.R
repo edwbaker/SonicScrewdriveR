@@ -40,9 +40,15 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 
   if (mime == "audio/x-wav" && .isTWavName(file)) {
     # An AudioMoth triggered recording reads as a valid WAV file, so it has to
-    # be expanded before readWave() gets to it. Anything that is not really a
-    # T.WAV file falls through to be read normally.
-    wave <- tryCatch(audiomothExpand(file), error=function(cond) NULL)
+    # be expanded before readWave() gets to it. A file that is not one of those
+    # at all falls through to be read normally, but a failure to expand a
+    # recording that is one is raised: reading it by other means would return
+    # the periods that did not trigger a recording still missing, and so the
+    # events in it at the wrong times, without saying so.
+    wave <- tryCatch(
+      audiomothExpand(file),
+      unsupportedWav = function(cond) NULL
+    )
     if (!is.null(wave)) {
       return(.cutAudio(wave, from, to, units, fromS))
     }
