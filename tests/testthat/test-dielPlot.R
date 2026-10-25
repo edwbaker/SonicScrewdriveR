@@ -31,8 +31,8 @@ test_that("dielPositions gives expected output", {
 })
 
 test_that("dielFraction rejects unknown formats", {
-  expect_error(dielFraction(2, "wombat"), "Unknown input for dielFraction: wombat")
-  expect_error(dielFraction(2, "hours", "worms"), "Unknown output for dielFraction: worms")
+  expect_error(dielFraction(2, "wombat"), "Unknown input.unit for dielFraction: wombat")
+  expect_error(dielFraction(2, "hours", "worms"), "Unknown output.unit for dielFraction: worms")
 })
 
 test_that("dielFraction gives expected output", {
@@ -96,21 +96,21 @@ for (tz in sessionTimezones) {
       # 2024-12-16 03:20:00 UTC as an instant carrying no timezone of its own,
       # which used to be read in the session's zone and so moved around the dial
       # with the machine.
-      expect_equal(dielFraction(naiveTime(1734319200), unit="fraction"), 12000/86400)
+      expect_equal(dielFraction(naiveTime(1734319200), output.unit="fraction"), 12000/86400)
       # A time carrying a timezone is read in it, whatever the session is.
       expect_equal(
-        dielFraction(as.POSIXct("2024-12-16 03:20:00", tz="Australia/Sydney"), unit="fraction"),
+        dielFraction(as.POSIXct("2024-12-16 03:20:00", tz="Australia/Sydney"), output.unit="fraction"),
         12000/86400
       )
       # Naming a timezone overrides the one the time carries.
       expect_equal(
-        dielFraction(as.POSIXct("2024-12-16 03:20:00", tz="UTC"), unit="fraction",
+        dielFraction(as.POSIXct("2024-12-16 03:20:00", tz="UTC"), output.unit="fraction",
                      timezone="Australia/Sydney"),
         51600/86400
       )
       # suncalc labels its output UTC, so the bands of a plot are unaffected.
       tim <- suncalc::getSunlightTimes(as.Date("2024-06-21"), lat=54, lon=0, tz="UTC")
-      expect_equal(dielFraction(tim$solarNoon, unit="fraction"), 0.5021528, tolerance=1e-6)
+      expect_equal(dielFraction(tim$solarNoon, output.unit="fraction"), 0.5021528, tolerance=1e-6)
     })
   })
 }

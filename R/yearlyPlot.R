@@ -70,32 +70,43 @@ yearlyPositions <- function(year=2022, format="months") {
 #'
 #' @param t Object to be converted to a fraction
 #' @param year Year to calculate fractions of (allows for leap years)
-#' @param input One of POSIXlt (default)
-#' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param input.unit The unit the date is given in, one of "POSIX", "day".
+#' @param output.unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @param timezone The timezone to read the time in, which decides which day of
 #'   the year it falls on. The default, NULL, uses the timezone the time itself
 #'   carries, and UTC for a time that carries none (such as the output of
 #'   `Sys.time()`).
+#' @param input Deprecated, use input.unit instead.
+#' @param unit Deprecated, use output.unit instead.
 #' @return The position of the date within the year, in radians or as a fraction of a year.
 #' @export
-yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians", timezone=NULL) {
-  .validateChoice(input, c("POSIX", "day"), msg=paste("Unknown input:", input))
+yearlyFraction <- function(t, year=2022, input.unit="POSIX", output.unit="radians",
+                           timezone=NULL, input, unit) {
+  if (!missing(input)) {
+    .deprecatedArg("input", "input.unit", "yearlyFraction")
+    input.unit <- input
+  }
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "output.unit", "yearlyFraction")
+    output.unit <- unit
+  }
+  .validateChoice(input.unit, c("POSIX", "day"), msg=paste("Unknown input:", input.unit))
   if (.isLeapYear(year)) {
     dc <- 366
   } else {
     dc <- 365
   }
-  if (input=="POSIX") {
+  if (input.unit=="POSIX") {
     #Which day of the year a moment falls on depends on the zone it is read in.
     #Breaking it down without naming one read a time carrying no timezone in the
     #session's, so a moment near midnight moved a day with the machine.
     t <- unclass(as.POSIXlt(.asInstant(t), tz=.timezoneOf(t, timezone)))
     f <- t$yday/dc
-  } else if (input=="day") {
+  } else if (input.unit=="day") {
     f <- t/dc
   }
 
-  if (unit=="radians") {
+  if (output.unit=="radians") {
     return(2*pi*f)
   }
   return(f)

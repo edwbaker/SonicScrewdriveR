@@ -44,7 +44,8 @@
 #' @param ref The channel that delays are measured against.
 #' @param from Optionally, the start of the region to correlate.
 #' @param to Optionally, the end of the region to correlate.
-#' @param units Units in which `from` and `to` are given, one of "samples",
+#' @param units Deprecated, use input.unit instead.
+#' @param input.unit Unit in which `from` and `to` are given, one of "samples",
 #'   "seconds" (the default), "minutes", or "hours".
 #' @param method Correlation method, one of "phat" (the default), "cc", or
 #'   "envelope" (see Details).
@@ -91,18 +92,23 @@ tdoa <- function(
   ref=1,
   from=NULL,
   to=NULL,
-  units="seconds",
+  input.unit="seconds",
   method="phat",
   max.delay=NULL,
-  interpolate=TRUE
+  interpolate=TRUE,
+  units
 ) {
+  if (!missing(units)) {
+    .deprecatedArg("units", "input.unit", "tdoa")
+    input.unit <- units
+  }
   validateIsWaveLike(wave)
   wave <- untagWave(wave)
   if (!method %in% c("phat", "cc", "envelope")) {
     stop(paste("Unknown method for tdoa:", method))
   }
   if (!is.null(from) | !is.null(to)) {
-    wave <- .cutRegion(wave, from, to, units)
+    wave <- .cutRegion(wave, from, to, input.unit)
   }
   d <- .channelMatrix(wave)
   channels <- ncol(d)
@@ -245,17 +251,17 @@ tdoa <- function(
 #' @param wave A Wave or WaveMC object.
 #' @param from Start of the region, or NULL for the start of the wave.
 #' @param to End of the region, or NULL for the end of the wave.
-#' @param units Units in which from and to are given.
+#' @param input.unit Unit in which from and to are given.
 #' @return A Wave or WaveMC object.
 #' @keywords internal
 #' @noRd
-.cutRegion <- function(wave, from=NULL, to=NULL, units="seconds") {
-  if (units == "samples") {
+.cutRegion <- function(wave, from=NULL, to=NULL, input.unit="seconds") {
+  if (input.unit == "samples") {
     from <- if (is.null(from)) 1 else from
     to <- if (is.null(to)) length(wave) else to
   } else {
-    from <- if (is.null(from)) 1 else convert2seconds(from, input=units) * wave@samp.rate + 1
-    to <- if (is.null(to)) length(wave) else convert2seconds(to, input=units) * wave@samp.rate
+    from <- if (is.null(from)) 1 else convert2seconds(from, input.unit=input.unit) * wave@samp.rate + 1
+    to <- if (is.null(to)) length(wave) else convert2seconds(to, input.unit=input.unit) * wave@samp.rate
   }
   from <- max(1, round(from))
   to <- min(length(wave), round(to))

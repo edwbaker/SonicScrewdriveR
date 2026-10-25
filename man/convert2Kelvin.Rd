@@ -4,12 +4,15 @@
 \alias{convert2Kelvin}
 \title{Convert temperature to Kelvin}
 \usage{
-convert2Kelvin(temp, input = "C")
+convert2Kelvin(temp, input.unit = "C", input)
 }
 \arguments{
 \item{temp}{The value of the temperature to convert}
 
-\item{input}{The unit of the temperature to convert, allowed values are "C", "F".}
+\item{input.unit}{The unit of the temperature to convert, one of "K", "C",
+"F".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 Numeric value in Kelvin
@@ -18,7 +21,7 @@ Numeric value in Kelvin
 Converts temperature measurements into Kelvin
 }
 \examples{
-convert2Kelvin(15, input="C")
-convert2Kelvin(15, input="F")
+convert2Kelvin(15, input.unit="C")
+convert2Kelvin(15, input.unit="F")
 
 }

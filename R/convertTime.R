@@ -2,44 +2,55 @@
 #'
 #' Converts time measurements into seconds
 #'
-#' @param T The time value to convert
-#' @param input The unit of time to convert, allowed values are "minutes",
-#'   "hours", "days", "years", "HHMM".
+#' @param t The time value to convert
+#' @param input.unit The unit of time to convert, one of "seconds", "minutes",
+#'   "hours", "days", "years", "HHMM", "POSIX".
 #' @param origin For POSIX whether to return relative to start of day ("day") or Unix epoch ("unix")
 #' @param timezone The timezone to read a POSIX time in, which decides when its
 #'   day starts. The default, NULL, uses the timezone the time itself carries,
 #'   and UTC for a time that carries none (such as the output of `Sys.time()`).
+#' @param T Deprecated, use t instead.
+#' @param input Deprecated, use input.unit instead.
 #' @export
 #' @return The numeric value in seconds
 #'
-convert2seconds <- function(T, input="minutes", origin="day", timezone=NULL) {
-  .validateChoice(input, .convertable2seconds(), "input", "convert2seconds")
-  factors <- .secondMultipliers()
-  if (input %in% names(factors)) {
-    s <- as.numeric(T) * factors[[input]]
+convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL,
+                            T, input) {
+  if (!missing(T)) {
+    .deprecatedArg("T", "t", "convert2seconds")
+    t <- T
   }
-  if (input == "HHMM") {
+  if (!missing(input)) {
+    .deprecatedArg("input", "input.unit", "convert2seconds")
+    input.unit <- input
+  }
+  .validateChoice(input.unit, .convertable2seconds(), "input.unit", "convert2seconds")
+  factors <- .secondMultipliers()
+  if (input.unit %in% names(factors)) {
+    s <- as.numeric(t) * factors[[input.unit]]
+  }
+  if (input.unit == "HHMM") {
     # TODO: Validate hours and minutes
     #Anchored, so that input which merely contains a digit is rejected here with
     #the intended message rather than failing later with an unrelated one.
-    if (!all(grepl("^[[:digit:]]{1,4}$", T))) {
+    if (!all(grepl("^[[:digit:]]{1,4}$", t))) {
       stop("HHMM input must be numeric")
     }
     # Pad start with 0 to length 4
-    T <- sprintf("%04d", as.numeric(T))
-    s <- as.numeric(substr(T,1,2))*60*60 + as.numeric(substr(T,3,4))*60
+    t <- sprintf("%04d", as.numeric(t))
+    s <- as.numeric(substr(t,1,2))*60*60 + as.numeric(substr(t,3,4))*60
   }
-  if (input == "POSIX") {
+  if (input.unit == "POSIX") {
     .validateChoice(origin, c("day", "unix"), "origin", "convert2seconds")
     if (origin == "day") {
       #Which day a moment falls in, and how far through it, depends on the zone
       #it is read in. Breaking it down without naming one read a time carrying
       #no timezone in the session's, so the answer moved with the machine.
-      t <- unclass(as.POSIXlt(.asInstant(T), tz=.timezoneOf(T, timezone)))
-      s <- (t$sec + 60*t$min + 3600*t$hour)
+      lt <- unclass(as.POSIXlt(.asInstant(t), tz=.timezoneOf(t, timezone)))
+      s <- (lt$sec + 60*lt$min + 3600*lt$hour)
     }
     if (origin == "unix") {
-      s <- as.numeric(T)
+      s <- as.numeric(t)
     }
   }
   return(validateTimeInSeconds(s))
@@ -103,17 +114,22 @@ convert2seconds <- function(T, input="minutes", origin="day", timezone=NULL) {
 #' Given a time calculates the result in a sensible output unit (e.g. minutes,
 #' hours).
 #'
-#' @param S Time to convert in unit. A vector may be given.
-#' @param unit The unit of time to convert
+#' @param S Time to convert, in input.unit. A vector may be given.
+#' @param input.unit The unit of time to convert
 #' @param digits Number of decimal places to round to, or NULL for no rounding.
+#' @param unit Deprecated, use input.unit instead.
 #' @return String in human readable format, one for each value of S.
 #' @export
 #' @examples
 #' humanTime(90)
 #' humanTime(c(1, 90, 7200))
-#' humanTime(1, unit="hours")
+#' humanTime(1, input.unit="hours")
 #'
-humanTime <- function(S, unit="seconds", digits=3) {
-  S <- convert2seconds(S, unit)
+humanTime <- function(S, input.unit="seconds", digits=3, unit) {
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "input.unit", "humanTime")
+    input.unit <- unit
+  }
+  S <- convert2seconds(S, input.unit)
   return(.humanUnits(S, .timeUnitMultipliers(), "second", pluralise="all", digits=digits))
 }

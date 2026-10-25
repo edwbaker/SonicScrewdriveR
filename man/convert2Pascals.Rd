@@ -4,12 +4,15 @@
 \alias{convert2Pascals}
 \title{Convert pressure to Pascals}
 \usage{
-convert2Pascals(P, input = "kPa")
+convert2Pascals(P, input.unit = "kPa", input)
 }
 \arguments{
 \item{P}{The value of the pressure to convert}
 
-\item{input}{The unit of the pressure to convert, allowed values are "kPa", "dyne_cm2".}
+\item{input.unit}{The unit of the pressure to convert, one of "Pa", "kPa",
+"dyne_cm2".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in Pascals
@@ -18,7 +21,7 @@ The numeric value in Pascals
 Converts pressure measurements into Pascals
 }
 \examples{
-convert2Pascals(1000, input="kPa")
-convert2Pascals(10, input="dyne_cm2")
+convert2Pascals(1000, input.unit="kPa")
+convert2Pascals(10, input.unit="dyne_cm2")
 
 }

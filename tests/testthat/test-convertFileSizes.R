@@ -3,11 +3,11 @@ test_that("Reject invalid input", {
 })
 
 test_that("Conversion is correct", {
-  expect_equal(convert2bytes(8, input="bits"), 1)
-  expect_equal(convert2bytes(1, input="bytes"), 1)
-  expect_equal(convert2bytes(1, input="kB"), 1000)
-  expect_equal(convert2bytes(1, input="MB"), 1000000)
-  expect_equal(convert2bytes(1, input="GB"), 1000000000)
+  expect_equal(convert2bytes(8, input.unit="bits"), 1)
+  expect_equal(convert2bytes(1, input.unit="bytes"), 1)
+  expect_equal(convert2bytes(1, input.unit="kB"), 1000)
+  expect_equal(convert2bytes(1, input.unit="MB"), 1000000)
+  expect_equal(convert2bytes(1, input.unit="GB"), 1000000000)
 })
 
 test_that("humanBytes is correct", {
@@ -24,17 +24,17 @@ test_that("humanBytes is correct", {
 })
 
 test_that("binary units are converted", {
-  expect_equal(convert2bytes(1, input="KiB"), 1024)
-  expect_equal(convert2bytes(1, input="MiB"), 1024^2)
-  expect_equal(convert2bytes(1, input="GiB"), 1024^3)
-  expect_equal(convert2bytes(1, input="TiB"), 1024^4)
-  expect_equal(convert2bytes(2, input="KiB"), 2048)
+  expect_equal(convert2bytes(1, input.unit="KiB"), 1024)
+  expect_equal(convert2bytes(1, input.unit="MiB"), 1024^2)
+  expect_equal(convert2bytes(1, input.unit="GiB"), 1024^3)
+  expect_equal(convert2bytes(1, input.unit="TiB"), 1024^4)
+  expect_equal(convert2bytes(2, input.unit="KiB"), 2048)
 })
 
 test_that("the larger decimal units are converted", {
-  expect_equal(convert2bytes(1, input="TB"), 1e12)
-  expect_equal(convert2bytes(1, input="PB"), 1e15)
-  expect_equal(convert2bytes(1, input="EB"), 1e18)
+  expect_equal(convert2bytes(1, input.unit="TB"), 1e12)
+  expect_equal(convert2bytes(1, input.unit="PB"), 1e15)
+  expect_equal(convert2bytes(1, input.unit="EB"), 1e18)
 })
 
 test_that("fileSizeUnits lists the units", {

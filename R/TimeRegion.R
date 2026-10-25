@@ -20,17 +20,23 @@ setClass(
 #' Specify a region with a file to analyse
 #'
 #' Specifies a time-bounded region to analyse.
-#' @param unit Unit of time (one of samples, seconds, minutes, hours)
+#' @param input.unit Unit the from and to values are given in (one of samples,
+#'   seconds, minutes, hours)
 #' @param from Start time
 #' @param to End time
+#' @param unit Deprecated, use input.unit instead.
 #' @return A TimeRegion object.
 #' @export
-region <- function(unit, from=0, to=Inf) {
+region <- function(input.unit, from=0, to=Inf, unit) {
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "input.unit", "region")
+    input.unit <- unit
+  }
   .validateChoice(
-    unit, c("samples", "seconds", "minutes", "hours"),
+    input.unit, c("samples", "seconds", "minutes", "hours"),
     msg="Unit must be one of samples, seconds, minutes, hours"
   )
-  return(new("TimeRegion", from=from, to=to, unit=unit))
+  return(new("TimeRegion", from=from, to=to, unit=input.unit))
 }
 
 .timeRegion2samples <- function(t, samp.rate) {

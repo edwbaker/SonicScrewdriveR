@@ -4,19 +4,30 @@
 \alias{convert2seconds}
 \title{Convert time to seconds}
 \usage{
-convert2seconds(T, input = "minutes", origin = "day", timezone = NULL)
+convert2seconds(
+  t,
+  input.unit = "minutes",
+  origin = "day",
+  timezone = NULL,
+  T,
+  input
+)
 }
 \arguments{
-\item{T}{The time value to convert}
+\item{t}{The time value to convert}
 
-\item{input}{The unit of time to convert, allowed values are "minutes",
-"hours", "days", "years", "HHMM".}
+\item{input.unit}{The unit of time to convert, one of "seconds", "minutes",
+"hours", "days", "years", "HHMM", "POSIX".}
 
 \item{origin}{For POSIX whether to return relative to start of day ("day") or Unix epoch ("unix")}
 
 \item{timezone}{The timezone to read a POSIX time in, which decides when its
 day starts. The default, NULL, uses the timezone the time itself carries,
 and UTC for a time that carries none (such as the output of \code{Sys.time()}).}
+
+\item{T}{Deprecated, use t instead.}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in seconds

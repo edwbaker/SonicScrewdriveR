@@ -144,11 +144,11 @@ oscillogram
 parseFilename
 pbapply
 plotix
-pythonInstall
 pseudoWave
 pulseDetection
 pulseIntervals
 pulseStats
+pythonInstall
 radialPolygon
 rainfallDetection
 readAudacityLabels
@@ -156,6 +156,8 @@ readAudio
 readBirdNet
 readRespeaker
 readWave
+referenceIntensity
+referencePressure
 rejectDuration
 resonantFrequency
 rhythmicity

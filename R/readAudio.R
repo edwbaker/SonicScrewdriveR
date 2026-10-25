@@ -28,7 +28,8 @@
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
 #' @param from Start point in file to return
 #' @param to End point in file to return
-#' @param units One of "samples", "seconds", "minutes", "hours". Default is "seconds".
+#' @param input.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
+#' @param units Deprecated, use input.unit instead.
 #' @return A Wave object, or a WaveMC object for a file with more than two
 #'   channels.
 #' @export
@@ -36,11 +37,16 @@
 #' @importFrom seewave cutw
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
-readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
+readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
+                      units) {
+  if (!missing(units)) {
+    .deprecatedArg("units", "input.unit", "readAudio")
+    input.unit <- units
+  }
   if (mime == "auto") {
     mime <- guess_type(file)
   }
-  if (units=="samples" & from == 0) {
+  if (input.unit=="samples" & from == 0) {
     fromS <- 1
   } else{
     fromS <- from
@@ -48,7 +54,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 
   if (mime == "audio/x-wav") {
     tryCatch({
-      wave <- readWave(file, from=fromS, to=to, units=units)
+      wave <- readWave(file, from=fromS, to=to, units=input.unit)
       return(wave)
     },
     error=function(cond){
@@ -60,13 +66,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     wave <- NULL
     wave <- tryCatch({
       wave <- readMP3(file)
-      if (units=="samples") {
+      if (input.unit=="samples") {
         return(cutws(wave, fromS, min(to, length(wave))))
       }
       if (from==0 && to==Inf) {
         return(wave)
       }
-      return(.cutSeconds(wave, from, to, units))
+      return(.cutSeconds(wave, from, to, input.unit))
     },
     error=function(cond){
     })
@@ -113,13 +119,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       wave <- .avWaveMC(samples, channels, samp.rate, bit)
     }
 
-    if (units == "samples") {
+    if (input.unit == "samples") {
       return(cutws(wave,from=fromS, to=min(to, length(wave))))
     } else {
       if (from==0 & to == Inf) {
         return(wave)
       }
-      return(.cutSeconds(wave, from, to, units))
+      return(.cutSeconds(wave, from, to, input.unit))
     }
   }
   stop("File could not be processed")
@@ -135,14 +141,14 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 #' @param wave The Wave object to cut.
 #' @param from Start point as given to readAudio().
 #' @param to End point as given to readAudio().
-#' @param units The units `from` and `to` are given in.
+#' @param input.unit The unit `from` and `to` are given in.
 #' @return A Wave object holding the section asked for, with as many channels as
 #'   it was given.
 #' @keywords internal
 #' @noRd
-.cutSeconds <- function(wave, from, to, units) {
-  from <- convert2seconds(from, input=units)
-  to <- .cutEnd(to, units, wave)
+.cutSeconds <- function(wave, from, to, input.unit) {
+  from <- convert2seconds(from, input.unit=input.unit)
+  to <- .cutEnd(to, input.unit, wave)
   if (inherits(wave, "WaveMC")) {
     #cutw() takes a Wave and returns one channel, so there is nothing it can do
     #with a WaveMC. The time bounds are turned into the sample positions cutw()
@@ -172,19 +178,19 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 #' that is there instead of an error.
 #'
 #' @param to End point as given to readAudio().
-#' @param units The units `to` is given in.
+#' @param input.unit The unit `to` is given in.
 #' @param wave The Wave object being cut.
 #' @return The end point in seconds, no later than the end of the wave.
 #' @keywords internal
 #' @noRd
-.cutEnd <- function(to, units, wave) {
+.cutEnd <- function(to, input.unit, wave) {
   end <- length(wave) / wave@samp.rate
   #is.infinite() alone would also take -Inf, which convert2seconds() rejects as
   #a negative time and which must keep being rejected.
   if (is.infinite(to) && to > 0) {
     return(end)
   }
-  return(min(convert2seconds(to, units), end))
+  return(min(convert2seconds(to, input.unit), end))
 }
 
 #' Build a WaveMC from the samples the av package decoded

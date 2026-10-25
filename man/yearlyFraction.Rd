@@ -7,9 +7,11 @@
 yearlyFraction(
   t,
   year = 2022,
-  input = "POSIX",
-  unit = "radians",
-  timezone = NULL
+  input.unit = "POSIX",
+  output.unit = "radians",
+  timezone = NULL,
+  input,
+  unit
 )
 }
 \arguments{
@@ -17,14 +19,18 @@ yearlyFraction(
 
 \item{year}{Year to calculate fractions of (allows for leap years)}
 
-\item{input}{One of POSIXlt (default)}
+\item{input.unit}{The unit the date is given in, one of "POSIX", "day".}
 
-\item{unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
+\item{output.unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
 
 \item{timezone}{The timezone to read the time in, which decides which day of
 the year it falls on. The default, NULL, uses the timezone the time itself
 carries, and UTC for a time that carries none (such as the output of
 \code{Sys.time()}).}
+
+\item{input}{Deprecated, use input.unit instead.}
+
+\item{unit}{Deprecated, use output.unit instead.}
 }
 \value{
 The position of the date within the year, in radians or as a fraction of a year.

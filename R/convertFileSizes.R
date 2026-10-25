@@ -4,24 +4,29 @@
 #' of 1000, and binary units, which are powers of 1024, are accepted.
 #'
 #' @param S The value to convert
-#' @param input The unit to convert, one of those given by fileSizeUnits(), or
-#'   "bits" or "bytes".
+#' @param input.unit The unit to convert, one of those given by fileSizeUnits(),
+#'   or "bits" or "bytes".
+#' @param input Deprecated, use input.unit instead.
 #' @export
 #' @return The numeric value in bytes
 #' @examples
-#' convert2bytes(8, input="bits")
-#' convert2bytes(1, input="kB")
-#' convert2bytes(1, input="KiB")
+#' convert2bytes(8, input.unit="bits")
+#' convert2bytes(1, input.unit="kB")
+#' convert2bytes(1, input.unit="KiB")
 #'
-convert2bytes <- function(S, input="bits") {
-  units <- c(
+convert2bytes <- function(S, input.unit="bits", input) {
+  if (!missing(input)) {
+    .deprecatedArg("input", "input.unit", "convert2bytes")
+    input.unit <- input
+  }
+  multipliers <- c(
     bits = 1/8,
     bytes = 1,
     .fileSizeMultipliers("decimal"),
     .fileSizeMultipliers("binary")
   )
-  .validateChoice(input, names(units), "input", "convert2bytes")
-  return(S * units[[input]])
+  .validateChoice(input.unit, names(multipliers), "input.unit", "convert2bytes")
+  return(S * multipliers[[input.unit]])
 }
 
 #' Units used for file sizes
