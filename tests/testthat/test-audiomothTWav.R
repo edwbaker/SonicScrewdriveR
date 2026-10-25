@@ -880,3 +880,64 @@ test_that("A comment of characters wider than a byte is cut between them", {
   )
   expect_true(file.exists(f))
 })
+
+test_that("Text is measured as the bytes it will be written as", {
+  w <- omittedFixture()
+
+  # A string held in another encoding counts fewer bytes than it takes once
+  # converted, so it could pass a check against a field it does not fit.
+  latin <- iconv(strrep("\u00e9", 20), "UTF-8", "latin1")
+  expect_equal(nchar(latin, type="bytes"), 20)
+  expect_equal(nchar(enc2utf8(latin), type="bytes"), 40)
+
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  suppressWarnings(audiomothCompress(w, f, threshold=1, segment=1024, artist=latin))
+  expect_true(.isTriggeredRecording(f))
+  expect_equal(length(readAudio(f)@left), length(w@left))
+
+  g <- tempfile(fileext=".wav")
+  on.exit(unlink(g), add=TRUE)
+  suppressWarnings(audiomothCompress(
+    w, g, threshold=1, segment=1024,
+    comment=iconv(strrep("\u00e9", 300), "UTF-8", "latin1")
+  ))
+  expect_true(.isTriggeredRecording(g))
+})
+
+test_that("A recording already written is not lost to a write that fails", {
+  w <- omittedFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1, segment=1024)
+  before <- file.size(f)
+
+  # Opening a file to write empties it, so what can fail has to fail first.
+  expect_error(
+    audiomothCompress(w, f, threshold=1, segment=1024, comment=c("a", "b"), overwrite=TRUE),
+    "single string"
+  )
+  expect_equal(file.size(f), before)
+  expect_equal(length(audiomothExpand(f)@left), length(w@left))
+})
+
+test_that("The comment is found wherever the file holds it", {
+  w <- omittedFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1000, segment=1024)
+
+  # Put a large chunk before the list, so the comment sits well past the start
+  # of the file, where reading a fixed run of bytes would never reach it.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  filler <- charToRaw(as.character(guanoCreate(Make="X", Note=strrep("z", 6000))))
+  chunk <- c(charToRaw("guan"), .uintToRaw(length(filler), 4L), filler)
+  bytes <- c(bytes[1:36], chunk, bytes[37:length(bytes)])
+  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
+  con <- file(f, "wb")
+  writeBin(bytes, con)
+  close(con)
+
+  expect_gt(.wavFindChunk(.wavChunks(bytes)$chunks, "LIST")$start, 4096)
+  expect_true(.isTriggeredRecording(f))
+})

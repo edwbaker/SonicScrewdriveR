@@ -17,11 +17,6 @@
 .AM_IART_SIZE <- 32L
 .AM_LIST_SIZE <- 436L
 
-# How far into a file the comment is looked for. The header AudioMoth writes is
-# 488 bytes and holds the comment well inside that, but the application note
-# warns that the fields it holds may grow.
-.AM_COMMENT_SCAN <- 4096
-
 #' Was a recording made on a trigger?
 #'
 #' AudioMoth devices name a triggered recording with a T before the extension,
@@ -50,13 +45,13 @@
   if (is.na(size) || size < 12) {
     return(FALSE)
   }
-  head <- readBin(file, "raw", n=min(size, .AM_COMMENT_SCAN))
   # Only the comment counts. Looked for anywhere in the header, the same words
   # in a field that says nothing about the recording, the artist for one, would
   # make an ordinary recording out to be a triggered one, and expanding that
   # could alter its audio and the timing of it.
   return(grepl(
-    "Amplitude threshold was|Frequency trigger", .wavComment(head), useBytes=TRUE
+    "Amplitude threshold was|Frequency trigger",
+    .wavCommentFromFile(file), useBytes=TRUE
   ))
 }
 
@@ -552,8 +547,11 @@ audiomothCompress <- function(
   # Each of these goes into a field of the header that holds one string, and
   # anything else would be compared and written a piece at a time, which fails
   # in ways that say nothing about what was given.
-  comment <- .oneValue(comment, "comment")
-  artist <- .oneValue(artist, "artist")
+  # Measured and cut as the bytes they will be written as: a string held in
+  # another encoding can count fewer bytes than it takes once converted, pass
+  # the check, and then not fit the field it was checked against.
+  comment <- enc2utf8(.oneValue(comment, "comment"))
+  artist <- enc2utf8(.oneValue(artist, "artist"))
 
   samples <- wave@left
   n <- length(samples)
@@ -651,12 +649,16 @@ audiomothCompress <- function(
     comment <- trimws(paste0(comment, recorded))
   }
 
+  # Built before the file is opened: opening it for writing empties whatever
+  # was there, so anything that can fail has to fail first, or a recording
+  # already on disk is lost to a header that could not be made.
+  header <- .audiomothHeader(
+    dataSize, wave@samp.rate, comment, artist, length(metadata)
+  )
+
   con <- file(file, "wb")
   on.exit(close(con))
-  writeBin(
-    .audiomothHeader(dataSize, wave@samp.rate, comment, artist, length(metadata)),
-    con
-  )
+  writeBin(header, con)
   for (part in parts) {
     writeBin(part, con)
   }

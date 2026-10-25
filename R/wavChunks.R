@@ -32,7 +32,37 @@
   return(as.raw(floor(x / 256^(seq_len(size) - 1L)) %% 256))
 }
 
-#' Read the comment a wave file carries
+#' Find the ICMT field within the body of an INFO list
+#'
+#' @param body The body of a LIST chunk
+#' @return The comment, as the bytes it is written in, or ""
+#' @keywords internal
+#' @noRd
+.infoComment <- function(body) {
+  if (length(body) < 4L || !.rawIs(body[1:4], "INFO")) {
+    return("")
+  }
+  pos <- 5L
+  while (pos + 7L <= length(body)) {
+    size <- .rawToUInt(body[(pos + 4L):(pos + 7L)])
+    at <- pos + 8L
+    if (.rawIs(body[pos:(pos + 3L)], "ICMT")) {
+      end <- min(at + size - 1, length(body))
+      if (end < at) {
+        return("")
+      }
+      held <- body[at:end]
+      # Read as bytes rather than as characters of any encoding: the field is
+      # padded with nothing in particular and may hold a part of a character
+      # where a writer has cut it short.
+      return(rawToChar(held[as.integer(held) != 0L]))
+    }
+    pos <- at + size + (size %% 2)
+  }
+  return("")
+}
+
+#' Read the comment a wave file carries, wherever it is held
 #'
 #' The comment is the ICMT field of the INFO list, which is where a recorder
 #' writes what it has to say about a recording. Other fields of that list, and
@@ -40,43 +70,33 @@
 #' so the comment is read as the one field rather than looked for anywhere in
 #' the file.
 #'
-#' @param bytes A raw vector holding the start of a WAV file
+#' The chunks are walked rather than a fixed run of bytes read, as nothing
+#' fixes where the list sits: writing metadata can move it, and a comment
+#' pushed past wherever a reader stopped looking would make a recording out to
+#' be something it is not.
+#'
+#' @param file Path to a wave file
 #' @return The comment, as the bytes it is written in, or "" where there is
 #'   none to be found
 #' @keywords internal
 #' @noRd
-.wavComment <- function(bytes) {
-  info <- tryCatch(.wavChunks(bytes), unsupportedWav=function(cond) NULL)
+.wavCommentFromFile <- function(file) {
+  size <- file.size(file)
+  if (is.na(size) || size < 12) {
+    return("")
+  }
+  con <- file(file, "rb")
+  on.exit(close(con))
+  read <- .wavConReader(con)
+  info <- tryCatch(.wavWalk(read, size, size), unsupportedWav=function(cond) NULL)
   if (is.null(info)) {
     return("")
   }
-  list <- .wavFindChunk(info$chunks, "LIST")
-  if (is.null(list)) {
+  chunk <- .wavFindChunk(info$chunks, "LIST")
+  if (is.null(chunk) || chunk$size < 4) {
     return("")
   }
-  last <- min(list$start + list$size - 1, length(bytes))
-  if (last - list$start + 1 < 4 || !.rawIs(bytes[list$start:(list$start + 3L)], "INFO")) {
-    return("")
-  }
-
-  pos <- list$start + 4L
-  while (pos + 7L <= last) {
-    size <- .rawToUInt(bytes[(pos + 4L):(pos + 7L)])
-    body <- pos + 8L
-    if (.rawIs(bytes[pos:(pos + 3L)], "ICMT")) {
-      end <- min(body + size - 1, last)
-      if (end < body) {
-        return("")
-      }
-      held <- bytes[body:end]
-      # Read as bytes rather than as characters of any encoding: the field is
-      # padded with nothing in particular and may hold a part of a character
-      # where a writer has cut it short.
-      return(rawToChar(held[as.integer(held) != 0L]))
-    }
-    pos <- body + size + (size %% 2)
-  }
-  return("")
+  return(.infoComment(read(chunk$start, min(chunk$size, 65536))))
 }
 
 #' Check that an argument is one value and not several
@@ -361,6 +381,8 @@
 #' @keywords internal
 #' @noRd
 .cutToBytes <- function(string, bytes) {
+  # Counted as the bytes it will be written as, whatever encoding it arrived in.
+  string <- enc2utf8(as.character(string))
   characters <- strsplit(string, "")[[1]]
   fits <- cumsum(nchar(characters, type="bytes")) <= bytes
   return(paste0(characters[fits], collapse=""))
