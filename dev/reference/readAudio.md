@@ -36,9 +36,30 @@ readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
 
 ## Value
 
-A Wave object
+A Wave object, or a WaveMC object for a file with more than two
+channels.
 
 ## Details
+
+Mono and stereo files are returned as a
+[`tuneR::Wave`](https://rdrr.io/pkg/tuneR/man/Wave.html) object, and
+files with more than two channels as a
+[`tuneR::WaveMC`](https://rdrr.io/pkg/tuneR/man/WaveMC.html) object
+holding one column per channel, in the order the file holds them.
+[`writeAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudio.md)
+writes either back out, and functions that take multichannel audio, such
+as
+[`tdoa()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tdoa.md),
+take the result directly.
+
+WAVE files are read by
+[`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html)
+whatever their channel count, so a multichannel WAVE keeps the channel
+names the file itself records. Everything read through the av package is
+named by channel position instead (see
+[`tuneR::MCnames`](https://rdrr.io/pkg/tuneR/man/MCnames.html)), because
+the av package reports a channel layout that does not identify the
+channels of the file.
 
 Files read through the av package (which is everything that is not WAVE
 or MP3, e.g. FLAC) are returned at the bit depth the file was stored at,

@@ -84,11 +84,22 @@ an attempt is made to use the av package to read the audio.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A Wave object</p>
+    <p>A Wave object, or a WaveMC object for a file with more than two
+channels.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Files read through the av package (which is everything that is not WAVE or
+    <p>Mono and stereo files are returned as a <code><a href="https://rdrr.io/pkg/tuneR/man/Wave.html" class="external-link">tuneR::Wave</a></code> object, and files with
+more than two channels as a <code><a href="https://rdrr.io/pkg/tuneR/man/WaveMC.html" class="external-link">tuneR::WaveMC</a></code> object holding one column per
+channel, in the order the file holds them. <code><a href="writeAudio.html">writeAudio()</a></code> writes either back
+out, and functions that take multichannel audio, such as <code><a href="tdoa.html">tdoa()</a></code>, take the
+result directly.</p>
+<p>WAVE files are read by <code><a href="https://rdrr.io/pkg/tuneR/man/readWave.html" class="external-link">tuneR::readWave()</a></code> whatever their channel count, so a
+multichannel WAVE keeps the channel names the file itself records. Everything
+read through the av package is named by channel position instead (see
+<code><a href="https://rdrr.io/pkg/tuneR/man/MCnames.html" class="external-link">tuneR::MCnames</a></code>), because the av package reports a channel layout that does
+not identify the channels of the file.</p>
+<p>Files read through the av package (which is everything that is not WAVE or
 MP3, e.g. FLAC) are returned at the bit depth the file was stored at, so that
 the same audio compares equal however it was read. The av package does not
 report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of

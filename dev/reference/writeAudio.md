@@ -71,7 +71,16 @@ the `av` package, and some encoders accept only certain sample rates
 Audio written to a lossy format (e.g. MP3) will not be identical to the
 audio held in the object, and audio written to a format that does not
 support the bit depth or channel count of the object will be converted
-by the encoder.
+by the encoder. Some encoders refuse a channel count they cannot hold
+rather than converting it: MP3 will not take more than two channels, for
+example, and reports an error from the encoder.
+
+A WaveMC read by
+[`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
+can be written back out directly. Where it was read through the av
+package its channels are named by position rather than from the file, so
+the names record the channel order and not what was recorded on each
+channel.
 
 ## References
 
