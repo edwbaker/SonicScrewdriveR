@@ -149,6 +149,12 @@
 - audiomothWave() took filter.limit from the frequency trigger rather than the
   filter on recordings that used both, as it looked for the first frequency in the
   comment rather than the one in the filter clause.
+- audiomothWave() returned NA for the voltage of a recording whose battery was
+  below the range the firmware measures, unless it was made on firmware 1.4.0 or
+  later, as it looked for that version's threshold and wording. The comparison is
+  now read apart from the threshold, so the thresholds written by every version
+  are returned, and the two decimal places firmware 1.0 wrote a measured voltage
+  to are no longer rejected.
 - audiomothWave() raised an error on recordings made with a band-pass filter. The
   two cut-off frequencies are now returned as filter.limit, as they already were
   for low-pass and high-pass recordings.

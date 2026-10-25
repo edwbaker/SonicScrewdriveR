@@ -231,6 +231,44 @@ test_that("Battery states outside the measured range are reported", {
   expect_equal(d$voltage, ">4.9")
 })
 
+test_that("Battery thresholds written by firmware before 1.4.0 are reported", {
+  # The comparison wording and the threshold both changed more than once, so
+  # each era's pair is checked against the firmware that wrote it.
+  legacy <- list(
+    # 1.0 to 1.1.0
+    list("battery state was < 3.6V", "<3.6"),
+    list("battery state was > 5.0V", ">5.0"),
+    # 1.2.0, which ended the comment with a full stop
+    list("battery state was < 3.6V.", "<3.6"),
+    list("battery state was > 5.0V.", ">5.0"),
+    # 1.2.2 and 1.3.0
+    list("battery state was less than 3.6V.", "<3.6"),
+    list("battery state was greater than 4.9V.", ">4.9")
+  )
+  for (case in legacy) {
+    d <- audiomothWave(audiomothFixture(paste0(
+      "Recorded at 23:32:00 01/05/2018 (UTC) by AudioMoth 240435055C7B17DB ",
+      "at gain setting 2 while ", case[[1]]
+    )))
+    expect_equal(d$voltage, case[[2]])
+  }
+})
+
+test_that("Measured voltage is read whatever its precision", {
+  # Firmware 1.0 wrote two decimal places, every later version writes one.
+  d <- audiomothWave(audiomothFixture(paste0(
+    "Recorded at 23:32:00 01/05/2018 by AudioMoth 240435055C7B17DB at gain ",
+    "setting 2 while battery state was 4.02V"
+  )))
+  expect_equal(d$voltage, "4.02")
+
+  d <- audiomothWave(audiomothFixture(paste0(
+    "Recorded at 23:32:00 01/05/2019 (UTC) by AudioMoth 240435055C7B17DB at ",
+    "gain setting 2 while battery state was 4.1V."
+  )))
+  expect_equal(d$voltage, "4.1")
+})
+
 test_that("Negative temperatures are read", {
   d <- audiomothWave(audiomothFixture(paste0(
     "Recorded at 23:32:00 01/05/2021 (UTC) by AudioMoth 240435055C7B17DB at ",

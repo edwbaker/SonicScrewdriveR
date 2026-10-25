@@ -80,8 +80,13 @@ audiomothField <- function(x, pattern) {
 #'   \item{deployment_id}{The configured deployment ID, or NA if none was set}
 #'   \item{gain}{Gain setting, one of "low", "low-medium", "medium",
 #'     "medium-high" or "high"}
-#'   \item{voltage}{Battery voltage in volts, or "<2.5" or ">4.9" where the
-#'     firmware reported only that the battery was outside the measured range}
+#'   \item{voltage}{Battery voltage in volts. Where the firmware reported only
+#'     that the battery was outside the range it measures, the threshold it
+#'     compared against is returned with a leading \code{"<"} or \code{">"},
+#'     e.g. \code{"<2.5"}. The thresholds themselves have changed: firmware up
+#'     to 1.2.0 wrote \code{"<3.6"} and \code{">5.0"}, 1.2.2 and 1.3.0
+#'     \code{"<3.6"} and \code{">4.9"}, and 1.4.0 onwards \code{"<2.5"} and
+#'     \code{">4.9"}}
 #'   \item{temperature}{Temperature in degrees Celsius, or NA for firmware
 #'     before 1.4.0, which did not record it}
 #'   \item{external_mic}{Whether an external microphone was used}
@@ -125,12 +130,24 @@ audiomothWave <- function(filename) {
     gain <- audiomothField(raw, "at gain setting ([0-9]+) while")
   }
 
-  if (grepl("less than 2\\.5V", raw)) {
-    voltage <- "<2.5"
-  } else if (grepl("greater than 4\\.9V", raw)) {
-    voltage <- ">4.9"
+  # Where the battery was outside the range the firmware measures, the state is
+  # written as a comparison against a threshold, and both the wording and the
+  # threshold have changed: 1.0 to 1.2.0 wrote "< 3.6V" and "> 5.0V", 1.2.2 and
+  # 1.3.0 "less than 3.6V" and "greater than 4.9V", and 1.4.0 onwards "less
+  # than 2.5V" and "greater than 4.9V". Reading the comparator separately from
+  # the threshold keeps every one of them. Firmware 1.0 wrote the measured
+  # voltage with two decimal places, the rest with one.
+  m <- audiomothMatch(
+    raw,
+    "battery(?: state)? was (less than|greater than|<|>) ?([0-9]+\\.[0-9]{1,2})V"
+  )
+  if (!is.null(m)) {
+    voltage <- paste0(
+      if (is.element(m[1], c("less than", "<"))) "<" else ">",
+      m[2]
+    )
   } else {
-    voltage <- audiomothField(raw, "battery(?: state)? was ([0-9]\\.[0-9])V")
+    voltage <- audiomothField(raw, "battery(?: state)? was ([0-9]+\\.[0-9]{1,2})V")
   }
 
   temp <- audiomothField(raw, "temperature was ([-+]?[0-9]+\\.[0-9]+)C")

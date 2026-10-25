@@ -21,8 +21,13 @@ A list of extracted parameters:
 \item{deployment_id}{The configured deployment ID, or NA if none was set}
 \item{gain}{Gain setting, one of "low", "low-medium", "medium",
 "medium-high" or "high"}
-\item{voltage}{Battery voltage in volts, or "<2.5" or ">4.9" where the
-firmware reported only that the battery was outside the measured range}
+\item{voltage}{Battery voltage in volts. Where the firmware reported only
+that the battery was outside the range it measures, the threshold it
+compared against is returned with a leading \code{"<"} or \code{">"},
+e.g. \code{"<2.5"}. The thresholds themselves have changed: firmware up
+to 1.2.0 wrote \code{"<3.6"} and \code{">5.0"}, 1.2.2 and 1.3.0
+\code{"<3.6"} and \code{">4.9"}, and 1.4.0 onwards \code{"<2.5"} and
+\code{">4.9"}}
 \item{temperature}{Temperature in degrees Celsius, or NA for firmware
 before 1.4.0, which did not record it}
 \item{external_mic}{Whether an external microphone was used}
