@@ -364,6 +364,20 @@ print.guano <- function(x, ...) {
   return(guanoParse(.rawToText(bytes[chunk$start:(chunk$start + chunk$size - 1)])))
 }
 
+#' Read the GUANO metadata of a WAV file
+#'
+#' Only the metadata chunk is read, rather than the whole recording, so that
+#' asking a long recording for a field needs no more memory than the metadata
+#' itself.
+#' @noRd
+.guanoFromFile <- function(file) {
+  body <- tryCatch(.wavChunkFromFile(file, "guan"), error=function(e) NULL)
+  if (is.null(body)) {
+    return(.guanoObject(list()))
+  }
+  return(guanoParse(.rawToText(body)))
+}
+
 #' Read GUANO metadata
 #'
 #' Reads the GUANO metadata of a WAV file, or of a Wave object that carries it.
@@ -401,7 +415,7 @@ guano <- function(x) {
   if (!file.exists(x)) {
     stop("File does not exist: ", x)
   }
-  return(.guanoFromBytes(readBin(x, "raw", n=file.size(x))))
+  return(.guanoFromFile(x))
 }
 
 #' Attach GUANO metadata to a Wave object
