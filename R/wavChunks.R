@@ -32,6 +32,53 @@
   return(as.raw(floor(x / 256^(seq_len(size) - 1L)) %% 256))
 }
 
+#' Read the comment a wave file carries
+#'
+#' The comment is the ICMT field of the INFO list, which is where a recorder
+#' writes what it has to say about a recording. Other fields of that list, and
+#' other chunks, hold text of their own that says nothing about the recording,
+#' so the comment is read as the one field rather than looked for anywhere in
+#' the file.
+#'
+#' @param bytes A raw vector holding the start of a WAV file
+#' @return The comment, as the bytes it is written in, or "" where there is
+#'   none to be found
+#' @keywords internal
+#' @noRd
+.wavComment <- function(bytes) {
+  info <- tryCatch(.wavChunks(bytes), unsupportedWav=function(cond) NULL)
+  if (is.null(info)) {
+    return("")
+  }
+  list <- .wavFindChunk(info$chunks, "LIST")
+  if (is.null(list)) {
+    return("")
+  }
+  last <- min(list$start + list$size - 1, length(bytes))
+  if (last - list$start + 1 < 4 || !.rawIs(bytes[list$start:(list$start + 3L)], "INFO")) {
+    return("")
+  }
+
+  pos <- list$start + 4L
+  while (pos + 7L <= last) {
+    size <- .rawToUInt(bytes[(pos + 4L):(pos + 7L)])
+    body <- pos + 8L
+    if (.rawIs(bytes[pos:(pos + 3L)], "ICMT")) {
+      end <- min(body + size - 1, last)
+      if (end < body) {
+        return("")
+      }
+      held <- bytes[body:end]
+      # Read as bytes rather than as characters of any encoding: the field is
+      # padded with nothing in particular and may hold a part of a character
+      # where a writer has cut it short.
+      return(rawToChar(held[as.integer(held) != 0L]))
+    }
+    pos <- body + size + (size %% 2)
+  }
+  return("")
+}
+
 #' Check that an argument is one value and not several
 #'
 #' Several of these arguments name a file, or go into a field of a header that
@@ -299,4 +346,22 @@
     nbytes <- nbytes - size
   }
   invisible(NULL)
+}
+
+#' Cut text to fit a fixed number of bytes, keeping whole characters
+#'
+#' A field of a WAV header holds a set number of bytes, and a character may
+#' take several of them. Cutting at the byte would leave a part of a character
+#' at the end, which is no longer text: it cannot be compared, written back out
+#' or read, and raises rather than giving the shortened comment that was meant.
+#'
+#' @param string The text to cut
+#' @param bytes How many bytes it may take
+#' @return The longest run of whole characters that fits
+#' @keywords internal
+#' @noRd
+.cutToBytes <- function(string, bytes) {
+  characters <- strsplit(string, "")[[1]]
+  fits <- cumsum(nchar(characters, type="bytes")) <= bytes
+  return(paste0(characters[fits], collapse=""))
 }

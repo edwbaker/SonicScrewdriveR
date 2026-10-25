@@ -814,3 +814,69 @@ test_that("Files that are not triggered recordings read as they did", {
   expect_gt(length(readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"))@left), 0)
   expect_gt(length(readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"))@left), 0)
 })
+
+test_that("Trigger wording outside the comment does not make a recording one", {
+  w <- omittedFixture()
+
+  # The artist field is text of its own and says nothing about the recording.
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=0, segment=1024, artist="Frequency trigger")
+  expect_false(.isTriggeredRecording(f))
+  expect_equal(length(readAudio(f)@left), length(w@left))
+
+  # Nor does any other field of the INFO list.
+  g <- tempfile(fileext=".wav")
+  on.exit(unlink(g), add=TRUE)
+  tuneR::writeWave(w, g)
+  bytes <- readBin(g, "raw", n=file.size(g))
+  note <- charToRaw("Amplitude threshold was 99 in a note, not the comment")
+  if (length(note) %% 2) note <- c(note, as.raw(0))
+  chunk <- c(
+    charToRaw("LIST"), .uintToRaw(length(note) + 12, 4L), charToRaw("INFO"),
+    charToRaw("ISBJ"), .uintToRaw(length(note), 4L), note
+  )
+  bytes <- c(bytes[1:36], chunk, bytes[37:length(bytes)])
+  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
+  con <- file(g, "wb")
+  writeBin(bytes, con)
+  close(con)
+  expect_false(.isTriggeredRecording(g))
+
+  # The comment itself still counts, for a file this package writes and for
+  # the bundled recording from a device.
+  p <- tempfile(fileext=".wav")
+  on.exit(unlink(p), add=TRUE)
+  audiomothCompress(w, p, threshold=1000, segment=1024)
+  expect_true(.isTriggeredRecording(p))
+  expect_true(.isTriggeredRecording(
+    system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  ))
+  expect_false(.isTriggeredRecording(
+    system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver")
+  ))
+})
+
+test_that("A comment of characters wider than a byte is cut between them", {
+  w <- omittedFixture()
+
+  # Cutting at the byte would leave a part of a character, which is no longer
+  # text and raises rather than giving the shortened comment that was meant.
+  for (n in c(100, 190, 200, 400)) {
+    f <- tempfile(fileext=".wav")
+    suppressWarnings(
+      audiomothCompress(w, f, threshold=1, segment=1024, comment=strrep("\u00e9", n))
+    )
+    expect_true(.isTriggeredRecording(f))
+    expect_equal(length(readAudio(f)@left), length(w@left))
+    unlink(f)
+  }
+
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  expect_warning(
+    audiomothCompress(w, f, threshold=0, segment=1024, artist=strrep("\u00e9", 40)),
+    "truncated"
+  )
+  expect_true(file.exists(f))
+})

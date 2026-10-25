@@ -51,11 +51,12 @@
     return(FALSE)
   }
   head <- readBin(file, "raw", n=min(size, .AM_COMMENT_SCAN))
-  # The header holds bytes that are not text, so the comment is read as bytes
-  # rather than as characters of any encoding.
-  text <- rawToChar(head[as.integer(head) != 0L])
+  # Only the comment counts. Looked for anywhere in the header, the same words
+  # in a field that says nothing about the recording, the artist for one, would
+  # make an ordinary recording out to be a triggered one, and expanding that
+  # could alter its audio and the timing of it.
   return(grepl(
-    "Amplitude threshold was|Frequency trigger", text, useBytes=TRUE
+    "Amplitude threshold was|Frequency trigger", .wavComment(head), useBytes=TRUE
   ))
 }
 
@@ -446,11 +447,12 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #' @noRd
 .audiomothHeader <- function(dataSize, sampleRate, comment, artist, extraSize=0) {
   pad <- function(string, len) {
-    bytes <- charToRaw(enc2utf8(as.character(string)))
-    if (length(bytes) > len) {
+    string <- as.character(string)
+    if (nchar(string, type="bytes") > len) {
       warning("String was truncated to ", len, " bytes to fit the WAV header.")
-      bytes <- bytes[seq_len(len)]
+      string <- .cutToBytes(string, len)
     }
+    bytes <- charToRaw(enc2utf8(string))
     return(c(bytes, raw(len - length(bytes))))
   }
 
@@ -639,15 +641,14 @@ audiomothCompress <- function(
     # could not be read back as a triggered recording without it, so a comment
     # too long to hold both is cut instead.
     room <- .AM_ICMT_SIZE - nchar(recorded, type="bytes")
-    given <- charToRaw(enc2utf8(as.character(comment)))
-    if (length(given) > room) {
+    if (nchar(comment, type="bytes") > room) {
       warning(
         "Comment was truncated to ", room,
         " bytes to leave room for the amplitude threshold."
       )
-      given <- given[seq_len(room)]
+      comment <- .cutToBytes(comment, room)
     }
-    comment <- trimws(paste0(rawToChar(given), recorded))
+    comment <- trimws(paste0(comment, recorded))
   }
 
   con <- file(file, "wb")
