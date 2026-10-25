@@ -622,3 +622,21 @@ test_that("Windowing a file that only looks like a triggered recording still wor
                              FUN=function(wave, start, window.length) start))
   expect_equal(length(starts), 8)
 })
+
+test_that("A recording can be expanded over itself whatever its length", {
+  expandInPlace <- function(wave) {
+    f <- tempfile(fileext="T.WAV")
+    on.exit(unlink(f))
+    audiomothCompress(wave, f, threshold=1)
+    audiomothExpand(f, output=f, overwrite=TRUE)
+    length(audiomothExpand(f)@left)
+  }
+
+  # A recording short enough to need no expansion is copied rather than
+  # written, and a file cannot be copied over itself.
+  short <- tuneR::Wave(left=as.integer(rep(1000L, 10)), samp.rate=8000, bit=16)
+  expect_equal(expandInPlace(short), 10)
+
+  long <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
+  expect_equal(expandInPlace(long), 32768)
+})

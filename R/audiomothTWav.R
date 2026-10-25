@@ -236,10 +236,16 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
     # it could be an encoded block and there is nothing to expand. A recording
     # of a few samples is the usual way to arrive here.
     if (!is.null(output)) {
+      # Asked to write over the file it was given, there is nothing to do:
+      # the file already holds what expanding it would produce. Copying it
+      # onto itself would fail, which a longer recording expanded in place
+      # does not.
+      same <- normalizePath(output, winslash="/", mustWork=FALSE) ==
+        normalizePath(file, winslash="/", mustWork=FALSE)
       # file.copy() reports a failure, such as a directory that is not there,
       # by returning FALSE, so saying nothing here would hand back the path of
       # a file that was never written.
-      if (!file.copy(file, output, overwrite=TRUE)) {
+      if (!same && !file.copy(file, output, overwrite=TRUE)) {
         stop("Could not write the output file: ", output)
       }
       return(invisible(output))
