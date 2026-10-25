@@ -762,3 +762,55 @@ test_that("Arguments that name one thing are refused several", {
   expect_error(audiomothExpand(c(f, f)), "single string")
   expect_error(audiomothExpand(f, output=c(tempfile(), tempfile())), "single string")
 })
+
+# A recording with periods genuinely left out, so that failing to recognise it
+# shows as audio at the wrong times rather than as nothing at all.
+omittedFixture <- function() {
+  samples <- as.integer(rep(50L, 20000))
+  samples[8000:9000] <- 12000L
+  tuneR::Wave(left=samples, samp.rate=8000, bit=16)
+}
+
+test_that("A trigger recorded beyond the comment field is not counted", {
+  w <- omittedFixture()
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  # The comment says the threshold, but only past the bytes the field holds,
+  # so what is written does not say it and the threshold has to be added.
+  expect_warning(
+    audiomothCompress(w, f, threshold=1000, segment=1024,
+                      comment=paste0(strrep("x", 384), " Amplitude threshold was 1000.")),
+    "truncated"
+  )
+  expect_true(.isTriggeredRecording(f))
+  expect_lt(length(tuneR::readWave(f)@left), length(w@left))
+  expect_equal(length(readAudio(f)@left), length(w@left))
+})
+
+test_that("A triggered recording is expanded whatever its name says", {
+  w <- omittedFixture()
+  for (ext in c(".dat", "", ".bin", ".mp3")) {
+    f <- file.path(tempdir(), paste0("recording", ext))
+    unlink(f)
+    audiomothCompress(w, f, threshold=1000, segment=1024)
+
+    # The type is guessed from the name, and a triggered recording can be
+    # called anything, so the trigger is looked for whatever the name says.
+    expect_true(.isTriggeredRecording(f))
+    expect_lt(length(tuneR::readWave(f)@left), length(w@left))
+    expect_equal(length(readAudio(f)@left), length(w@left))
+    unlink(f)
+  }
+})
+
+test_that("Files that are not triggered recordings read as they did", {
+  w <- omittedFixture()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+  expect_equal(length(readAudio(f)@left), length(w@left))
+
+  expect_gt(length(readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"))@left), 0)
+  expect_gt(length(readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"))@left), 0)
+})

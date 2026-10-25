@@ -620,8 +620,15 @@ audiomothCompress <- function(
   #
   # A comment that records a trigger already, as one copied from a device does,
   # is left as it is rather than made to say it twice.
+  # Only what the comment field will hold counts as recording the trigger: a
+  # comment that says so beyond the bytes the field keeps would be cut back to
+  # one that does not, and the recording could never be read back as triggered.
+  stored <- charToRaw(enc2utf8(comment))
+  if (length(stored) > .AM_ICMT_SIZE) {
+    stored <- stored[seq_len(.AM_ICMT_SIZE)]
+  }
   records <- grepl(
-    "Amplitude threshold was|Frequency trigger", comment, useBytes=TRUE
+    "Amplitude threshold was|Frequency trigger", rawToChar(stored), useBytes=TRUE
   )
   if (threshold > 0 && !records) {
     recorded <- paste0(

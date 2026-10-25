@@ -55,7 +55,11 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     fromS <- from
   }
 
-  if (mime == "audio/x-wav" && .isTriggeredRecording(file)) {
+  # Asked before the type is weighed, as the type is guessed from the name and
+  # a triggered recording can be called anything at all. One that is not a
+  # wave file this package can expand says so and is read as it would be
+  # otherwise, so there is nothing to lose by asking.
+  if (.isTriggeredRecording(file)) {
     # An AudioMoth triggered recording reads as a valid WAV file, so it has to
     # be expanded before readWave() gets to it. A file that is not one of those
     # at all falls through to be read normally, but a failure to expand a
