@@ -491,6 +491,14 @@ guanoWrite <- function(x, file, output=NULL) {
     tail <- if (after <= length(bytes)) bytes[after:length(bytes)] else raw(0)
   }
 
+  # A RIFF chunk of an odd length is followed by a padding byte, so a recording
+  # holding an odd number of audio bytes needs one before anything is written
+  # after it. Without it the metadata would start a byte early and be read as a
+  # chunk of some other name.
+  if (length(head) %% 2L == 1L) {
+    head <- c(head, raw(1))
+  }
+
   head[5:8] <- .uintToRaw(length(head) + length(chunk) + length(tail) - 8, 4L)
 
   con <- file(output, "wb")

@@ -498,3 +498,43 @@ test_that("A sample range past the end stops at the end of the recording", {
   expect_equal(length(wave@left), 9)
   expect_false(any(is.na(wave@left)))
 })
+
+test_that("Windowing a triggered recording covers all of it", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+
+  starts <- c()
+  invisible(windowing(
+    f, window.length=8000, window.overlap=0,
+    FUN=function(wave, start, window.length) {
+      starts <<- c(starts, start)
+      length(wave@left)
+    }
+  ))
+
+  # The recording expands to 49908 samples, so six whole windows of 8000 fit.
+  # Scheduling from the file on disk gives only four, as it holds 33780
+  # samples with the periods that did not trigger a recording left out.
+  expect_equal(starts, c(1, 8001, 16001, 24001, 32001, 40001))
+
+  # The audible part of this recording runs from sample 32525, which the four
+  # windows the file on disk would give never reach.
+  expect_gt(max(starts) + 8000 - 1, 32525)
+
+  lengths <- unlist(windowing(
+    f, window.length=8000, window.overlap=0,
+    FUN=function(wave, start, window.length) length(wave@left)
+  ))
+  expect_true(all(lengths == 8000))
+})
+
+test_that("Windowing a triggered recording to its end stops at the last sample", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+
+  lengths <- unlist(windowing(
+    f, window.length=8000, window.overlap=0, complete.windows=FALSE,
+    FUN=function(wave, start, window.length) length(wave@left)
+  ))
+  expect_equal(length(lengths), 7)
+  # The last window runs past the end of the recording and stops at it.
+  expect_equal(sum(lengths), 49908)
+})

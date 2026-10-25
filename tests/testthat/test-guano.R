@@ -440,3 +440,29 @@ test_that("Metadata written to a recording cut short can be read back", {
   expect_equal(info$riffSize + 8, file.size(f))
   expect_gt(length(tuneR::readWave(f)@left), 0)
 })
+
+test_that("Metadata is readable after a recording ending on an odd byte", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  # Leave an odd number of audio bytes, so that a padding byte is needed
+  # before anything written after the audio.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  con <- file(f, "wb")
+  writeBin(bytes[seq_len(length(bytes) - 1743)], con)
+  close(con)
+  info <- .wavChunks(readBin(f, "raw", n=file.size(f)))
+  expect_equal(.wavFindChunk(info$chunks, "data")$size %% 2, 1)
+
+  expect_warning(guanoWrite(guanoCreate(Make="X"), f), "truncated")
+
+  # Without the padding byte the chunk would start one byte early and be read
+  # under some other name.
+  expect_identical(guano(f)[["Make"]], "X")
+  ids <- vapply(.wavChunks(readBin(f, "raw", n=file.size(f)))$chunks,
+                function(chunk) chunk$id, character(1))
+  expect_true("guan" %in% ids)
+  expect_equal(.wavChunks(readBin(f, "raw", n=file.size(f)))$riffSize + 8, file.size(f))
+})
