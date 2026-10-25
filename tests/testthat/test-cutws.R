@@ -56,3 +56,37 @@ test_that("cutws handles Inf and plotting for WaveMC", {
   expect_equal(nrow(cutws(mc, from=91, to=Inf)@.Data), 10)
   expect_silent(cutws(mc, from=1, to=10, plot=TRUE))
 })
+
+test_that("cutws preserves pcm for Wave objects", {
+  s <- tuneR::sine(440, duration=1000, samp.rate=8000)
+  expect_false(s@pcm)
+  cut <- cutws(s, from=1, to=500)
+  expect_false(cut@pcm)
+  expect_equal(cut@bit, s@bit)
+
+  stereo <- tuneR::Wave(s@left, right=s@left, samp.rate=8000, bit=32, pcm=FALSE)
+  expect_false(cutws(stereo, from=1, to=500)@pcm)
+})
+
+test_that("cutws can cut a 64-bit float Wave", {
+  w64 <- tuneR::Wave(stats::runif(1000, -1, 1), samp.rate=8000, bit=64, pcm=FALSE)
+  cut <- cutws(w64, from=1, to=500)
+  expect_equal(length(cut@left), 500)
+  expect_equal(cut@bit, 64)
+  expect_false(cut@pcm)
+})
+
+test_that("cutws past the end returns the audio that is there, not NA", {
+  w <- tuneR::sine(1000, duration=100, samp.rate=8000)
+  cut <- cutws(w, from=91, to=110)
+  expect_equal(length(cut@left), 10)
+  expect_equal(sum(is.na(cut@left)), 0)
+  expect_equal(cut@left, w@left[91:100])
+
+  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=16)
+  cutmc <- cutws(mc, from=91, to=110)
+  expect_equal(nrow(cutmc@.Data), 10)
+  expect_equal(sum(is.na(cutmc@.Data)), 0)
+
+  expect_error(cutws(w, from=110, to=120), "In cutws to must be greater than from")
+})
