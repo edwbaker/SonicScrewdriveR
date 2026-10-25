@@ -466,3 +466,27 @@ test_that("Metadata is readable after a recording ending on an odd byte", {
   expect_true("guan" %in% ids)
   expect_equal(.wavChunks(readBin(f, "raw", n=file.size(f)))$riffSize + 8, file.size(f))
 })
+
+test_that("Reading metadata from a path gives what reading the bytes gives", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  # The file has no metadata yet, and must not be reported as an error.
+  expect_identical(guano(f), guano(readBin(f, "raw", n=file.size(f))))
+
+  g <- guanoCreate(
+    Make = "Open Acoustic Devices",
+    Samplerate = 8000,
+    "Loc Position" = c(51.4964, -0.1224),
+    Timestamp = as.POSIXct("2020-11-03 11:24:30", tz="UTC")
+  )
+  guanoWrite(g, f)
+  expect_equal(guano(f), guano(readBin(f, "raw", n=file.size(f))))
+
+  # A file that is not a wave file at all still gives empty metadata rather
+  # than an error.
+  writeLines("not a wave file at all", f)
+  expect_length(guano(f), 0)
+})

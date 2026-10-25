@@ -75,38 +75,45 @@
   rawToChar(as.raw(v))
 }
 
-#' List the RIFF chunks of a WAV file
+#' Walk the RIFF chunks of a WAV file
+#'
+#' The bytes are fetched through a function given to it, so that a file held in
+#' memory and a file read over a connection cannot come to disagree about the
+#' chunks it holds.
 #'
 #' A chunk whose size runs past the end of the file is reported with the size it
 #' actually has and flagged as truncated, rather than failing, as recordings cut
 #' short by a flat battery or a full card are common.
 #'
-#' @param bytes A raw vector holding a WAV file, or the start of one
-#' @param total Size of the whole file, where `bytes` holds only the start of
-#'   it. Chunks are only reported as far as `bytes` goes, but a chunk running
-#'   past it is not mistaken for a truncated one.
+#' @param read A function of the one-based position of the first byte wanted and
+#'   the number of bytes to fetch, returning them as a raw vector
+#' @param n Number of bytes that can be read
+#' @param total Size of the whole file, where only the start of it can be read.
+#'   Chunks are only reported as far as `n` goes, but a chunk running past it is
+#'   not mistaken for a truncated one.
 #' @return A list giving the size recorded in the RIFF header and a list of
 #'   chunks, each with its identifier, the one-based position of the first byte
 #'   of its body, its size in bytes, and whether it was truncated
 #' @keywords internal
 #' @noRd
-.wavChunks <- function(bytes, total=length(bytes)) {
-  n <- length(bytes)
+.wavWalk <- function(read, n, total) {
   if (n < 12L) {
     .unsupportedWav("File is too short to be a WAV file.")
   }
-  if (!.rawIs(bytes[1:4], "RIFF")) {
+  header <- read(1L, 12L)
+  if (!.rawIs(header[1:4], "RIFF")) {
     .unsupportedWav("Could not find RIFF chunk ID.")
   }
-  if (!.rawIs(bytes[9:12], "WAVE")) {
+  if (!.rawIs(header[9:12], "WAVE")) {
     .unsupportedWav("Could not find WAVE ID.")
   }
 
   chunks <- list()
   pos <- 13L
   while (pos + 7L <= n) {
-    id <- .rawToId(bytes[pos:(pos + 3L)])
-    size <- .rawToUInt(bytes[(pos + 4L):(pos + 7L)])
+    bytes <- read(pos, 8L)
+    id <- .rawToId(bytes[1:4])
+    size <- .rawToUInt(bytes[5:8])
     body <- pos + 8L
     truncated <- body + size - 1 > total
     if (truncated) {
@@ -122,7 +129,68 @@
     pos <- body + size + (size %% 2)
   }
 
-  return(list(riffSize=.rawToUInt(bytes[5:8]), chunks=chunks))
+  return(list(riffSize=.rawToUInt(header[5:8]), chunks=chunks))
+}
+
+#' List the RIFF chunks of a WAV file held as raw bytes
+#'
+#' @param bytes A raw vector holding a WAV file, or the start of one
+#' @param total Size of the whole file, where `bytes` holds only the start of it
+#' @return The chunks, as .wavWalk() reports them
+#' @keywords internal
+#' @noRd
+.wavChunks <- function(bytes, total=length(bytes)) {
+  read <- function(at, n) bytes[at:(at + n - 1L)]
+  return(.wavWalk(read, length(bytes), total))
+}
+
+#' Fetch a run of bytes from a connection by position
+#'
+#' @param con A binary connection that can seek
+#' @return A function of a one-based position and a number of bytes
+#' @keywords internal
+#' @noRd
+.wavConReader <- function(con) {
+  function(at, n) {
+    seek(con, at - 1)
+    return(readBin(con, "raw", n=n))
+  }
+}
+
+#' List the RIFF chunks of a WAV file without reading the whole file
+#'
+#' Reads each chunk header and seeks past the body it describes, so that the
+#' memory needed does not grow with the length of the recording.
+#'
+#' @param file Path to a WAV file
+#' @return The chunks, as .wavWalk() reports them
+#' @keywords internal
+#' @noRd
+.wavChunksFile <- function(file) {
+  con <- file(file, "rb")
+  on.exit(close(con))
+  size <- file.size(file)
+  return(.wavWalk(.wavConReader(con), size, size))
+}
+
+#' Read the body of one chunk of a WAV file without reading the whole file
+#'
+#' @param file Path to a WAV file
+#' @param id The chunk identifier to look for
+#' @return A raw vector holding the body of the chunk, or NULL where the file
+#'   has no such chunk or it holds nothing
+#' @keywords internal
+#' @noRd
+.wavChunkFromFile <- function(file, id) {
+  con <- file(file, "rb")
+  on.exit(close(con))
+  size <- file.size(file)
+  read <- .wavConReader(con)
+  chunk <- .wavFindChunk(.wavWalk(read, size, size)$chunks, id)
+  if (is.null(chunk) || chunk$size < 1) {
+    return(NULL)
+  }
+  return(read(chunk$start, chunk$size))
 }
 
 #' Find one chunk of a WAV file by identifier

@@ -17,7 +17,10 @@
   it to a wave file, and `guano<-` attaches it to a Wave. Fields the GUANO
   specification defines are converted to the types it gives them, and any other
   field is kept as written. Metadata is carried through expansion of a T.WAV
-  file, and audiomothCompress() can write it.
+  file, and audiomothCompress() can write it. Given a path, it walks the chunks
+  of the file over a connection and reads only the metadata chunk, so reading a
+  field from a recording of any length needs no more memory than the metadata
+  itself.
 - Wave methods for reticulate allow wave objects to be passed between R and Python
 - Initial support for scikit-maad Python package
 - dolbear() can now perform Dolbear's law calculations for more species
