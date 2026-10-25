@@ -525,3 +525,18 @@ test_that("Replacing metadata held before the audio keeps the omitted periods", 
     expect_equal(length(audiomothExpand(f)@left), 49908)
   }
 })
+
+test_that("A file that cannot be read is told apart from one holding nothing", {
+  # A directory exists, so it passes the check that the file is there, but it
+  # cannot be opened. Reporting that as metadata being absent would hide it.
+  unreadable <- tempfile()
+  dir.create(unreadable)
+  on.exit(unlink(unreadable, recursive=TRUE))
+  expect_error(suppressWarnings(guano(unreadable)))
+
+  # A file that simply is not a wave file does hold no metadata, and says so.
+  notAWave <- tempfile(fileext=".WAV")
+  on.exit(unlink(notAWave), add=TRUE)
+  writeLines("not a wave file at all, by any measure", notAWave)
+  expect_length(guano(notAWave), 0)
+})

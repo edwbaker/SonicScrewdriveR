@@ -233,7 +233,12 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
     # it could be an encoded block and there is nothing to expand. A recording
     # of a few samples is the usual way to arrive here.
     if (!is.null(output)) {
-      file.copy(file, output, overwrite=TRUE)
+      # file.copy() reports a failure, such as a directory that is not there,
+      # by returning FALSE, so saying nothing here would hand back the path of
+      # a file that was never written.
+      if (!file.copy(file, output, overwrite=TRUE)) {
+        stop("Could not write the output file: ", output)
+      }
       return(invisible(output))
     }
     return(.audiomothWave(c(blocks, tail), info, 0))
@@ -256,8 +261,11 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 
   # A WAV file records its sizes in four bytes, so it cannot describe one of
   # 4GB or more. Writing such a file would wrap the sizes and leave something
-  # no reader could make sense of.
-  if (info$riffSize + expanded >= 2^32 || info$dataSize + expanded >= 2^32) {
+  # no reader could make sense of. The sizes to weigh are the ones about to be
+  # written, not the ones the file declares: a recording cut short can declare
+  # a RIFF size far larger than anything it holds, and refusing it on that
+  # would turn away a recording that expands perfectly well.
+  if (outSize - 8 >= 2^32 || info$dataSize + expanded >= 2^32) {
     stop(
       "The expanded recording would be ", round(outSize / 2^30, 1),
       "GB, which is more than a WAV file can describe."

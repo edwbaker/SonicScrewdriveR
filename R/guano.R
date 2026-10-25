@@ -377,7 +377,11 @@ print.guano <- function(x, ...) {
 #' itself.
 #' @noRd
 .guanoFromFile <- function(file) {
-  body <- tryCatch(.wavChunkFromFile(file, "guan"), error=function(e) NULL)
+  # A file that is not one this package can read holds no metadata, and says
+  # so. A file it cannot open or read at all is a different matter, and saying
+  # the metadata is absent would report a file that could not be read as one
+  # carrying nothing.
+  body <- tryCatch(.wavChunkFromFile(file, "guan"), unsupportedWav=function(cond) NULL)
   if (is.null(body)) {
     return(.guanoObject(list()))
   }

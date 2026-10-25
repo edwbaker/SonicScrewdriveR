@@ -563,3 +563,37 @@ test_that("Metadata is carried onto a section of a triggered recording", {
   expect_identical(guano(readAudio(f, from=1, to=2))[["Make"]], "Open Acoustic Devices")
   expect_identical(guano(readAudio(f, from=1, to=100, units="samples"))[["Make"]], "Open Acoustic Devices")
 })
+
+test_that("A file that could not be written is reported rather than returned", {
+  w <- tuneR::Wave(left=as.integer(rep(1000L, 10)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1)
+
+  # Short enough to be copied rather than expanded, which is the path that
+  # could hand back the name of a file it never wrote.
+  expect_lt(file.size(f), 512)
+  missing <- file.path(tempfile(), "not", "there.WAV")
+  expect_error(suppressWarnings(audiomothExpand(f, missing)), "Could not write")
+  expect_false(file.exists(missing))
+})
+
+test_that("A recording cut short is not refused for the size it claims", {
+  w <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1)
+
+  # Declare a RIFF size near the largest a WAV header can hold, then cut the
+  # file short, as a recording that stopped before it finished would.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  bytes[5:8] <- .uintToRaw(2^32 - 100, 4L)
+  con <- file(f, "wb")
+  writeBin(bytes[seq_len(length(bytes) - 5000)], con)
+  close(con)
+
+  # What matters is the size about to be written, not the one it claims.
+  wave <- suppressWarnings(audiomothExpand(f))
+  expect_gt(length(wave@left), 0)
+  expect_lt(length(wave@left), length(w@left))
+})
