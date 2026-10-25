@@ -22,3 +22,4 @@ README.md
 ^CRAN-SUBMISSION$
 ^.*\.pem$
 ^\.claude$
+^data-raw$

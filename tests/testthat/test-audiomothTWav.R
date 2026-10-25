@@ -1,3 +1,66 @@
+# The bundled AUDIOMOTHT.WAV is a triggered recording written at the segment
+# size current AudioMoth firmware uses. It was checked, byte for byte, against
+# the reference implementation published by Open Acoustic Devices, so the
+# figures below describe an expansion known to be correct, and are not simply
+# what this package happened to produce. Expanding it exercises the reader
+# against a fixed file rather than against this package's own writer.
+#
+# It holds four segments: a quiet first one, a quiet second one that is omitted,
+# a triggered third one, and a short final one. The first and last segments are
+# always written, as silence where they fall below the threshold, so the only
+# audible part of the expansion is the third segment.
+test_that("The bundled triggered recording expands as the reference tool expands it", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  e <- audiomothExpand(f)
+
+  expect_s4_class(e, "Wave")
+  expect_equal(length(e@left), 49908)
+  expect_equal(e@samp.rate, 8000)
+  expect_equal(e@bit, 16)
+  expect_false(e@stereo)
+
+  samples <- as.integer(e@left)
+  # The first segment and the omitted second segment are both silence.
+  expect_true(all(samples[1:32524] == 0))
+  # The triggered third segment is the only audio in the file.
+  expect_equal(which(samples != 0)[1], 32525)
+  expect_equal(max(which(samples != 0)), 48908)
+  expect_equal(sum(samples != 0), 16241)
+  expect_equal(range(samples), c(-11000, 11000))
+  expect_equal(sum(abs(as.numeric(samples))), 56236756)
+  # The short final segment is below the threshold, so it too is silence.
+  expect_true(all(samples[48909:49908] == 0))
+})
+
+test_that("The bundled triggered recording holds one encoded block", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  bytes <- readBin(f, "raw", n=file.size(f))
+  nBlocks <- length(bytes) %/% 512L
+  blocks <- bytes[seq_len(nBlocks * 512L)]
+  dim(blocks) <- c(512L, nBlocks)
+
+  counts <- .audiomothBlockCounts(blocks)
+  # One omitted segment of 32768 bytes, which is 64 blocks of 512 bytes.
+  expect_equal(sum(counts > 0), 1)
+  expect_equal(counts[counts > 0], 64)
+})
+
+test_that("The bundled triggered recording reads through readAudio", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  expect_equal(length(readAudio(f)@left), 49908)
+
+  # Read through tuneR it is shorter, as the omitted period is still missing.
+  expect_lt(length(tuneR::readWave(f)@left), 49908)
+})
+
+test_that("The bundled triggered recording still carries a readable comment", {
+  f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  d <- audiomothWave(f)
+  expect_equal(d$start_time, "21:06:00")
+  expect_equal(d$start_date, "14/05/2026")
+  expect_equal(d$serial, "247AB4055C7B17DB")
+})
+
 # A wave with loud bursts separated by near-silence, long enough at the default
 # segment size to produce several omitted periods.
 twavFixture <- function(rate=8000, seconds=6, bursts=c(1, 4)) {

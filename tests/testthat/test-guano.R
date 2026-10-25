@@ -1,3 +1,35 @@
+# AUDIOMOTH_GUANO.WAV carries metadata of the shape current AudioMoth firmware
+# writes, including the fields it puts in its own OAD namespace. The older
+# AUDIOMOTH.WAV predates the firmware that writes GUANO and carries none.
+test_that("The bundled metadata is read field by field", {
+  f <- system.file("extdata/AUDIOMOTH_GUANO.WAV", package="sonicscrewdriver")
+  g <- guano(f)
+
+  expect_s3_class(g, "guano")
+  expect_length(g, 12)
+  expect_identical(g[["GUANO|Version"]], "1.0")
+  expect_identical(g[["Make"]], "Open Acoustic Devices")
+  expect_identical(g[["Model"]], "AudioMoth")
+  expect_identical(g[["Serial"]], "247AB4055C7B17DB")
+  expect_identical(g[["Firmware Version"]], "AudioMoth-Firmware-Basic (1.11.0)")
+  expect_equal(g[["Loc Position"]], c(51.4964, -0.1224))
+  expect_identical(g[["Temperature Int"]], 12.3)
+
+  # The timestamp was written with a UTC offset of one hour.
+  expect_s3_class(g[["Timestamp"]], "POSIXct")
+  expect_identical(format(g[["Timestamp"]], "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2026-05-14T20:06:00Z")
+
+  # Fields in a manufacturer's namespace are kept exactly as written.
+  expect_identical(g[["OAD|Battery Voltage"]], "4.1")
+  expect_identical(g[["OAD|Loc Source"]], "Configuration app")
+  expect_identical(g[["OAD|Recording Settings"]], "8000 GAIN 2 AMP 1000 1")
+})
+
+test_that("A recording from before GUANO was written carries none", {
+  f <- system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver")
+  expect_length(guano(f), 0)
+})
+
 test_that("Fields are read as the types the specification gives them", {
   g <- guanoParse(paste(
     "GUANO|Version:1.0",
