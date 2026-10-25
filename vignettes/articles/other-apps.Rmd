@@ -31,6 +31,62 @@ The [audioBlast API](https://api.audioblast.org) can be accessed using the `audi
 
 [AudioMoth](https://www.openacousticdevices.info/audiomoth) configuration files and wave files can be read into R using the `audiomothConfig()` and `audiomothWave()` functions, respectively. The `audiomothConfig()` function takes a path to a configuration file and returns a data frame of the configuration settings. The `audiomothWave()` function takes a path to a wave file and returns a list of extracted parameters.
 
+#### Triggered recordings
+
+An AudioMoth recording on a trigger, such as an amplitude threshold, writes a single file whose name ends in `T.WAV`. The periods that did not trigger a recording are left out of it, each replaced by a short encoded block recording how long it was. A conventional wave tool reads such a file as the triggered recordings run together, which loses the timing of the events in the recording.
+
+`audiomothExpand()` puts the omitted periods back as silence, so that the triggered recordings sit where they were recorded. It returns a Wave object, or writes an ordinary wave file if given a path to write to.
+
+```{r, eval=FALSE}
+w <- audiomothExpand("20201103_112430T.WAV")
+
+# Or expand every triggered recording on a card to a wave file
+for (f in list.files(pattern="T\\.WAV$")) {
+  audiomothExpand(f, sub("T\\.WAV$", ".WAV", f))
+}
+```
+
+`readAudio()` recognises the `T.WAV` naming convention and expands such a file as it reads it, so no change is needed to code that already uses it.
+
+```{r, eval=FALSE}
+w <- readAudio("20201103_112430T.WAV", from=60, to=120, units="seconds")
+```
+
+`audiomothCompress()` goes the other way, writing a Wave as a triggered file and leaving out the segments whose peak amplitude falls below a threshold. Audio left out is not recoverable, as it is not recoverable on the device.
+
+```{r, eval=FALSE}
+audiomothCompress(w, "20201103_112430T.WAV", threshold=1000)
+```
+
+#### GUANO metadata
+
+Current AudioMoth firmware writes [GUANO](https://github.com/riggsd/guano-spec) metadata, a format used by many bioacoustic recorders, which `guano()` reads from any wave file that carries it.
+
+```{r, eval=FALSE}
+m <- guano("20201103_112430.WAV")
+m[["Loc Position"]]
+m[["Timestamp"]]
+```
+
+Fields the specification defines are converted to the types it gives them, so a position is a pair of numbers and a timestamp is a `POSIXct`. Any other field, which includes every namespaced field such as `OAD|Battery Voltage`, is kept as written. Metadata can be edited as a list and written back with `guanoWrite()`, which replaces only the metadata and leaves the audio untouched.
+
+```{r, eval=FALSE}
+m[["Species Manual ID"]] <- "Pipistrellus pipistrellus"
+guanoWrite(m, "20201103_112430.WAV")
+```
+
+`guanoCreate()` builds metadata from scratch, which `guanoWrite()` can add to a file that has none, and `audiomothCompress()` can write into a triggered file. Expanding a triggered file carries its metadata over.
+
+```{r, eval=FALSE}
+m <- guanoCreate(
+  Make = "Open Acoustic Devices",
+  Model = "AudioMoth",
+  Samplerate = 48000,
+  "Loc Position" = c(51.4964, -0.1224)
+)
+guanoWrite(m, "20201103_112430.WAV")
+```
+
 ### BirdNET Analyzer
 
 [BirdNET Analyzer](https://birdnet.cornell.edu) is a deep learning model for the automatic detection of bird sounds. The `birdNetInstall()` function can be used to install the `ssd_birdnet` environment required to use the `birdNetAnalyse()` function with `SonicScrewdriver`. The `birdNetAnalyse()` function takes a list of sound files and analyses them using the `BirdNET-Analyzer`. The function either returns a data frame with the results of the analysis or a list of `Annotation` objects.

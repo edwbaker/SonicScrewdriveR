@@ -32,4 +32,9 @@ the same audio compares equal however it was read. The av package does not
 report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of
 a 24bit file are 256 times those \code{tuneR::readWave()} would give for the same
 audio stored as WAVE. Audio stored as floating point is returned as 32bit.
+
+A file named following the AudioMoth convention for triggered recordings,
+ending in T.WAV, is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is read, so that
+the periods that did not trigger a recording are returned as silence and the
+timing of the triggered recordings is preserved.
 }

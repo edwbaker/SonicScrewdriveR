@@ -20,6 +20,7 @@ HHMM
 HHMMSS
 IUPAC
 MoleFracCO
+OAD
 Oecanthus
 POSIXct
 POSIXlt
@@ -58,7 +59,9 @@ audioRead
 audioblast
 audioblastDownload
 audiomoth
+audiomothCompress
 audiomothConfig
+audiomothExpand
 audiomothWave
 autoBandPass
 av
@@ -116,6 +119,10 @@ getMoonTimes
 ggplot
 gl
 gs
+guan
+guanoCreate
+guanoParse
+guanoWrite
 hardRain
 hilbert
 humanBytes

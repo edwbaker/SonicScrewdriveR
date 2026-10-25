@@ -12,6 +12,11 @@
 #' a 24bit file are 256 times those `tuneR::readWave()` would give for the same
 #' audio stored as WAVE. Audio stored as floating point is returned as 32bit.
 #'
+#' A file named following the AudioMoth convention for triggered recordings,
+#' ending in T.WAV, is expanded by [audiomothExpand()] as it is read, so that
+#' the periods that did not trigger a recording are returned as silence and the
+#' timing of the triggered recordings is preserved.
+#'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
 #' @param from Start point in file to return
@@ -31,6 +36,16 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     fromS <- 1
   } else{
     fromS <- from
+  }
+
+  if (mime == "audio/x-wav" && .isTWavName(file)) {
+    # An AudioMoth triggered recording reads as a valid WAV file, so it has to
+    # be expanded before readWave() gets to it. Anything that is not really a
+    # T.WAV file falls through to be read normally.
+    wave <- tryCatch(audiomothExpand(file), error=function(cond) NULL)
+    if (!is.null(wave)) {
+      return(.cutAudio(wave, from, to, units, fromS))
+    }
   }
 
   if (mime == "audio/x-wav") {
@@ -119,6 +134,36 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     }
   }
   stop("File could not be processed")
+}
+
+#' Return the requested part of a wave that was read whole
+#'
+#' @param wave A Wave object
+#' @param from Start point to return
+#' @param to End point to return
+#' @param units One of "samples", "seconds", "minutes", "hours"
+#' @param fromS Start point adjusted for sample numbering
+#' @return A Wave object
+#' @keywords internal
+#' @noRd
+.cutAudio <- function(wave, from, to, units, fromS) {
+  metadata <- attr(wave, "guano")
+  if (units == "samples") {
+    cut <- cutws(wave, from=fromS, to=to)
+  } else if (from == 0 && to == Inf) {
+    cut <- wave
+  } else {
+    cut <- cutw(
+      wave,
+      from = convert2seconds(from, input=units),
+      to = convert2seconds(to, input=units),
+      output = "Wave"
+    )
+  }
+  if (!is.null(metadata)) {
+    attr(cut, "guano") <- metadata
+  }
+  return(cut)
 }
 
 .bitdepth <- function(v) {
