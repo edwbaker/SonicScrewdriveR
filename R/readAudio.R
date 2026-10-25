@@ -5,6 +5,18 @@
 #' an attempt is made to use the av package to read the audio.
 #'
 #' @details
+#' Mono and stereo files are returned as a `tuneR::Wave` object, and files with
+#' more than two channels as a `tuneR::WaveMC` object holding one column per
+#' channel, in the order the file holds them. `writeAudio()` writes either back
+#' out, and functions that take multichannel audio, such as `tdoa()`, take the
+#' result directly.
+#'
+#' WAVE files are read by `tuneR::readWave()` whatever their channel count, so a
+#' multichannel WAVE keeps the channel names the file itself records. Everything
+#' read through the av package is named by channel position instead (see
+#' `tuneR::MCnames`), because the av package reports a channel layout that does
+#' not identify the channels of the file.
+#'
 #' Files read through the av package (which is everything that is not WAVE or
 #' MP3, e.g. FLAC) are returned at the bit depth the file was stored at, so that
 #' the same audio compares equal however it was read. The av package does not
@@ -22,7 +34,8 @@
 #' @param from Start point in file to return
 #' @param to End point in file to return
 #' @param units One of "samples", "seconds", "minutes", "hours". Default is "seconds".
-#' @return A Wave object
+#' @return A Wave object, or a WaveMC object for a file with more than two
+#'   channels.
 #' @export
 #' @importFrom tuneR readMP3 readWave stereo Wave
 #' @importFrom seewave cutw
@@ -88,9 +101,6 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     if (is.null(channels)) {
       stop("Could not determine number of channels.")
     }
-    if (channels > 2) {
-      stop("channel count greater than 2 is not supported")
-    }
 
     samples <- av::read_audio_bin(file, channels=channels)
     samp.rate <- attr(samples, "sample_rate")
@@ -119,6 +129,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
       left <- samples[seq(1, length(samples), by = 2)]
       right <- samples[seq(2, length(samples), by = 2)]
       wave <- Wave(left=left, right=right, samp.rate=samp.rate, bit=bit)
+    }
+    if (channels > 2) {
+      wave <- .avWaveMC(samples, channels, samp.rate, bit)
     }
 
     if (units == "samples") {
@@ -151,6 +164,18 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
 .cutSeconds <- function(wave, from, to, units) {
   from <- convert2seconds(from, input=units)
   to <- .cutEnd(to, units, wave)
+  if (inherits(wave, "WaveMC")) {
+    #cutw() takes a Wave and returns one channel, so there is nothing it can do
+    #with a WaveMC. The time bounds are turned into the sample positions cutw()
+    #would have cut at, and the cut made by row, which keeps every channel. The
+    #end is held within the wave against the rounding of a time .cutEnd() has
+    #already put at its last sample.
+    return(cutws(
+      wave,
+      from=round(from * wave@samp.rate) + 1,
+      to=min(length(wave), round(to * wave@samp.rate))
+    ))
+  }
   if (wave@stereo) {
     left <- cutw(wave, channel=1, from=from, to=to, output="Wave")
     right <- cutw(wave, channel=2, from=from, to=to, output="Wave")
@@ -181,6 +206,62 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     return(end)
   }
   return(min(convert2seconds(to, units), end))
+}
+
+#' Build a WaveMC from the samples the av package decoded
+#'
+#' av::read_audio_bin() returns the samples of every channel in one vector,
+#' interleaved a frame at a time, which a matrix filled by row turns back into
+#' one column per channel.
+#'
+#' The channels are named because tuneR::writeWave() refuses a WaveMC whose
+#' channels are not, so an unnamed one could not be written back out. They are
+#' named by their position in the file, in the order tuneR::MCnames lists,
+#' rather than from the layout the av package reports: that layout does not
+#' identify the channels, giving "4.0" for a file holding FL/FR/BL/BR as
+#' readily as for one holding FL/FR/FC/BC. The names are therefore a
+#' convention, not a reading of the file, and a file read as WAVE by
+#' tuneR::readWave() keeps the channel names the file itself records.
+#'
+#' @param samples The decoded samples, already scaled to the bit depth of the
+#'   source.
+#' @param channels The number of channels in the file.
+#' @param samp.rate The sample rate of the file.
+#' @param bit The bit depth of the file.
+#' @return A WaveMC object with one column per channel.
+#' @keywords internal
+#' @noRd
+.avWaveMC <- function(samples, channels, samp.rate, bit) {
+  #A truncated final frame would otherwise be recycled into a full one by
+  #matrix(), inventing samples in the channels it did not reach.
+  frames <- length(samples) %/% channels
+  if (frames < 1) {
+    stop("Fewer samples than channels were decoded.")
+  }
+  samples <- samples[seq_len(frames * channels)]
+  m <- matrix(samples, ncol=channels, byrow=TRUE)
+  colnames(m) <- .mcChannelNames(channels)
+  return(tuneR::WaveMC(m, samp.rate=samp.rate, bit=bit))
+}
+
+#' Names for the channels of a wave, by their position
+#'
+#' tuneR::MCnames holds the channels of the WAVE channel mask in the order the
+#' format puts them in, so the first n of them name the first n channels of a
+#' file. Positions beyond the ones tuneR knows are numbered instead; the audio
+#' is then still readable, although tuneR::writeWave() will not write a wave
+#' holding channels it has no name for.
+#'
+#' @param channels The number of channels to name.
+#' @return A character vector of channel names.
+#' @keywords internal
+#' @noRd
+.mcChannelNames <- function(channels) {
+  known <- tuneR::MCnames$name
+  if (channels <= length(known)) {
+    return(known[seq_len(channels)])
+  }
+  return(c(known, paste0("C", seq(length(known) + 1, channels))))
 }
 
 #' Return the requested part of a wave that was read whole
