@@ -290,3 +290,142 @@ test_that(".bitdepth gives correct output", {
   expect_equal(.bitdepth(2^32/2), 32)
   expect_error(.bitdepth(2^64/2+1), "Bit depths above 32bit are not supported.")
 })
+
+#A four channel file is built here rather than shipped in inst/extdata, so that
+#the tests do not carry a binary fixture for a case this is the only user of.
+.fourChannel <- function(samp.rate=8000, seconds=2) {
+  n <- samp.rate * seconds
+  d <- matrix(0, nrow=n, ncol=4)
+  for (i in 1:4) {
+    d[, i] <- round(16000 * sin(2 * pi * (220 * i) * seq_len(n) / samp.rate))
+  }
+  colnames(d) <- c("FL", "FR", "FC", "BC")
+  return(tuneR::WaveMC(d, samp.rate=samp.rate, bit=16))
+}
+
+test_that("readAudio returns a WaveMC for a file with more than two channels", {
+  w <- .fourChannel()
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f), add=TRUE)
+  writeAudio(w, f)
+
+  r <- readAudio(f)
+  expect_s4_class(r, "WaveMC")
+  expect_equal(ncol(r@.Data), 4)
+  expect_equal(length(r), length(w))
+  expect_equal(r@samp.rate, w@samp.rate)
+  expect_equal(r@bit, w@bit)
+  #WAVE files are read by readWave() whatever the channel count, so the channel
+  #names the file records survive the round trip.
+  expect_equal(colnames(r@.Data), c("FL", "FR", "FC", "BC"))
+  expect_equal(unname(r@.Data), unname(w@.Data))
+})
+
+test_that("readAudio reads a multichannel file through the av package", {
+  skip_if_not_installed("av")
+
+  w <- .fourChannel()
+  wav <- tempfile(fileext=".wav")
+  flac <- tempfile(fileext=".flac")
+  on.exit(unlink(c(wav, flac)), add=TRUE)
+  writeAudio(w, wav)
+  #The FLAC encoder prints a notice that it cannot record the channel layout of
+  #a four channel file, which does not affect the samples it writes.
+  writeAudio(w, flac)
+
+  r <- readAudio(flac)
+  expect_s4_class(r, "WaveMC")
+  expect_equal(ncol(r@.Data), 4)
+  expect_equal(length(r), length(w))
+  expect_equal(r@samp.rate, w@samp.rate)
+  expect_equal(r@bit, 16)
+  #FLAC is lossless, so the same audio read as WAVE and as FLAC must give the
+  #same samples in the same channels despite taking different code paths.
+  expect_equal(unname(r@.Data), unname(readAudio(wav)@.Data))
+  #The channels of a wave read by the av package are named by position, as the
+  #layout the av package reports does not identify them.
+  expect_equal(colnames(r@.Data), tuneR::MCnames$name[1:4])
+  #An unnamed WaveMC cannot be written back out, so the names matter.
+  out <- tempfile(fileext=".wav")
+  on.exit(unlink(out), add=TRUE)
+  expect_equal(writeAudio(r, out), out)
+})
+
+test_that("readAudio keeps every channel of a multichannel file when cutting", {
+  skip_if_not_installed("av")
+
+  w <- .fourChannel()
+  wav <- tempfile(fileext=".wav")
+  flac <- tempfile(fileext=".flac")
+  on.exit(unlink(c(wav, flac)), add=TRUE)
+  writeAudio(w, wav)
+  writeAudio(w, flac)
+
+  for (f in c(wav, flac)) {
+    sr <- w@samp.rate
+    #In samples.
+    r <- readAudio(f, from=101, to=200, units="samples")
+    expect_equal(ncol(r@.Data), 4)
+    expect_equal(length(r), 100)
+    expect_equal(unname(r@.Data), unname(w@.Data[101:200, ]))
+
+    #In seconds, and in another time unit, which must land in the same place.
+    r <- readAudio(f, from=0.5, to=1)
+    expect_equal(ncol(r@.Data), 4)
+    expect_equal(length(r), sr / 2)
+    expect_equal(unname(r@.Data), unname(w@.Data[(sr / 2 + 1):sr, ]))
+    expect_equal(readAudio(f, from=0.5 / 60, to=1 / 60, units="minutes")@.Data, r@.Data)
+
+    #A start with no end reads to the end of the file.
+    r <- readAudio(f, from=0.5)
+    expect_equal(ncol(r@.Data), 4)
+    expect_equal(length(r), length(w) - sr / 2)
+    expect_false(anyNA(r@.Data))
+    expect_equal(unname(r@.Data), unname(w@.Data[(sr / 2 + 1):length(w), ]))
+    expect_equal(length(readAudio(f, from=sr / 2 + 1, units="samples")), length(w) - sr / 2)
+
+    #As does an end point beyond it.
+    expect_equal(length(readAudio(f, from=0.5, to=3600)), length(w) - sr / 2)
+  }
+})
+
+test_that("readAudio cuts a multichannel file where it cuts a stereo one", {
+  skip_if_not_installed("av")
+
+  #cutw() cannot take a WaveMC, so a multichannel wave is cut by row instead.
+  #The two have to cut at the same sample, or the units asked for would change
+  #the section a recording gives depending on its channel count.
+  w <- .fourChannel()
+  mc <- tempfile(fileext=".flac")
+  st <- tempfile(fileext=".flac")
+  on.exit(unlink(c(mc, st)), add=TRUE)
+  writeAudio(w, mc)
+  two <- w@.Data[, 1:2]
+  colnames(two) <- c("FL", "FR")
+  writeAudio(tuneR::WaveMC(two, samp.rate=w@samp.rate, bit=w@bit), st)
+
+  for (args in list(list(from=0.3, to=1.1), list(from=0.3), list(from=0.25, to=0.75))) {
+    a <- do.call(readAudio, c(list(mc), args))
+    b <- do.call(readAudio, c(list(st), args))
+    expect_equal(length(a), length(b))
+    expect_equal(as.vector(a@.Data[, 1]), b@left)
+    expect_equal(as.vector(a@.Data[, 2]), b@right)
+  }
+})
+
+test_that("readAudio returns a Wave for mono and stereo files", {
+  #Reading one and two channel files must not start returning a WaveMC, which
+  #would change the result of every call that has ever been made.
+  files <- c("AUDIOMOTH.WAV", "AUDIOMOTH.mp3", "AUDIOMOTH.flac",
+             "STEREO.WAV", "STEREO.mp3", "STEREO.flac")
+  for (file in files) {
+    path <- system.file("extdata", file, package="sonicscrewdriver")
+    for (w in list(readAudio(path), readAudio(path, from=0.5),
+                   readAudio(path, from=0.5, to=1),
+                   readAudio(path, from=101, to=200, units="samples"))) {
+      expect_s4_class(w, "Wave")
+      expect_false(inherits(w, "WaveMC"))
+      expect_equal(w@stereo, startsWith(file, "STEREO"), label=file)
+    }
+  }
+})

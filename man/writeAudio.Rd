@@ -52,6 +52,14 @@ requires 48kHz or one of its divisors).
 Audio written to a lossy format (e.g. MP3) will not be identical to the audio
 held in the object, and audio written to a format that does not support the
 bit depth or channel count of the object will be converted by the encoder.
+Some encoders refuse a channel count they cannot hold rather than converting
+it: MP3 will not take more than two channels, for example, and reports an
+error from the encoder.
+
+A WaveMC read by \code{readAudio()} can be written back out directly. Where it was
+read through the av package its channels are named by position rather than
+from the file, so the names record the channel order and not what was
+recorded on each channel.
 }
 \examples{
 w <- tuneR::sine(440, duration=1000)

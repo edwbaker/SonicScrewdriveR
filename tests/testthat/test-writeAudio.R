@@ -136,3 +136,27 @@ test_that("the flac program is looked for in the real places by default", {
   expect_equal(deparse(defaults$os), ".Platform$OS.type")
   expect_equal(deparse(defaults$path), "Sys.which(\"flac\")")
 })
+
+test_that("writeAudio round trips a multichannel wave through another format", {
+  skip_if_not_installed("av")
+
+  d <- matrix(0, nrow=4000, ncol=4)
+  for (i in 1:4) {
+    d[, i] <- round(16000 * sin(2 * pi * (220 * i) * seq_len(4000) / 8000))
+  }
+  colnames(d) <- c("FL", "FR", "FC", "BC")
+  w <- tuneR::WaveMC(d, samp.rate=8000, bit=16)
+
+  f <- tempfile(fileext=".flac")
+  on.exit(unlink(f), add=TRUE)
+  #The FLAC encoder prints a notice that it cannot record the channel layout of
+  #a four channel file, which does not affect the samples it writes.
+  expect_equal(writeAudio(w, f), f)
+
+  r <- readAudio(f)
+  expect_s4_class(r, "WaveMC")
+  expect_equal(ncol(r@.Data), 4)
+  expect_equal(r@samp.rate, 8000)
+  expect_equal(r@bit, 16)
+  expect_equal(unname(r@.Data), unname(d))
+})

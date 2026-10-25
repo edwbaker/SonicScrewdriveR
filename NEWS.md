@@ -14,6 +14,12 @@
   readAudio(). WAVE files are written directly, and any other format the encoders
   available to the av package can produce (e.g. FLAC, MP3) is written by converting
   a temporary WAVE file. FLAC can also be written without the av package.
+- readAudio() reads files with more than two channels, returning a tuneR::WaveMC
+  object holding one column per channel. Reading such a file through the av package
+  (e.g. a multichannel FLAC) used to stop with "channel count greater than 2 is not
+  supported". Cutting the result with from and to keeps every channel, whether the
+  section is given in samples or in time units. Mono and stereo files are returned
+  as a Wave object as before.
 - tdoa() measures the time differences of arrival of a sound between the channels of
   a multichannel recording, by generalised cross-correlation against a reference
   channel. The phase transform (the default), unweighted cross-correlation, or
