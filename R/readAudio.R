@@ -79,7 +79,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       unsupportedWav = function(cond) NULL
     )
     if (!is.null(wave)) {
-      return(.cutAudio(wave, from, to, units, fromS))
+      return(.cutAudio(wave, from, to, input.unit, fromS))
     }
   }
 
@@ -290,14 +290,14 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @param wave A Wave object
 #' @param from Start point to return
 #' @param to End point to return
-#' @param units One of "samples", "seconds", "minutes", "hours"
+#' @param input.unit One of "samples", "seconds", "minutes", "hours"
 #' @param fromS Start point adjusted for sample numbering
 #' @return A Wave object
 #' @keywords internal
 #' @noRd
-.cutAudio <- function(wave, from, to, units, fromS) {
+.cutAudio <- function(wave, from, to, input.unit, fromS) {
   metadata <- attr(wave, "guano")
-  if (units == "samples") {
+  if (input.unit == "samples") {
     # cutws() indexes the samples directly, so an end past the last of them
     # would pad the result with NA rather than stop at the end of the
     # recording.
@@ -305,7 +305,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   } else if (from == 0 && to == Inf) {
     cut <- wave
   } else {
-    cut <- .cutSeconds(wave, from, to, units)
+    cut <- .cutSeconds(wave, from, to, input.unit)
   }
   if (!is.null(metadata)) {
     attr(cut, "guano") <- metadata
