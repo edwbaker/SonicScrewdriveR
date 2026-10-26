@@ -345,10 +345,24 @@
   }
 
   at <- fmt$start
+  # Where `bytes` holds only the start of the file, a chunk that fits inside
+  # the file is not necessarily held in them. Reading past the end of a raw
+  # vector gives zero bytes rather than failing, so the fields would be read as
+  # a format, channel count or bit depth of zero and the file turned away for a
+  # reason that is not true of it. Saying that the bytes fall outside what was
+  # read lets the caller read more of the file and ask again, which is what
+  # audiomothExpand() does, so such a file is read rather than refused.
+  held <- function(through) at + through <= length(bytes)
+  if (!held(15L)) {
+    .unsupportedWav("FMT chunk lies beyond the bytes read.")
+  }
   format <- .rawToUInt(bytes[at:(at + 1L)])
   # WAVE_FORMAT_EXTENSIBLE, which is what tuneR writes, gives the format it
   # extends in the first two bytes of its sub-format identifier.
   if (format == 65534 && fmt$size >= 40) {
+    if (!held(25L)) {
+      .unsupportedWav("FMT chunk sub-format lies beyond the bytes read.")
+    }
     format <- .rawToUInt(bytes[(at + 24L):(at + 25L)])
   }
 

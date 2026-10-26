@@ -438,6 +438,42 @@ test_that("A header longer than the first block is still read", {
   expect_equal(as.integer(audiomothExpand(f)@left), rep(777L, 10))
 })
 
+test_that("A format chunk reaching past the blocks read is still read", {
+  # Expanding reads the whole 512-byte blocks first, as the omitted periods are
+  # found in them, and the rest of the file only if the header turns out not to
+  # fit. A format chunk can then begin inside the blocks and end outside them.
+  # Reading past the end of a raw vector gives zero bytes rather than failing,
+  # so the fields would come back as zeros and this recording, which is mono
+  # 16-bit PCM, would be refused for being none of those.
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+
+  # The data chunk is put first so that it has been found by the time the walk
+  # stops, and the filler sets the format chunk 1009 bytes in: its header is
+  # inside the first two blocks and its body runs past them.
+  audio <- writeBin(rep(777L, 8), raw(), size=2L, endian="little")
+  bytes <- c(
+    charToRaw("RIFF"), .uintToRaw(0L, 4L), charToRaw("WAVE"),
+    charToRaw("data"), .uintToRaw(length(audio), 4L), audio,
+    charToRaw("LIST"), .uintToRaw(964L, 4L), rep(charToRaw("x"), 964),
+    charToRaw("fmt "), .uintToRaw(16L, 4L),
+    .uintToRaw(1L, 2L), .uintToRaw(1L, 2L), .uintToRaw(8000L, 4L),
+    .uintToRaw(16000L, 4L), .uintToRaw(2L, 2L), .uintToRaw(16L, 2L),
+    raw(100)
+  )
+  fmt <- .wavFindChunk(
+    .wavChunks(bytes[seq_len(1024L)], total=length(bytes))$chunks, "fmt "
+  )
+  expect_equal(fmt$start, 1017)
+  expect_gt(fmt$start + 15L, 1024L)
+
+  con <- file(f, "wb")
+  writeBin(bytes, con)
+  close(con)
+
+  expect_equal(as.integer(audiomothExpand(f)@left), rep(777L, 8))
+})
+
 test_that("A chunk after the audio is not mistaken for an omitted period", {
   w <- tuneR::Wave(left=as.integer(rep(c(-9000L, 9000L), 16384)), samp.rate=8000, bit=16)
   f <- tempfile(fileext="T.WAV")

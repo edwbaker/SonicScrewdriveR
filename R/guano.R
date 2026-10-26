@@ -394,6 +394,13 @@ print.guano <- function(x, ...) {
 #'
 #' The block is padded with a space to an even number of bytes, as RIFF chunks
 #' must be word aligned and the specification allows whitespace padding.
+#'
+#' @param x A guano object
+#' @param size Length to pad the block to, in bytes, or NULL for the length the
+#'   metadata takes. It must be even: a chunk is word aligned, so an odd length
+#'   would be padded to one byte more than was asked for, and a caller asking
+#'   for a size is one placing what follows the chunk at a particular offset.
+#' @return The chunk, header and all, as raw bytes
 #' @noRd
 .guanoChunk <- function(x, size=NULL) {
   if (!inherits(x, "guano")) {
@@ -401,6 +408,14 @@ print.guano <- function(x, ...) {
   }
   body <- charToRaw(enc2utf8(as.character(x)))
   if (!is.null(size)) {
+    # An odd size cannot be given, as the word alignment below would add a byte
+    # to it and the chunk would be longer than was asked for. The caller asking
+    # for a size wants what follows the chunk at a given offset, and a byte of
+    # slip there is what moves the audio of a triggered recording off the 512
+    # byte boundary its omitted periods are counted in.
+    if (size %% 2L != 0L) {
+      stop("size must be an even number of bytes, not ", size, ".")
+    }
     if (size < length(body)) {
       stop("The metadata does not fit in the ", size, " bytes asked for.")
     }

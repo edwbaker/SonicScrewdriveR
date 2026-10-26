@@ -526,6 +526,23 @@ test_that("Replacing metadata held before the audio keeps the omitted periods", 
   }
 })
 
+test_that("A chunk is exactly the size it was asked for", {
+  # A caller asking for a size is one placing what comes after the chunk at a
+  # given offset: the test above, which keeps the audio of a triggered
+  # recording on the 512-byte boundary its omitted periods are counted in. A
+  # chunk is word aligned, so an odd size would be padded to one byte more than
+  # was asked for, and the audio would move by that byte.
+  x <- guanoCreate(Make="Open Acoustic Devices")
+  for (size in c(504L, 1016L, 2040L)) {
+    expect_length(.guanoChunk(x, size=size), size + 8L)
+  }
+  expect_error(.guanoChunk(x, size=1015L), "even")
+
+  # Without a size it still comes out word aligned.
+  expect_true(length(.guanoChunk(x)) %% 2L == 0L)
+  expect_error(.guanoChunk(x, size=8L), "does not fit")
+})
+
 test_that("A file that cannot be read is told apart from one holding nothing", {
   # A directory exists, so it passes the check that the file is there, but it
   # cannot be opened. Reporting that as metadata being absent would hide it.
