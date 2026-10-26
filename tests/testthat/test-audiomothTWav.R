@@ -1033,3 +1033,28 @@ test_that("Truncation says what it did when characters are wider than a byte", {
     "within 32 bytes"
   )
 })
+
+test_that("Reading closes the recording however it ends", {
+  w <- tuneR::Wave(left=as.integer(rep(500L, 20000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  audiomothCompress(w, f, threshold=1000, segment=1024)
+
+  # A read that fails, or that someone cancels, would otherwise leave the
+  # connection open, which holds the recording open on systems that mind.
+  for (ending in list(quote(stop("read failed")),
+                      quote(stop(structure(class=c("interrupt", "condition"), list()))))) {
+    invisible(gc())
+    open <- length(getAllConnections())
+    trace(readBin,
+          tracer=bquote(if (exists(".interruptRead", .GlobalEnv)) .(ending)),
+          print=FALSE)
+    assign(".interruptRead", TRUE, .GlobalEnv)
+    invisible(tryCatch(audiomothExpand(f), condition=function(c) NULL))
+    rm(".interruptRead", envir=.GlobalEnv)
+    untrace(readBin)
+    expect_equal(length(getAllConnections()), open)
+  }
+
+  expect_equal(length(audiomothExpand(f)@left), 20000)
+})

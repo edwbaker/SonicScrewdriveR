@@ -157,8 +157,24 @@
     type,
     float = number(value),
     integer = {
+      # A whole number the field is meant to hold, and one R can hold as a
+      # whole number. Anything else, a fraction or a number too large, would
+      # come back cut down or as nothing at all, so it is kept as the text it
+      # is: editing one field should not quietly destroy another.
       parsed <- number(value)
-      if (is.numeric(parsed)) as.integer(parsed) else parsed
+      if (!is.numeric(parsed)) {
+        parsed
+      } else if (length(parsed) != 1 || !is.finite(parsed) ||
+                 parsed != round(parsed) ||
+                 abs(parsed) > .Machine$integer.max) {
+        warning(
+          "The GUANO field '", key, "' is not a whole number that can be ",
+          "held as one, keeping it as text."
+        )
+        value
+      } else {
+        as.integer(parsed)
+      }
     },
     position = {
       # The specification gives a position as a latitude and a longitude.
@@ -209,7 +225,17 @@
   formatted <- switch(
     type,
     float = number(value),
-    integer = number(as.integer(value)),
+    integer = {
+      # Written as the whole number it is, rather than narrowed to what an R
+      # integer holds, which turns anything larger into nothing.
+      if (!is.finite(value) || value != round(value)) {
+        stop(
+          "The GUANO field '", key, "' must be a whole number, not ",
+          format(value, scientific=FALSE), "."
+        )
+      }
+      number(value)
+    },
     position = paste(number(value), collapse=" "),
     list = paste(as.character(value), collapse=","),
     multiline = gsub("\n", "\\n", as.character(value), fixed=TRUE),

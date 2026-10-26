@@ -247,10 +247,19 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 
   # Read the whole blocks and the remainder separately, so that the blocks can
   # be given a matrix shape without copying the file a second time.
+  # Closed however the reading ends. A read that fails, or that someone
+  # cancels, would otherwise leave the connection open, which holds the
+  # recording open on systems that mind.
   con <- file(file, "rb")
-  blocks <- readBin(con, "raw", n=nBlocks * .AM_BLOCK_SIZE)
-  tail <- readBin(con, "raw", n=tailBytes)
-  close(con)
+  read <- tryCatch(
+    list(
+      blocks = readBin(con, "raw", n=nBlocks * .AM_BLOCK_SIZE),
+      tail = readBin(con, "raw", n=tailBytes)
+    ),
+    finally = close(con)
+  )
+  blocks <- read$blocks
+  tail <- read$tail
 
   info <- tryCatch(
     .wavFormat(if (nBlocks > 0L) blocks else tail, total=size),

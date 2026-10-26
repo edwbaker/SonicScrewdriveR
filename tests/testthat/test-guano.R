@@ -682,3 +682,31 @@ test_that("Nothing is left open or left behind however a write ends", {
   expect_equal(readBin(path, "raw", n=8), charToRaw("replaced"))
   expect_equal(length(getAllConnections()), connections)
 })
+
+test_that("A field that cannot be held as a whole number is kept as text", {
+  whole <- function(field, value) {
+    text <- as.character(suppressWarnings(
+      guanoParse(paste0("GUANO|Version:1.0\n", field, ":", value))
+    ))
+    sub(paste0(".*", field, ":"), "", strsplit(text, "\n")[[1]][2])
+  }
+
+  # A fraction would be cut down and a number beyond what an R integer holds
+  # would become nothing at all, so editing one field would destroy another.
+  for (value in c("1", "10", "-3", "0")) {
+    expect_identical(whole("TE", value), value)
+  }
+  expect_identical(whole("TE", "1.5"), "1.5")
+  expect_identical(whole("TE", "2147483648"), "2147483648")
+  expect_identical(whole("Samplerate", "48000.5"), "48000.5")
+  expect_warning(
+    guanoParse("GUANO|Version:1.0\nTE:1.5"),
+    "whole number"
+  )
+
+  # Given directly, a fraction is refused, and a large whole number is written
+  # as the number it is rather than narrowed to nothing.
+  expect_error(as.character(guanoCreate(TE=1.5)), "whole number")
+  expect_true(grepl("TE:2147483648", as.character(guanoCreate(TE=2147483648)), fixed=TRUE))
+  expect_true(grepl("TE:10", as.character(guanoCreate(TE=10)), fixed=TRUE))
+})
