@@ -424,8 +424,27 @@
   part <- tempfile(tmpdir=dirname(path), fileext=".part")
   on.exit(unlink(part), add=TRUE)
 
+  # A write that stops short, on a disk with no room left for instance, is
+  # reported by a warning rather than an error. Output that stops short must
+  # not take the place of a recording that is whole, so a warning while
+  # writing or closing is taken as the failure it is.
+  complain <- function(condition) {
+    stop(
+      "Writing ", path, " did not finish: ", conditionMessage(condition),
+      call. = FALSE
+    )
+  }
   con <- file(part, "wb")
-  tryCatch(write(con), finally=close(con))
+  tryCatch(
+    withCallingHandlers({
+      write(con)
+      close(con)
+    }, warning = complain),
+    error = function(condition) {
+      suppressWarnings(try(close(con), silent=TRUE))
+      stop(condition)
+    }
+  )
 
   if (!file.rename(part, path)) {
     stop("Could not put the written file in place of: ", path)

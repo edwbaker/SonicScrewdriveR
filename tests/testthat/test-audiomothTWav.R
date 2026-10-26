@@ -990,13 +990,20 @@ test_that("A write that fails part way leaves the recording as it was", {
   audiomothCompress(w, f, threshold=1000, segment=1024)
   size <- file.size(f)
 
-  invisible(interrupted(
-    audiomothCompress(w, f, threshold=1, segment=1024, overwrite=TRUE)
-  ))
+  # One write to the file is let through before the stop, so the file being
+  # written is left part written: stopping before any of it would end the call
+  # before it opened a file at all, and show nothing about what is left on
+  # disk. These functions also build bytes in memory with the same function,
+  # which is why only writes to a connection are stopped.
+  expect_equal(
+    interrupted(audiomothCompress(w, f, threshold=1, segment=1024, overwrite=TRUE)),
+    "interrupted"
+  )
   expect_equal(file.size(f), size)
+  expect_equal(length(audiomothExpand(f)@left), 20000)
 
   # Expanding a recording over itself is the same hazard.
-  invisible(interrupted(audiomothExpand(f, output=f, overwrite=TRUE)))
+  expect_equal(interrupted(audiomothExpand(f, output=f, overwrite=TRUE)), "interrupted")
   expect_equal(file.size(f), size)
   expect_equal(length(audiomothExpand(f)@left), 20000)
   expect_length(list.files(dirname(f), pattern="[.]part$"), 0)

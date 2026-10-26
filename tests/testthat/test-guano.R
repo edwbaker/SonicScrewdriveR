@@ -614,10 +614,33 @@ test_that("A write that fails part way leaves the recording as it was", {
 
   # Opening a file to write empties it, so putting one field of metadata into
   # a recording could otherwise lose the recording.
-  invisible(interrupted(guanoWrite(guanoCreate(Make="Y"), f)))
+  expect_equal(interrupted(guanoWrite(guanoCreate(Make="Y"), f)), "interrupted")
 
   expect_equal(file.size(f), size)
   expect_equal(length(tuneR::readWave(f)@left), 20000)
   expect_identical(guano(f)[["Make"]], "X")
   expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
+})
+
+test_that("Output that stops short does not take the place of a recording", {
+  # A write that stops short, on a disk with no room left for instance, is
+  # reported by a warning rather than an error.
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  writeBin(charToRaw("a recording that is already here"), f)
+  size <- file.size(f)
+
+  expect_error(
+    .writeAtomically(f, function(con) {
+      writeBin(as.raw(1:10), con)
+      warning("short write")
+    }),
+    "did not finish"
+  )
+  expect_equal(file.size(f), size)
+  expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
+
+  # And a write that finishes still takes its place.
+  .writeAtomically(f, function(con) writeBin(charToRaw("replaced"), con))
+  expect_equal(readBin(f, "raw", n=8), charToRaw("replaced"))
 })
