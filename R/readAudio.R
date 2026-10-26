@@ -24,6 +24,15 @@
 #' a 24bit file are 256 times those `tuneR::readWave()` would give for the same
 #' audio stored as WAVE. Audio stored as floating point is returned as 32bit.
 #'
+#' A recording made on a trigger is expanded by [audiomothExpand()] as it is
+#' read, so that the periods that did not trigger a recording are returned as
+#' silence and the timing of the triggered recordings is preserved. Such a
+#' recording is recognised by the trigger AudioMoth records in the comment it
+#' writes into the header, rather than by the T before its extension: a name is
+#' only a convention, which an ordinary recording can meet and a triggered one
+#' can be renamed out of. A file whose comment has been lost can still be
+#' expanded by calling [audiomothExpand()] on it.
+#'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
 #' @param from Start point in file to return
@@ -44,6 +53,26 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     fromS <- 1
   } else{
     fromS <- from
+  }
+
+  # Asked before the type is weighed, as the type is guessed from the name and
+  # a triggered recording can be called anything at all. One that is not a
+  # wave file this package can expand says so and is read as it would be
+  # otherwise, so there is nothing to lose by asking.
+  if (.isTriggeredRecording(file)) {
+    # An AudioMoth triggered recording reads as a valid WAV file, so it has to
+    # be expanded before readWave() gets to it. A file that is not one of those
+    # at all falls through to be read normally, but a failure to expand a
+    # recording that is one is raised: reading it by other means would return
+    # the periods that did not trigger a recording still missing, and so the
+    # events in it at the wrong times, without saying so.
+    wave <- tryCatch(
+      audiomothExpand(file),
+      unsupportedWav = function(cond) NULL
+    )
+    if (!is.null(wave)) {
+      return(.cutAudio(wave, from, to, units, fromS))
+    }
   }
 
   if (mime == "audio/x-wav") {
@@ -241,6 +270,39 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, units="seconds") {
     return(known[seq_len(channels)])
   }
   return(c(known, paste0("C", seq(length(known) + 1, channels))))
+}
+
+#' Return the requested part of a wave that was read whole
+#'
+#' An AudioMoth triggered recording is expanded before it is cut, so unlike the
+#' other paths it has the whole recording in hand already. It is cut through the
+#' same helpers so that it stops where they stop, and any GUANO metadata read
+#' from the file is carried onto the section.
+#'
+#' @param wave A Wave object
+#' @param from Start point to return
+#' @param to End point to return
+#' @param units One of "samples", "seconds", "minutes", "hours"
+#' @param fromS Start point adjusted for sample numbering
+#' @return A Wave object
+#' @keywords internal
+#' @noRd
+.cutAudio <- function(wave, from, to, units, fromS) {
+  metadata <- attr(wave, "guano")
+  if (units == "samples") {
+    # cutws() indexes the samples directly, so an end past the last of them
+    # would pad the result with NA rather than stop at the end of the
+    # recording.
+    cut <- cutws(wave, from=fromS, to=min(to, length(wave)))
+  } else if (from == 0 && to == Inf) {
+    cut <- wave
+  } else {
+    cut <- .cutSeconds(wave, from, to, units)
+  }
+  if (!is.null(metadata)) {
+    attr(cut, "guano") <- metadata
+  }
+  return(cut)
 }
 
 .bitdepth <- function(v) {

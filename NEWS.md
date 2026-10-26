@@ -1,6 +1,30 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- audiomothExpand() expands an AudioMoth triggered (T.WAV) recording, in which
+  the periods that did not trigger a recording are left out, restoring them as
+  silence so that the timing of the triggered recordings is preserved. It gives
+  either a Wave object or an ordinary wave file, and its output is identical to
+  that of the reference implementation published by Open Acoustic Devices.
+  readAudio() and windowing() expand a triggered recording as they read it, so
+  existing code works on them unchanged. One is recognised by the trigger
+  AudioMoth records in the comment it writes into the header, rather than by
+  the T before its extension, as a name is only a convention: an ordinary
+  recording can meet it and a triggered one can be renamed out of it.
+- audiomothCompress() writes a Wave as a T.WAV file, leaving out the segments
+  whose peak amplitude falls below an amplitude threshold, as an AudioMoth
+  device does, and records that threshold in the file's comment as a device
+  records it.
+- guano() reads GUANO metadata, the format used by many bioacoustic recorders
+  and by current AudioMoth firmware, from a wave file or from a Wave object it
+  is attached to. guanoCreate() and guanoParse() build it, guanoWrite() writes
+  it to a wave file, and `guano<-` attaches it to a Wave. Fields the GUANO
+  specification defines are converted to the types it gives them, and any other
+  field is kept as written. Metadata is carried through expansion of a T.WAV
+  file, and audiomothCompress() can write it. Given a path, it walks the chunks
+  of the file over a connection and reads only the metadata chunk, so reading a
+  field from a recording of any length needs no more memory than the metadata
+  itself.
 - Wave methods for reticulate allow wave objects to be passed between R and Python
 - Initial support for scikit-maad Python package
 - dolbear() can now perform Dolbear's law calculations for more species

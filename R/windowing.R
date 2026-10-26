@@ -33,6 +33,25 @@ windowing <- function(
   complete.windows=TRUE,
   cluster=NULL,
   ...){
+  if (typeof(wave) == "character" && .isTriggeredRecording(wave)) {
+    # An AudioMoth triggered recording holds neither the length nor the timing
+    # of the recording it stands for, so the file on disk cannot be used to
+    # schedule the windows: it would give the length with the periods that did
+    # not trigger a recording left out, and the last windows of the recording
+    # would never be reached. Reading each window from the file separately
+    # would also expand the whole recording again for every window, so it is
+    # expanded once here instead.
+    #
+    # A recording whose comment records a trigger can still be one this package
+    # cannot expand, a multichannel one for instance, and that keeps the
+    # filename it had and is windowed as any other file is. Reading it here
+    # instead would hand a WaveMC to a branch that takes only a Wave.
+    expanded <- tryCatch(audiomothExpand(wave), unsupportedWav=function(cond) NULL)
+    if (!is.null(expanded)) {
+      wave <- expanded
+    }
+  }
+
   if (typeof(wave) == "character") {
     FUN2 <- function(start, wave, window.length, ...){
       wave <- readAudio(wave, from=start,to=start+window.length-1,units="samples")
@@ -44,7 +63,10 @@ windowing <- function(
     validateIsWave(wave)
     n.samples <- length(wave)
     FUN2 <- function(start, wave, window.length, ...){
-      section <- cutws(wave, from=start, to=start+window.length-1)
+      # cutws() indexes the samples directly, so a window reaching past the
+      # last of them would be padded with NA rather than stop at the end of
+      # the wave. Only an incomplete final window reaches past it.
+      section <- cutws(wave, from=start, to=min(start+window.length-1, length(wave)))
       return(FUN(section, start, window.length, ...))
     }
   }

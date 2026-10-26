@@ -45,4 +45,13 @@ the same audio compares equal however it was read. The av package does not
 report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of
 a 24bit file are 256 times those \code{tuneR::readWave()} would give for the same
 audio stored as WAVE. Audio stored as floating point is returned as 32bit.
+
+A recording made on a trigger is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is
+read, so that the periods that did not trigger a recording are returned as
+silence and the timing of the triggered recordings is preserved. Such a
+recording is recognised by the trigger AudioMoth records in the comment it
+writes into the header, rather than by the T before its extension: a name is
+only a convention, which an ordinary recording can meet and a triggered one
+can be renamed out of. A file whose comment has been lost can still be
+expanded by calling \code{\link[=audiomothExpand]{audiomothExpand()}} on it.
 }
