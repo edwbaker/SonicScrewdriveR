@@ -5,14 +5,18 @@ Provides the standard reference pressure level.
 ## Usage
 
 ``` r
-referencePressure(unit = "Pa")
+referencePressure(output.unit = "Pa", unit)
 ```
 
 ## Arguments
 
-- unit:
+- output.unit:
 
   Unit to return, "Pa" or "dyne_cm2"
+
+- unit:
+
+  Deprecated, use output.unit instead.
 
 ## Value
 
@@ -22,5 +26,5 @@ The reference sound pressure, in the unit specified.
 
 ``` r
 rp <- referencePressure()
-rp <- referencePressure(unit="dyne_cm2")
+rp <- referencePressure(output.unit="dyne_cm2")
 ```

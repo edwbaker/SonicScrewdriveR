@@ -12,10 +12,11 @@ tdoa(
   ref = 1,
   from = NULL,
   to = NULL,
-  units = "seconds",
+  input.unit = "seconds",
   method = "phat",
   max.delay = NULL,
-  interpolate = TRUE
+  interpolate = TRUE,
+  units
 )
 ```
 
@@ -37,9 +38,9 @@ tdoa(
 
   Optionally, the end of the region to correlate.
 
-- units:
+- input.unit:
 
-  Units in which `from` and `to` are given, one of "samples", "seconds"
+  Unit in which `from` and `to` are given, one of "samples", "seconds"
   (the default), "minutes", or "hours".
 
 - method:
@@ -58,6 +59,10 @@ tdoa(
 
   If TRUE (the default) the delay is interpolated to a fraction of a
   sample (see Details).
+
+- units:
+
+  Deprecated, use input.unit instead.
 
 ## Value
 

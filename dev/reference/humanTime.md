@@ -6,22 +6,26 @@ minutes, hours).
 ## Usage
 
 ``` r
-humanTime(S, unit = "seconds", digits = 3)
+humanTime(S, input.unit = "seconds", digits = 3, unit)
 ```
 
 ## Arguments
 
 - S:
 
-  Time to convert in unit. A vector may be given.
+  Time to convert, in input.unit. A vector may be given.
 
-- unit:
+- input.unit:
 
   The unit of time to convert
 
 - digits:
 
   Number of decimal places to round to, or NULL for no rounding.
+
+- unit:
+
+  Deprecated, use input.unit instead.
 
 ## Value
 
@@ -34,6 +38,6 @@ humanTime(90)
 #> [1] "1.5 minutes"
 humanTime(c(1, 90, 7200))
 #> [1] "1 second"    "1.5 minutes" "2 hours"    
-humanTime(1, unit="hours")
+humanTime(1, input.unit="hours")
 #> [1] "1 hour"
 ```

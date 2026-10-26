@@ -8,7 +8,14 @@ channel file.
 ## Usage
 
 ``` r
-readRespeaker6(filename, from = 1, to = Inf, units = "samples", header = FALSE)
+readRespeaker6(
+  filename,
+  from = 1,
+  to = Inf,
+  input.unit = "samples",
+  header = FALSE,
+  units
+)
 ```
 
 ## Arguments
@@ -19,21 +26,25 @@ readRespeaker6(filename, from = 1, to = Inf, units = "samples", header = FALSE)
 
 - from:
 
-  Where to start reading the wave in units.
+  Where to start reading the wave in input.unit.
 
 - to:
 
-  Where to stop reading the wave in units.
+  Where to stop reading the wave in input.unit.
 
-- units:
+- input.unit:
 
-  Units in which from and to is given, the default is "samples", but can
+  Unit in which from and to is given, the default is "samples", but can
   be set to time intervals such as "seconds".
 
 - header:
 
   If TRUE, just header information of the Wave file are returned,
   otherwise (the default) the whole Wave object.
+
+- units:
+
+  Deprecated, use input.unit instead.
 
 ## Value
 

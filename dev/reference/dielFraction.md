@@ -6,7 +6,14 @@ string format, return the fraction of a day represented by the object.
 ## Usage
 
 ``` r
-dielFraction(t, input = "POSIX", unit = "radians", timezone = NULL)
+dielFraction(
+  t,
+  input.unit = "POSIX",
+  output.unit = "radians",
+  timezone = NULL,
+  input,
+  unit
+)
 ```
 
 ## Arguments
@@ -15,11 +22,12 @@ dielFraction(t, input = "POSIX", unit = "radians", timezone = NULL)
 
   Object to be converted to a fraction
 
-- input:
+- input.unit:
 
-  One of POSIX (default) or HHMM
+  The unit the time is given in, one of "seconds", "minutes", "hours",
+  "days", "years", "HHMM", "POSIX".
 
-- unit:
+- output.unit:
 
   If set to radians outputs a position around a circle. If set to
   fraction outputs the raw fraction.
@@ -30,6 +38,14 @@ dielFraction(t, input = "POSIX", unit = "radians", timezone = NULL)
   falls. The default, NULL, uses the timezone the time itself carries,
   and UTC for a time that carries none (such as the output of
   [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html)).
+
+- input:
+
+  Deprecated, use input.unit instead.
+
+- unit:
+
+  Deprecated, use output.unit instead.
 
 ## Value
 

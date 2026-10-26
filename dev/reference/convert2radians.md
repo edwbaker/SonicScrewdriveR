@@ -5,7 +5,7 @@ Converts angle measurements into radians
 ## Usage
 
 ``` r
-convert2radians(A, input = "degrees")
+convert2radians(A, input.unit = "degrees", input)
 ```
 
 ## Arguments
@@ -14,9 +14,13 @@ convert2radians(A, input = "degrees")
 
   The angle value to convert
 
+- input.unit:
+
+  The unit of angle to convert, one of "degrees", "radians".
+
 - input:
 
-  The unit of angle to convert, allowed values are "degrees".
+  Deprecated, use input.unit instead.
 
 ## Value
 

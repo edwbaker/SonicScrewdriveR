@@ -6,7 +6,12 @@ of sound in that medium.
 ## Usage
 
 ``` r
-wavelength(frequency, speed = soundSpeed(medium = "air"), unit = "m")
+wavelength(
+  frequency,
+  speed = soundSpeed(medium = "air"),
+  output.unit = "m",
+  unit
+)
 ```
 
 ## Arguments
@@ -19,9 +24,13 @@ wavelength(frequency, speed = soundSpeed(medium = "air"), unit = "m")
 
   Speed of sound (defaults to the speed of sound in air)
 
-- unit:
+- output.unit:
 
   Unit to return the wavelength in, either "m" or "cm"
+
+- unit:
+
+  Deprecated, use output.unit instead.
 
 ## Value
 
@@ -32,5 +41,5 @@ Wavelength of the sound in the unit specified
 ``` r
 wl <- wavelength(1000)
 wl <- wavelength(1000, speed=soundSpeed(medium="steel"))
-wl <- wavelength(1000, unit="cm")
+wl <- wavelength(1000, output.unit="cm")
 ```

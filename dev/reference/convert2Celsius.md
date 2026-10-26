@@ -5,7 +5,7 @@ Converts temperature measurements into Celsius
 ## Usage
 
 ``` r
-convert2Celsius(temp, input = "K")
+convert2Celsius(temp, input.unit = "K", input)
 ```
 
 ## Arguments
@@ -14,9 +14,13 @@ convert2Celsius(temp, input = "K")
 
   The value of the temperature to convert
 
+- input.unit:
+
+  The unit of the temperature to convert, one of "K", "C", "F".
+
 - input:
 
-  The unit of the temperature to convert, allowed values are "K", "F".
+  Deprecated, use input.unit instead.
 
 ## Value
 
@@ -25,8 +29,8 @@ Numeric value in degrees Celsius
 ## Examples
 
 ``` r
-convert2Celsius(15, input="K")
+convert2Celsius(15, input.unit="K")
 #> [1] -258.15
-convert2Celsius(15, input="F")
+convert2Celsius(15, input.unit="F")
 #> [1] -9.444444
 ```

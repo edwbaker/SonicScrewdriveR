@@ -8,7 +8,14 @@ package to read the audio.
 ## Usage
 
 ``` r
-readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
+readAudio(
+  file,
+  mime = "auto",
+  from = 0,
+  to = Inf,
+  input.unit = "seconds",
+  units
+)
 ```
 
 ## Arguments
@@ -30,9 +37,13 @@ readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
 
   End point in file to return
 
-- units:
+- input.unit:
 
   One of "samples", "seconds", "minutes", "hours". Default is "seconds".
+
+- units:
+
+  Deprecated, use input.unit instead.
 
 ## Value
 

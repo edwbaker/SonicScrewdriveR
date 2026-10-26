@@ -7,7 +7,7 @@ accepted.
 ## Usage
 
 ``` r
-convert2bytes(S, input = "bits")
+convert2bytes(S, input.unit = "bits", input)
 ```
 
 ## Arguments
@@ -16,10 +16,14 @@ convert2bytes(S, input = "bits")
 
   The value to convert
 
-- input:
+- input.unit:
 
   The unit to convert, one of those given by fileSizeUnits(), or "bits"
   or "bytes".
+
+- input:
+
+  Deprecated, use input.unit instead.
 
 ## Value
 
@@ -28,10 +32,10 @@ The numeric value in bytes
 ## Examples
 
 ``` r
-convert2bytes(8, input="bits")
+convert2bytes(8, input.unit="bits")
 #> [1] 1
-convert2bytes(1, input="kB")
+convert2bytes(1, input.unit="kB")
 #> [1] 1000
-convert2bytes(1, input="KiB")
+convert2bytes(1, input.unit="KiB")
 #> [1] 1024
 ```

@@ -7,7 +7,7 @@ direction the sound arrived from.
 ## Usage
 
 ``` r
-bearing(delays, positions, speed = NULL, unit = "degrees")
+bearing(delays, positions, speed = NULL, output.unit = "degrees", unit)
 ```
 
 ## Arguments
@@ -35,10 +35,14 @@ bearing(delays, positions, speed = NULL, unit = "degrees")
   gives for air, a value for the conditions of a recording can be
   obtained with e.g. `soundSpeed(method="cramer", temp=14, RH=80)`.
 
-- unit:
+- output.unit:
 
   Unit for the returned angles, either "degrees" (the default) or
   "radians".
+
+- unit:
+
+  Deprecated, use output.unit instead.
 
 ## Value
 

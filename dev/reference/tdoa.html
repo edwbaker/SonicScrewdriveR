@@ -60,10 +60,11 @@ channel against a reference channel.</p>
 <span>  ref <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  from <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  to <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  units <span class="op">=</span> <span class="st">"seconds"</span>,</span>
+<span>  input.unit <span class="op">=</span> <span class="st">"seconds"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"phat"</span>,</span>
 <span>  max.delay <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  interpolate <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  interpolate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">units</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -87,8 +88,8 @@ channel against a reference channel.</p>
 <dd><p>Optionally, the end of the region to correlate.</p></dd>
 
 
-<dt id="arg-units">units<a class="anchor" aria-label="anchor" href="#arg-units"></a></dt>
-<dd><p>Units in which <code>from</code> and <code>to</code> are given, one of "samples",
+<dt id="arg-input-unit">input.unit<a class="anchor" aria-label="anchor" href="#arg-input-unit"></a></dt>
+<dd><p>Unit in which <code>from</code> and <code>to</code> are given, one of "samples",
 "seconds" (the default), "minutes", or "hours".</p></dd>
 
 
@@ -107,6 +108,10 @@ being returned.</p></dd>
 <dt id="arg-interpolate">interpolate<a class="anchor" aria-label="anchor" href="#arg-interpolate"></a></dt>
 <dd><p>If TRUE (the default) the delay is interpolated to a
 fraction of a sample (see Details).</p></dd>
+
+
+<dt id="arg-units">units<a class="anchor" aria-label="anchor" href="#arg-units"></a></dt>
+<dd><p>Deprecated, use input.unit instead.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -5,7 +5,7 @@ Converts temperature measurements into Fahrenheit
 ## Usage
 
 ``` r
-convert2Fahrenheit(temp, input)
+convert2Fahrenheit(temp, input.unit, input)
 ```
 
 ## Arguments
@@ -14,9 +14,13 @@ convert2Fahrenheit(temp, input)
 
   The value of the temperature to convert
 
+- input.unit:
+
+  The unit of the temperature to convert, one of "K", "C", "F".
+
 - input:
 
-  The unit of the temperature to convert, allowed values are "K", "C".
+  Deprecated, use input.unit instead.
 
 ## Value
 
@@ -27,6 +31,6 @@ raises an error.
 
 ``` r
 if (FALSE) { # \dontrun{
-convert2Fahrenheit(15, input = "C")
+convert2Fahrenheit(15, input.unit = "C")
 } # }
 ```

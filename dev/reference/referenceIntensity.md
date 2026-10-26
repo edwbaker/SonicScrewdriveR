@@ -5,14 +5,18 @@ Provides the standard reference intensity level.
 ## Usage
 
 ``` r
-referenceIntensity(unit = "watt_cm2")
+referenceIntensity(output.unit = "watt_cm2", unit)
 ```
 
 ## Arguments
 
-- unit:
+- output.unit:
 
   Unit to return, "watt_cm2"
+
+- unit:
+
+  Deprecated, use output.unit instead.
 
 ## Value
 

@@ -9,9 +9,11 @@ year represented by the object.
 yearlyFraction(
   t,
   year = 2022,
-  input = "POSIX",
-  unit = "radians",
-  timezone = NULL
+  input.unit = "POSIX",
+  output.unit = "radians",
+  timezone = NULL,
+  input,
+  unit
 )
 ```
 
@@ -25,11 +27,11 @@ yearlyFraction(
 
   Year to calculate fractions of (allows for leap years)
 
-- input:
+- input.unit:
 
-  One of POSIXlt (default)
+  The unit the date is given in, one of "POSIX", "day".
 
-- unit:
+- output.unit:
 
   If set to radians outputs a position around a circle. If set to
   fraction outputs the raw fraction.
@@ -40,6 +42,14 @@ yearlyFraction(
   it falls on. The default, NULL, uses the timezone the time itself
   carries, and UTC for a time that carries none (such as the output of
   [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html)).
+
+- input:
+
+  Deprecated, use input.unit instead.
+
+- unit:
+
+  Deprecated, use output.unit instead.
 
 ## Value
 
