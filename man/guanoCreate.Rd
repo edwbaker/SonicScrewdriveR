@@ -8,7 +8,10 @@ guanoCreate(..., version = "1.0")
 }
 \arguments{
 \item{...}{Named fields. A name containing a space or a vertical bar must be
-quoted.}
+quoted. A GUANO line ends its name at the first colon, so the whitespace
+around a name is no part of it and is dropped here, leaving the name the
+field will have when the file is read back. Two names alike but for that
+whitespace are therefore one name, and refused as a repeat.}
 
 \item{version}{The GUANO version to record}
 }

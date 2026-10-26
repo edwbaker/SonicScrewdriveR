@@ -328,6 +328,46 @@ test_that("A name used twice cannot be written", {
   expect_error(as.character(g), "newline")
 })
 
+test_that("A name is held in the form it is read back in", {
+  # A line gives its name up to the first colon, and the whitespace around it is
+  # no part of it. A name kept as it was given would not be the name the field
+  # has once the file has been read.
+  m <- guanoCreate("Make " = "A", "  Model" = "B", " Loc Position " = c(1.5, 2.5))
+  expect_identical(names(m), c("GUANO|Version", "Make", "Model", "Loc Position"))
+  expect_identical(m[["Make"]], "A")
+
+  # Which is to say the round trip gives back what went in.
+  expect_identical(unclass(guanoParse(as.character(m))), unclass(m))
+
+  # The whitespace within a name is part of it and stays.
+  expect_identical(names(guanoCreate("Loc Position" = c(1, 2)))[2], "Loc Position")
+})
+
+test_that("Two names alike but for their whitespace are one name", {
+  # Both are written as the same name, so reading the file back would find one
+  # field with the later value in place of the earlier.
+  expect_error(
+    guanoCreate(Make = "Original", " Make " = "Replacement"),
+    "more than once"
+  )
+  # A field can be put on an object by assignment, which does not go through
+  # guanoCreate(), so writing has to turn it away as well.
+  m <- guanoCreate(Make = "Original")
+  m[[" Make "]] <- "Replacement"
+  expect_error(as.character(m), "more than once")
+})
+
+test_that("A name of nothing but whitespace is no name", {
+  # It was written as an empty name, and the field then disappeared on being
+  # read, without so much as a warning.
+  expect_error(guanoCreate(" " = "x"), "must be named")
+  expect_error(guanoCreate("\t" = "x"), "must be named")
+
+  m <- guanoCreate(Make = "X")
+  m[["  "]] <- "lost"
+  expect_error(as.character(m), "must be named")
+})
+
 test_that("A fractional second is kept, and a whole one is not invented", {
   stamp <- function(value) {
     text <- as.character(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))

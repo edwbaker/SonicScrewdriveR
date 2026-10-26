@@ -296,7 +296,10 @@ guanoParse <- function(text) {
 #' namespaced.
 #'
 #' @param ... Named fields. A name containing a space or a vertical bar must be
-#'   quoted.
+#'   quoted. A GUANO line ends its name at the first colon, so the whitespace
+#'   around a name is no part of it and is dropped here, leaving the name the
+#'   field will have when the file is read back. Two names alike but for that
+#'   whitespace are therefore one name, and refused as a repeat.
 #' @param version The GUANO version to record
 #' @return A guano object, which is a named list of fields
 #' @export
@@ -315,8 +318,21 @@ guanoParse <- function(text) {
 guanoCreate <- function(..., version="1.0") {
   version <- .oneValue(version, "version")
   fields <- list(...)
-  if (length(fields) > 0L && (is.null(names(fields)) || any(!nzchar(names(fields))))) {
-    stop("Every field must be named.")
+  if (length(fields) > 0L) {
+    if (is.null(names(fields))) {
+      stop("Every field must be named.")
+    }
+    # A line gives its name up to the first colon, and whatever whitespace sits
+    # around it is not part of it, so a name is kept here in the form it will be
+    # read back in. A name left as it was given would not be the name the field
+    # has once the file has been read: "Make " would not be found as "Make ",
+    # two names differing only in the whitespace around them would be one field
+    # on the way back in, with the later value put in place of the earlier, and
+    # a name of nothing but whitespace would be a field that disappears.
+    names(fields) <- trimws(names(fields))
+    if (any(!nzchar(names(fields)))) {
+      stop("Every field must be named.")
+    }
   }
   if (anyDuplicated(names(fields))) {
     stop("A GUANO field name must not be used more than once.")
@@ -329,6 +345,17 @@ as.character.guano <- function(x, ...) {
   fields <- unclass(x)
   if (length(fields) == 0L) {
     fields <- list("GUANO|Version"="1.0")
+  }
+  if (is.null(names(fields))) {
+    stop("Every field must be named.")
+  }
+  # Named here as well as in guanoCreate(), as a field can be put on an object
+  # by assignment, which does not go through it. The reasons are the same: the
+  # whitespace around a name is not part of the name, so it is written in the
+  # form it will be read back in, and a name of nothing else is no name.
+  names(fields) <- trimws(names(fields))
+  if (any(!nzchar(names(fields)))) {
+    stop("Every field must be named.")
   }
   if (is.null(fields[["GUANO|Version"]])) {
     fields <- c(list("GUANO|Version"="1.0"), fields)
