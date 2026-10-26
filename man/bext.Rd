@@ -25,7 +25,10 @@ error.
 \details{
 Fields are named as the specification names them. The date and time are also
 reported together as \code{datetime}; the file says nothing about which timezone
-they were written in, so they are read in the timezone of the session.
+they were written in, so they are read in the timezone of the session. A
+time written in no layout the specification allows leaves the date at
+midnight, which is what a file that left the time empty already gave, rather
+than taking the date down with it.
 }
 \examples{
 \dontrun{

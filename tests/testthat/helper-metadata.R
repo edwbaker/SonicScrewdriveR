@@ -96,9 +96,9 @@ mdBextChunk <- function(description, originator="An Originator",
   )))
 }
 
-#' An ID3v2.4 frame
-mdFrame24 <- function(id, body) {
-  return(c(charToRaw(id), mdSyncsafe(length(body)), raw(2), body))
+#' An ID3v2.4 frame, whose size is that of the body as it is stored
+mdFrame24 <- function(id, body, flags=raw(2)) {
+  return(c(charToRaw(id), mdSyncsafe(length(body)), flags, body))
 }
 
 #' An ID3v2.3 frame, whose size is written plainly rather than sync-safe

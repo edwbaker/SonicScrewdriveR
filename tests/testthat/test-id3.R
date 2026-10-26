@@ -121,15 +121,49 @@ test_that("A version 2.2 tag is read, with its shorter names and headers", {
 
 # A tag may be written so that nothing in it can be mistaken for the start of
 # an MP3 frame, by following every 255 with a nul that is not part of the tag.
-test_that("An unsynchronised tag is read with the added nuls removed", {
-  frame <- mdFrame24("TIT2", c(as.raw(0), charToRaw("A"), as.raw(255), charToRaw("B")))
+# Version 2.3 does this to the tag as one run of bytes, and sizes its frames as
+# they are once those nuls are gone, so the whole tag is put back first.
+test_that("A version 2.3 tag unsynchronised as a whole is read with the added nuls removed", {
+  frame <- mdFrame23("TIT2", c(as.raw(0), charToRaw("A"), as.raw(255), charToRaw("B")))
   unsynced <- mdUnsync(frame)
   f <- mdFile(c(
-    charToRaw("ID3"), as.raw(c(4, 0, 128)), mdSyncsafe(length(unsynced)), unsynced
+    charToRaw("ID3"), as.raw(c(3, 0, 128)), mdSyncsafe(length(unsynced)), unsynced
   ), ".mp3")
 
   expect_identical(length(unsynced), length(frame) + 1L)
   expect_identical(id3(f)[["TIT2"]], "AÿB")
+})
+
+# Version 2.4 unsynchronises each frame rather than the tag, and sizes every
+# frame as it is stored. Putting the whole tag back first would shorten it
+# while its sizes still described the longer form, so a reader would lose its
+# place at the first byte that had been unsynchronised: the frame being read
+# would take in the start of the next one, and the rest of the tag would go
+# unread. Two frames are needed to see that, which is why one was not enough.
+test_that("A version 2.4 tag unsynchronised as a whole keeps the frames after the first", {
+  stored <- mdUnsync(c(as.raw(0), charToRaw("A"), as.raw(255), charToRaw("B")))
+  f <- mdFile(mdId3Tag(c(
+    mdFrame24("TIT2", stored, as.raw(c(0, 2))),
+    mdFrame24("TPE1", c(as.raw(0), charToRaw("A Recordist")), as.raw(c(0, 2)))
+  ), major=4L, flags=128L), ".mp3")
+  t <- id3(f)
+
+  expect_identical(t[["TIT2"]], "AÿB")
+  expect_identical(t[["TPE1"]], "A Recordist")
+})
+
+# The specification asks that every frame of such a tag say so itself as well,
+# but a writer that said it only in the tag header is taken at its word.
+test_that("A version 2.4 tag unsynchronised only in its header is read the same way", {
+  stored <- mdUnsync(c(as.raw(0), charToRaw("A"), as.raw(255), charToRaw("B")))
+  f <- mdFile(mdId3Tag(c(
+    mdFrame24("TIT2", stored),
+    mdFrame24("TPE1", c(as.raw(0), charToRaw("A Recordist")))
+  ), major=4L, flags=128L), ".mp3")
+  t <- id3(f)
+
+  expect_identical(t[["TIT2"]], "AÿB")
+  expect_identical(t[["TPE1"]], "A Recordist")
 })
 
 test_that("A frame unsynchronised on its own is read the same way", {

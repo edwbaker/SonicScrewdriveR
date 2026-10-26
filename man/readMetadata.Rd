@@ -73,8 +73,9 @@ never guessed at from a title.
 \code{filename} reads the recorder filename conventions that \code{\link[=parseFilename]{parseFilename()}}
 knows. A name that is only digits is ambiguous: eight digits are read as a
 date and ten as a count of seconds since 1970, which is wrong for a
-collection that names its files by a numeric record identifier. Pass
-\code{filename=FALSE} to read only what is inside the file.
+collection that names its files by a numeric record identifier. Where those
+digits spell no real date, no \code{datetime} is reported rather than one that is
+missing. Pass \code{filename=FALSE} to read only what is inside the file.
 }
 }
 \examples{

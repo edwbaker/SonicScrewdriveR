@@ -51,8 +51,18 @@
   # The specification asks for hyphens between the parts of the date and
   # colons between the parts of the time, but allows any punctuation, and
   # writers differ.
-  wanted <- paste(gsub("[-:_/.]", "-", date), gsub("[-:_/.]", ":", time))
-  parsed <- as.POSIXct(wanted, format="%Y-%m-%d %H:%M:%S", tz="")
+  day <- gsub("[-:_/.]", "-", date)
+  parsed <- as.POSIXct(
+    paste(day, gsub("[-:_/.]", ":", time)), format="%Y-%m-%d %H:%M:%S", tz=""
+  )
+  if (is.na(parsed)) {
+    # A time written in no layout the specification allows says nothing about
+    # the date beside it, which the file gave plainly, so the date is kept at
+    # midnight rather than thrown away with it. That is what a file leaving the
+    # time empty already gave, and a writer's bad time should cost no more than
+    # a missing one.
+    parsed <- as.POSIXct(day, format="%Y-%m-%d", tz="")
+  }
   if (is.na(parsed)) {
     return(NULL)
   }
@@ -149,7 +159,10 @@
 #'
 #' Fields are named as the specification names them. The date and time are also
 #' reported together as `datetime`; the file says nothing about which timezone
-#' they were written in, so they are read in the timezone of the session.
+#' they were written in, so they are read in the timezone of the session. A
+#' time written in no layout the specification allows leaves the date at
+#' midnight, which is what a file that left the time empty already gave, rather
+#' than taking the date down with it.
 #'
 #' @param x Path to a wave file, a Wave object with bext metadata attached, a
 #'   raw vector holding a wave file, or a bext object

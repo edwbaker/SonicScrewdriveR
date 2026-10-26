@@ -206,10 +206,13 @@
 #' @param data The body of the frame as the file holds it
 #' @param major The major version of the tag
 #' @param flags The format flags of the frame
+#' @param unsynchronised Whether the tag header said every frame in it is
+#'   unsynchronised, which a version 2.4 tag says there rather than, or as well
+#'   as, in each frame
 #' @return The body of the frame, or NULL for a frame that cannot be read
 #' @keywords internal
 #' @noRd
-.id3FrameData <- function(data, major, flags) {
+.id3FrameData <- function(data, major, flags, unsynchronised=FALSE) {
   if (major == 3L) {
     # Compressed with zlib, or encrypted: in either case the bytes cannot be
     # read without undoing that first.
@@ -232,7 +235,12 @@
       }
       data <- data[-(1:4)]
     }
-    if (bitwAnd(flags, 2L) != 0L) {
+    # A tag unsynchronised as a whole has every frame in it unsynchronised, and
+    # the specification asks that each frame say so too. A writer that said it
+    # only in the tag header is taken at its word, and one that said it in both
+    # places has the nuls taken out once rather than twice: a second pass would
+    # take out a nul that the text itself holds after a 255.
+    if (bitwAnd(flags, 2L) != 0L || unsynchronised) {
       data <- .id3Deunsync(data)
     }
   }
@@ -246,10 +254,12 @@
 #'
 #' @param body The tag, from the first frame
 #' @param major The major version of the tag
+#' @param unsynchronised Whether the tag header said every frame in it is
+#'   unsynchronised
 #' @return The fields read, the frames passed over, and their languages
 #' @keywords internal
 #' @noRd
-.id3Frames <- function(body, major) {
+.id3Frames <- function(body, major, unsynchronised=FALSE) {
   idLength <- if (major == 2L) 3L else 4L
   headerLength <- if (major == 2L) 6L else .ID3_HEADER
   fields <- list()
@@ -278,7 +288,7 @@
     data <- body[(pos + headerLength):(pos + headerLength + size - 1)]
     pos <- pos + headerLength + size
 
-    data <- .id3FrameData(data, major, flags)
+    data <- .id3FrameData(data, major, flags, unsynchronised)
     read <- if (is.null(data)) NULL else .id3Value(id, data)
     if (is.null(read)) {
       skipped[id] <- size
@@ -329,7 +339,19 @@
     return(NULL)
   }
   body <- bytes[(.ID3_HEADER + 1L):last]
-  if (bitwAnd(flags, 128L) != 0L) {
+  # Version 2.3 unsynchronises the tag as one run of bytes and writes its frame
+  # sizes to describe that run with the added nuls gone, so there the whole tag
+  # is put back before the frames are walked.
+  #
+  # Version 2.4 unsynchronises each frame on its own and sizes every frame as
+  # it is stored. Putting the whole tag back first would shorten the body while
+  # its sizes still described the longer form, so the walk would lose its place
+  # at the first byte that had been unsynchronised: it would read the start of
+  # the next frame as the end of this one's text and stop at the frame after
+  # that, having silently dropped the rest of the tag. There it is left to each
+  # frame, which knows its own stored length.
+  unsynchronised <- bitwAnd(flags, 128L) != 0L
+  if (unsynchronised && major < 4L) {
     body <- .id3Deunsync(body)
   }
   at <- 1L
@@ -342,7 +364,7 @@
   if (at > length(body)) {
     return(NULL)
   }
-  read <- .id3Frames(body[at:length(body)], major)
+  read <- .id3Frames(body[at:length(body)], major, unsynchronised && major >= 4L)
   return(structure(
     .mdObject(read$fields, "id3"),
     version = paste0("2.", major, ".", minor),

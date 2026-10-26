@@ -23,6 +23,33 @@ test_that("The date and the time are reported together as one time", {
   expect_identical(format(t, "%Y-%m-%d %H:%M:%S"), "2011-05-23 14:22:03")
 })
 
+# A writer that puts something other than a time in the time field says nothing
+# about the date beside it, which the file gave plainly. Leaving the time empty
+# already gives the date at midnight, so a bad time should cost no more than a
+# missing one rather than taking the date down with it.
+test_that("A date is kept when the time beside it cannot be read", {
+  f <- mdFile(mdWav(mdFmt(), mdBextChunk(
+    "A recording", date="2011-05-23", time="--:--:--"
+  ), mdData()))
+  b <- bext(f)
+
+  expect_identical(b[["OriginationDate"]], "2011-05-23")
+  expect_s3_class(b[["datetime"]], "POSIXct")
+  expect_identical(
+    format(b[["datetime"]], "%Y-%m-%d %H:%M:%S"), "2011-05-23 00:00:00"
+  )
+})
+
+test_that("A date is kept when the time beside it is cut short", {
+  f <- mdFile(mdWav(mdFmt(), mdBextChunk(
+    "A recording", date="2011-05-23", time="14:22"
+  ), mdData()))
+
+  expect_identical(
+    format(bext(f)[["datetime"]], "%Y-%m-%d %H:%M:%S"), "2011-05-23 00:00:00"
+  )
+})
+
 # The specification asks for hyphens in the date and colons in the time, but
 # allows any punctuation between the parts, and writers differ.
 test_that("A date written with other punctuation is read the same way", {

@@ -353,6 +353,21 @@ test_that("A name that says nothing this package recognises is not an error", {
   expect_length(readMetadata(named)$sources, 0)
 })
 
+# A name of eight digits is read as a date, and one that spells no real date
+# leaves a time that is missing rather than no time at all. Reporting it would
+# put a field in the record saying the recording has a date and that the date
+# is not known, which is a worse answer than not mentioning one.
+test_that("A name of digits that spell no date gives no date", {
+  bytes <- mdWav(mdFmt(), mdData())
+  named <- file.path(tempdir(), "13131313.wav")
+  on.exit(unlink(named), add=TRUE)
+  writeBin(bytes, named)
+  m <- readMetadata(named)
+
+  expect_null(m$fields$datetime)
+  expect_false("datetime" %in% names(m$fields))
+})
+
 # ------------------------------------------------- the files the package ships --
 
 test_that("The bundled AudioMoth recording is read from its comment", {

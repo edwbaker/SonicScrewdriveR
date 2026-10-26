@@ -283,7 +283,17 @@
 #' @noRd
 .mdNormaliseFilename <- function(p) {
   return(list(
-    datetime = if (inherits(p$datetime, "POSIXt")) p$datetime else NULL,
+    # A name of eight or ten digits is read as a date or as a count of seconds,
+    # and one that spells neither a real date nor a real time of day is read as
+    # a time that is missing. Reporting that would put a field in the record
+    # saying the recording has a date and that the date is not known, which is
+    # a worse answer than the record simply not mentioning one.
+    datetime = if (inherits(p$datetime, "POSIXt") && length(p$datetime) == 1L &&
+                   !is.na(p$datetime)) {
+      p$datetime
+    } else {
+      NULL
+    },
     model = if (length(p$model) == 1L && !is.na(p$model)) p$model else NULL,
     prefix = if (length(p$prefix) == 1L && !is.na(p$prefix)) p$prefix else NULL
   ))
@@ -473,8 +483,9 @@
 #' `filename` reads the recorder filename conventions that [parseFilename()]
 #' knows. A name that is only digits is ambiguous: eight digits are read as a
 #' date and ten as a count of seconds since 1970, which is wrong for a
-#' collection that names its files by a numeric record identifier. Pass
-#' `filename=FALSE` to read only what is inside the file.
+#' collection that names its files by a numeric record identifier. Where those
+#' digits spell no real date, no `datetime` is reported rather than one that is
+#' missing. Pass `filename=FALSE` to read only what is inside the file.
 #'
 #' @param x Path to an audio file, a Wave object with metadata attached, or a
 #'   raw vector holding a file
