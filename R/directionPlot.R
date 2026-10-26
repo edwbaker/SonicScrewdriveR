@@ -7,7 +7,7 @@ directionPlot <- function(angles,
   Angles <- Speeds <- NULL
 
 
-  angles <- convert2radians(angles, input=angle.unit)
+  angles <- convert2radians(angles, input.unit=angle.unit)
   #Named before the row is appended. data.frame(0, 0) names its columns X0 and
   #X0.1, which match nothing, so rbind() failed for every input.
   data <- data.frame(Angles=angles, Speeds=speeds)

@@ -4,12 +4,15 @@
 \alias{convert2dyne_cm2}
 \title{Convert pressure to dyne per square centimetre}
 \usage{
-convert2dyne_cm2(P, input = "kPa")
+convert2dyne_cm2(P, input.unit = "kPa", input)
 }
 \arguments{
 \item{P}{The value of the pressure to convert}
 
-\item{input}{The unit of the pressure to convert, allowed values are "Pa", "kPa".}
+\item{input.unit}{The unit of the pressure to convert, one of "Pa", "kPa",
+"dyne_cm2".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in dyne per square centimetre.
@@ -18,6 +21,6 @@ The numeric value in dyne per square centimetre.
 Converts pressure measurements into dyne per square centimetre
 }
 \examples{
-convert2dyne_cm2(1, input="Pa")
-convert2dyne_cm2(1, input="kPa")
+convert2dyne_cm2(1, input.unit="Pa")
+convert2dyne_cm2(1, input.unit="kPa")
 }

@@ -4,7 +4,14 @@
 \alias{readAudio}
 \title{Read an audio file}
 \usage{
-readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
+readAudio(
+  file,
+  mime = "auto",
+  from = 0,
+  to = Inf,
+  input.unit = "seconds",
+  units
+)
 }
 \arguments{
 \item{file}{File to read}
@@ -15,7 +22,9 @@ readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
 
 \item{to}{End point in file to return}
 
-\item{units}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
+\item{input.unit}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
+
+\item{units}{Deprecated, use input.unit instead.}
 }
 \value{
 A Wave object, or a WaveMC object for a file with more than two

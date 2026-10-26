@@ -4,12 +4,15 @@
 \alias{convert2Fahrenheit}
 \title{Convert temperature to Fahrenheit}
 \usage{
-convert2Fahrenheit(temp, input)
+convert2Fahrenheit(temp, input.unit, input)
 }
 \arguments{
 \item{temp}{The value of the temperature to convert}
 
-\item{input}{The unit of the temperature to convert, allowed values are "K", "C".}
+\item{input.unit}{The unit of the temperature to convert, one of "K", "C",
+"F".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 No return value, this conversion is not implemented and the function raises an error.
@@ -19,7 +22,7 @@ Converts temperature measurements into Fahrenheit
 }
 \examples{
 \dontrun{
-convert2Fahrenheit(15, input = "C")
+convert2Fahrenheit(15, input.unit = "C")
 }
 
 }

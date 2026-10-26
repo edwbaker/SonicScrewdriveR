@@ -61,7 +61,8 @@
 #' @param speed The speed of sound in metres per second. The default is the value
 #'   `soundSpeed()` gives for air, a value for the conditions of a recording can
 #'   be obtained with e.g. `soundSpeed(method="cramer", temp=14, RH=80)`.
-#' @param unit Unit for the returned angles, either "degrees" (the default) or
+#' @param unit Deprecated, use output.unit instead.
+#' @param output.unit Unit for the returned angles, either "degrees" (the default) or
 #'   "radians".
 #' @return A list holding:
 #' * **azimuth** The direction the sound arrived from, or two directions where
@@ -97,7 +98,13 @@
 #' # A stereo pair leaves two possible bearings
 #' bearing(c(0, -0.5/343), rbind(c(0, 0), c(1, 0)))
 #'
-bearing <- function(delays, positions, speed=NULL, unit="degrees") {
+bearing <- function(delays, positions, speed=NULL, output.unit="degrees", unit) {
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "bearing"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
+  }
   if (is.data.frame(delays)) {
     if (!all(c("channel", "delay") %in% names(delays))) {
       stop("A data frame of delays must have channel and delay columns, as returned by tdoa().")
@@ -107,8 +114,8 @@ bearing <- function(delays, positions, speed=NULL, unit="degrees") {
   if (!is.numeric(delays)) {
     stop("delays must be numeric.")
   }
-  if (!unit %in% c("degrees", "radians")) {
-    stop(paste("Unknown unit for bearing:", unit))
+  if (!output.unit %in% c("degrees", "radians")) {
+    stop(paste("Unknown unit for bearing:", output.unit))
   }
   if (is.null(speed)) {
     speed <- soundSpeed()
@@ -143,7 +150,7 @@ bearing <- function(delays, positions, speed=NULL, unit="degrees") {
   b <- -speed * (delays - mean(delays))
 
   fit <- .planeWaveFit(A, b)
-  return(.bearingAngles(fit, dimensions, speed, unit))
+  return(.bearingAngles(fit, dimensions, speed, output.unit))
 }
 
 #' Least squares fit of a plane wave direction to path length differences
@@ -258,11 +265,11 @@ bearing <- function(delays, positions, speed=NULL, unit="degrees") {
 #' @param fit The list returned by .planeWaveFit().
 #' @param dimensions Number of dimensions the positions were given in.
 #' @param speed The speed of sound used.
-#' @param unit Unit for the returned angles.
+#' @param output.unit Unit for the returned angles.
 #' @return The list returned by bearing().
 #' @keywords internal
 #' @noRd
-.bearingAngles <- function(fit, dimensions, speed, unit) {
+.bearingAngles <- function(fit, dimensions, speed, output.unit) {
   azimuth <- atan2(fit$direction[,2], fit$direction[,1])
   if (dimensions == 3) {
     elevation <- asin(pmax(-1, pmin(1, fit$direction[,3])))
@@ -271,7 +278,7 @@ bearing <- function(delays, positions, speed=NULL, unit="degrees") {
   }
   cone <- fit$cone
 
-  if (unit == "degrees") {
+  if (output.unit == "degrees") {
     azimuth <- convert2degrees(azimuth)
     elevation <- convert2degrees(elevation)
     cone <- convert2degrees(cone)
@@ -285,7 +292,7 @@ bearing <- function(delays, positions, speed=NULL, unit="degrees") {
     residual = fit$residual,
     magnitude = fit$magnitude,
     speed = speed,
-    unit = unit,
+    unit = output.unit,
     ambiguous = fit$ambiguous
   ))
 }

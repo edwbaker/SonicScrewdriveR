@@ -3,15 +3,15 @@ test_that("default to air with good known value", {
 })
 
 test_that("units default to m", {
-  expect_equal(wavelength(1000, speed=300), wavelength(1000, speed=300, unit="m"))
+  expect_equal(wavelength(1000, speed=300), wavelength(1000, speed=300, output.unit="m"))
 })
 
 test_that("cm calcualtion is correct", {
-  expect_equal(wavelength(1000, speed=300, unit="m")*100, wavelength(1000, speed=300, unit="cm"))
+  expect_equal(wavelength(1000, speed=300, output.unit="m")*100, wavelength(1000, speed=300, output.unit="cm"))
 })
 
 test_that("error on invalid unit", {
-  expect_error(wavelength(1, speed=300, unit="Fahrenheit is a moon unit"))
+  expect_error(wavelength(1, speed=300, output.unit="Fahrenheit is a moon unit"))
 })
 
 test_that("wavelength inverts frequencySound", {

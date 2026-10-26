@@ -4,12 +4,15 @@
 \alias{convert2Celsius}
 \title{Convert temperature to Celsius}
 \usage{
-convert2Celsius(temp, input = "K")
+convert2Celsius(temp, input.unit = "K", input)
 }
 \arguments{
 \item{temp}{The value of the temperature to convert}
 
-\item{input}{The unit of the temperature to convert, allowed values are "K", "F".}
+\item{input.unit}{The unit of the temperature to convert, one of "K", "C",
+"F".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 Numeric value in degrees Celsius
@@ -18,7 +21,7 @@ Numeric value in degrees Celsius
 Converts temperature measurements into Celsius
 }
 \examples{
-convert2Celsius(15, input="K")
-convert2Celsius(15, input="F")
+convert2Celsius(15, input.unit="K")
+convert2Celsius(15, input.unit="F")
 
 }
