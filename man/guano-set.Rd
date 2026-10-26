@@ -7,7 +7,7 @@
 guano(x) <- value
 }
 \arguments{
-\item{x}{A Wave or WaveMC object}
+\item{x}{A Wave, WaveMC, TaggedWave or TaggedWaveMC object}
 
 \item{value}{A guano object, or NULL to remove the metadata}
 }
@@ -15,14 +15,25 @@ guano(x) <- value
 The object with the metadata attached
 }
 \description{
-Wave objects have no place to keep file metadata, so GUANO metadata read from
-a file is kept as an attribute, which \code{\link[=guano]{guano()}} reads back. Writing the wave
-to a file does not carry the metadata with it: use \code{\link[=guanoWrite]{guanoWrite()}} on the
-written file, or pass the metadata to \code{\link[=audiomothCompress]{audiomothCompress()}}.
+Wave objects have no place to keep file metadata, so it is kept in the one
+store a wave carries for it, which \code{\link[=guano]{guano()}} reads back: the metadata slot
+of a TaggedWave, or an attribute of a plain Wave. GUANO is recorded there
+alongside any other format the file carried, so setting it leaves the rest
+of what the wave says about its file alone, and \code{\link[=readMetadata]{readMetadata()}} reads all
+of it together.
+}
+\details{
+Writing the wave to a file does not carry the metadata with it: use
+\code{\link[=guanoWrite]{guanoWrite()}} on the written file, or pass the metadata to
+\code{\link[=audiomothCompress]{audiomothCompress()}}.
 }
 \examples{
 \dontrun{
 guano(wave) <- guanoCreate(Make="Open Acoustic Devices", Model="AudioMoth")
 }
 
+}
+\seealso{
+\code{\link{audioMetadata<-}} attaches a whole reading, of every format at
+once.
 }

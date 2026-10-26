@@ -296,7 +296,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @keywords internal
 #' @noRd
 .cutAudio <- function(wave, from, to, units, fromS) {
-  metadata <- attr(wave, "guano")
+  # Everything the file said about itself is carried over, not just its GUANO
+  # metadata: a section of a recording came from the same recording.
+  metadata <- .mdStore(wave)
   if (units == "samples") {
     # cutws() indexes the samples directly, so an end past the last of them
     # would pad the result with NA rather than stop at the end of the
@@ -308,7 +310,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     cut <- .cutSeconds(wave, from, to, units)
   }
   if (!is.null(metadata)) {
-    attr(cut, "guano") <- metadata
+    cut <- .mdSetStore(cut, metadata)
   }
   return(cut)
 }

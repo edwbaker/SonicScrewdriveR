@@ -1,9 +1,11 @@
 ACI
+Acinipe
 Analyzer
 AnnotationList
 AudioBlast
 AudioMoth
 Audioblast
+Baucina
 Bedoya
 BioAcoustica
 Bioacoustic
@@ -14,6 +16,7 @@ DataFrame
 Diel
 Dolbear
 Dolbear's
+EBU
 Geissmann
 Gryllotalpa
 HHMM
@@ -56,6 +59,7 @@ allChannels
 allardi
 audioBLAST
 audioBlast
+audioMetadata
 audioRead
 audioblast
 audioblastDownload
@@ -68,9 +72,11 @@ autoBandPass
 av
 beatSpectrum
 bedoya
+bext
 bioacoustic
 birdNetAnalyse
 bw
+calabra
 cbind
 cleanTZ
 codecov
@@ -129,7 +135,9 @@ hardRain
 hilbert
 humanBytes
 humanTime
+iXML
 indexSpec
+ixml
 kPa
 labelPadding
 labelReduction
@@ -161,6 +169,7 @@ rainfallDetection
 readAudacityLabels
 readAudio
 readBirdNet
+readMetadata
 readRespeaker
 readWave
 referenceIntensity
@@ -202,10 +211,14 @@ validateRH
 validateSpectrum
 validateTimeInSeconds
 vineae
+vorbisComment
+wamd
+wavInfo
 writeAudacityLabels
 writeAudio
 writeAudioFlac
 writeWave
+xeno
 yearlyFraction
 yearlyPlot
 yearlyPositions
