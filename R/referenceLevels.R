@@ -2,21 +2,28 @@
 #'
 #' Provides the standard reference pressure level.
 #'
-#' @param unit Unit to return, "Pa" or "dyne_cm2"
+#' @param output.unit Unit to return, "Pa" or "dyne_cm2"
+#' @param unit Deprecated, use output.unit instead.
 #' @examples
 #' rp <- referencePressure()
-#' rp <- referencePressure(unit="dyne_cm2")
+#' rp <- referencePressure(output.unit="dyne_cm2")
 #' @return The reference sound pressure, in the unit specified.
 #' @export
 #'
-referencePressure <- function(unit="Pa") {
-  if (!unit %in% c("Pa", "dyne_cm2")) {
-    stop(paste("Unknown unit to referencePressure:",unit))
+referencePressure <- function(output.unit="Pa", unit) {
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "referencePressure"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
-  if (unit=="Pa") {
-    return(convert2Pascals(0.0002, input="dyne_cm2"))
+  if (!output.unit %in% c("Pa", "dyne_cm2")) {
+    stop(paste("Unknown unit to referencePressure:",output.unit))
   }
-  if (unit=="dyne_cm2") {
+  if (output.unit=="Pa") {
+    return(convert2Pascals(0.0002, input.unit="dyne_cm2"))
+  }
+  if (output.unit=="dyne_cm2") {
     return(0.0002)
   }
 }
@@ -25,17 +32,24 @@ referencePressure <- function(unit="Pa") {
 #'
 #' Provides the standard reference intensity level.
 #'
-#' @param unit Unit to return, "watt_cm2"
+#' @param output.unit Unit to return, "watt_cm2"
+#' @param unit Deprecated, use output.unit instead.
 #' @examples
 #' ri <- referenceIntensity()
 #' @return The reference sound intensity, in the unit specified.
 #' @export
 #'
-referenceIntensity <- function(unit="watt_cm2") {
-  if (!unit %in% c("watt_cm2")) {
-    stop(paste("Unknown unit to referenceIntensity:",unit))
+referenceIntensity <- function(output.unit="watt_cm2", unit) {
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(unit="output.unit"), "referenceIntensity"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
   }
-  if (unit=="watt_cm2") {
+  if (!output.unit %in% c("watt_cm2")) {
+    stop(paste("Unknown unit to referenceIntensity:",output.unit))
+  }
+  if (output.unit=="watt_cm2") {
     return(10^-16)
   }
 }

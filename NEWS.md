@@ -60,6 +60,44 @@
   available are listed by the new fileSizeUnits(). audio_filesize() passes the choice
   on when its output.unit is "human".
 
+## Deprecations
+- unit arguments are now named consistently across the package. A function takes
+  input.unit for the unit a value is supplied in, output.unit for the unit a
+  result is returned in, and <quantity>.unit (as in temp.unit, pressure.unit)
+  where it takes several quantities that each need a unit. The former names still
+  work and warn, and will be removed in a future release:
+  - input became input.unit in convert2Pascals(), convert2dyne_cm2(),
+    convert2Kelvin(), convert2Celsius(), convert2Fahrenheit(), convert2degrees(),
+    convert2radians(), convert2bytes(), convert2seconds(), dielFraction() and
+    yearlyFraction().
+  - units became input.unit in readAudio(), readRespeaker6() and tdoa().
+  - unit became input.unit in humanTime() and region().
+  - unit became output.unit in referencePressure(), referenceIntensity(),
+    wavelength(), bearing(), dielFraction() and yearlyFraction().
+  - the first argument of convert2seconds() was named T, which shadows the base R
+    value TRUE. It is now named t, as it already was in dielFraction() and
+    yearlyFraction().
+  The unit arguments that do not name a unit of measurement are unchanged: the one
+  normalise() and data2Wave() pass to normalize() from tuneR selects a bit depth,
+  and the units argument of humanBytes(), convert2bytes() and audio_filesize()
+  chooses between decimal and binary prefixes. The unit element of the list
+  bearing() returns is part of its return value rather than an argument, and keeps
+  its name.
+- the documented set of accepted units was incomplete in several places, and is now
+  the set each function actually takes: every convert2*() function accepts its own
+  output unit, so that a value already in the wanted unit passes through unchanged;
+  convert2dyne_cm2() listed an input of "Pa" and "kPa" but not "dyne_cm2";
+  convert2seconds() did not list "seconds" or "POSIX"; dielFraction() gave its input
+  as POSIX or HHMM, where it accepts every unit convert2seconds() does; and
+  yearlyFraction() gave its input as POSIXlt, where it accepts "POSIX" or "day".
+- while a former name and the argument that replaced it are both arguments, an
+  abbreviation of the former name that also abbreviates the new one matches both
+  and raises an error rather than being guessed. This affects the former input
+  only, which is a prefix of input.unit, so `convert2Pascals(1, inp="kPa")` is now
+  an error where it used to be accepted; the name in full, and any abbreviation
+  of the new name, both work. The former unit and units are unaffected, as
+  neither is a prefix of the argument that replaced it.
+
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each
   window separately, making it around 80 times faster. This also speeds up

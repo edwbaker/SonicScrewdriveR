@@ -37,18 +37,18 @@ test_that("yearlyPositions gives expected results", {
 })
 
 test_that("yearlyFraction rejects unknown input", {
-  expect_error(yearlyFraction(24, input="firefly"), "Unknown input: firefly")
+  expect_error(yearlyFraction(24, input.unit="firefly"), "Unknown input: firefly")
 })
 
 test_that("yearlyFraction gives expected results", {
   expect_equal(yearlyFraction(as.POSIXlt("2000-01-01 00:00:00"), year=2000), 0)
   expect_lte(abs(2*pi - yearlyFraction(as.POSIXlt("2000-12-31 23:59:59"))), 0.1)
 
-  expect_equal(yearlyFraction(as.POSIXlt("2018-01-01 00:00:00"), year=2018, unit="fraction"), 0)
-  expect_lte(abs(1 - yearlyFraction(as.POSIXlt("2018-12-31 23:59:59"), unit="fraction")), 0.1)
+  expect_equal(yearlyFraction(as.POSIXlt("2018-01-01 00:00:00"), year=2018, output.unit="fraction"), 0)
+  expect_lte(abs(1 - yearlyFraction(as.POSIXlt("2018-12-31 23:59:59"), output.unit="fraction")), 0.1)
 
-  expect_equal(yearlyFraction(0, input="day"), 0)
-  expect_lte(abs(2*pi - yearlyFraction(365, input="day")), 0.1)
+  expect_equal(yearlyFraction(0, input.unit="day"), 0)
+  expect_lte(abs(2*pi - yearlyFraction(365, input.unit="day")), 0.1)
 })
 
 test_that("Plotting does not throw errors", {
@@ -100,13 +100,13 @@ for (tz in sessionTimezones) {
       # 2024-01-01 00:00:00 UTC, the first moment of the year, as an instant
       # carrying no timezone. Read in a zone behind UTC this falls in the year
       # before, and read in one ahead it is already well into New Year's Day.
-      expect_equal(yearlyFraction(naiveTime(1704067200), year=2024, unit="fraction"), 0)
+      expect_equal(yearlyFraction(naiveTime(1704067200), year=2024, output.unit="fraction"), 0)
       # The last day of the year, where the same shift ran off the other end.
-      expect_equal(yearlyFraction(naiveTime(1735603200), year=2024, unit="fraction"), 365/366)
+      expect_equal(yearlyFraction(naiveTime(1735603200), year=2024, output.unit="fraction"), 365/366)
       # A time carrying a timezone is read in it.
       expect_equal(
         yearlyFraction(as.POSIXct("2024-01-01 00:00:00", tz="Australia/Sydney"),
-                       year=2024, unit="fraction"),
+                       year=2024, output.unit="fraction"),
         0
       )
     })
@@ -120,8 +120,8 @@ for (tz in sessionTimezones) {
       # the day of the year depends on which zone the time is read in. A POSIXlt
       # used to ignore the timezone argument entirely.
       lt <- as.POSIXlt("2023-12-31 20:00:00", tz="UTC")
-      expect_equal(yearlyFraction(lt, year=2023, unit="fraction"), 364/365)
-      expect_equal(yearlyFraction(lt, year=2023, unit="fraction", timezone="Australia/Sydney"), 0)
+      expect_equal(yearlyFraction(lt, year=2023, output.unit="fraction"), 364/365)
+      expect_equal(yearlyFraction(lt, year=2023, output.unit="fraction", timezone="Australia/Sydney"), 0)
     })
   })
 }

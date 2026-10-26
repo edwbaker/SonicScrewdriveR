@@ -127,9 +127,9 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
                                   RH=50,
                                   MoleFracCO2=400e-6) {
   validateRH(RH)
-  K <- convert2Kelvin(temp, temp.unit)
-  celsius <- convert2Celsius(temp, temp.unit)
-  P <- convert2Pascals(pressure, pressure.unit)
+  K <- convert2Kelvin(temp, input.unit=temp.unit)
+  celsius <- convert2Celsius(temp, input.unit=temp.unit)
+  P <- convert2Pascals(pressure, input.unit=pressure.unit)
 
   #Davis, Metrologia, 29, p67, 1992
   ENH <- pi * 10^-8 * P + 1.00062 + celsius^2 * 5.6 * 10^-7

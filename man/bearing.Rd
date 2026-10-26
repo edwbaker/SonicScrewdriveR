@@ -4,7 +4,7 @@
 \alias{bearing}
 \title{Estimate the direction a sound arrived from}
 \usage{
-bearing(delays, positions, speed = NULL, unit = "degrees")
+bearing(delays, positions, speed = NULL, output.unit = "degrees", unit)
 }
 \arguments{
 \item{delays}{Time differences of arrival in seconds, one per microphone, as
@@ -19,8 +19,10 @@ two or three columns.}
 \code{soundSpeed()} gives for air, a value for the conditions of a recording can
 be obtained with e.g. \code{soundSpeed(method="cramer", temp=14, RH=80)}.}
 
-\item{unit}{Unit for the returned angles, either "degrees" (the default) or
+\item{output.unit}{Unit for the returned angles, either "degrees" (the default) or
 "radians".}
+
+\item{unit}{Deprecated, use output.unit instead.}
 }
 \value{
 A list holding:

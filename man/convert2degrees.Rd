@@ -4,12 +4,14 @@
 \alias{convert2degrees}
 \title{Convert angle to degrees}
 \usage{
-convert2degrees(A, input = "radians")
+convert2degrees(A, input.unit = "radians", input)
 }
 \arguments{
 \item{A}{The angle value to convert}
 
-\item{input}{The unit of angle to convert, allowed values are "radians".}
+\item{input.unit}{The unit of angle to convert, one of "degrees", "radians".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in degrees

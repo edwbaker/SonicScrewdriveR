@@ -54,7 +54,7 @@ windowing <- function(
 
   if (typeof(wave) == "character") {
     FUN2 <- function(start, wave, window.length, ...){
-      wave <- readAudio(wave, from=start,to=start+window.length-1,units="samples")
+      wave <- readAudio(wave, from=start,to=start+window.length-1,input.unit="samples")
       return(FUN(wave, start, window.length, ...))
     }
     info <- av::av_media_info(wave)
@@ -124,7 +124,7 @@ windowing <- function(
         if (inherits(wave, "Wave")) {
           parts[[2*i]] <- cutws(wave, from=gap.start, to=gap.end)
         } else {
-          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, units="samples")
+          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, input.unit="samples")
         }
       }
       l <- do.call(tuneR::bind, parts[!vapply(parts, is.null, logical(1))])

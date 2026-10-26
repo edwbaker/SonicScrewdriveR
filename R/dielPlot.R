@@ -51,19 +51,29 @@ dielPositions <- function(format="3hourly") {
 #' format, return the fraction of a day represented by the object.
 #'
 #' @param t Object to be converted to a fraction
-#' @param input One of POSIX (default) or HHMM
-#' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param input.unit The unit the time is given in, one of "seconds", "minutes",
+#'   "hours", "days", "years", "HHMM", "POSIX".
+#' @param output.unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @param timezone The timezone to read the time in, which decides where in the
 #'   day it falls. The default, NULL, uses the timezone the time itself carries,
 #'   and UTC for a time that carries none (such as the output of `Sys.time()`).
+#' @param input Deprecated, use input.unit instead.
+#' @param unit Deprecated, use output.unit instead.
 #' @return The position of the time within the day, in radians or as a fraction of a day.
 #' @export
-dielFraction <- function(t, input="POSIX", unit="radians", timezone=NULL) {
-  .validateChoice(input, .convertable2seconds(), "input", "dielFraction", prep="for")
-  .validateChoice(unit, c("radians", "fraction"), "output", "dielFraction", prep="for")
-  s <- convert2seconds(t, input=input, origin="day", timezone=timezone)
+dielFraction <- function(t, input.unit="POSIX", output.unit="radians", timezone=NULL,
+                         input, unit) {
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit", unit="output.unit"), "dielFraction"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
+  }
+  .validateChoice(input.unit, .convertable2seconds(), "input.unit", "dielFraction", prep="for")
+  .validateChoice(output.unit, c("radians", "fraction"), "output.unit", "dielFraction", prep="for")
+  s <- convert2seconds(t, input.unit=input.unit, origin="day", timezone=timezone)
   f <- s/(24*60*60)
-  if (unit=="radians") {
+  if (output.unit=="radians") {
     return(2*pi*f)
   }
   return(f)
@@ -254,8 +264,8 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
   cols <- rep_len(cols, length.out = length(names))
 
   #Convert to fractional circle
-  starts <- dielFraction(starts, input=format)
-  ends <- dielFraction(ends, input=format)
+  starts <- dielFraction(starts, input.unit=format)
+  ends <- dielFraction(ends, input.unit=format)
 
   if (length(names) == 0) {
     return(invisible(NULL))

@@ -4,18 +4,27 @@
 \alias{readRespeaker6}
 \title{Read a file from Seeed Studio Respeaker 6 mic array}
 \usage{
-readRespeaker6(filename, from = 1, to = Inf, units = "samples", header = FALSE)
+readRespeaker6(
+  filename,
+  from = 1,
+  to = Inf,
+  input.unit = "samples",
+  header = FALSE,
+  units
+)
 }
 \arguments{
 \item{filename}{file to read.}
 
-\item{from}{Where to start reading the wave in units.}
+\item{from}{Where to start reading the wave in input.unit.}
 
-\item{to}{Where to stop reading the wave in units.}
+\item{to}{Where to stop reading the wave in input.unit.}
 
-\item{units}{Units in which from and to is given, the default is "samples", but can be set to time intervals such as "seconds".}
+\item{input.unit}{Unit in which from and to is given, the default is "samples", but can be set to time intervals such as "seconds".}
 
 \item{header}{If TRUE, just header information of the Wave file are returned, otherwise (the default) the whole Wave object.}
+
+\item{units}{Deprecated, use input.unit instead.}
 }
 \value{
 A WaveMC object.

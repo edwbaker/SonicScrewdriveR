@@ -45,7 +45,7 @@ test_that("bearing recovers elevation from an array in three dimensions", {
 })
 
 test_that("bearing returns angles in radians when asked", {
-  b <- bearing(planeWaveDelays(triangle, 30), triangle, unit="radians")
+  b <- bearing(planeWaveDelays(triangle, 30), triangle, output.unit="radians")
   expect_equal(b$azimuth, 30 * pi/180)
   expect_equal(b$unit, "radians")
 })
@@ -163,7 +163,7 @@ test_that("bearing reports a fit the delays do not support", {
 test_that("bearing rejects what it cannot use", {
   expect_error(bearing("a", triangle), "delays must be numeric")
   expect_error(bearing(data.frame(a=1), triangle), "channel and delay columns")
-  expect_error(bearing(c(0, 0, 0), triangle, unit="grads"), "Unknown unit for bearing")
+  expect_error(bearing(c(0, 0, 0), triangle, output.unit="grads"), "Unknown unit for bearing")
   expect_error(bearing(c(0, 0), triangle), "one row for each delay")
   expect_error(bearing(c(0, 0, 0), cbind(triangle, 0, 0)), "two or three columns")
   expect_error(bearing(c(0, 0, 0), matrix("a", nrow=3, ncol=2)), "positions must be numeric")

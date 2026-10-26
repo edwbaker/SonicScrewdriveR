@@ -4,13 +4,15 @@
 \alias{convert2bytes}
 \title{Convert file sizes to bytes}
 \usage{
-convert2bytes(S, input = "bits")
+convert2bytes(S, input.unit = "bits", input)
 }
 \arguments{
 \item{S}{The value to convert}
 
-\item{input}{The unit to convert, one of those given by fileSizeUnits(), or
-"bits" or "bytes".}
+\item{input.unit}{The unit to convert, one of those given by fileSizeUnits(),
+or "bits" or "bytes".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in bytes
@@ -20,8 +22,8 @@ Converts file size measurements into bytes. Both decimal units, which are powers
 of 1000, and binary units, which are powers of 1024, are accepted.
 }
 \examples{
-convert2bytes(8, input="bits")
-convert2bytes(1, input="kB")
-convert2bytes(1, input="KiB")
+convert2bytes(8, input.unit="bits")
+convert2bytes(1, input.unit="kB")
+convert2bytes(1, input.unit="KiB")
 
 }

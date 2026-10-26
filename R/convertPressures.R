@@ -3,19 +3,29 @@
 #' Converts pressure measurements into Pascals
 #'
 #' @param P The value of the pressure to convert
-#' @param input The unit of the pressure to convert, allowed values are "kPa", "dyne_cm2".
+#' @param input.unit The unit of the pressure to convert, one of "Pa", "kPa",
+#'   "dyne_cm2".
+#' @param input Deprecated, use input.unit instead.
 #' @export
 #' @return The numeric value in Pascals
 #' @examples
-#' convert2Pascals(1000, input="kPa")
-#' convert2Pascals(10, input="dyne_cm2")
+#' convert2Pascals(1000, input.unit="kPa")
+#' convert2Pascals(10, input.unit="dyne_cm2")
 #'
-convert2Pascals <- function(P, input="kPa") {
-  .convertLinear(P, input, "Pa", .pressureMultipliers(), fn="convert2Pascals")
+convert2Pascals <- function(P, input.unit="kPa", input) {
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2Pascals"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
+  }
+  .convertLinear(P, input.unit, "Pa", .pressureMultipliers(),
+                 what="input.unit", fn="convert2Pascals")
 }
 
-convert2kPascals <- function(P, input="kPa") {
-  .convertLinear(P, input, "kPa", .pressureMultipliers(), fn="convert2kPascals")
+convert2kPascals <- function(P, input.unit="kPa") {
+  .convertLinear(P, input.unit, "kPa", .pressureMultipliers(),
+                 what="input.unit", fn="convert2kPascals")
 }
 
 #' Convert pressure to dyne per square centimetre
@@ -23,12 +33,21 @@ convert2kPascals <- function(P, input="kPa") {
 #' Converts pressure measurements into dyne per square centimetre
 #'
 #' @param P The value of the pressure to convert
-#' @param input The unit of the pressure to convert, allowed values are "Pa", "kPa".
+#' @param input.unit The unit of the pressure to convert, one of "Pa", "kPa",
+#'   "dyne_cm2".
+#' @param input Deprecated, use input.unit instead.
 #' @return The numeric value in dyne per square centimetre.
 #' @export
 #' @examples
-#' convert2dyne_cm2(1, input="Pa")
-#' convert2dyne_cm2(1, input="kPa")
-convert2dyne_cm2 <- function(P, input="kPa") {
-  .convertLinear(P, input, "dyne_cm2", .pressureMultipliers(), fn="convert2dyne_cm2")
+#' convert2dyne_cm2(1, input.unit="Pa")
+#' convert2dyne_cm2(1, input.unit="kPa")
+convert2dyne_cm2 <- function(P, input.unit="kPa", input) {
+  redone <- .withRenamedArgs(
+    sys.call(), parent.frame(), c(input="input.unit"), "convert2dyne_cm2"
+  )
+  if (!is.null(redone)) {
+    return(redone[[1]])
+  }
+  .convertLinear(P, input.unit, "dyne_cm2", .pressureMultipliers(),
+                 what="input.unit", fn="convert2dyne_cm2")
 }

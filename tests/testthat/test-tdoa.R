@@ -84,7 +84,7 @@ test_that("tdoa correlates only the region and lags asked for", {
   w <- delayedWave(c(0, -121))
 
   expect_equal(tdoa(w, from=0.01, to=0.08, interpolate=FALSE)$samples[2], -121)
-  expect_equal(tdoa(w, from=480, to=3840, units="samples", interpolate=FALSE)$samples[2], -121)
+  expect_equal(tdoa(w, from=480, to=3840, input.unit="samples", interpolate=FALSE)$samples[2], -121)
 
   #A delay of 121 samples is outside a limit of 100 samples, so the peak found
   #has to be somewhere else.
@@ -130,7 +130,7 @@ test_that("tdoa rejects what it cannot correlate", {
   expect_error(tdoa(w, max.delay=-1), "max.delay must be a positive number")
   expect_error(tdoa(w, max.delay=0), "max.delay must be a positive number")
   expect_error(tdoa(w, max.delay=1e-9), "max.delay is shorter than one sample")
-  expect_error(tdoa(w, from=1, to=1, units="samples"), "too short")
+  expect_error(tdoa(w, from=1, to=1, input.unit="samples"), "too short")
 })
 
 test_that(".parabolicPeak finds the vertex of a parabola", {
