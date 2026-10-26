@@ -152,6 +152,10 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- readAudio() failed on an AudioMoth triggered (T.WAV) recording with "argument
+  "units" is missing, with no default". The renaming of the unit arguments left
+  the call that cuts an expanded recording passing the deprecated argument,
+  which has no default, rather than the one that replaced it.
 - generateNoise() could send samples outside the range the format holds. The
   noise was scaled by its largest positive sample rather than by its largest
   either way, so noise with a deeper trough than peak went past the level asked

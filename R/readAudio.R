@@ -79,7 +79,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       unsupportedWav = function(cond) NULL
     )
     if (!is.null(wave)) {
-      return(.cutAudio(wave, from, to, units, fromS))
+      return(.cutAudio(wave, from, to, input.unit, fromS))
     }
   }
 
