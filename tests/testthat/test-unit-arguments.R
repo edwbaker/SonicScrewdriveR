@@ -218,10 +218,23 @@ test_that("a former name mixed with positionals binds as it used to, for waves",
 })
 
 test_that("both former names at once bind as they used to", {
-  expect_warning(x <- convert2seconds(T=1, input="hours"))
+  #Each former name warns, so both warnings are expected here rather than one.
+  expect_warning(
+    expect_warning(
+      x <- convert2seconds(T=1, input="hours"),
+      "T argument of convert2seconds"
+    ),
+    "input argument of convert2seconds"
+  )
   expect_equal(x, 3600)
 
-  expect_warning(x <- dielFraction(6, input="hours", unit="fraction"))
+  expect_warning(
+    expect_warning(
+      x <- dielFraction(6, input="hours", unit="fraction"),
+      "input argument of dielFraction"
+    ),
+    "unit argument of dielFraction"
+  )
   expect_equal(x, 0.25)
 })
 
@@ -414,4 +427,55 @@ test_that("a frame with no dots is not taken for a failing one", {
   expect_equal(convert2seconds(1, input.unit="hours"), 3600)
   expect_warning(x <- convert2seconds(1, input="hours"))
   expect_equal(x, 3600)
+})
+
+#Matching the arguments again hands over the values this frame already holds,
+#not the expressions that produced them, so an expression is evaluated once
+#however it is reached and an argument a caller forced in advance is not
+#evaluated a second time.
+test_that("an argument forced in advance is not forced again", {
+  #Counted in an environment rather than a variable: the expression below is
+  #written in this frame, and <<- would skip this frame and count somewhere up
+  #the chain, leaving the count here at zero whatever the function did.
+  tally <- new.env(parent=emptyenv())
+  tally$n <- 0
+  expect_warning(
+    x <- forceAndCall(1, convert2seconds, {tally$n <- tally$n + 1; 1}, input="hours"),
+    "input argument of convert2seconds"
+  )
+  expect_equal(x, 3600)
+  expect_equal(tally$n, 1)
+
+  tally$n <- 0
+  expect_equal(
+    forceAndCall(1, convert2seconds, {tally$n <- tally$n + 1; 1}, input.unit="hours"),
+    3600
+  )
+  expect_equal(tally$n, 1)
+})
+
+test_that("an argument is evaluated once whichever way a former name is given", {
+  once <- function(expr) {
+    tally <- new.env(parent=emptyenv())
+    tally$n <- 0
+    value <- eval(expr, list2env(list(count=function() {
+      tally$n <- tally$n + 1
+      1
+    }), parent=environment()))
+    list(value=value, evaluated=tally$n)
+  }
+
+  plain <- once(quote(suppressWarnings(convert2seconds(count(), input="hours"))))
+  expect_equal(plain$value, 3600)
+  expect_equal(plain$evaluated, 1)
+
+  dots <- once(quote(suppressWarnings(
+    (function(...) convert2seconds(...))(count(), input="hours")
+  )))
+  expect_equal(dots$value, 3600)
+  expect_equal(dots$evaluated, 1)
+
+  mixed <- once(quote(suppressWarnings(convert2seconds(T=count(), "hours"))))
+  expect_equal(mixed$value, 3600)
+  expect_equal(mixed$evaluated, 1)
 })
