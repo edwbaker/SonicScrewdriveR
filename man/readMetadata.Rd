@@ -13,7 +13,10 @@ raw vector holding a file}
 \item{filename}{Whether to read the name of the file as well as its contents}
 }
 \value{
-An audioMetadata object
+An audioMetadata object. \code{file} and \code{container} are always there, so
+its length says nothing about whether the file carried any metadata: ask
+\code{length(x$sources)} for that, or \code{length(x$fields)} for whether anything
+was read that this package has a normalised name for.
 }
 \description{
 Reads the embedded metadata of an audio file, whatever format that metadata

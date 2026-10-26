@@ -479,7 +479,10 @@
 #' @param x Path to an audio file, a Wave object with metadata attached, or a
 #'   raw vector holding a file
 #' @param filename Whether to read the name of the file as well as its contents
-#' @return An audioMetadata object
+#' @return An audioMetadata object. `file` and `container` are always there, so
+#'   its length says nothing about whether the file carried any metadata: ask
+#'   `length(x$sources)` for that, or `length(x$fields)` for whether anything
+#'   was read that this package has a normalised name for.
 #' @export
 #' @seealso The readers for one format at a time: [guano()], [wamd()],
 #'   [bext()], [ixml()], [wavInfo()], [id3()], [vorbisComment()] and
