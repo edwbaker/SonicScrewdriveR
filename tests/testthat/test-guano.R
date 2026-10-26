@@ -710,3 +710,20 @@ test_that("A field that cannot be held as a whole number is kept as text", {
   expect_true(grepl("TE:2147483648", as.character(guanoCreate(TE=2147483648)), fixed=TRUE))
   expect_true(grepl("TE:10", as.character(guanoCreate(TE=10)), fixed=TRUE))
 })
+
+test_that("The interruption used by these tests is told from any other failure", {
+  # These tests are only worth anything if the stop they report is the write
+  # being stopped. Reporting every failure as that would let them pass whether
+  # or not the write they are about ever happened.
+  expect_error(interrupted(stop("unrelated failure before any write")), "unrelated")
+  expect_equal(interrupted(42), 42)
+
+  # A write that is genuinely stopped is still reported as one.
+  w <- tuneR::Wave(left=as.integer(rep(500L, 2000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+  guanoWrite(guanoCreate(Make="X"), f)
+  expect_equal(interrupted(guanoWrite(guanoCreate(Make="Y"), f)), "interrupted")
+  expect_identical(guano(f)[["Make"]], "X")
+})
