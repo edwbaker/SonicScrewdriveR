@@ -644,3 +644,41 @@ test_that("Output that stops short does not take the place of a recording", {
   .writeAtomically(f, function(con) writeBin(charToRaw("replaced"), con))
   expect_equal(readBin(f, "raw", n=8), charToRaw("replaced"))
 })
+
+test_that("Nothing is left open or left behind however a write ends", {
+  directory <- tempfile()
+  dir.create(directory)
+  on.exit(unlink(directory, recursive=TRUE))
+  path <- file.path(directory, "recording.wav")
+  writeBin(charToRaw("a recording that is already here"), path)
+  size <- file.size(path)
+  connections <- length(getAllConnections())
+
+  # Someone cancelling raises a condition no error handler sees, which would
+  # otherwise leave the connection open and, where an open file cannot be
+  # removed, a part of a recording behind.
+  cancelled <- function(con) {
+    writeBin(as.raw(1:10), con)
+    stop(structure(class=c("interrupt", "condition"), list()))
+  }
+  invisible(tryCatch(
+    .writeAtomically(path, cancelled),
+    condition=function(c) NULL
+  ))
+  expect_equal(length(getAllConnections()), connections)
+  expect_length(list.files(directory, pattern="[.]part$"), 0)
+  expect_equal(file.size(path), size)
+
+  # The same for an error, and for a write that stops short and only warns.
+  for (ending in list(function(con) stop("failed"), function(con) warning("short"))) {
+    invisible(tryCatch(.writeAtomically(path, ending), error=function(e) NULL))
+    expect_equal(length(getAllConnections()), connections)
+    expect_length(list.files(directory, pattern="[.]part$"), 0)
+    expect_equal(file.size(path), size)
+  }
+
+  # And a write that finishes still takes its place.
+  .writeAtomically(path, function(con) writeBin(charToRaw("replaced"), con))
+  expect_equal(readBin(path, "raw", n=8), charToRaw("replaced"))
+  expect_equal(length(getAllConnections()), connections)
+})

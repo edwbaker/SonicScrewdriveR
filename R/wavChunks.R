@@ -422,7 +422,6 @@
 #' @noRd
 .writeAtomically <- function(path, write) {
   part <- tempfile(tmpdir=dirname(path), fileext=".part")
-  on.exit(unlink(part), add=TRUE)
 
   # A write that stops short, on a disk with no room left for instance, is
   # reported by a warning rather than an error. Output that stops short must
@@ -435,20 +434,31 @@
     )
   }
   con <- file(part, "wb")
+  state <- new.env(parent=emptyenv())
+  state$open <- TRUE
+
+  # However this call ends, the connection is closed and the part written file
+  # removed, and in that order, as a file still open cannot be removed on some
+  # systems. It is done here rather than where an error is caught because
+  # someone cancelling the call raises something no error handler sees, and
+  # that would leave the connection open and a part of a recording behind.
+  on.exit({
+    if (state$open) {
+      suppressWarnings(try(close(con), silent=TRUE))
+      state$open <- FALSE
+    }
+    unlink(part)
+  }, add=TRUE)
+
   if (file.exists(path) && !isTRUE(Sys.chmod(part, file.info(path)$mode))) {
-    close(con)
     stop("Could not preserve file permissions for: ", path)
   }
-  tryCatch(
-    withCallingHandlers({
-      write(con)
-      close(con)
-    }, warning = complain),
-    error = function(condition) {
-      suppressWarnings(try(close(con), silent=TRUE))
-      stop(condition)
-    }
-  )
+
+  withCallingHandlers({
+    write(con)
+    close(con)
+    state$open <- FALSE
+  }, warning = complain)
 
   if (!file.rename(part, path)) {
     stop("Could not put the written file in place of: ", path)
