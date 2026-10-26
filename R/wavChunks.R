@@ -435,6 +435,10 @@
     )
   }
   con <- file(part, "wb")
+  if (file.exists(path) && !isTRUE(Sys.chmod(part, file.info(path)$mode))) {
+    close(con)
+    stop("Could not preserve file permissions for: ", path)
+  }
   tryCatch(
     withCallingHandlers({
       write(con)
