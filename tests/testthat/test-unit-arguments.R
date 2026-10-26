@@ -479,3 +479,56 @@ test_that("an argument is evaluated once whichever way a former name is given", 
   expect_equal(mixed$value, 3600)
   expect_equal(mixed$evaluated, 1)
 })
+
+#The shape of an argument matters as much as its name: a value of NULL, a
+#position left empty, and one argument too many each have to survive the
+#arguments being matched again.
+test_that("an explicit NULL stays a supplied argument", {
+  expect_warning(
+    x <- humanTime(100, unit="seconds", digits=NULL),
+    "unit argument of humanTime"
+  )
+  expect_equal(x, humanTime(100, input.unit="seconds", digits=NULL))
+  #digits=NULL means no rounding, which is visible in the answer.
+  expect_equal(x, "1.66666666666667 minutes")
+
+  #Two former names, so two warnings.
+  expect_warning(
+    expect_warning(
+      y <- convert2seconds(T=1, input="hours", timezone=NULL),
+      "T argument of convert2seconds"
+    ),
+    "input argument of convert2seconds"
+  )
+  expect_equal(y, 3600)
+})
+
+test_that("a position left empty stays unsupplied", {
+  expect_warning(
+    x <- humanTime(100, unit="seconds", ),
+    "unit argument of humanTime"
+  )
+  expect_equal(x, humanTime(100, input.unit="seconds"))
+
+  expect_warning(
+    y <- convert2seconds(T=1, "hours", ),
+    "T argument of convert2seconds"
+  )
+  expect_equal(y, 3600)
+})
+
+test_that("one argument too many is still unused, with a former name given", {
+  #humanTime(S, unit, digits) took three arguments, so a fourth was an error.
+  expect_error(suppressWarnings(humanTime(100, unit="seconds", 1, 2)), "unused argument")
+  expect_error(
+    suppressWarnings(convert2seconds(T=1, "hours", "day", NULL, "extra")),
+    "unused argument"
+  )
+
+  #Every argument the signature did have is still accepted.
+  expect_warning(
+    x <- convert2seconds(T=1, "POSIX", "unix", NULL),
+    "T argument of convert2seconds"
+  )
+  expect_equal(x, convert2seconds(1, input.unit="POSIX", origin="unix", timezone=NULL))
+})

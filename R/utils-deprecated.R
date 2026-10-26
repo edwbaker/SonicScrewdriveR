@@ -268,16 +268,41 @@
   }
   then <- .matchFormals(before, .formalsBefore(target, renamed))
 
+  supplied <- as.list(probe)[-1]
   args <- list()
   for (i in seq_along(then)) {
-    if (is.na(then[i]) || is.na(now[i])) {
+    #An argument given as an empty slot was not supplied, and stays that way.
+    #Reading the formal it displaced would hand that formal'''s default on as
+    #though it had been given.
+    if (.isEmptyArg(supplied[[i]])) {
       next
+    }
+    #An argument with nowhere to go in the signature as it was, was an unused
+    #argument then, and saying so is better than dropping it.
+    if (is.na(then[i]) || is.na(now[i])) {
+      stop("unused argument in ", fn, "()", call.=FALSE)
     }
     to <- if (then[i] %in% names(renamed)) renamed[[then[i]]] else then[i]
     #The value as this frame already holds it. An argument already forced is
     #not forced again, and one not yet forced is evaluated here, once, in the
-    #environment it was written in.
-    args[[to]] <- get(now[i], envir=frame)
+    #environment it was written in. Assigned with a single bracket and a
+    #one-element list, so that a value of NULL stays a supplied argument
+    #rather than removing it.
+    args[to] <- list(get(now[i], envir=frame))
   }
   return(list(do.call(target, args, quote=TRUE)))
+}
+
+#' Whether an argument was given as an empty slot
+#'
+#' A call may leave a position empty, as `humanTime(100, unit="seconds", )`
+#' does. Such an argument is not supplied, and has to stay unsupplied when the
+#' arguments are matched again.
+#'
+#' @param expr The expression the argument was given as.
+#' @return TRUE if the argument is an empty slot.
+#' @keywords internal
+#' @noRd
+.isEmptyArg <- function(expr) {
+  return(is.symbol(expr) && !nzchar(as.character(expr)))
 }
