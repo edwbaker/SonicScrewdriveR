@@ -227,10 +227,10 @@ test_that("readAudio expands triggered recordings", {
   whole <- readAudio(f)
   expect_equal(length(whole@left), length(w@left))
 
-  part <- readAudio(f, from=1, to=2, units="seconds")
+  part <- readAudio(f, from=1, to=2, input.unit="seconds")
   expect_equal(length(part@left), 8000, tolerance=2)
 
-  samples <- readAudio(f, from=1, to=100, units="samples")
+  samples <- readAudio(f, from=1, to=100, input.unit="samples")
   expect_equal(length(samples@left), 100)
 })
 
@@ -529,7 +529,7 @@ test_that("A recording cut short is given sizes that match the file written", {
 
 test_that("A sample range past the end stops at the end of the recording", {
   f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
-  wave <- readAudio(f, from=49900, to=50000, units="samples")
+  wave <- readAudio(f, from=49900, to=50000, input.unit="samples")
 
   expect_equal(length(wave@left), 9)
   expect_false(any(is.na(wave@left)))
@@ -597,7 +597,7 @@ test_that("Metadata is carried onto a section of a triggered recording", {
 
   expect_identical(guano(readAudio(f))[["Make"]], "Open Acoustic Devices")
   expect_identical(guano(readAudio(f, from=1, to=2))[["Make"]], "Open Acoustic Devices")
-  expect_identical(guano(readAudio(f, from=1, to=100, units="samples"))[["Make"]], "Open Acoustic Devices")
+  expect_identical(guano(readAudio(f, from=1, to=100, input.unit="samples"))[["Make"]], "Open Acoustic Devices")
 })
 
 test_that("A file that could not be written is reported rather than returned", {
