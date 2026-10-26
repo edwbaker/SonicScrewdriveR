@@ -30,7 +30,9 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audio_filesize.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblast.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothConfig.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/autoBandPass.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/bandpass.html</loc></url>
@@ -82,6 +84,11 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/generateTimeShift.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/getMaad.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/gs_transcribe.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/guano-set.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/guano.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoCreate.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoParse.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoWrite.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanBytes.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanTime.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/index.html</loc></url>

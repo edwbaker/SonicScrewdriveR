@@ -183,8 +183,12 @@ London.
   : Get data or analyses from audioBlast
 - [`audioblastDownload()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.md)
   : Download audio files from audioBlast
+- [`audiomothCompress()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.md)
+  : Write a Wave as an AudioMoth triggered (T.WAV) file
 - [`audiomothConfig()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothConfig.md)
   : Read AudioMoth configuration file
+- [`audiomothExpand()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.md)
+  : Expand an AudioMoth triggered (T.WAV) file
 - [`audiomothWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.md)
   : Read AudioMoth metadata from a wave file
 - [`autoBandPass()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/autoBandPass.md)
@@ -289,6 +293,16 @@ London.
   : Import scikit-maad
 - [`gs_transcribe()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/gs_transcribe.md)
   : Google Speech API Transcribe
+- [`` `guano<-`() ``](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guano-set.md)
+  : Attach GUANO metadata to a Wave object
+- [`guano()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guano.md)
+  : Read GUANO metadata
+- [`guanoCreate()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoCreate.md)
+  : Create GUANO metadata
+- [`guanoParse()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoParse.md)
+  : Parse a block of GUANO metadata
+- [`guanoWrite()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoWrite.md)
+  : Write GUANO metadata to a WAV file
 - [`humanBytes()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanBytes.md)
   : Converts bytes in human readable form
 - [`humanTime()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanTime.md)

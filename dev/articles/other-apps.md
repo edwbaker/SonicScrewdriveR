@@ -46,6 +46,106 @@ of the configuration settings. The
 function takes a path to a wave file and returns a list of extracted
 parameters.
 
+#### Triggered recordings
+
+An AudioMoth recording on a trigger, such as an amplitude threshold,
+writes a single file whose name ends in `T.WAV`. The periods that did
+not trigger a recording are left out of it, each replaced by a short
+encoded block recording how long it was. A conventional wave tool reads
+such a file as the triggered recordings run together, which loses the
+timing of the events in the recording.
+
+[`audiomothExpand()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.md)
+puts the omitted periods back as silence, so that the triggered
+recordings sit where they were recorded. It returns a Wave object, or
+writes an ordinary wave file if given a path to write to.
+
+``` r
+
+w <- audiomothExpand("20201103_112430T.WAV")
+
+# Or expand every triggered recording on a card to a wave file
+for (f in list.files(pattern="T\\.WAV$")) {
+  audiomothExpand(f, sub("T\\.WAV$", ".WAV", f))
+}
+```
+
+[`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
+recognises a triggered recording and expands it as it reads it, so no
+change is needed to code that already uses it. It is recognised by the
+trigger AudioMoth records in the comment it writes into the header,
+rather than by the `T` before the extension: a name is only a
+convention, which an ordinary recording can meet and a triggered one can
+be renamed out of.
+[`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)
+reads such a file the same way, so windows are scheduled over the
+recording rather than over what is left of it on disk.
+
+``` r
+
+w <- readAudio("20201103_112430T.WAV", from=60, to=120, units="seconds")
+```
+
+[`audiomothCompress()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.md)
+goes the other way, writing a Wave as a triggered file and leaving out
+the segments whose peak amplitude falls below a threshold. Audio left
+out is not recoverable, as it is not recoverable on the device. The
+threshold is recorded in the file’s comment, as a device records it,
+which is what lets the file be read back as a triggered recording.
+
+``` r
+
+audiomothCompress(w, "20201103_112430T.WAV", threshold=1000)
+```
+
+#### GUANO metadata
+
+Current AudioMoth firmware writes
+[GUANO](https://github.com/riggsd/guano-spec) metadata, a format used by
+many bioacoustic recorders, which
+[`guano()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guano.md)
+reads from any wave file that carries it.
+
+``` r
+
+m <- guano("20201103_112430.WAV")
+m[["Loc Position"]]
+m[["Timestamp"]]
+```
+
+Fields the specification defines are converted to the types it gives
+them, so a position is a pair of numbers and a timestamp is a `POSIXct`.
+Any other field, which includes every namespaced field such as
+`OAD|Battery Voltage`, is kept as written. Metadata can be edited as a
+list and written back with
+[`guanoWrite()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoWrite.md),
+which replaces only the metadata and leaves the audio untouched.
+
+``` r
+
+m[["Species Manual ID"]] <- "Pipistrellus pipistrellus"
+guanoWrite(m, "20201103_112430.WAV")
+```
+
+[`guanoCreate()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoCreate.md)
+builds metadata from scratch, which
+[`guanoWrite()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoWrite.md)
+can add to a file that has none, and
+[`audiomothCompress()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.md)
+can write into a triggered file. Expanding a triggered file carries its
+metadata over.
+
+``` r
+
+m <- guanoCreate(
+  Make = "Open Acoustic Devices",
+  Model = "AudioMoth",
+  Samplerate = 48000,
+  "Loc Position" = c(51.4964, -0.1224)
+)
+guanoWrite(m, "20201103_112430.WAV")
+```
+
 ### BirdNET Analyzer
 
 [BirdNET Analyzer](https://birdnet.cornell.edu) is a deep learning model
