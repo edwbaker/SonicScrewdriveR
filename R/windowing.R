@@ -63,10 +63,9 @@ windowing <- function(
     validateIsWave(wave)
     n.samples <- length(wave)
     FUN2 <- function(start, wave, window.length, ...){
-      # cutws() indexes the samples directly, so a window reaching past the
-      # last of them would be padded with NA rather than stop at the end of
-      # the wave. Only an incomplete final window reaches past it.
-      section <- cutws(wave, from=start, to=min(start+window.length-1, length(wave)))
+      # Only an incomplete final window reaches past the last sample, and
+      # cutws() cuts a point beyond it back to the end of the wave.
+      section <- cutws(wave, from=start, to=start+window.length-1)
       return(FUN(section, start, window.length, ...))
     }
   }
