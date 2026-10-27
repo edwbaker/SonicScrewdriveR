@@ -152,11 +152,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     #read_audio_bin() attaches sample_rate and channels to the vector it returns,
     #and they would be carried into the slots of the Wave object if left on it.
     samples <- as.vector(samples)
-    nonFinite <- !is.finite(samples)
-    if (any(nonFinite)) {
-      samples[nonFinite] <- 0
-      .nonFiniteWarning(sum(nonFinite), file)
-    }
+    samples <- .zeroNonFinite(samples, file)
 
     #read_audio_bin() fills the 32bit range whatever the file was stored at, so
     #the samples are scaled back down to the bit depth of the source. Without
@@ -248,6 +244,22 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   seek(con, data$start - 5L, rw="write")
   writeBin(.uintToRaw(size, 4L), con)
   return(out)
+}
+
+#' Read any sample of a vector that is not a finite number as zero
+#'
+#' @param samples The samples read from the file
+#' @param file The file they were read from
+#' @return The samples, with any that are not finite numbers replaced by zero
+#' @keywords internal
+#' @noRd
+.zeroNonFinite <- function(samples, file) {
+  bad <- !is.finite(samples)
+  if (any(bad)) {
+    samples[bad] <- 0
+    .nonFiniteWarning(sum(bad), file)
+  }
+  return(samples)
 }
 
 #' Warn that samples were read as zero

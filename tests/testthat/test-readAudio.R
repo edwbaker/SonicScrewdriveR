@@ -590,3 +590,55 @@ test_that(".waveFinite replaces samples that are not finite numbers", {
   clean <- tuneR::Wave(left=c(1, 2), samp.rate=8000, bit=16)
   expect_identical(.waveFinite(clean, "test.wav"), clean)
 })
+
+test_that("A file with nothing to repair is left for the ordinary reader", {
+  # Too short to hold even a RIFF header, and a file that is not there at all.
+  short <- tempfile(fileext=".wav")
+  on.exit(unlink(short))
+  writeBin(charToRaw("RIFF"), short)
+  expect_null(.wavRepaired(short))
+  expect_null(.wavRepaired(tempfile(fileext=".wav")))
+
+  # Long enough to walk, but not a WAV file.
+  junk <- tempfile(fileext=".wav")
+  on.exit(unlink(junk), add=TRUE)
+  writeBin(as.raw(rep(7L, 40)), junk)
+  expect_null(.wavRepaired(junk))
+
+  # An empty data chunk with audio after it, but no format to say how long a
+  # sample frame is, so there is no way to tell how much audio is there.
+  noFmt <- tempfile(fileext=".wav")
+  on.exit(unlink(noFmt), add=TRUE)
+  body <- c(charToRaw("WAVE"), charToRaw("data"), .uintToRaw(0, 4L), raw(64))
+  writeBin(c(charToRaw("RIFF"), .uintToRaw(8, 4L), body), noFmt)
+  expect_null(.wavRepaired(noFmt))
+
+  # A file whose audio is as long as it says it is.
+  ordinary <- tempfile(fileext=".wav")
+  on.exit(unlink(ordinary), add=TRUE)
+  tuneR::writeWave(tuneR::Wave(left=rep(100, 50), samp.rate=8000, bit=16), ordinary)
+  expect_null(.wavRepaired(ordinary))
+})
+
+test_that("A repair that cannot be copied gives nothing rather than failing", {
+  samples <- as.integer(rep(c(400L, -400L), 100))
+  f <- malformedWav(samples, dataSize=0, riffSize=8)
+  on.exit(unlink(f))
+
+  # There is no reaching the temporary directory from here, so the copy is made
+  # to fail rather than waiting for the day it does.
+  testthat::local_mocked_bindings(file.copy=function(...) FALSE, .package="base")
+  expect_null(.wavRepaired(f))
+})
+
+test_that(".zeroNonFinite replaces samples that are not finite numbers", {
+  expect_warning(
+    s <- .zeroNonFinite(c(1, NaN, 2, Inf, -Inf), "test.wav"),
+    "3 samples .* are not finite numbers"
+  )
+  expect_equal(s, c(1, 0, 2, 0, 0))
+
+  # Samples that are all numbers are given back untouched, without a warning.
+  clean <- c(1, 2, 3)
+  expect_identical(.zeroNonFinite(clean, "test.wav"), clean)
+})

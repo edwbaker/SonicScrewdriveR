@@ -232,3 +232,37 @@ test_that("Only an empty data chunk with unaccounted bytes after it is unfinalis
   # The size is rounded down to a whole sample frame.
   expect_equal(.wavUnfinalisedSize(chunk, 8, 4, 1090), 1044)
 })
+
+test_that("A chunk written after an empty data chunk is not read as audio", {
+  # The writer left the data chunk empty and wrote its metadata after it without
+  # counting it in the RIFF header. The bytes after the chunk begin a chunk of
+  # their own, so they are not a recording.
+  data <- list(id="data", start=45, size=0, truncated=FALSE)
+  header <- c(charToRaw("guan"), .uintToRaw(20, 4L))
+  expect_equal(
+    .wavUnfinalisedSize(data, 8, 2, 1088, function(at, n) header),
+    0
+  )
+
+  # Audio in the same place is read as the recording it is.
+  audio <- c(as.raw(c(0, 255, 7, 200)), .uintToRaw(10, 4L))
+  expect_equal(
+    .wavUnfinalisedSize(data, 8, 2, 1088, function(at, n) audio),
+    1044
+  )
+})
+
+test_that("The size of an unfinalised chunk is judged without the bytes after it", {
+  f <- flatWaveFile(1000)
+  on.exit(unlink(f))
+  unfinalise(f)
+
+  # Only the start of the file, stopping before the audio, as audiomothExpand()
+  # reads it. The bytes after the data chunk header cannot be weighed, so the
+  # size the RIFF header declares answers on its own.
+  size <- file.size(f)
+  bytes <- readBin(f, "raw", n=size)
+  info <- .wavFormat(bytes[seq_len(.wavFormat(bytes)$dataStart - 1)], total=size)
+  expect_true(info$dataUnfinalised)
+  expect_equal(info$dataSize, 2000)
+})
