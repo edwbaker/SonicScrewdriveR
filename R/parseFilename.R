@@ -41,7 +41,8 @@
 #' * **YYYYMMDD_HHMMSS** - A standard date-time format.
 #' * **YYYYMMDD** - A standard date format, the time is taken to be midnight.
 #'
-#' @param file A filename (or list of filenames).
+#' @param file A filename, or several filenames as either a list or a
+#'  character vector (the shape returned by `list.files()`).
 #' @param format Optionally force a given format (see Details). If NULL (default)
 #'  an attempt is made to automatically detect the format for each file. If "match"
 #'  and a list of filenames is given then an attempt will be made to find a format
@@ -63,6 +64,11 @@
 parseFilename <- function(file, format=NULL, timezone="UTC") {
   if (is.null(timezone)) {
     timezone <- "UTC"
+  }
+  if (is.character(file) && length(file) > 1) {
+    # list.files() returns a character vector of filenames; treat it the same
+    # as a list of filenames.
+    file <- as.list(file)
   }
   if (!is.null(format) && identical(as.character(format), "match")) {
     # Matching a format across files is only meaningful for a list of files,

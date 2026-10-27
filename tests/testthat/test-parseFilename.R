@@ -195,6 +195,38 @@ test_that("parseFilename() accepts a list of filenames with a forced format", {
   expect_instant(parsed[[1]], 1708446151)
 })
 
+test_that("parseFilename() accepts a character vector of filenames", {
+  # list.files() returns a character vector, not a list.
+  files <- c(
+    "20240220_162231.wav",
+    "20240221_162231.wav"
+  )
+  parsed <- parseFilename(files, timezone="UTC")
+  expect_length(parsed, 2)
+  expect_instant(parsed[[1]], 1708446151)
+  expect_instant(parsed[[2]], 1708532551)
+  expect_equal(parsed, parseFilename(as.list(files), timezone="UTC"))
+
+  parsed <- parseFilename(files, format="YYYYMMDD_HHMMSS", timezone="UTC")
+  expect_equal(vapply(parsed, function(x) x$match, character(1)),
+               c("YYYYMMDD_HHMMSS", "YYYYMMDD_HHMMSS"))
+
+  # A single-element vector keeps behaving like a single filename.
+  parsed <- parseFilename(c("20240220_162231.wav"), timezone="UTC")
+  expect_equal(parsed$match, "YYYYMMDD_HHMMSS")
+})
+
+test_that("match parameter to parseFilename() works on a character vector", {
+  files <- c(
+    "20220430.wav",
+    "5E90A4D4.wav"
+  )
+  parsed <- parseFilename(files, format="match", timezone="UTC")
+  expect_equal(parsed, parseFilename(as.list(files), format="match", timezone="UTC"))
+  expect_equal(vapply(parsed, function(x) x$match, character(1)),
+               c("AudioMoth HEX", "AudioMoth HEX"))
+})
+
 test_that("match parameter to parseFilename() works as expected", {
   files <- list(
     "20220430.wav",
