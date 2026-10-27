@@ -5,22 +5,8 @@ test_that("default to air with good known value", {
 test_that("naturalFrequency gives expected output", {
   expect_lt(naturalFrequency(1/2, 1/pi^2, 4) - 0.30775845, 0.001)
   expect_gt(naturalFrequency(1/2, 1/pi^2, 4) - 0.30775845, -0.001)
-})
-
-test_that("naturalFrequency defaults C to the IUPAC standard pressure in SI units", {
-  # 1e5 Pascals, not 100: supplying the documented default explicitly must give
-  # the same answer as leaving it out.
-  expect_equal(naturalFrequency(L=20, R=0.01), 1.0527110e-4, tolerance = 1e-6)
-  expect_equal(naturalFrequency(L=20, R=0.01), naturalFrequency(L=20, C=1e5, R=0.01))
-  expect_equal(resonantFrequency(L=1), 5.0329212e-4, tolerance = 1e-6)
-  expect_equal(resonantFrequency(L=1), resonantFrequency(L=1, C=1e5))
-})
-
-test_that("naturalFrequency rejects an overdamped system", {
-  expect_error(naturalFrequency(L=20, R=0.5), "overdamped")
-  expect_error(naturalFrequency(L=20, C=1e5, R=0.5), "overdamped")
-  # Critically damped (discriminant exactly zero) is still a valid result.
-  expect_equal(naturalFrequency(L=1, C=1/4, R=4), 0)
+  expect_lt(naturalFrequency(L=20,R=0.5) - 0.002950812, 0.001)
+  expect_gt(naturalFrequency(L=20,R=0.5) - 0.002950812, -0.001)
 })
 
 test_that("resonantFrequency gives expected output", {

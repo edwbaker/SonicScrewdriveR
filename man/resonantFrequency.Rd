@@ -4,12 +4,12 @@
 \alias{resonantFrequency}
 \title{Calculate the resonant frequency}
 \usage{
-resonantFrequency(L, C = 1e+05)
+resonantFrequency(L, C = "default")
 }
 \arguments{
 \item{L}{Inductance}
 
-\item{C}{Capacitance, by default the IUPAC standard pressure of 1e5 Pascals.}
+\item{C}{Capacitance, by default IUPAC standard pressure.}
 }
 \value{
 The resonant frequency, in Hertz.
@@ -21,7 +21,7 @@ resistance and related quantities. All units are SI.
 }
 \details{
 For isothermal compression, the bulk modulus is equal to the pressure. The default value of C therefore is the IUPAC
-standard pressure, which in SI units is 1e5 Pascals.
+standard pressure.
 }
 \examples{
 f <- resonantFrequency(L=1)

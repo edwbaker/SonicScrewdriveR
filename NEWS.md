@@ -115,15 +115,6 @@
   in convert2seconds().
 
 ## Fixes
-- naturalFrequency() and resonantFrequency() documented their default capacitance
-  as the IUPAC standard pressure in SI units, but used 100 rather than 1e5
-  Pascals, so a user who supplied the documented value explicitly got a different
-  answer from the default. The default is now 1e5 Pascals, and is shown in the
-  argument list rather than hidden behind a sentinel value. Results that relied on
-  the old default change: pass C=100 to keep them.
-- naturalFrequency() returned NaN, or an error about a missing value, for an
-  overdamped system, in which the damping term exceeds the stiffness term and
-  there is no real natural frequency. It now raises an error saying so.
 - readAudio() returned an empty wave for a file whose data chunk size was never
   written, which is what a recorder leaves behind when it loses power part-way
   through a file, discarding the whole recording the file still held. The audio
