@@ -437,8 +437,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #'
 #' An AudioMoth triggered recording is expanded before it is cut, so unlike the
 #' other paths it has the whole recording in hand already. It is cut through the
-#' same helpers so that it stops where they stop, and any GUANO metadata read
-#' from the file is carried onto the section.
+#' same helpers so that it stops where they stop, and whatever metadata was
+#' read from the file is carried onto the section.
 #'
 #' @param wave A Wave object
 #' @param from Start point to return
@@ -449,7 +449,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @keywords internal
 #' @noRd
 .cutAudio <- function(wave, from, to, input.unit, fromS) {
-  metadata <- attr(wave, "guano")
+  # Everything the file said about itself is carried over, not just its GUANO
+  # metadata: a section of a recording came from the same recording.
+  metadata <- .mdStore(wave)
   if (input.unit == "samples") {
     # cutws() indexes the samples directly, so an end past the last of them
     # would pad the result with NA rather than stop at the end of the
@@ -461,7 +463,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     cut <- .cutSeconds(wave, from, to, input.unit)
   }
   if (!is.null(metadata)) {
-    attr(cut, "guano") <- metadata
+    cut <- .mdSetStore(cut, metadata)
   }
   return(cut)
 }

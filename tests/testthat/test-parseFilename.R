@@ -28,10 +28,21 @@ test_that(".detectFormat() correctly identifies formats", {
     .detectFormat("PARIS_-0-_20150410$195550.wav"),
     "Wildlife Acoustics SM3"
   )
+  # A name of nothing but digits could as easily be a record number, so the
+  # format it is read as carries the others it could have been.
   expect_equal(
-    .detectFormat("0123456789.wav"),
+    as.character(.detectFormat("0123456789.wav")),
     "timestamp"
   )
+  expect_equal(
+    attr(.detectFormat("0123456789.wav"), "alternatives"),
+    c("timestamp", "record number")
+  )
+  expect_equal(
+    attr(.detectFormat("20240220.wav"), "alternatives"),
+    c("YYYYMMDD", "AudioMoth HEX", "record number")
+  )
+  expect_null(attr(.detectFormat("20240220_162231.wav"), "alternatives"))
 
   expect_null(
     .detectFormat("__!__.mp3")
@@ -112,7 +123,11 @@ for (tz in sessionTimezones) {
         # here used to be a second out and in whatever zone the machine was in, which
         # went unnoticed because expect_equal() compares times that large by relative
         # tolerance and a second is well inside it.
-        datetime= as.POSIXct(1708529883, origin=as.POSIXct("1970-01-01", tz="UTC"), tz="GMT")
+        datetime= as.POSIXct(1708529883, origin=as.POSIXct("1970-01-01", tz="UTC"), tz="GMT"),
+        # Ten digits read as a count of seconds since 1970 read just as well as
+        # a record number, so the reading says it is a guess.
+        ambiguous=TRUE,
+        alternatives=c("timestamp", "record number")
       )
       expect_equal(parseFilename(files, timezone="GMT"), data)
       expect_instant(parseFilename(files, timezone="GMT"), 1708529883)
@@ -232,19 +247,37 @@ test_that("match parameter to parseFilename() works as expected", {
     "20220430.wav",
     "20240121.wav"
   )
+  # Finding a format that fits every name in the list does not settle what
+  # these names are: a list of record numbers agrees with itself exactly as
+  # readily as a list of dates does, so the reading is still a guess and still
+  # says so. A format the caller names is a different matter, and carries no
+  # alternatives.
+  ambiguity <- list(
+    ambiguous=TRUE,
+    alternatives=c("YYYYMMDD", "AudioMoth HEX", "record number")
+  )
   data <- list(
-    list(
-      filename="20220430.wav",
-      match="YYYYMMDD",
-      datetime=as.POSIXct("2022-04-30", tz="UTC")
+    c(
+      list(
+        filename="20220430.wav",
+        match="YYYYMMDD",
+        datetime=as.POSIXct("2022-04-30", tz="UTC")
+      ),
+      ambiguity
     ),
-    list(
-      filename="20240121.wav",
-      match="YYYYMMDD",
-      datetime=as.POSIXct("2024-01-21", tz="UTC")
+    c(
+      list(
+        filename="20240121.wav",
+        match="YYYYMMDD",
+        datetime=as.POSIXct("2024-01-21", tz="UTC")
+      ),
+      ambiguity
     )
   )
   expect_equal(parseFilename(files, format="match", timezone="UTC"), data)
+  expect_false("ambiguous" %in% names(
+    parseFilename("20220430.wav", format="YYYYMMDD", timezone="UTC")
+  ))
 
   files <- list(
     "20220430.wav",

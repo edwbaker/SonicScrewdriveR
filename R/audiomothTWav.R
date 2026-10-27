@@ -412,7 +412,7 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #' @param info Chunk positions from .wavFormat(), describing the file before it
 #'   was expanded
 #' @param expanded The number of bytes the expansion added
-#' @return A Wave object, carrying any GUANO metadata as an attribute
+#' @return A Wave object, carrying any GUANO metadata the file held
 #' @keywords internal
 #' @noRd
 .audiomothWave <- function(bytes, info, expanded) {
@@ -423,10 +423,7 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   )
   wave <- Wave(left=samples, samp.rate=info$sampleRate, bit=16, pcm=TRUE)
 
-  metadata <- .guanoFromBytes(bytes)
-  if (length(metadata) > 0L) {
-    attr(wave, "guano") <- metadata
-  }
+  guano(wave) <- .guanoFromBytes(bytes)
   return(wave)
 }
 

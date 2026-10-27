@@ -1,6 +1,67 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- readMetadata() reads the embedded metadata of an audio file, whatever format
+  that metadata is in and whatever container the file is, and gives back both
+  what each format said and one normalised record built from all of them. A
+  recording commonly carries several of these formats, written by the device
+  that made it and by whatever software has handled it since, and the same fact
+  under a different name in each; the record holds the time, make, model,
+  serial, firmware, title, species, recordist, comment, licence, position and
+  elevation the file gave, taken from the most specific format that gave each.
+  Chunks carrying metadata this package cannot read are named rather than
+  passed over in silence, so that a file is not taken to carry nothing just
+  because nothing here can read what it carries.
+- `audioMetadata<-` attaches a reading to a wave, which readMetadata() reads
+  back. A wave keeps the metadata of its file in one place: a TaggedWave has a
+  metadata slot made for this, so the reading goes in there under the name
+  "audioMetadata", beside anything else the caller has recorded in that slot,
+  and a plain Wave, which has nowhere of its own, carries an attribute of the
+  same name. `guano<-` now writes into that same place rather than an attribute
+  of its own, so a wave cannot end up carrying one record of its file in one
+  place and another somewhere else, and reading a section of a recording or
+  expanding a triggered one carries everything its file said over rather than
+  only its GUANO metadata.
+- The formats readMetadata() reads can each be read on their own: id3() reads
+  the ID3 tag of an MP3 file, or the one a wave file holds in a chunk, in
+  versions 1 and 2.2 to 2.4; wamd() reads the Wildlife Acoustics chunk that
+  Song Meter recorders write; bext() reads Broadcast Wave metadata, whose
+  description is where a sound library commonly puts the whole of its record
+  for a recording; wavInfo() reads the INFO list, which is where AudioMoth
+  firmware records the settings a recording was made with, and the labels an
+  editor has given the cue points of a recording; ixml() reads the
+  iXML chunk field recorders write; and vorbisComment() reads the comments of
+  a FLAC or Ogg file. Each takes a path, a Wave object or the bytes of a file,
+  reads only the metadata rather than the whole recording, and gives an empty
+  result rather than an error for a file that carries none.
+- A file is identified by its bytes rather than by its name, so an MP3 or an
+  Ogg file under a .wav extension is read as what it is.
+- parseFilename() reads the filename convention of the TSA corpus and the
+  collections distributed with it, as
+  `TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav`, giving the collection,
+  the taxon, the accession number the collection gave the recording and the
+  hash of the file. readMetadata() reports the taxon as the species and the
+  collection beside it, which for much of that corpus is the only record of
+  what was recorded: those files commonly carry no embedded metadata at all.
+  A taxon is read only from a scientific name, so the part of the corpus named
+  by a German common name and a German word for the kind of call gives none
+  rather than a taxon invented from its first two words.
+- parseFilename() says when a reading was a guess. `ambiguous` is TRUE and
+  `alternatives` names every format the filename could have been in, where the
+  name itself could not settle it. A name of nothing but digits is the case
+  that matters: eight digits are read as a date and ten as a count of seconds,
+  and a collection that numbers its records gives names of exactly that shape.
+  readMetadata() therefore takes no date from such a name, since nothing
+  outranks a filename and a confident wrong date is worse than none; a format
+  asked for by name is not a guess and carries no alternatives.
+- readMetadata()'s `filename` argument takes the name of a filename format as
+  well as TRUE or FALSE, as in `filename = "YYYYMMDD"`. Where you know what
+  your own files are named by, naming the format settles what the digits mean
+  and the date is read and used rather than passed over as a guess. A format
+  the package does not know is an error at once rather than a file quietly
+  reading as though nothing had been asked for.
+- Text declared as ISO-8859-1 that is in fact valid UTF-8 is read as UTF-8,
+  which is what xeno-canto writes into the comment frame of its recordings.
 - audiomothExpand() expands an AudioMoth triggered (T.WAV) recording, in which
   the periods that did not trigger a recording are left out, restoring them as
   silence so that the timing of the triggered recordings is preserved. It gives
@@ -116,6 +177,10 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- readAudio() failed on an AudioMoth triggered (T.WAV) recording with "argument
+  "units" is missing, with no default". The renaming of the unit arguments left
+  the call that cuts an expanded recording passing the deprecated argument,
+  which has no default, rather than the one that replaced it.
 - naturalFrequency() and resonantFrequency() documented their default capacitance
   as the IUPAC standard pressure, in SI units, but used 100 rather than 1e5
   Pascals, so supplying the documented value explicitly gave a different answer
