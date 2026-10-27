@@ -10,16 +10,21 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 \item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
 allChannels(), which returns one set of statistics per channel.}
 
-\item{wave_spec}{A precomputed spectrum (optional, if not present will be generated)}
+\item{wave_spec}{A precomputed spectrum (optional, if not present will be
+generated), with its frequencies in kHz as seewave::meanspec() returns them.}
 
 \item{warn}{If TRUE provides warnings when values are not consistent}
 
-\item{lowcut}{Frequency (in kHz) values below which are ignored.}
+\item{lowcut}{Frequency below which values are ignored, in kHz. That is the
+unit of the spectrum measured here and of every frequency returned, where
+the frequency arguments of the filtering functions, such as autoBandPass(),
+are in Hz.}
 
 \item{plot}{IF TRUE displays values}
 }
 \value{
-A list of frequency statistics, with an entry for each of the -3dB and -10dB thresholds.
+A list of frequency statistics, with an entry for each of the -3dB
+and -10dB thresholds. Frequencies and bandwidths are in kHz.
 }
 \description{
 Calculates the peak, centre, bandwidth and quality factor. The quality factor (Q) is calculated at both

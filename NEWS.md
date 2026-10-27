@@ -668,6 +668,35 @@
 - validateSpectrum() aborted with R's own "missing value where TRUE/FALSE needed"
   when a spectrum held an NA in its frequency column and NAs were being coerced. It
   now says which column the NA was in. NA amplitudes are still coerced to zero.
+- autoBandPass() measured the centre frequency and bandwidth with a floor of 1kHz
+  whatever lowcut it was given, so a band below 1kHz could never be chosen. Its own
+  lowcut is in Hz, where the lowcut of frequencyStats(), which takes the
+  measurement for it, is in kHz, the unit of the spectrum that function measures;
+  the value was passed on unconverted, which left the 1kHz default of
+  frequencyStats() standing however low the high-pass was set. A recording whose
+  signal lies below 1kHz, as the call of a mole cricket does, came back filtered to
+  a band holding nothing but numerical residue, and nothing warned. The frequency
+  is now converted, so lowcut=0 measures the whole recording as its documentation
+  says. Results at the default lowcut of 1000Hz are unchanged, that being the floor
+  which was already applied. The unit each argument is in is now given in both help
+  pages, and frequencyStats() keeps kHz, the unit of the spectrum it measures and
+  of every frequency it returns.
+- autoBandPass() failed on a signal narrow enough to fall in a single bin of the
+  spectrum, such as a pure tone or a stable insect call, with "'from' should be
+  strictly inferior to 'to'" from seewave, which named neither the function nor the
+  reason. Such a signal has no bandwidth to measure at the threshold asked for, so
+  the band ran from the centre frequency to the centre frequency. A band one bin of
+  the spectrum wide is kept instead, which keeps the peak rather than nothing, and
+  the warning names the threshold that had no bandwidth to measure. The warnings
+  frequencyStats() raises about a single bin are no longer passed on from here, as
+  they are raised for both thresholds where only one is the threshold the filter is
+  built from.
+- autoBandPass() now refuses a number of bandwidths it cannot build a band from.
+  An n.bw below 1 asks for a band of no width, or for one whose edges are the wrong
+  way round, and gave the same error from seewave about its own arguments. A band
+  reaching past either end of the recording, which several bandwidths either side
+  of a low centre frequency do, is kept as far as the recording goes rather than
+  reaching below zero, where seewave reported it as an error about subscripts.
 
 ## Internal
 - directionPlot() named its columns with aes_string(), deprecated since ggplot2

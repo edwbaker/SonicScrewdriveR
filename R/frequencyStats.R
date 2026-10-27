@@ -5,13 +5,18 @@
 #'
 #' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
 #'   allChannels(), which returns one set of statistics per channel.
-#' @param wave_spec A precomputed spectrum (optional, if not present will be generated)
+#' @param wave_spec A precomputed spectrum (optional, if not present will be
+#'   generated), with its frequencies in kHz as seewave::meanspec() returns them.
 #' @param plot IF TRUE displays values
 #' @param warn If TRUE provides warnings when values are not consistent
-#' @param lowcut Frequency (in kHz) values below which are ignored.
+#' @param lowcut Frequency below which values are ignored, in kHz. That is the
+#'   unit of the spectrum measured here and of every frequency returned, where
+#'   the frequency arguments of the filtering functions, such as autoBandPass(),
+#'   are in Hz.
 #' @importFrom graphics abline plot title
 #' @importFrom seewave sfm
-#' @return A list of frequency statistics, with an entry for each of the -3dB and -10dB thresholds.
+#' @return A list of frequency statistics, with an entry for each of the -3dB
+#'   and -10dB thresholds. Frequencies and bandwidths are in kHz.
 #' @export
 #'
 frequencyStats <- function(

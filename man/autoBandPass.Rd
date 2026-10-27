@@ -13,7 +13,10 @@ autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 
 \item{n.bw}{The number of bandwidths either side of the centre of the centre to keep}
 
-\item{lowcut}{High-pass filtering is applied at this frequency before calculating the centre frequency and bandwidth}
+\item{lowcut}{Frequency (in Hz) below which the recording is ignored.
+High-pass filtering is applied here before the centre frequency and
+bandwidth are calculated, and the same frequency is the floor of that
+calculation, so no band below it is chosen.}
 }
 \value{
 A band-pass filtered Wave object
