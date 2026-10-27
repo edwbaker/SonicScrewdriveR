@@ -28,7 +28,8 @@
   Song Meter recorders write; bext() reads Broadcast Wave metadata, whose
   description is where a sound library commonly puts the whole of its record
   for a recording; wavInfo() reads the INFO list, which is where AudioMoth
-  firmware records the settings a recording was made with; ixml() reads the
+  firmware records the settings a recording was made with, and the labels an
+  editor has given the cue points of a recording; ixml() reads the
   iXML chunk field recorders write; and vorbisComment() reads the comments of
   a FLAC or Ogg file. Each takes a path, a Wave object or the bytes of a file,
   reads only the metadata rather than the whole recording, and gives an empty
