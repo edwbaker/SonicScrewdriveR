@@ -177,6 +177,17 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- pythonInstall() stopped with "the condition has length > 1", which names
+  neither Python nor pip, where the pip of an existing `sonicscrewdriver`
+  environment could not be imported. reticulate asks pip for its version before
+  installing into an environment, and compares what comes back against a
+  minimum; where the import fails, that comparison is handed the three lines of
+  a Python traceback in place of a version. pip being installed but not
+  importable is what an interrupted install leaves behind, and what a
+  file-syncing service does to an environment built inside a synced folder,
+  carrying off the loose files of the package and leaving its directories. The
+  import is now attempted first, and such an environment reported as needing a
+  rebuild.
 - readAudio() failed on an AudioMoth triggered (T.WAV) recording with "argument
   "units" is missing, with no default". The renaming of the unit arguments left
   the call that cuts an expanded recording passing the deprecated argument,
