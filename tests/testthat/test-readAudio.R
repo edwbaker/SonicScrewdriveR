@@ -872,3 +872,16 @@ test_that("A file readWave() cannot read is still passed on to be read another w
   writeBin(as.raw(rep(7L, 400)), junk)
   expect_error(suppressWarnings(readAudio(junk)))
 })
+
+test_that("A file that cannot be read gives nothing to compare the header against", {
+  # The cross-check is made after the audio has been read, so a file that
+  # cannot be read by the time its metadata is asked for leaves nothing to
+  # compare the header against, and that is no reason to raise anything about
+  # the rate of a wave that was read.
+  gone <- tempfile(fileext=".wav")
+  expect_equal(.wavRateClaims(gone), list())
+
+  f <- rateWav(38400, mdGuanoChunk("Samplerate:384000"))
+  w <- suppressWarnings(readAudio(f))
+  expect_equal(rateWarnings(.wavRateWarning(w, gone))$messages, character(0))
+})
