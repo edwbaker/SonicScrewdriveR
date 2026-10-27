@@ -100,6 +100,7 @@ dayPhase
 dayPhases
 daysPhases
 defaultCluster
+detectCores
 diel
 disp
 dielFraction
@@ -154,6 +155,7 @@ lowcut
 maad
 maad's
 magrittr
+makeCluster
 meanspec
 minMax
 mpeg

@@ -34,8 +34,8 @@ test_that("frequencyStats passes arguments to each channel", {
   # warn=FALSE throughout: a pure tone leaves a single bin above the threshold
   # once lowcut is applied, which frequencyStats() rightly warns about.
   expect_equal(
-    frequencyStats(st, lowcut=2, warn=FALSE),
-    list(frequencyStats(L, lowcut=2, warn=FALSE), frequencyStats(L, lowcut=2, warn=FALSE))
+    frequencyStats(st, lowcut=2000, warn=FALSE),
+    list(frequencyStats(L, lowcut=2000, warn=FALSE), frequencyStats(L, lowcut=2000, warn=FALSE))
   )
   expect_equal(frequencyStats(st, warn=FALSE), list(frequencyStats(L, warn=FALSE), frequencyStats(L, warn=FALSE)))
 })
@@ -68,6 +68,22 @@ test_that("frequencyStats returns one value per statistic when maxima tie", {
       expect_length(r[[threshold]][[stat]], 1)
     }
   }
+})
+
+test_that("frequencyStats takes its low cut in Hz", {
+  # The spectrum has its frequency axis in kHz, and this argument used to be in
+  # kHz with it, so a cut of 4000 zeroed the whole spectrum rather than the bins
+  # below 4kHz.
+  spec <- knownSpectrum(c(0,0,0,0,2,4,2,0,0,0,0))
+  r <- frequencyStats(knownWave, wave_spec=spec, lowcut=4000, warn=FALSE)$`-3dB`
+  expect_equal(r$min, 4)
+  expect_equal(r$max, 6)
+
+  # A cut above everything in the spectrum still leaves nothing to measure.
+  expect_error(
+    frequencyStats(knownWave, wave_spec=spec, lowcut=7000, warn=FALSE),
+    "No signal above lowcut"
+  )
 })
 
 test_that("frequencyStats says so when there is no signal", {
