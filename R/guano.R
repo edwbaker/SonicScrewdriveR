@@ -506,7 +506,8 @@ print.guano <- function(x, ...) {
 #' Reads the GUANO metadata of a WAV file, or of a Wave object that carries it.
 #' GUANO is the metadata format used by many bioacoustic recorders, including
 #' AudioMoth devices running current firmware. A file holding no GUANO metadata
-#' gives an empty result rather than an error.
+#' gives an empty result rather than an error. A WAV file over 4 GiB, written in
+#' the RF64 or BW64 form, is read as any other.
 #'
 #' @param x Path to a WAV file, a Wave object with GUANO metadata attached, or a
 #'   raw vector holding a whole WAV file
@@ -583,8 +584,10 @@ guano <- function(x) {
 #' Write GUANO metadata to a WAV file
 #'
 #' Replaces the GUANO metadata of a WAV file, adding a guan chunk if the file
-#' has none. Only the metadata chunk and the sizes in the file header are
-#' changed, so the audio data and every other chunk are left as they were.
+#' has none. Only the metadata chunk and the sizes the file records are
+#' changed: those in the file header, or in the ds64 chunk of an RF64 or BW64
+#' file, the form a recording over 4 GiB is written in. The audio data and every
+#' other chunk are left as they were.
 #'
 #' @param x A guano object, from [guano()] or [guanoCreate()]
 #' @param file Path to the WAV file to read
@@ -640,36 +643,58 @@ guanoWrite <- function(x, file, output=NULL) {
     }
   }
 
+  # The data size is written only where it changes.
+  dataSize <- NULL
   if (!is.null(data) && isTRUE(data$truncated)) {
     warning(
       "DATA chunk runs past the end of the file, which may be truncated. ",
       "Its size has been corrected to the audio the file holds."
     )
-    bytes[(data$start - 4L):(data$start - 1L)] <- .uintToRaw(data$size, 4L)
+    dataSize <- data$size
   }
+  # A ds64 chunk that miscounts the sample frames is given the data size it
+  # already has, which puts the count right with it.
+  if (!is.null(info$ds64) && !info$ds64$countAgrees) {
+    .wavCountWarning(info$ds64, file, corrected=TRUE)
+    if (is.null(dataSize)) {
+      dataSize <- info$ds64$dataSize
+    }
+  }
+
+  if (is.null(existing)) {
+    headLength <- length(bytes)
+    tailLength <- 0
+  } else {
+    headLength <- existing$start - 9
+    after <- existing$start + existing$size + (existing$size %% 2)
+    tailLength <- max(0, length(bytes) - after + 1)
+  }
+  # A RIFF chunk of an odd length is followed by a padding byte, so a recording
+  # holding an odd number of audio bytes needs one before anything is written
+  # after it. Without it the metadata would start a byte early and be read as a
+  # chunk of some other name.
+  pad <- headLength %% 2
+
+  # The sizes are written before the file is divided around the metadata, as
+  # the data chunk header comes after the metadata where the metadata is held
+  # before the audio. length() gives a whole number, and a recording of 2GB or
+  # more is longer than their sum can be counted in, so the size is added up in
+  # doubles.
+  riffSize <- as.numeric(headLength) + pad + length(chunk) + tailLength - 8
+  bytes <- .wavPatch(
+    bytes, .wavSizePatches(info$form, info$ds64, data$start, riffSize, dataSize)
+  )
 
   if (is.null(existing)) {
     head <- bytes
     tail <- raw(0)
   } else {
-    head <- bytes[seq_len(existing$start - 9L)]
-    after <- existing$start + existing$size + (existing$size %% 2)
-    tail <- if (after <= length(bytes)) bytes[after:length(bytes)] else raw(0)
+    head <- bytes[seq_len(headLength)]
+    tail <- if (tailLength > 0) bytes[after:length(bytes)] else raw(0)
   }
-
-  # A RIFF chunk of an odd length is followed by a padding byte, so a recording
-  # holding an odd number of audio bytes needs one before anything is written
-  # after it. Without it the metadata would start a byte early and be read as a
-  # chunk of some other name.
-  if (length(head) %% 2L == 1L) {
+  if (pad == 1) {
     head <- c(head, raw(1))
   }
-
-  # length() gives a whole number, and a recording of 2GB or more is longer
-  # than their sum can be counted in, so the size is added up in doubles.
-  head[5:8] <- .uintToRaw(
-    as.numeric(length(head)) + length(chunk) + length(tail) - 8, 4L
-  )
 
   # Written beside the recording and put in its place once whole, so that a
   # write which fails part way through cannot lose a recording that was only

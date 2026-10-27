@@ -292,6 +292,11 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
       "read to the end of the file."
     )
   }
+  # The sizes are written anew whatever happens below, which puts the count
+  # right in any file written.
+  if (!is.null(info$ds64) && !info$ds64$countAgrees) {
+    .wavCountWarning(info$ds64, file)
+  }
 
   if (info$dataStart - 1 > nBlocks * .AM_BLOCK_SIZE) {
     # The header reaches past the last whole 512-byte block, so no block after
@@ -325,7 +330,7 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   outSize <- plan$total
   expanded <- outSize - size
 
-  # A WAV file records its sizes in four bytes, so it cannot describe one of
+  # A RIFF file records its sizes in four bytes, so it cannot describe one of
   # 4GB or more. Writing such a file would wrap the sizes and leave something
   # no reader could make sense of. The sizes to weigh are the ones about to be
   # written, not the ones the file declares: a recording cut short can declare
@@ -333,18 +338,25 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   # would turn away a recording that expands perfectly well.
   # Nothing was left out of a recording that holds no encoded block, so it is
   # written back as it is, and a file already on disk is not refused for a size
-  # it already has. Only a recording that grows has to be described anew.
-  if (expanded > 0 && (outSize - 8 >= 2^32 || info$dataSize + expanded >= 2^32)) {
+  # it already has. Only a recording that grows has to be described anew. An
+  # RF64 or BW64 file records its sizes in eight bytes, and has room for any.
+  if (expanded > 0 && info$form == "RIFF" &&
+      (outSize - 8 >= 2^32 || info$dataSize + expanded >= 2^32)) {
     stop(
       "The expanded recording would be ", round(outSize / 2^30, 1),
       "GB, which is more than a WAV file can describe."
     )
   }
 
-  # The chunk sizes still describe the unexpanded file.
-  blocks[5:8] <- .uintToRaw(outSize - 8, 4L)
-  blocks[(info$dataStart - 4L):(info$dataStart - 1L)] <-
-    .uintToRaw(info$dataSize + expanded, 4L)
+  # The chunk sizes still describe the unexpanded file. They are written into
+  # the blocks here rather than by .wavPatch(), which would copy every block of
+  # the recording to change a few bytes of its header.
+  patches <- .wavSizePatches(
+    info$form, info$ds64, info$dataStart, outSize - 8, info$dataSize + expanded
+  )
+  for (patch in patches) {
+    blocks[patch$at:(patch$at + length(patch$bytes) - 1)] <- patch$bytes
+  }
 
   if (!is.null(output)) {
     # Streaming the expansion keeps a recording that expands to more than memory
@@ -400,10 +412,10 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #' @keywords internal
 #' @noRd
 .audiomothRepair <- function(bytes, info, expanded) {
-  bytes[5:8] <- .uintToRaw(length(bytes) - 8, 4L)
-  bytes[(info$dataStart - 4L):(info$dataStart - 1L)] <-
-    .uintToRaw(info$dataSize + expanded, 4L)
-  return(bytes)
+  return(.wavPatch(bytes, .wavSizePatches(
+    info$form, info$ds64, info$dataStart, length(bytes) - 8,
+    info$dataSize + expanded
+  )))
 }
 
 #' Build a Wave from the bytes of an expanded recording

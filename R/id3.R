@@ -434,7 +434,7 @@
     }
   }
   # A wave file carries a whole version 2 tag inside a chunk of its own.
-  if (identical(container, "WAVE")) {
+  if (.mdWaveContainer(container)) {
     for (id in c("id3 ", "ID3 ")) {
       body <- .mdWavChunk(file, id)
       if (!is.null(body)) {

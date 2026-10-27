@@ -56,6 +56,56 @@ mdFmt <- function() {
 #' A data chunk holding silence
 mdData <- function(n=16L) mdChunk("data", raw(n))
 
+#' Little-endian unsigned 64-bit integer as bytes, as a ds64 chunk holds a size
+mdU64 <- function(x) as.raw(floor(as.numeric(x) / 256^(0:7)) %% 256)
+
+#' A chunk whose size is left to the ds64 chunk, as an RF64 file leaves it
+mdDeferred <- function(id, body) {
+  if (length(body) %% 2L == 1L) {
+    body <- c(body, as.raw(0))
+  }
+  return(c(charToRaw(id), mdU32(4294967295), body))
+}
+
+#' A wave file in the RF64 or BW64 form, holding the given chunks
+#'
+#' The ds64 chunk comes first, as the form requires, and gives the RIFF size of
+#' the file as built unless it is given one, so that a test can give a size the
+#' file disagrees with. The data size and the number of sample frames are the
+#' caller's to give, as the data chunk is, and `table` names the size of any
+#' other chunk that leaves its size to the ds64 chunk.
+mdRf64 <- function(..., dataSize, frames=0, table=list(), riffSize=NULL,
+                   form="RF64") {
+  body <- c(...)
+  entries <- unlist(lapply(
+    names(table), function(id) c(charToRaw(id), mdU64(table[[id]]))
+  ))
+  if (is.null(riffSize)) {
+    riffSize <- 4 + 8 + 28 + 12 * length(table) + length(body)
+  }
+  ds64 <- c(
+    charToRaw("ds64"), mdU32(28 + 12 * length(table)),
+    mdU64(riffSize), mdU64(dataSize), mdU64(frames), mdU32(length(table)),
+    entries
+  )
+  return(c(charToRaw(form), mdU32(4294967295), charToRaw("WAVE"), ds64, body))
+}
+
+#' A mono 16-bit RF64 recording of the given samples
+#'
+#' Its data size and count of frames are those of the samples unless given,
+#' and `after` is written after the audio, as a recorder writes its metadata.
+mdRf64Wav <- function(samples=1:100, dataSize=NULL, frames=NULL, ...,
+                      after=mdChunk("guan", charToRaw("GUANO|Version:1.0\nMake:X\n"))) {
+  audio <- writeBin(as.integer(samples), raw(), size=2L, endian="little")
+  return(mdRf64(
+    mdFmt(), mdDeferred("data", audio), after,
+    dataSize = if (is.null(dataSize)) length(audio) else dataSize,
+    frames = if (is.null(frames)) length(samples) else frames,
+    ...
+  ))
+}
+
 #' Write bytes to a file that goes when the test does
 mdFile <- function(bytes, extension=".wav") {
   path <- withr::local_tempfile(fileext=extension, .local_envir=parent.frame())

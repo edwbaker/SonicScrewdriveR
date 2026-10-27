@@ -1115,3 +1115,54 @@ test_that("A triggered recording whose audio size was never written still expand
     system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
   )@left)
 })
+
+# A triggered recording rewritten in the RF64 form, which keeps its sizes in a
+# ds64 chunk. The chunk takes its 36 bytes from the comment, which leaves the
+# 488-byte header its length, so that the audio, and the blocks encoding the
+# omitted periods, stay on the 512-byte boundaries they are counted in.
+rf64TWav <- function(bytes, frames=NULL) {
+  dataSize <- .wavFindChunk(.wavChunks(bytes)$chunks, "data")$size
+  list <- c(
+    charToRaw("LIST"), mdU32(400), charToRaw("INFO"),
+    charToRaw("ICMT"), mdU32(348), bytes[57:404], bytes[441:480]
+  )
+  return(c(
+    charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"),
+    charToRaw("ds64"), mdU32(28), mdU64(length(bytes) - 8), mdU64(dataSize),
+    mdU64(if (is.null(frames)) dataSize / 2 else frames), mdU32(0),
+    bytes[13:36], list,
+    charToRaw("data"), mdU32(4294967295), bytes[489:length(bytes)]
+  ))
+}
+
+test_that("A triggered recording in the RF64 form expands as the RIFF one does", {
+  source <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  bytes <- rf64TWav(readBin(source, "raw", n=file.size(source)))
+  f <- mdFile(bytes, "T.WAV")
+  riff <- audiomothExpand(source)
+
+  # Its comment is read through the ds64 chunk, so it is known for what it is.
+  expect_true(.isTriggeredRecording(f))
+  expect_equal(audiomothExpand(f)@left, riff@left)
+  expect_equal(readAudio(f)@left, riff@left)
+
+  # Written out, it keeps the form, with the sizes of what it has grown to in
+  # the ds64 chunk, where a RIFF size would not have room for one over 4 GiB.
+  out <- withr::local_tempfile(fileext=".WAV")
+  audiomothExpand(f, out)
+  written <- readBin(out, "raw", n=file.size(out))
+  info <- .wavChunks(written)
+  expect_identical(info$form, "RF64")
+  expect_equal(info$riffSize + 8, length(written))
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 2 * length(riff@left))
+  expect_equal(info$ds64$sampleCount, length(riff@left))
+  expect_equal(written[5:8], mdU32(4294967295))
+})
+
+test_that("A triggered recording whose ds64 chunk miscounts its frames says so", {
+  source <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  f <- mdFile(rf64TWav(readBin(source, "raw", n=file.size(source)), frames=7), "T.WAV")
+
+  expect_warning(e <- audiomothExpand(f), "gives 7 sample frames")
+  expect_equal(e@left, audiomothExpand(source)@left)
+})

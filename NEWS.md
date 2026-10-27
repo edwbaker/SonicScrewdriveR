@@ -177,6 +177,20 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
+  nothing for a wave file in the RF64 or BW64 form, which is how a recording is
+  written once it passes the 4 GiB a RIFF header can describe, so the metadata
+  of a long recording was reported absent. guanoWrite() refused such a file, and
+  readAudio() read one whose sizes were never written as empty, as the av
+  package, which reads these forms, takes those sizes at their word. The forms
+  keep their sizes in a ds64 chunk, which is now read, and the sizes a write
+  changes are written there, so a file stays in the form it was in. A ds64 chunk
+  that is missing, comes later than first, or disagrees with the file, as the E2
+  file of the malformed wave files reference set does, is refused rather than
+  guessed at. readAudio() reads the audio of such a file as the av package does,
+  by the sizes in its ds64 chunk where it has one, and says what is wrong with
+  it. A count of sample frames that disagrees with the audio is read past with a
+  warning, and put right in a file written.
 - pythonInstall() stopped with "the condition has length > 1", which names
   neither Python nor pip, where the pip of an existing `sonicscrewdriver`
   environment could not be imported. reticulate asks pip for its version before

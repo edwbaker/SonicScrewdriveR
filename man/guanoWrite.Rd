@@ -19,8 +19,10 @@ The path to the written file (invisibly)
 }
 \description{
 Replaces the GUANO metadata of a WAV file, adding a guan chunk if the file
-has none. Only the metadata chunk and the sizes in the file header are
-changed, so the audio data and every other chunk are left as they were.
+has none. Only the metadata chunk and the sizes the file records are
+changed: those in the file header, or in the ds64 chunk of an RF64 or BW64
+file, the form a recording over 4 GiB is written in. The audio data and every
+other chunk are left as they were.
 }
 \examples{
 \dontrun{

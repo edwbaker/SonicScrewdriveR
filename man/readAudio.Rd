@@ -70,6 +70,13 @@ recording while still holding the audio it was recording at the time. The
 audio of such a file is read to the end of the file, with a warning, rather
 than returned as nothing. A file that really holds no audio is read as empty.
 
+A recording too long for the 4 GiB a RIFF header can describe is written in
+the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
+\code{tuneR::readWave()} does not read these forms, so they are read through the
+av package, by those sizes. One whose sizes were never written is recovered
+as above. One whose ds64 chunk disagrees with the rest of the file is still
+read, with a warning saying what is wrong with it.
+
 Samples that are not finite numbers, which a floating-point file can hold,
 are read as zero with a warning, as they would otherwise spread through every
 measurement made from the wave.

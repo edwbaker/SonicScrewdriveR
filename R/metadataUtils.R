@@ -495,8 +495,10 @@ print.audioMetadataFields <- function(x, ...) {
     form <- .rawToId(bytes[9:12])
     return(if (form == "WAVE") "WAVE" else paste0("RIFF/", form))
   }
-  if (first == "RF64") {
-    return("RF64")
+  # The forms a wave file over 4 GiB is written in. They are named as they are,
+  # rather than as WAVE, so that what was read says which form the file took.
+  if (first == "RF64" || first == "BW64") {
+    return(first)
   }
   if (first == "fLaC") {
     return("FLAC")
@@ -521,4 +523,17 @@ print.audioMetadataFields <- function(x, ...) {
     return("MP3")
   }
   return(NA_character_)
+}
+
+#' Does a container hold its metadata in wave chunks?
+#'
+#' A file in the RF64 or BW64 form is a wave file too, written that way because
+#' it is too long for a RIFF header, and holds its metadata in the same chunks.
+#'
+#' @param container A container name, as .mdContainer() gives it
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.mdWaveContainer <- function(container) {
+  return(container %in% c("WAVE", "RF64", "BW64"))
 }

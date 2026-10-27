@@ -38,6 +38,17 @@
 # that is wrong, or made wrong on purpose, cannot ask for an unbounded read.
 .WAV_INFO_READ <- 65536L
 
+# A size of 0xFFFFFFFF in the header of a chunk of an RF64 or BW64 file says
+# that its real size, too large for the four bytes there, is held in the ds64
+# chunk instead.
+.WAV_DEFERRED <- 4294967295
+
+# How much of a ds64 chunk is read. It holds three sizes and a table giving the
+# size of any other chunk too large for its own header, of which a file has few
+# if any, so this too is far more than is needed; it is here so that a table
+# declared wrongly, or made wrong on purpose, cannot ask for an unbounded read.
+.WAV_DS64_READ <- 65536L
+
 #' Find the ICMT field within the body of an INFO list
 #'
 #' @param body The body of a LIST chunk
@@ -156,6 +167,40 @@
   ))
 }
 
+#' Report an RF64 or BW64 file whose ds64 chunk cannot be believed
+#'
+#' An RF64 or BW64 file keeps the sizes a RIFF header has no room for in a ds64
+#' chunk, which must come first. Where that chunk is missing, or disagrees with
+#' the file, there is no telling which of the sizes is wrong, and walking the
+#' chunks by any of them would be a guess. It is raised as an unsupportedWav,
+#' so that everything that passes over a file it cannot read passes over this
+#' one, and with a class of its own, so that [readAudio()], which reads the
+#' audio of such a file all the same, can say what is wrong with it.
+#'
+#' @param ... Parts of the message
+#' @return Nothing, called for the condition it raises
+#' @keywords internal
+#' @noRd
+.badDs64 <- function(...) {
+  stop(structure(
+    class = c("badDs64", "unsupportedWav", "error", "condition"),
+    list(message = paste0(...), call = NULL)
+  ))
+}
+
+#' Write a size as the whole number it is
+#'
+#' A size read from a file is a double, which is otherwise printed in
+#' scientific notation once it reaches a million or so.
+#'
+#' @param x A number
+#' @return A string
+#' @keywords internal
+#' @noRd
+.wavNumber <- function(x) {
+  format(x, scientific=FALSE)
+}
+
 #' Does a run of bytes hold a given ASCII identifier?
 #'
 #' @param bytes A raw vector
@@ -191,13 +236,19 @@
 #' actually has and flagged as truncated, rather than failing, as recordings cut
 #' short by a flat battery or a full card are common.
 #'
+#' A recording too long for the four bytes a RIFF header gives a size is written
+#' in the RF64 or BW64 form, which keeps its sizes in a ds64 chunk. Such a file
+#' is walked by those sizes, and refused where the chunk cannot be believed.
+#'
 #' @param read A function of the one-based position of the first byte wanted and
 #'   the number of bytes to fetch, returning them as a raw vector
 #' @param n Number of bytes that can be read
 #' @param total Size of the whole file, where only the start of it can be read.
 #'   Chunks are only reported as far as `n` goes, but a chunk running past it is
 #'   not mistaken for a truncated one.
-#' @return A list giving the size recorded in the RIFF header and a list of
+#' @return A list giving the form of the file ("RIFF", "RF64" or "BW64"), the
+#'   RIFF size, which an RF64 or BW64 file gives in its ds64 chunk, that chunk
+#'   as .wavDs64Check() reports it, or NULL for a RIFF file, and a list of
 #'   chunks, each with its identifier, the one-based position of the first byte
 #'   of its body, its size in bytes, and whether it was truncated
 #' @keywords internal
@@ -207,12 +258,14 @@
     .unsupportedWav("File is too short to be a WAV file.")
   }
   header <- read(1L, 12L)
-  if (!.rawIs(header[1:4], "RIFF")) {
-    .unsupportedWav("Could not find RIFF chunk ID.")
+  form <- .rawToId(header[1:4])
+  if (!form %in% c("RIFF", "RF64", "BW64")) {
+    .unsupportedWav("Could not find a RIFF, RF64 or BW64 chunk ID.")
   }
   if (!.rawIs(header[9:12], "WAVE")) {
     .unsupportedWav("Could not find WAVE ID.")
   }
+  ds64 <- if (form == "RIFF") NULL else .wavDs64(read, n)
 
   chunks <- list()
   pos <- 13L
@@ -220,6 +273,9 @@
     bytes <- read(pos, 8L)
     id <- .rawToId(bytes[1:4])
     size <- .rawToUInt(bytes[5:8])
+    if (!is.null(ds64)) {
+      size <- .wavDs64Size(ds64, id, size)
+    }
     body <- pos + 8L
     truncated <- body + size - 1 > total
     if (truncated) {
@@ -235,7 +291,284 @@
     pos <- body + size + (size %% 2)
   }
 
-  return(list(riffSize=.rawToUInt(header[5:8]), chunks=chunks))
+  if (is.null(ds64)) {
+    return(list(
+      form=form, riffSize=.rawToUInt(header[5:8]), ds64=NULL, chunks=chunks
+    ))
+  }
+  ds64 <- .wavDs64Check(ds64, chunks, read, n, total)
+  return(list(form=form, riffSize=ds64$riffSize, ds64=ds64, chunks=chunks))
+}
+
+#' Read the ds64 chunk of an RF64 or BW64 file
+#'
+#' The chunk holds the RIFF size, the data size and the number of sample frames,
+#' each in eight bytes, then a table giving the size of any other chunk too
+#' large for the four bytes of its own header. It must be the first chunk in the
+#' file, and is not looked for anywhere else: a reader going by the
+#' specification would find none, and read the file by other sizes. A chunk of
+#' 24 bytes holds the three sizes and no count of table entries, and is read as
+#' having no table, as FFmpeg reads it.
+#'
+#' @param read A function of a one-based position and a number of bytes
+#' @param n Number of bytes that can be read
+#' @return A list giving the one-based position of the body of the chunk, the
+#'   RIFF size, data size and sample count it holds, and its table, as sizes
+#'   named by the chunk they are for
+#' @keywords internal
+#' @noRd
+.wavDs64 <- function(read, n) {
+  header <- if (n >= 20L) read(13L, 8L) else raw(0)
+  if (length(header) < 8L || !.rawIs(header[1:4], "ds64")) {
+    .badDs64(
+      "The first chunk is not ds64, which an RF64 or BW64 file must begin with."
+    )
+  }
+  size <- .rawToUInt(header[5:8])
+  if (size < 24) {
+    .badDs64(
+      "The ds64 chunk is ", .wavNumber(size),
+      " bytes, too short to hold the sizes it is for."
+    )
+  }
+  if (20 + size > n) {
+    .badDs64("The ds64 chunk runs past the end of the bytes read.")
+  }
+  body <- read(21L, min(size, .WAV_DS64_READ))
+
+  entries <- 0
+  if (size >= 28) {
+    entries <- .rawToUInt(body[25:28])
+    if (28 + 12 * entries > size) {
+      .badDs64(
+        "The ds64 chunk declares a table of ", .wavNumber(entries),
+        " entries, which it has no room for."
+      )
+    }
+  }
+  # Only the entries that were read are looked at. A chunk whose entry was not
+  # read is taken at the size its own header gives, as a chunk with no entry.
+  held <- min(entries, max(0, (length(body) - 28) %/% 12))
+  at <- 28 + 12 * (seq_len(held) - 1)
+  table <- vapply(at, function(i) .rawToUInt(body[(i + 5):(i + 12)]), numeric(1))
+  names(table) <- vapply(at, function(i) .rawToId(body[(i + 1):(i + 4)]), character(1))
+
+  return(list(
+    start = 21,
+    riffSize = .rawToUInt(body[1:8]),
+    dataSize = .rawToUInt(body[9:16]),
+    sampleCount = .rawToUInt(body[17:24]),
+    table = table
+  ))
+}
+
+#' The size of a chunk of an RF64 or BW64 file
+#'
+#' A size of 0xFFFFFFFF defers to the ds64 chunk: the data chunk to the data size
+#' it gives, and any other chunk to its entry in the table. A chunk the table has
+#' no entry for keeps the size it gives, which runs past the end of anything
+#' smaller than 4 GiB and is reported as truncated, as it would be in a RIFF
+#' file. Audio read as a chunk header after a data chunk whose size was never
+#' written can give that size, and it is no reason to refuse the file.
+#'
+#' A data chunk that gives a size of its own must give the one the ds64 chunk
+#' does. FFmpeg and libsndfile read the audio by the ds64 chunk whatever the data
+#' chunk says, so where the two disagree, readers disagree about how much audio
+#' the file holds.
+#'
+#' @param ds64 The ds64 chunk, as .wavDs64() reads it
+#' @param id The identifier of the chunk
+#' @param size The size its header gives
+#' @return The size of the chunk
+#' @keywords internal
+#' @noRd
+.wavDs64Size <- function(ds64, id, size) {
+  if (id == "data") {
+    if (size != .WAV_DEFERRED && size != ds64$dataSize) {
+      .badDs64(
+        "The data chunk gives a size of ", .wavNumber(size),
+        " bytes, and the ds64 chunk a size of ", .wavNumber(ds64$dataSize), "."
+      )
+    }
+    return(ds64$dataSize)
+  }
+  if (size == .WAV_DEFERRED && id %in% names(ds64$table)) {
+    return(ds64$table[[id]])
+  }
+  return(size)
+}
+
+#' Check the sizes a ds64 chunk gives against the file
+#'
+#' The RIFF size is weighed against the length of the file. A file shorter than
+#' it says has been cut short, as a recording is by a flat battery or a full
+#' card, which leaves a chunk running past its end; a file as long as it says
+#' leaves none. A file longer than it says holds bytes nothing accounts for,
+#' which a recorder that stopped before writing its sizes leaves after an empty
+#' data chunk. In every other case there is no telling which size is wrong, so
+#' the file is refused rather than guessed at.
+#'
+#' The number of sample frames is weighed as well, but never refused: the audio
+#' is read by the data size, and a file whose count is wrong is no harder to
+#' read. It can only be weighed for PCM and floating-point audio, where a frame
+#' takes a fixed number of bytes, and a count of zero gives none.
+#'
+#' @param ds64 The ds64 chunk, as .wavDs64() reads it
+#' @param chunks The chunks walked
+#' @param read A function of a one-based position and a number of bytes
+#' @param n Number of bytes that can be read
+#' @param total Size of the whole file
+#' @return The ds64 chunk, with the bytes a sample frame takes, or NA where that
+#'   is not known, and whether its count of frames agrees with its data size
+#' @keywords internal
+#' @noRd
+.wavDs64Check <- function(ds64, chunks, read, n, total) {
+  cut <- any(vapply(chunks, function(chunk) chunk$truncated, logical(1)))
+  declared <- ds64$riffSize + 8
+  if (declared < total && ds64$dataSize != 0) {
+    .badDs64(
+      "The ds64 chunk gives a RIFF size of ", .wavNumber(ds64$riffSize),
+      " bytes, which leaves ", .wavNumber(total - declared),
+      " bytes at the end of the file that nothing accounts for."
+    )
+  }
+  if (declared > total && !cut) {
+    .badDs64(
+      "The ds64 chunk gives a RIFF size of ", .wavNumber(ds64$riffSize),
+      " bytes, ", .wavNumber(declared - total), " more than the file holds, ",
+      "though nothing in it is cut short."
+    )
+  }
+  if (declared == total && cut) {
+    .badDs64("A chunk runs past the end of a file the ds64 chunk says is whole.")
+  }
+
+  fields <- NULL
+  fmt <- .wavFindChunk(chunks, "fmt ")
+  if (!is.null(fmt)) {
+    held <- min(fmt$size, 26, n - fmt$start + 1)
+    if (held >= 16) {
+      fields <- .wavFmtFields(read(fmt$start, held), fmt$size)
+    }
+  }
+  fixed <- !is.null(fields) && fields$format %in% c(1, 3) && fields$frameSize > 0
+  ds64$frameSize <- if (fixed) fields$frameSize else NA
+  ds64$countAgrees <- ds64$sampleCount == 0 || !fixed ||
+    is.null(.wavFindChunk(chunks, "data")) ||
+    ds64$sampleCount == floor(ds64$dataSize / fields$frameSize)
+  return(ds64)
+}
+
+#' Read the fields of a format chunk
+#'
+#' @param body The body of a fmt chunk, or as much of the start of it as is in
+#'   hand
+#' @param size The size the chunk declares
+#' @return A list giving the format, which for WAVE_FORMAT_EXTENSIBLE is the
+#'   format it extends, the number of channels, the sample rate, the bit depth
+#'   and the bytes a sample frame takes; or NULL where `body` stops short of a
+#'   field that is needed
+#' @keywords internal
+#' @noRd
+.wavFmtFields <- function(body, size) {
+  if (length(body) < 16L) {
+    return(NULL)
+  }
+  format <- .rawToUInt(body[1:2])
+  # WAVE_FORMAT_EXTENSIBLE, which is what tuneR writes, gives the format it
+  # extends in the first two bytes of its sub-format identifier.
+  if (format == 65534 && size >= 40) {
+    if (length(body) < 26L) {
+      return(NULL)
+    }
+    format <- .rawToUInt(body[25:26])
+  }
+  channels <- .rawToUInt(body[3:4])
+  bits <- .rawToUInt(body[15:16])
+  return(list(
+    format = format,
+    channels = channels,
+    sampleRate = .rawToUInt(body[5:8]),
+    bits = bits,
+    frameSize = channels * ceiling(bits / 8)
+  ))
+}
+
+#' Where the sizes of a wave file are written, and what to write there
+#'
+#' A RIFF file holds its sizes in the four bytes of the headers they describe.
+#' An RF64 or BW64 file holds them in its ds64 chunk, with 0xFFFFFFFF left in
+#' those headers to say so, and holds the number of sample frames there too.
+#' That count is given anew with the data size: as the frames the size holds,
+#' or as zero, which gives none, where the format does not say how many bytes a
+#' frame takes. Giving the data size a file already has therefore puts right a
+#' count that disagrees with it.
+#'
+#' @param form The form of the file, as .wavWalk() reports it
+#' @param ds64 The ds64 chunk, as .wavWalk() reports it, or NULL for a RIFF file
+#' @param dataStart One-based position of the first byte of audio
+#' @param riffSize The RIFF size to write
+#' @param dataSize The data size to write, or NULL to leave it as it is
+#' @return A list of patches, each giving the one-based position to write at
+#'   and the bytes to write there
+#' @keywords internal
+#' @noRd
+.wavSizePatches <- function(form, ds64, dataStart, riffSize, dataSize=NULL) {
+  if (form == "RIFF") {
+    patches <- list(list(at=5, bytes=.uintToRaw(riffSize, 4L)))
+    if (!is.null(dataSize)) {
+      patches[[2L]] <- list(at=dataStart - 4, bytes=.uintToRaw(dataSize, 4L))
+    }
+    return(patches)
+  }
+  deferred <- .uintToRaw(.WAV_DEFERRED, 4L)
+  patches <- list(
+    list(at=5, bytes=deferred),
+    list(at=ds64$start, bytes=.uintToRaw(riffSize, 8L))
+  )
+  if (!is.null(dataSize)) {
+    frames <- if (is.na(ds64$frameSize)) 0 else floor(dataSize / ds64$frameSize)
+    patches[[3L]] <- list(
+      at=ds64$start + 8,
+      bytes=c(.uintToRaw(dataSize, 8L), .uintToRaw(frames, 8L))
+    )
+    patches[[4L]] <- list(at=dataStart - 4, bytes=deferred)
+  }
+  return(patches)
+}
+
+#' Write patches into the bytes of a file
+#'
+#' @param bytes A raw vector holding a file, or as much of the start of one as
+#'   the patches fall in
+#' @param patches The patches, as .wavSizePatches() gives them
+#' @return The bytes, patched
+#' @keywords internal
+#' @noRd
+.wavPatch <- function(bytes, patches) {
+  for (patch in patches) {
+    bytes[patch$at:(patch$at + length(patch$bytes) - 1)] <- patch$bytes
+  }
+  return(bytes)
+}
+
+#' Warn that a ds64 chunk miscounts the sample frames in a file
+#'
+#' @param ds64 The ds64 chunk, as .wavWalk() reports it
+#' @param file The file it was read from
+#' @param corrected TRUE where the count has been put right in a file written
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.wavCountWarning <- function(ds64, file, corrected=FALSE) {
+  warning(
+    "The ds64 chunk of '", file, "' gives ", .wavNumber(ds64$sampleCount),
+    if (ds64$sampleCount == 1) " sample frame" else " sample frames",
+    ", where its data holds ",
+    .wavNumber(floor(ds64$dataSize / ds64$frameSize)), ".",
+    if (corrected) " The count has been corrected." else ""
+  )
+  invisible(NULL)
 }
 
 #' List the RIFF chunks of a WAV file held as raw bytes
@@ -383,7 +716,8 @@
 #' @param total Size of the whole file, where `bytes` holds only the start of it
 #' @return A list of format parameters, the one-based position of the first byte
 #'   of audio data, the size of the data chunk, whether that size was never
-#'   written, and the size recorded in the RIFF header
+#'   written, the size recorded in the RIFF header, and the form of the file and
+#'   its ds64 chunk, as .wavWalk() reports them
 #' @keywords internal
 #' @noRd
 .wavFormat <- function(bytes, total=length(bytes)) {
@@ -412,18 +746,11 @@
   if (!held(15L)) {
     .unsupportedWav("FMT chunk lies beyond the bytes read.")
   }
-  format <- .rawToUInt(bytes[at:(at + 1L)])
-  # WAVE_FORMAT_EXTENSIBLE, which is what tuneR writes, gives the format it
-  # extends in the first two bytes of its sub-format identifier.
-  if (format == 65534 && fmt$size >= 40) {
-    if (!held(25L)) {
-      .unsupportedWav("FMT chunk sub-format lies beyond the bytes read.")
-    }
-    format <- .rawToUInt(bytes[(at + 24L):(at + 25L)])
+  fields <- .wavFmtFields(bytes[at:(at + if (held(25L)) 25L else 15L)], fmt$size)
+  if (is.null(fields)) {
+    .unsupportedWav("FMT chunk sub-format lies beyond the bytes read.")
   }
 
-  channels <- .rawToUInt(bytes[(at + 2L):(at + 3L)])
-  bits <- .rawToUInt(bytes[(at + 14L):(at + 15L)])
   # The bytes after the data chunk header can only be weighed where they were
   # read; without them the size the RIFF header declares has to answer on its
   # own.
@@ -433,19 +760,21 @@
     NULL
   }
   unfinalised <- .wavUnfinalisedSize(
-    data, info$riffSize, channels * ceiling(bits / 8), total, peek
+    data, info$riffSize, fields$frameSize, total, peek
   )
 
   return(list(
-    format = format,
-    channels = channels,
-    sampleRate = .rawToUInt(bytes[(at + 4L):(at + 7L)]),
-    bits = bits,
+    format = fields$format,
+    channels = fields$channels,
+    sampleRate = fields$sampleRate,
+    bits = fields$bits,
     dataStart = data$start,
     dataSize = if (unfinalised > 0) unfinalised else data$size,
     dataTruncated = data$truncated,
     dataUnfinalised = unfinalised > 0,
-    riffSize = info$riffSize
+    riffSize = info$riffSize,
+    form = info$form,
+    ds64 = info$ds64
   ))
 }
 

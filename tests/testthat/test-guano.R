@@ -784,3 +784,74 @@ test_that("The interruption used by these tests is told from any other failure",
   expect_equal(interrupted(guanoWrite(guanoCreate(Make="Y"), f)), "interrupted")
   expect_identical(guano(f)[["Make"]], "X")
 })
+
+# A recording too long for a RIFF header is written in the RF64 form, which keeps
+# its sizes in a ds64 chunk. Its metadata is commonly written after the audio,
+# where a reader that took the audio to run to the end of the file would never
+# find it.
+
+test_that("GUANO metadata is read from an RF64 file, after its audio", {
+  bytes <- mdRf64Wav()
+  f <- mdFile(bytes)
+
+  expect_identical(guano(f)[["Make"]], "X")
+  expect_identical(guano(bytes)[["Make"]], "X")
+})
+
+test_that("GUANO metadata written to an RF64 file keeps the file in that form", {
+  f <- mdFile(mdRf64Wav(after=raw(0)))
+
+  guanoWrite(guanoCreate(Make="Y"), f)
+  bytes <- readBin(f, "raw", n=file.size(f))
+  info <- .wavChunks(bytes)
+  expect_identical(info$form, "RF64")
+  expect_identical(guano(f)[["Make"]], "Y")
+  # The sizes are in the ds64 chunk, and the headers say so.
+  expect_equal(info$riffSize + 8, length(bytes))
+  expect_equal(bytes[5:8], mdU32(4294967295))
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 200)
+  expect_equal(info$ds64$sampleCount, 100)
+
+  # Replacing it with metadata of another length keeps them right.
+  guanoWrite(guanoCreate(Make="Z", Model="A model with a longer name"), f)
+  bytes <- readBin(f, "raw", n=file.size(f))
+  expect_equal(.wavChunks(bytes)$riffSize + 8, length(bytes))
+  expect_identical(guano(f)[["Model"]], "A model with a longer name")
+})
+
+test_that("An RF64 recording cut short has its sizes put right as metadata is written", {
+  bytes <- mdRf64Wav(after=raw(0))
+  f <- mdFile(bytes[seq_len(length(bytes) - 50)])
+
+  expect_warning(guanoWrite(guanoCreate(Make="X"), f), "truncated")
+  info <- .wavChunksFile(f)
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 150)
+  expect_equal(info$ds64$dataSize, 150)
+  # The count of frames goes with the data size, so it says what is left.
+  expect_equal(info$ds64$sampleCount, 75)
+  expect_equal(info$riffSize + 8, file.size(f))
+  expect_identical(guano(f)[["Make"]], "X")
+})
+
+test_that("A ds64 chunk that miscounts the frames is put right as metadata is written", {
+  f <- mdFile(mdRf64Wav(frames=99))
+
+  expect_warning(guanoWrite(guanoCreate(Make="X"), f), "99 sample frames")
+  info <- .wavChunksFile(f)
+  expect_equal(info$ds64$sampleCount, 100)
+  expect_true(info$ds64$countAgrees)
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 200)
+})
+
+test_that("A file whose ds64 chunk cannot be believed is not written to", {
+  good <- mdRf64Wav()
+  f <- mdFile(mdRf64Wav(riffSize=length(good)))
+  before <- readBin(f, "raw", n=file.size(f))
+
+  # Read, it carries nothing this package will vouch for; written, it is
+  # refused, as writing sizes into a file whose sizes cannot be believed would
+  # make it worse.
+  expect_length(guano(f), 0)
+  expect_error(guanoWrite(guanoCreate(Make="Y"), f), class="badDs64")
+  expect_identical(readBin(f, "raw", n=file.size(f)), before)
+})
