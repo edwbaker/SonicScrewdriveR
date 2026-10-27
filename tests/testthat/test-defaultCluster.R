@@ -38,6 +38,13 @@ test_that("forking is asked for only where the platform can do it", {
 test_that("the cluster returned can be used and stopped", {
   skip_on_cran()
   skip_if_not_installed("parallel")
+  #R CMD check holds a package to two processes, and defaultCluster() asks for
+  #one fewer than the machine has, so on all but the smallest machine the
+  #cluster cannot be created there and parallel refuses it.
+  skip_if(
+    isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE"))),
+    "R CMD check limits the number of processes a package may start"
+  )
   cl <- defaultCluster()
   on.exit(parallel::stopCluster(cl), add=TRUE)
   expect_s3_class(cl, "cluster")
