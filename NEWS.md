@@ -116,6 +116,18 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- readAudio() returned an empty wave for a file whose data chunk size was never
+  written, which is what a recorder leaves behind when it loses power part-way
+  through a file, discarding the whole recording the file still held. The audio
+  of such a file is now read to the end of the file, with a warning, and
+  audiomothExpand() warns on a triggered recording left the same way. A file
+  that really does hold no audio, such as one an AudioMoth writes when its
+  battery fails as it starts to record, is still read as empty.
+- readAudio() returned samples that were not finite numbers, which a
+  floating-point file can hold, so that every measurement made from the wave
+  came back as NaN. They are now read as zero, with a warning saying how many.
+  Infinite samples read through the av package were already turned into zeroes
+  but are now reported as well.
 - generateNoise() could send samples outside the range the format holds. The
   noise was scaled by its largest positive sample rather than by its largest
   either way, so noise with a deeper trough than peak went past the level asked

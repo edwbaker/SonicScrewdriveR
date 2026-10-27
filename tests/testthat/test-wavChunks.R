@@ -148,3 +148,87 @@ test_that("An extensible sub-format outside the bytes read is reported", {
   expect_error(.wavFormat(blocks, total=length(bytes)), class="unsupportedWav")
   expect_equal(.wavFormat(bytes)$format, 1)
 })
+
+# A recorder that loses power part-way through a file leaves the size of the
+# audio unwritten. Telling that from a file that really holds no audio is what
+# these tests are about: the first still holds its recording, the second does
+# not, and both declare an empty data chunk.
+unfinalise <- function(file) {
+  bytes <- readBin(file, "raw", n=file.size(file))
+  info <- .wavFormat(bytes)
+  bytes[(info$dataStart - 4):(info$dataStart - 1)] <- raw(4)
+  bytes[5:8] <- .uintToRaw(8, 4L)
+  writeBin(bytes, file)
+  invisible(file)
+}
+
+test_that("A data chunk whose size was never written runs to the end of the file", {
+  f <- flatWaveFile(1000)
+  on.exit(unlink(f))
+  unfinalise(f)
+
+  info <- .wavFormat(readBin(f, "raw", n=file.size(f)))
+  expect_true(info$dataUnfinalised)
+  expect_equal(info$dataSize, 2000)
+  expect_false(info$dataTruncated)
+
+  # The size is the same read over a connection, where the bytes after the
+  # chunk header are fetched rather than held.
+  chunks <- .wavChunksFile(f)
+  data <- .wavFindChunk(chunks$chunks, "data")
+  expect_equal(
+    .wavUnfinalisedSize(data, chunks$riffSize, 2, file.size(f), NULL),
+    2000
+  )
+})
+
+test_that("A file that holds no audio keeps its empty data chunk", {
+  f <- flatWaveFile(1000)
+  on.exit(unlink(f))
+
+  # An empty recording with its metadata after it, as an AudioMoth writes when
+  # its battery fails as it starts to record: the file accounts for every byte
+  # it holds, so there is no audio hiding in it.
+  bytes <- readBin(f, "raw", n=file.size(f))
+  info <- .wavFormat(bytes)
+  head <- bytes[seq_len(info$dataStart - 1)]
+  head[(info$dataStart - 4):(info$dataStart - 1)] <- raw(4)
+  text <- charToRaw("GUANO|Version:1.0
+Length:0")
+  guan <- c(charToRaw("guan"), .uintToRaw(length(text), 4L), text)
+  head[5:8] <- .uintToRaw(length(head) + length(guan) - 8, 4L)
+  writeBin(c(head, guan), f)
+
+  after <- .wavFormat(readBin(f, "raw", n=file.size(f)))
+  expect_false(after$dataUnfinalised)
+  expect_equal(after$dataSize, 0)
+  expect_equal(guano(f)[["Length"]], 0)
+})
+
+test_that("A chunk header is told from audio the writer never recorded", {
+  header <- c(charToRaw("guan"), .uintToRaw(10, 4L))
+  expect_true(.wavIsChunkHeader(header, 18))
+  # A chunk that could not fit in what is left of the file is not one.
+  expect_false(.wavIsChunkHeader(header, 17))
+  # Audio rarely begins with four printable characters.
+  expect_false(.wavIsChunkHeader(c(as.raw(c(0, 255, 7, 200)), .uintToRaw(10, 4L)), 1000))
+  # Nothing can be told from fewer than eight bytes.
+  expect_false(.wavIsChunkHeader(header[1:4], 1000))
+})
+
+test_that("Only an empty data chunk with unaccounted bytes after it is unfinalised", {
+  chunk <- list(id="data", start=45, size=0, truncated=FALSE)
+  # 1044 bytes of audio the RIFF header does not account for.
+  expect_equal(.wavUnfinalisedSize(chunk, 8, 2, 1088), 1044)
+  # A chunk that declares a size of its own is taken at its word.
+  expect_equal(.wavUnfinalisedSize(list(id="data", start=45, size=100, truncated=FALSE), 8, 2, 1088), 0)
+  # A RIFF size that accounts for the whole file leaves nothing unrecorded.
+  expect_equal(.wavUnfinalisedSize(chunk, 1080, 2, 1088), 0)
+  # A block alignment of zero, from a header that gives no channels or bit
+  # depth, cannot say how much audio there is.
+  expect_equal(.wavUnfinalisedSize(chunk, 8, 0, 1088), 0)
+  # Less than one sample frame is not a recording.
+  expect_equal(.wavUnfinalisedSize(chunk, 8, 2, 45), 0)
+  # The size is rounded down to a whole sample frame.
+  expect_equal(.wavUnfinalisedSize(chunk, 8, 4, 1090), 1044)
+})

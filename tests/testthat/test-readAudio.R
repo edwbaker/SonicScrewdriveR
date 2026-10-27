@@ -453,3 +453,140 @@ test_that(".avWaveMC refuses fewer samples than channels", {
   expect_equal(length(w), 2)
   expect_equal(unname(w@.Data), matrix(1:8, ncol=4, byrow=TRUE))
 })
+
+# A WAV file assembled from its chunks, so that a header can be written that
+# disagrees with the audio the file holds.
+malformedWav <- function(samples, rate=48000, bits=16, format=1, dataSize=NULL,
+                         riffSize=NULL) {
+  blockAlign <- bits %/% 8
+  audio <- if (format == 3) {
+    writeBin(as.double(samples), raw(), size=blockAlign, endian="little")
+  } else {
+    writeBin(as.integer(samples), raw(), size=blockAlign, endian="little")
+  }
+  fmt <- c(
+    charToRaw("fmt "), .uintToRaw(16, 4L),
+    .uintToRaw(format, 2L), .uintToRaw(1, 2L), .uintToRaw(rate, 4L),
+    .uintToRaw(rate * blockAlign, 4L), .uintToRaw(blockAlign, 2L),
+    .uintToRaw(bits, 2L)
+  )
+  data <- c(
+    charToRaw("data"),
+    .uintToRaw(if (is.null(dataSize)) length(audio) else dataSize, 4L),
+    audio
+  )
+  body <- c(charToRaw("WAVE"), fmt, data)
+  file <- tempfile(fileext=".wav")
+  writeBin(
+    c(
+      charToRaw("RIFF"),
+      .uintToRaw(if (is.null(riffSize)) length(body) else riffSize, 4L),
+      body
+    ),
+    file
+  )
+  return(file)
+}
+
+test_that("A file whose audio size was never written is read to the end of the file", {
+  samples <- as.integer(round(sin(seq(0, 100, length.out=4800)) * 10000))
+  f <- malformedWav(samples, dataSize=0, riffSize=8)
+  on.exit(unlink(f))
+
+  expect_warning(w <- readAudio(f), "was never written")
+  expect_equal(length(w@left), length(samples))
+  expect_equal(w@left, as.numeric(samples))
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@bit, 16)
+
+  # Part of such a file can still be asked for.
+  expect_warning(
+    p <- readAudio(f, from=1, to=2400, input.unit="samples"),
+    "was never written"
+  )
+  expect_equal(length(p@left), 2400)
+  expect_equal(p@left, as.numeric(samples[1:2400]))
+
+  # Reading the file must not change it.
+  expect_equal(.wavChunksFile(f)$riffSize, 8)
+})
+
+test_that("A stereo recording is recovered a whole sample frame at a time", {
+  n <- 1200
+  w <- tuneR::Wave(
+    left=round(sin(seq(0, 50, length.out=n)) * 9000),
+    right=round(cos(seq(0, 50, length.out=n)) * 9000),
+    samp.rate=44100, bit=16, pcm=TRUE
+  )
+  f <- tempfile(fileext=".wav")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  bytes <- readBin(f, "raw", n=file.size(f))
+  info <- .wavFormat(bytes)
+  bytes[(info$dataStart - 4):(info$dataStart - 1)] <- raw(4)
+  bytes[5:8] <- .uintToRaw(8, 4L)
+  # Two stray bytes leave the audio short of a whole sample frame, which the
+  # recovered size has to round down to.
+  writeBin(c(bytes, as.raw(c(7, 7))), f)
+
+  expect_warning(r <- readAudio(f), "was never written")
+  expect_true(r@stereo)
+  expect_equal(length(r@left), n)
+  expect_equal(r@left, w@left)
+  expect_equal(r@right, w@right)
+})
+
+test_that("A file that holds no audio at all is read as empty, not repaired", {
+  f <- malformedWav(integer(0))
+  on.exit(unlink(f))
+
+  warnings <- character()
+  w <- withCallingHandlers(
+    readAudio(f),
+    warning=function(cond) {
+      warnings <<- c(warnings, conditionMessage(cond))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_equal(length(w@left), 0)
+  expect_false(any(grepl("was never written", warnings)))
+})
+
+test_that("Samples that are not finite numbers are read as zero", {
+  samples <- c(0.1, NaN, -0.2, Inf, 0.3, -Inf)
+  f <- malformedWav(samples, bits=32, format=3)
+  on.exit(unlink(f))
+
+  expect_warning(w <- readAudio(f), "are not finite numbers")
+  expect_equal(length(w@left), length(samples))
+  expect_true(all(is.finite(w@left)))
+  expect_equal(w@left[c(2, 4, 6)], c(0, 0, 0))
+  expect_equal(w@left[c(1, 3, 5)], c(0.1, -0.2, 0.3), tolerance=1e-6)
+
+  # A measurement of the wave is a number again.
+  expect_false(is.nan(mean(w@left)))
+})
+
+test_that(".waveFinite replaces samples that are not finite numbers", {
+  w <- tuneR::Wave(left=c(1, NaN), right=c(Inf, 2), samp.rate=8000, bit=16)
+  expect_warning(r <- .waveFinite(w, "test.wav"), "are not finite numbers")
+  expect_equal(r@left, c(1, 0))
+  expect_equal(r@right, c(0, 2))
+
+  m <- tuneR::WaveMC(
+    data=matrix(c(1, NaN, Inf, 2, 3, 4), ncol=3), samp.rate=8000, bit=16
+  )
+  expect_warning(r <- .waveFinite(m, "test.wav"), "are not finite numbers")
+  expect_equal(as.numeric(r@.Data), c(1, 0, 0, 2, 3, 4))
+
+  expect_warning(
+    .waveFinite(tuneR::Wave(left=c(1, NaN), samp.rate=8000, bit=16), "test.wav"),
+    "is not a finite number"
+  )
+
+  # A wave that holds nothing but numbers is given back as it is, without a
+  # warning.
+  clean <- tuneR::Wave(left=c(1, 2), samp.rate=8000, bit=16)
+  expect_identical(.waveFinite(clean, "test.wav"), clean)
+})

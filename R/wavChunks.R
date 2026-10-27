@@ -315,6 +315,62 @@
   return(NULL)
 }
 
+#' Could a run of bytes be the start of a RIFF chunk?
+#'
+#' Used to tell a chunk written after the audio from audio whose size the writer
+#' never recorded.
+#'
+#' @param bytes The eight bytes where a chunk header would be
+#' @param available Number of bytes from there to the end of the file
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.wavIsChunkHeader <- function(bytes, available) {
+  if (length(bytes) < 8L) {
+    return(FALSE)
+  }
+  id <- as.integer(bytes[1:4])
+  if (any(id < 32L | id > 126L)) {
+    return(FALSE)
+  }
+  return(8 + .rawToUInt(bytes[5:8]) <= available)
+}
+
+#' How far does a data chunk whose size was never written run?
+#'
+#' A recorder that loses power part-way through a file never goes back to write
+#' the size of the audio, leaving an empty data chunk with the recording still in
+#' the file. Where bytes follow such a chunk that the RIFF header does not
+#' account for, and that do not begin a chunk of their own, they are audio the
+#' writer never recorded and the chunk runs to the end of the file. A file that
+#' really holds no audio, as an AudioMoth writes when its battery fails as it
+#' starts to record, declares its own length correctly and is left alone.
+#'
+#' @param data The data chunk, as .wavWalk() reports it
+#' @param riffSize The size recorded in the RIFF header
+#' @param blockAlign Bytes per sample frame
+#' @param total Size of the whole file
+#' @param read A function of a one-based position and a number of bytes, or NULL
+#'   where the bytes after the chunk header cannot be read
+#' @return The size the audio runs to, a whole number of sample frames, or 0
+#'   where the chunk holds no audio
+#' @keywords internal
+#' @noRd
+.wavUnfinalisedSize <- function(data, riffSize, blockAlign, total, read=NULL) {
+  if (data$size != 0 || blockAlign <= 0) {
+    return(0)
+  }
+  following <- total - data$start + 1
+  # Bytes the RIFF header accounts for are a chunk the writer meant to be there.
+  if (following < blockAlign || riffSize + 8 >= total) {
+    return(0)
+  }
+  if (!is.null(read) && .wavIsChunkHeader(read(data$start, 8L), following)) {
+    return(0)
+  }
+  return(following - following %% blockAlign)
+}
+
 #' Read the format parameters and data position of a WAV file
 #'
 #' Walks the chunks rather than assuming a fixed header length, as the AudioMoth
@@ -326,8 +382,8 @@
 #'   to cover its format and data chunk headers
 #' @param total Size of the whole file, where `bytes` holds only the start of it
 #' @return A list of format parameters, the one-based position of the first byte
-#'   of audio data, the size of the data chunk, and the size recorded in the
-#'   RIFF header
+#'   of audio data, the size of the data chunk, whether that size was never
+#'   written, and the size recorded in the RIFF header
 #' @keywords internal
 #' @noRd
 .wavFormat <- function(bytes, total=length(bytes)) {
@@ -366,14 +422,29 @@
     format <- .rawToUInt(bytes[(at + 24L):(at + 25L)])
   }
 
+  channels <- .rawToUInt(bytes[(at + 2L):(at + 3L)])
+  bits <- .rawToUInt(bytes[(at + 14L):(at + 15L)])
+  # The bytes after the data chunk header can only be weighed where they were
+  # read; without them the size the RIFF header declares has to answer on its
+  # own.
+  peek <- if (data$start + 7L <= length(bytes)) {
+    function(at, n) bytes[at:(at + n - 1L)]
+  } else {
+    NULL
+  }
+  unfinalised <- .wavUnfinalisedSize(
+    data, info$riffSize, channels * ceiling(bits / 8), total, peek
+  )
+
   return(list(
     format = format,
-    channels = .rawToUInt(bytes[(at + 2L):(at + 3L)]),
+    channels = channels,
     sampleRate = .rawToUInt(bytes[(at + 4L):(at + 7L)]),
-    bits = .rawToUInt(bytes[(at + 14L):(at + 15L)]),
+    bits = bits,
     dataStart = data$start,
-    dataSize = data$size,
+    dataSize = if (unfinalised > 0) unfinalised else data$size,
     dataTruncated = data$truncated,
+    dataUnfinalised = unfinalised > 0,
     riffSize = info$riffSize
   ))
 }
