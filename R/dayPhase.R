@@ -206,6 +206,8 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 
   ret <- data.frame(Start=starts, End=ends, row.names=make.unique(phases, sep=""))
   if (min(ev$Start) > from) {
+    #Nor does any event precede the stretch, so the phase it opens with is only
+    #known to reach back to the start of it, and nothing has named it yet.
     ret <- rbind(
       data.frame(
         Start = from,

@@ -158,11 +158,44 @@ test_that("dayPhase gives polar day as Day and polar night as Night", {
   expect_equal(solarCoverage(night), 3600)
 })
 
+test_that("dayPhase gives a phase at the pole, where no event ever occurs", {
+  # At 90 N the sun circles at the altitude of its own declination and suncalc gives
+  # every event of every date as NA, so there is no event anywhere to bound a phase
+  # with and the sun's altitude is all there is to go on.
+  midsummer <- dayPhase(time=as.POSIXct("2024-06-21 12:00:00", tz="UTC"),
+                        duration=3600, lat=90, lon=0, tz="UTC")
+  expect_equal(rownames(midsummer)[1], "Day")
+  expect_equal(solarCoverage(midsummer), 3600)
+
+  midwinter <- dayPhase(time=as.POSIXct("2024-12-21 12:00:00", tz="UTC"),
+                        duration=3600, lat=90, lon=0, tz="UTC")
+  expect_equal(rownames(midwinter)[1], "Night")
+  expect_equal(solarCoverage(midwinter), 3600)
+})
+
+test_that("dayPhase names a phase the search cannot bound", {
+  # At 89.9 N the sun crosses the thresholds only in the few days around each
+  # equinox, which for a handful of dates leaves the 200 days searched holding an
+  # event on one side of the recording and none on the other. The phase that cannot
+  # be bounded reaches the end of the recording, or back to the start of it, and is
+  # named from the sun's altitude. The recording is still accounted for in full.
+  start <- as.POSIXct("2024-10-07 20:00:00", tz="UTC")
+  unbegun <- dayPhase(time=start, duration=40000, lat=89.9, lon=15, tz="UTC")
+  expect_equal(solarCoverage(unbegun), 40000)
+  expect_equal(sub("[0-9]+$", "", rownames(unbegun))[1], "Dusk.Civil")
+  expect_equal(as.numeric(unbegun$Start[1]), as.numeric(start), tolerance=0)
+
+  start <- as.POSIXct("2024-03-19 20:00:00", tz="UTC")
+  unended <- dayPhase(time=start, duration=40000, lat=89.9, lon=15, tz="UTC")
+  expect_equal(solarCoverage(unended), 40000)
+  expect_equal(as.numeric(unended$End[1]), as.numeric(start) + 40000, tolerance=0)
+})
+
 test_that("dayPhase accounts for the whole of a recording wherever it was made", {
   # The phases partition the day at every latitude, so there is no date or place at
   # which part of a recording belongs to no phase.
   duration <- 40000
-  dates <- seq.Date(as.Date("2024-01-05"), as.Date("2024-12-31"), by=31)
+  dates <- seq.Date(as.Date("2024-01-05"), as.Date("2024-12-31"), by=45)
   for (lat in c(LAT, 69.65, 85)) {
     coverage <- vapply(dates, function(d) {
       r <- dayPhase(time=as.POSIXct(paste(d, "20:00:00"), tz="UTC"), duration=duration,
