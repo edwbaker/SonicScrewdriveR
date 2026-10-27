@@ -88,3 +88,103 @@ test_that("Annotation output is as expected", {
   expect_equal(as.numeric(d$time_end), a@end)
   expect_equal(d$source, a@metadata$source)
 })
+
+#The pages below never leave the machine: fromJSON() is stood in for, so what is
+#checked is which pages are asked for and how they are joined together.
+pagedApi <- function(last_page=3, env=parent.frame()) {
+  asked <- new.env(parent=emptyenv())
+  asked$urls <- character(0)
+  testthat::local_mocked_bindings(
+    fromJSON = function(txt, ...) {
+      asked$urls <- c(asked$urls, txt)
+      page <- as.integer(regmatches(txt, regexpr("(?<=page=)[0-9]+", txt, perl=TRUE)))
+      list(
+        data = data.frame(page=page, taxon=paste("taxon", page)),
+        last_page = last_page
+      )
+    },
+    .package = "jsonlite",
+    .env = env
+  )
+  return(asked)
+}
+
+test_that("every page of results is fetched and joined to the first", {
+  api <- pagedApi()
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE)
+  expect_equal(res$page, 1:3)
+  expect_equal(nrow(res), 3)
+  expect_length(api$urls, 3)
+})
+
+test_that("no more than the maximum number of pages asked for is fetched", {
+  api <- pagedApi(last_page=10)
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE, max_pages=2)
+  expect_equal(res$page, 1:2)
+  expect_length(api$urls, 2)
+})
+
+test_that("the endpoint asked for is kept on every page, not just the first", {
+  api <- pagedApi()
+  audioblast("data", "annomate", endpoint="taxa", check=FALSE, quiet=TRUE)
+  expect_length(api$urls, 3)
+  expect_true(all(grepl("/annomate/taxa/", api$urls, fixed=TRUE)))
+  expect_equal(api$urls[1], "https://api.audioblast.org/data/annomate/taxa/?page=1")
+})
+
+test_that("the fields filtered on are kept on every page", {
+  api <- pagedApi()
+  audioblast("data", "recordings", check=FALSE, quiet=TRUE, taxon="Gryllotalpa")
+  expect_length(api$urls, 3)
+  expect_true(all(grepl("&taxon=Gryllotalpa", api$urls, fixed=TRUE)))
+})
+
+test_that("progress through the pages is reported unless silence is asked for", {
+  pagedApi()
+  expect_output(audioblast("data", "recordings", check=FALSE, quiet=FALSE))
+  expect_silent(audioblast("data", "recordings", check=FALSE, quiet=TRUE))
+})
+
+test_that("a single page is fetched silently without a progress bar", {
+  pagedApi(last_page=1)
+  expect_silent(audioblast("data", "recordings", check=FALSE, max_pages=1))
+})
+
+test_that("a download that fails is reported as a warning naming audioblast", {
+  expect_warning(
+    sonicscrewdriver:::.audioblastIssue(simpleError("server said no")),
+    "issue downloading the requested file via audioblast"
+  )
+  expect_warning(
+    sonicscrewdriver:::.audioblastIssue(simpleError("server said no")),
+    "server said no"
+  )
+  expect_warning(
+    sonicscrewdriver:::.audioblastIssue(simpleError("server said no")),
+    "contact the audioblast team"
+  )
+})
+
+test_that("a failed download is a warning by default, so the rest are still tried", {
+  dir <- file.path(tempdir(), paste0("ab-", basename(tempfile(""))))
+  withr::defer(unlink(dir, recursive=TRUE))
+  d <- data.frame(filename=c(
+    "https://invalid.invalid/first.wav",
+    "https://invalid.invalid/second.wav"
+  ))
+  #download.file() is stood in for so that nothing is fetched.
+  attempted <- character(0)
+  local_mocked_bindings(
+    download.file = function(url, destfile, quiet=FALSE, ...) {
+      attempted <<- c(attempted, url)
+      stop("could not resolve host")
+    }
+  )
+  #One warning for each file that failed, and the second file was still tried.
+  expect_warning(
+    expect_warning(audioblastDownload(d, dir=dir, quiet=TRUE), "issue downloading"),
+    "issue downloading"
+  )
+  expect_equal(attempted, d$filename)
+  expect_true(file.exists(file.path(dir, "metadata.csv")))
+})

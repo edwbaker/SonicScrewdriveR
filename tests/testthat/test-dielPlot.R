@@ -114,3 +114,95 @@ for (tz in sessionTimezones) {
     })
   })
 }
+
+#The bands are drawn by radialPolygon(), so recording its calls says which bands
+#were drawn and how far round the dial each one reached.
+polygonsDrawn <- function(expr, env=parent.frame()) {
+  drawn <- list()
+  testthat::local_mocked_bindings(
+    radialPolygon = function(angle1, angle2, radius1, radius2, ...) {
+      drawn[[length(drawn)+1]] <<- list(from=angle1, to=angle2)
+      invisible(NULL)
+    },
+    .env = env
+  )
+  force(expr)
+  return(drawn)
+}
+
+#The sun's altitude through the day is drawn first, as one polygon of a thousand
+#angles. The bands that follow are each a single arc.
+bandsDrawn <- function(drawn) {
+  Filter(function(p) length(p$to) == 1, drawn)
+}
+
+wholeCircleDrawn <- function(drawn) {
+  any(vapply(drawn, function(p) {
+    isTRUE(all.equal(p$from, 0)) && isTRUE(all.equal(p$to, 2*pi))
+  }, logical(1)))
+}
+
+test_that("plotting with plotrix says so when plotrix is missing", {
+  local_mocked_bindings(package.installed = function(name, ...) FALSE)
+  expect_error(
+    dielPlot("2024-06-21", lat=54, lon=0),
+    "Plotrix must be installed to plot using Plotrix."
+  )
+})
+
+test_that("a day on which the sun never rises is drawn as twilight all round", {
+  #At 70 degrees north in late December the sun does not rise, so there is no
+  #sunrise to end the civil twilight band at and it covers the whole dial.
+  drawn <- polygonsDrawn(dielPlot("2024-12-21", lat=70, lon=0, plot="Civil Twilight"))
+  expect_gt(length(drawn), 0)
+  expect_true(wholeCircleDrawn(drawn))
+})
+
+test_that("a day with no astronomical twilight at all is drawn as night all round", {
+  #At 85 degrees north the sun stays more than 18 degrees below the horizon, so
+  #astronomical night neither begins nor ends and covers the whole dial.
+  drawn <- polygonsDrawn(dielPlot("2024-12-21", lat=85, lon=0, plot="Night"))
+  expect_gt(length(drawn), 0)
+  expect_true(wholeCircleDrawn(drawn))
+})
+
+test_that("a day whose twilight does end is not drawn as twilight all round", {
+  drawn <- polygonsDrawn(dielPlot("2024-06-21", lat=54, lon=0, plot="Civil Twilight"))
+  expect_gt(length(drawn), 0)
+  expect_false(wholeCircleDrawn(drawn))
+})
+
+test_that("a sunrise that never completes is drawn as far as solar noon", {
+  #At 67 degrees north in late December the top of the sun clears the horizon
+  #but the whole disc does not, so there is no sunriseEnd to draw to.
+  tim <- suncalc::getSunlightTimes(date=as.Date("2024-12-21"), lat=67, lon=0, tz="UTC")
+  expect_false(is.na(tim$sunrise))
+  expect_true(is.na(tim$sunriseEnd))
+
+  bands <- bandsDrawn(polygonsDrawn(dielPlot("2024-12-21", lat=67, lon=0, plot="Sunrise")))
+  expect_length(bands, 1)
+  expect_equal(bands[[1]]$from, dielFraction(tim$sunrise))
+  expect_equal(bands[[1]]$to, dielFraction(tim$solarNoon))
+})
+
+test_that("a sunset that never completes is drawn from solar noon", {
+  tim <- suncalc::getSunlightTimes(date=as.Date("2024-12-21"), lat=67, lon=0, tz="UTC")
+  expect_false(is.na(tim$sunset))
+  expect_true(is.na(tim$sunsetStart))
+
+  bands <- bandsDrawn(polygonsDrawn(dielPlot("2024-12-21", lat=67, lon=0, plot="Sunset")))
+  expect_length(bands, 1)
+  expect_equal(bands[[1]]$from, dielFraction(tim$solarNoon))
+  expect_equal(bands[[1]]$to, dielFraction(tim$sunset))
+})
+
+test_that("a day on which the sun never rises has no sunrise band", {
+  bands <- bandsDrawn(polygonsDrawn(dielPlot("2024-12-21", lat=70, lon=0, plot="Sunrise")))
+  expect_length(bands, 0)
+})
+
+test_that("a polar day and a polar night are both drawn without complaint", {
+  expect_silent(dielPlot("2024-06-21", lat=85, lon=0))
+  expect_silent(dielPlot("2024-12-21", lat=85, lon=0))
+  expect_silent(dielPlot("2024-12-21", lat=70, lon=0, legend=TRUE))
+})

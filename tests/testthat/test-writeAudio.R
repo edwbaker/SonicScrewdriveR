@@ -160,3 +160,127 @@ test_that("writeAudio round trips a multichannel wave through another format", {
   expect_equal(r@bit, 16)
   expect_equal(unname(r@.Data), unname(d))
 })
+
+#A short tone to write out.
+toneWave <- function(samp.rate=8000, n=4000) {
+  tuneR::Wave(
+    round(16000*sin(2*pi*440*seq_len(n)/samp.rate)),
+    samp.rate=samp.rate, bit=16
+  )
+}
+
+test_that("FLAC is written without the av package", {
+  skip_if(
+    !nzchar(Sys.which("flac")) && !file.exists("C:/Program Files/FLAC/flac.exe"),
+    "the flac program is not installed"
+  )
+  asked <- list()
+  local_mocked_bindings(
+    package.installed = function(name, method=NULL, repo=NULL, askInstall=TRUE) {
+      if (name != "av") {
+        return(TRUE)
+      }
+      asked[[length(asked)+1]] <<- askInstall
+      return(FALSE)
+    }
+  )
+
+  f <- tempfile(fileext=".flac")
+  withr::defer(unlink(f))
+  expect_equal(writeAudio(toneWave(), f), f)
+  expect_true(file.exists(f))
+  expect_gt(file.size(f), 0)
+  #av was asked for, but only without a prompt: FLAC has another route to disk.
+  expect_equal(asked, list(FALSE))
+  #Reading it back would go through av, which is being held to be absent here, so
+  #the file is identified by its own marker instead.
+  expect_equal(rawToChar(readBin(f, "raw", n=4)), "fLaC")
+})
+
+test_that("a format with no other route to disk asks for av rather than writing nothing", {
+  #package.installed() raises this itself when the installation is declined.
+  local_mocked_bindings(
+    package.installed = function(name, method=NULL, repo=NULL, askInstall=TRUE) {
+      if (name != "av") {
+        return(TRUE)
+      }
+      if (askInstall) {
+        stop("Missing package not installed.")
+      }
+      return(FALSE)
+    }
+  )
+  f <- tempfile(fileext=".mp3")
+  withr::defer(unlink(f))
+  expect_error(writeAudio(toneWave(), f), "Missing package not installed.")
+  expect_false(file.exists(f))
+})
+
+test_that("av is asked for without a prompt first, and only then with one", {
+  asked <- list()
+  local_mocked_bindings(
+    #Missing until it is asked for with a prompt, as it would be after installing.
+    package.installed = function(name, method=NULL, repo=NULL, askInstall=TRUE) {
+      if (name != "av") {
+        return(TRUE)
+      }
+      asked[[length(asked)+1]] <<- askInstall
+      return(askInstall)
+    },
+    .writeAudioAv = function(wave, file, ...) file
+  )
+  f <- tempfile(fileext=".mp3")
+  withr::defer(unlink(f))
+  expect_equal(writeAudio(toneWave(), f), f)
+  #Asked quietly first, so a missing av only interrupts formats that need it.
+  expect_equal(asked, list(FALSE, TRUE))
+})
+
+test_that("a FLAC conversion that produces nothing is reported", {
+  local_mocked_bindings(
+    wav2flac = function(file, overwrite=FALSE, ...) invisible(NULL),
+    .package = "seewave"
+  )
+  f <- tempfile(fileext=".flac")
+  withr::defer(unlink(f))
+  expect_error(
+    sonicscrewdriver:::.writeAudioFlac(toneWave(), f),
+    "FLAC conversion failed, is the flac program installed?"
+  )
+})
+
+test_that("a FLAC that cannot be put where it was asked for is reported", {
+  #The conversion succeeds, but the destination is in a directory that is not
+  #there, so neither moving nor copying the result can work.
+  local_mocked_bindings(
+    wav2flac = function(file, overwrite=FALSE, ...) {
+      file.copy(file, paste0(tools::file_path_sans_ext(file), ".flac"))
+      invisible(NULL)
+    },
+    .package = "seewave"
+  )
+  f <- file.path(tempdir(), "no-such-directory", "out.flac")
+  expect_error(
+    suppressWarnings(sonicscrewdriver:::.writeAudioFlac(toneWave(), f)),
+    "Could not write to"
+  )
+})
+
+test_that("the converted FLAC is moved to the path asked for", {
+  converted <- NULL
+  local_mocked_bindings(
+    wav2flac = function(file, overwrite=FALSE, ...) {
+      converted <<- paste0(tools::file_path_sans_ext(file), ".flac")
+      #wav2flac() writes alongside its input, not where the caller wants it.
+      file.copy(file, converted)
+      invisible(NULL)
+    },
+    .package = "seewave"
+  )
+  f <- tempfile(fileext=".flac")
+  withr::defer(unlink(f))
+  expect_equal(sonicscrewdriver:::.writeAudioFlac(toneWave(), f), f)
+  expect_true(file.exists(f))
+  #Nothing is left behind in the temporary directory.
+  expect_false(file.exists(converted))
+})

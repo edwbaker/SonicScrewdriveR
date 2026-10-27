@@ -116,6 +116,12 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- readBirdNet() took the name of a file by splitting its path on a forward
+  slash, so on Windows, where a path is separated with backslashes, the whole
+  path was read as the name. filename_parsing="audiomoth" and "timestamp" then
+  parsed the directories rather than the name and gave NA start and end times
+  for every detection. The name is taken with basename(), which reads either
+  separator.
 - generateNoise() could send samples outside the range the format holds. The
   noise was scaled by its largest positive sample rather than by its largest
   either way, so noise with a deeper trough than peak went past the level asked
@@ -543,6 +549,19 @@
   now says which column the NA was in. NA amplitudes are still coerced to zero.
 
 ## Internal
+- directionPlot() named its columns with aes_string(), deprecated since ggplot2
+  3.0.0, and drew the mean direction against the whole of the plot's data, which
+  ggplot2 warned about on every call. Both are now written as the rest of the
+  package writes them, and the plot is drawn without warnings.
+- Tests were added for the parts of the package that had none: readBirdNet(),
+  gs_transcribe() and the Google Speech wrappers, labelPadding() and
+  labelReduction(), directionPlot(), beatSpectrum() and beatComplexity(),
+  autoBandPass(), dielHistogram(), pd_simple(), ntd(), defaultCluster() and the
+  retry intervals. Tests were also added for the input guards, polar-latitude
+  cases and error paths of daysPhases(), writeAudio(), fcis(), package.installed(),
+  pseudoWave(), audioblast(), the Annotation functions, pulseDetection(),
+  pythonInstall() and dielPlot(). Nothing in them reaches the network, a paid API
+  or an installer: the packages those functions call are stood in for.
 - validateFreqIsPossible() and validateSpectrum() now test their input in one
   vectorised pass rather than looping over each frequency, or each cell of the
   spectrum, in turn.
