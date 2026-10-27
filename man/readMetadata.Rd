@@ -10,7 +10,11 @@ readMetadata(x, filename = TRUE)
 \item{x}{Path to an audio file, a Wave object with metadata attached, or a
 raw vector holding a file}
 
-\item{filename}{Whether to read the name of the file as well as its contents}
+\item{filename}{Whether to read the name of the file as well as its
+contents. TRUE works the format out from the name, FALSE reads only what
+is inside the file, and the name of one of \code{\link[=parseFilename]{parseFilename()}}'s formats
+reads the name as that, which settles a name the package could not have
+settled on its own.}
 }
 \value{
 An audioMetadata object. \code{file} and \code{container} are always there, so
@@ -80,8 +84,13 @@ Because nothing outranks it, a reading the name left in doubt gives no
 \code{datetime}. A name of nothing but digits is read as a date or as a count of
 seconds, and a collection that numbers its records gives names of exactly
 that shape, so a date taken from one would often be a confident wrong answer
-with nothing beside it to correct it. \code{\link[=parseFilename]{parseFilename()}} reports it there, for
-a caller who knows what their own files are named by.
+with nothing beside it to correct it.
+
+Where you know what your own files are named by, say so: \code{filename} takes
+the name of a filename format as well as TRUE or FALSE, as in
+\code{filename = "YYYYMMDD"}. Naming it settles what those digits mean, so the
+date is read and used rather than passed over as a guess. The formats are
+those \code{\link[=parseFilename]{parseFilename()}} lists.
 
 A TSA name gives a \code{species} and a \code{collection}. That corpus commonly holds
 no embedded metadata at all, so for those recordings its name is the only

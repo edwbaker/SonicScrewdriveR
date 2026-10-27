@@ -387,9 +387,9 @@
 #' an error here.
 #' @keywords internal
 #' @noRd
-.mdFilenameSource <- function(file) {
+.mdFilenameSource <- function(file, format=NULL) {
   read <- tryCatch(
-    parseFilename(file),
+    parseFilename(file, format=format),
     error=function(cond) NULL,
     warning=function(cond) NULL
   )
@@ -397,6 +397,41 @@
     return(NULL)
   }
   return(read)
+}
+
+#' Which filename format to read, from what the caller asked for
+#'
+#' `filename` says whether to read the name at all, and may instead name the
+#' convention the caller knows their files follow. Naming it settles what the
+#' name means, so the date it holds is used rather than passed over as a guess.
+#'
+#' The name is checked here rather than where it is used, so that a format this
+#' package does not know is an error at once instead of a file quietly reading
+#' as though nothing had been asked for.
+#'
+#' @param filename What the caller passed
+#' @return NULL to read no name, NA to detect the format, or the format named
+#' @keywords internal
+#' @noRd
+.mdFilenameFormat <- function(filename) {
+  if (isTRUE(filename)) {
+    return(NA_character_)
+  }
+  if (isFALSE(filename)) {
+    return(NULL)
+  }
+  if (!is.character(filename) || length(filename) != 1L || is.na(filename)) {
+    stop("filename must be TRUE, FALSE, or the name of a filename format.")
+  }
+  # "match" picks a format that fits a list of filenames, and there is one file
+  # here, so there is nothing for it to match against.
+  if (!filename %in% .knownFileFormats()) {
+    stop(
+      "Unknown filename format: ", filename,
+      ". One of: ", paste(.knownFileFormats(), collapse=", "), "."
+    )
+  }
+  return(filename)
 }
 
 #' Name the chunks a file holds that carry metadata this package cannot read
@@ -503,8 +538,13 @@
 #' `datetime`. A name of nothing but digits is read as a date or as a count of
 #' seconds, and a collection that numbers its records gives names of exactly
 #' that shape, so a date taken from one would often be a confident wrong answer
-#' with nothing beside it to correct it. [parseFilename()] reports it there, for
-#' a caller who knows what their own files are named by.
+#' with nothing beside it to correct it.
+#'
+#' Where you know what your own files are named by, say so: `filename` takes
+#' the name of a filename format as well as TRUE or FALSE, as in
+#' `filename = "YYYYMMDD"`. Naming it settles what those digits mean, so the
+#' date is read and used rather than passed over as a guess. The formats are
+#' those [parseFilename()] lists.
 #'
 #' A TSA name gives a `species` and a `collection`. That corpus commonly holds
 #' no embedded metadata at all, so for those recordings its name is the only
@@ -512,7 +552,11 @@
 #'
 #' @param x Path to an audio file, a Wave object with metadata attached, or a
 #'   raw vector holding a file
-#' @param filename Whether to read the name of the file as well as its contents
+#' @param filename Whether to read the name of the file as well as its
+#'   contents. TRUE works the format out from the name, FALSE reads only what
+#'   is inside the file, and the name of one of [parseFilename()]'s formats
+#'   reads the name as that, which settles a name the package could not have
+#'   settled on its own.
 #' @return An audioMetadata object. `file` and `container` are always there, so
 #'   its length says nothing about whether the file carried any metadata: ask
 #'   `length(x$sources)` for that, or `length(x$fields)` for whether anything
@@ -528,6 +572,9 @@
 #' m$sources$guano
 #'
 readMetadata <- function(x, filename=TRUE) {
+  # Checked before anything is read, so that a format this package does not
+  # know is an error whatever the file turns out to be.
+  format <- .mdFilenameFormat(filename)
   if (inherits(x, "audioMetadata")) {
     return(x)
   }
@@ -538,13 +585,13 @@ readMetadata <- function(x, filename=TRUE) {
     return(.mdFromBytesAll(x))
   }
   .mdCheckFile(x)
-  return(.mdFromFileAll(x, filename=filename))
+  return(.mdFromFileAll(x, filename=if (is.null(format)) FALSE else format))
 }
 
 #' Read every kind of metadata a file on disk carries
 #' @keywords internal
 #' @noRd
-.mdFromFileAll <- function(file, filename=TRUE) {
+.mdFromFileAll <- function(file, filename=NA_character_) {
   container <- .mdContainer(.mdFileHead(file, 16L))
   sources <- list()
   unparsed <- character(0)
@@ -565,8 +612,12 @@ readMetadata <- function(x, filename=TRUE) {
     sources$vorbisComment <- vorbisComment(file)
     sources$id3 <- id3(file)
   }
-  if (filename) {
-    sources$filename <- .mdFilenameSource(file)
+  # FALSE to read no name at all, NA to work out the format from the name, or
+  # the name of the format the caller knows their files follow.
+  if (!isFALSE(filename)) {
+    sources$filename <- .mdFilenameSource(
+      file, format=if (is.na(filename)) NULL else filename
+    )
   }
   return(.mdObjectAll(file, container, sources, unparsed))
 }

@@ -53,6 +53,12 @@
   readMetadata() therefore takes no date from such a name, since nothing
   outranks a filename and a confident wrong date is worse than none; a format
   asked for by name is not a guess and carries no alternatives.
+- readMetadata()'s `filename` argument takes the name of a filename format as
+  well as TRUE or FALSE, as in `filename = "YYYYMMDD"`. Where you know what
+  your own files are named by, naming the format settles what the digits mean
+  and the date is read and used rather than passed over as a guess. A format
+  the package does not know is an error at once rather than a file quietly
+  reading as though nothing had been asked for.
 - Text declared as ISO-8859-1 that is in fact valid UTF-8 is read as UTF-8,
   which is what xeno-canto writes into the comment frame of its recordings.
 - audiomothExpand() expands an AudioMoth triggered (T.WAV) recording, in which

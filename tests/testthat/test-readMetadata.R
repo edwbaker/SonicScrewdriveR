@@ -330,6 +330,62 @@ test_that("A date the filename left in doubt is not reported", {
   }
 })
 
+# A caller who knows what their own files are named by can say so, and then the
+# digits are not a guess any more.
+test_that("Naming the filename format settles a name the package could not", {
+  bytes <- mdWav(mdFmt(), mdData())
+  path <- file.path(tempdir(), "20190101.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+
+  expect_null(readMetadata(path)$fields$datetime)
+  expect_identical(
+    format(readMetadata(path, filename="YYYYMMDD")$fields$datetime, "%Y-%m-%d"),
+    "2019-01-01"
+  )
+  expect_false("ambiguous" %in% names(
+    readMetadata(path, filename="YYYYMMDD")$sources$filename
+  ))
+})
+
+test_that("A count of seconds can be named too", {
+  bytes <- mdWav(mdFmt(), mdData())
+  path <- file.path(tempdir(), "1234567890.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+
+  expect_null(readMetadata(path)$fields$datetime)
+  expect_identical(
+    as.numeric(readMetadata(path, filename="timestamp")$fields$datetime),
+    1234567890
+  )
+})
+
+# A name that spells no real date gives no date even when it was asked for as
+# one, rather than a date that is missing.
+test_that("Naming a format does not make a name into a date it cannot be", {
+  bytes <- mdWav(mdFmt(), mdData())
+  path <- file.path(tempdir(), "12345678.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+
+  expect_null(readMetadata(path, filename="YYYYMMDD")$fields$datetime)
+})
+
+test_that("A filename format this package does not know is refused at once", {
+  bytes <- mdWav(mdFmt(), mdData())
+  path <- file.path(tempdir(), "20190101.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+
+  expect_error(readMetadata(path, filename="YYYY-MM-DD"), "Unknown filename format")
+  expect_error(readMetadata(path, filename="match"), "Unknown filename format")
+  expect_error(readMetadata(path, filename=c("YYYYMMDD", "timestamp")), "must be TRUE")
+  # The format is checked before the file is, so the complaint is about the
+  # format whatever the file turns out to be.
+  expect_error(readMetadata("no-such-file.wav", filename="nonsense"), "Unknown filename format")
+})
+
 test_that("A name that says plainly what it is still gives its date", {
   bytes <- mdWav(mdFmt(), mdData())
   path <- file.path(tempdir(), "20240220_162231.wav")
