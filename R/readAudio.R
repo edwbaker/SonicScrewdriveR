@@ -9,6 +9,15 @@
 #' the periods that did not trigger a recording are returned as silence and the
 #' timing of the triggered recordings is preserved.
 #'
+#' A recorder that loses power part-way through a WAV file can leave the size of
+#' the audio unwritten, so that the file declares an empty recording while
+#' holding the audio it was recording at the time. The audio of such a file is
+#' read to the end of the file, with a warning, rather than returned as nothing.
+#'
+#' Samples that are not finite numbers, which floating-point files can hold, are
+#' read as zero with a warning, as they would otherwise spread through any
+#' measurement made from the wave.
+#'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
 #' @param from Start point in file to return
@@ -48,9 +57,24 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds", u
   }
 
   if (mime == "audio/x-wav") {
+    # A file whose data chunk size was never written declares that it holds no
+    # audio, so the size is filled in on a copy before the file is read.
+    repaired <- .wavRepaired(file)
+    if (!is.null(repaired)) {
+      on.exit(unlink(repaired), add=TRUE)
+    }
     tryCatch({
-      wave <- readWave(file, from=fromS, to=to, units=input.unit)
-      return(wave)
+      wave <- readWave(
+        if (is.null(repaired)) file else repaired,
+        from=fromS, to=to, units=input.unit
+      )
+      if (!is.null(repaired)) {
+        warning(
+          "The size of the audio in '", file, "' was never written, so the ",
+          "recording has been read to the end of the file."
+        )
+      }
+      return(.waveFinite(wave, file))
     },
     error=function(cond){
 
@@ -87,7 +111,11 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds", u
     }
 
     wave <- av::read_audio_bin(file, channels=channels)
-    wave[which(is.na(wave))] <- 0
+    nonFinite <- !is.finite(wave)
+    if (any(nonFinite)) {
+      wave[nonFinite] <- 0
+      .nonFiniteWarning(sum(nonFinite), file)
+    }
     bit <- .bitdepth(wave)
 
     if (channels == 1) {
@@ -116,6 +144,105 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds", u
     }
   }
   stop("File could not be processed")
+}
+
+#' Copy a WAV file whose data size was never finalised, with the size filled in
+#'
+#' Only the size of the audio and the size in the RIFF header are changed, so
+#' that the audio is read by the same code as any other file. A file that has
+#' nothing to repair gives NULL, and the file itself is never written to.
+#'
+#' @param file Path to a WAV file
+#' @return Path to a temporary file holding the repaired copy, or NULL
+#' @keywords internal
+#' @noRd
+.wavRepaired <- function(file) {
+  total <- file.size(file)
+  if (is.na(total) || total < 12) {
+    return(NULL)
+  }
+  # The header is all that has to be read to find out whether there is anything
+  # to repair, and a file holding more metadata than this before its audio is
+  # left to be read as it is.
+  bytes <- tryCatch(
+    readBin(file, "raw", n=min(total, 65536)),
+    error=function(cond) NULL
+  )
+  if (is.null(bytes)) {
+    return(NULL)
+  }
+  info <- tryCatch(.wavFormat(bytes, total=total), error=function(cond) NULL)
+  if (is.null(info) || !isTRUE(info$dataUnfinalised)) {
+    return(NULL)
+  }
+
+  out <- tempfile(fileext=".wav")
+  if (!file.copy(file, out)) {
+    return(NULL)
+  }
+  con <- file(out, "r+b")
+  on.exit(close(con))
+  # A connection open for both reading and writing keeps a position for each, so
+  # the write position is the one to set.
+  seek(con, 4L, rw="write")
+  writeBin(.uintToRaw(total - 8, 4L), con)
+  # The size of a chunk is held in the four bytes before its body.
+  seek(con, info$dataStart - 5L, rw="write")
+  writeBin(.uintToRaw(info$dataSize, 4L), con)
+  return(out)
+}
+
+#' Warn that samples were read as zero
+#'
+#' @param n Number of samples that were not finite numbers
+#' @param file The file they were read from
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.nonFiniteWarning <- function(n, file) {
+  warning(
+    n, " sample", if (n == 1) "" else "s", " of '", file,
+    "' ", if (n == 1) "is not a finite number" else "are not finite numbers",
+    " and ", if (n == 1) "has" else "have", " been read as zero."
+  )
+  invisible(NULL)
+}
+
+#' Read any sample that is not a finite number as zero
+#'
+#' A floating-point file can hold values that are not numbers or are infinite,
+#' which would otherwise spread through every measurement made from the wave.
+#'
+#' @param wave A Wave or WaveMC object
+#' @param file The file it was read from
+#' @return The object, with any such sample replaced by zero
+#' @keywords internal
+#' @noRd
+.waveFinite <- function(wave, file) {
+  n <- 0
+  if (inherits(wave, "WaveMC")) {
+    bad <- !is.finite(wave@.Data)
+    if (any(bad)) {
+      n <- sum(bad)
+      wave@.Data[bad] <- 0
+    }
+  } else {
+    bad <- !is.finite(wave@left)
+    if (any(bad)) {
+      n <- n + sum(bad)
+      wave@left[bad] <- 0
+    }
+    # A mono wave holds no right channel, so there is nothing to check there.
+    bad <- !is.finite(wave@right)
+    if (any(bad)) {
+      n <- n + sum(bad)
+      wave@right[bad] <- 0
+    }
+  }
+  if (n > 0) {
+    .nonFiniteWarning(n, file)
+  }
+  return(wave)
 }
 
 #' Return the requested part of a wave that was read whole

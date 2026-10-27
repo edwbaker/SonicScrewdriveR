@@ -215,6 +215,12 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   if (info$dataTruncated) {
     warning("DATA chunk runs past the end of the file, which may be truncated.")
   }
+  if (info$dataUnfinalised) {
+    warning(
+      "The size of the audio was never written, so the recording has been ",
+      "read to the end of the file."
+    )
+  }
   if (info$dataStart - 1 > nBlocks * .AM_BLOCK_SIZE) {
     stop("File is too short to hold any audio data.")
   }

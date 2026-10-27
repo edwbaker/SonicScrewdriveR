@@ -124,6 +124,16 @@
 - naturalFrequency() returned NaN, or an error about a missing value, for an
   overdamped system, in which the damping term exceeds the stiffness term and
   there is no real natural frequency. It now raises an error saying so.
+- readAudio() returned an empty wave for a file whose data chunk size was never
+  written, which is what a recorder leaves behind when it loses power part-way
+  through a file, discarding the whole recording the file still held. The audio
+  of such a file is now read to the end of the file, with a warning.
+  audiomothExpand() warns on a triggered recording left the same way. A file
+  that really does hold no audio, such as one an AudioMoth writes when its
+  battery fails as it starts to record, is still read as empty.
+- readAudio() returned samples that were not finite numbers, which a
+  floating-point file can hold, so that every measurement made from the wave
+  came back as NaN. They are now read as zero, with a warning saying how many.
 - soundSpeed() with method="cramer" used the value TRUE in place of the temperature
   in one term of Cramer's equation, because the term referred to an undefined
   variable named T. The speed of sound was therefore slightly wrong at every

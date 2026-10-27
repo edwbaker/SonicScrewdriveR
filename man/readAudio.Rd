@@ -40,4 +40,13 @@ A file named following the AudioMoth convention for triggered recordings,
 ending in T.WAV, is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is read, so that
 the periods that did not trigger a recording are returned as silence and the
 timing of the triggered recordings is preserved.
+
+A recorder that loses power part-way through a WAV file can leave the size of
+the audio unwritten, so that the file declares an empty recording while
+holding the audio it was recording at the time. The audio of such a file is
+read to the end of the file, with a warning, rather than returned as nothing.
+
+Samples that are not finite numbers, which floating-point files can hold, are
+read as zero with a warning, as they would otherwise spread through any
+measurement made from the wave.
 }

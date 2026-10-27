@@ -125,8 +125,8 @@
 #'   to cover its format and data chunk headers
 #' @param total Size of the whole file, where `bytes` holds only the start of it
 #' @return A list of format parameters, the one-based position of the first byte
-#'   of audio data, the size of the data chunk, and the size recorded in the
-#'   RIFF header
+#'   of audio data, the size of the data chunk, whether that size was left
+#'   unfinalised, and the size recorded in the RIFF header
 #' @keywords internal
 #' @noRd
 .wavFormat <- function(bytes, total=length(bytes)) {
@@ -151,16 +151,60 @@
     format <- .rawToUInt(bytes[(at + 24L):(at + 25L)])
   }
 
+  channels <- .rawToUInt(bytes[(at + 2L):(at + 3L)])
+  bits <- .rawToUInt(bytes[(at + 14L):(at + 15L)])
+  blockAlign <- channels * ceiling(bits / 8)
+
+  # A recorder that loses power part-way through a file never goes back to write
+  # the size of the audio, leaving an empty data chunk with the recording still
+  # in the file. Where bytes follow such a chunk that the RIFF header does not
+  # account for and that do not begin a chunk of their own, they are audio the
+  # writer never recorded, and the chunk runs to the end of the file.
+  dataSize <- data$size
+  dataUnfinalised <- FALSE
+  if (dataSize == 0 && blockAlign > 0) {
+    following <- total - data$start + 1
+    accounted <- info$riffSize + 8 >= total
+    if (following >= blockAlign && !accounted &&
+        !.wavIsChunkHeader(bytes, data$start, total)) {
+      dataSize <- following - following %% blockAlign
+      dataUnfinalised <- TRUE
+    }
+  }
+
   return(list(
     format = format,
-    channels = .rawToUInt(bytes[(at + 2L):(at + 3L)]),
+    channels = channels,
     sampleRate = .rawToUInt(bytes[(at + 4L):(at + 7L)]),
-    bits = .rawToUInt(bytes[(at + 14L):(at + 15L)]),
+    bits = bits,
     dataStart = data$start,
-    dataSize = data$size,
+    dataSize = dataSize,
     dataTruncated = data$truncated,
+    dataUnfinalised = dataUnfinalised,
     riffSize = info$riffSize
   ))
+}
+
+#' Could a run of bytes be the start of a RIFF chunk?
+#'
+#' Used to tell a chunk written after the audio from audio that the writer never
+#' recorded the size of.
+#'
+#' @param bytes A raw vector holding a WAV file, or the start of one
+#' @param at The one-based position to look at
+#' @param total Size of the whole file
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.wavIsChunkHeader <- function(bytes, at, total) {
+  if (at + 7L > length(bytes)) {
+    return(FALSE)
+  }
+  id <- as.integer(bytes[at:(at + 3L)])
+  if (any(id < 32L | id > 126L)) {
+    return(FALSE)
+  }
+  return(at + 7L + .rawToUInt(bytes[(at + 4L):(at + 7L)]) <= total)
 }
 
 #' Write a run of zero bytes to a connection
