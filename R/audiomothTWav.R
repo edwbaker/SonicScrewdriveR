@@ -286,6 +286,12 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   if (info$dataTruncated) {
     warning("DATA chunk runs past the end of the file, which may be truncated.")
   }
+  if (info$dataUnfinalised) {
+    warning(
+      "The size of the audio was never written, so the recording has been ",
+      "read to the end of the file."
+    )
+  }
 
   if (info$dataStart - 1 > nBlocks * .AM_BLOCK_SIZE) {
     # The header reaches past the last whole 512-byte block, so no block after
@@ -406,7 +412,7 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #' @param info Chunk positions from .wavFormat(), describing the file before it
 #'   was expanded
 #' @param expanded The number of bytes the expansion added
-#' @return A Wave object, carrying any GUANO metadata as an attribute
+#' @return A Wave object, carrying any GUANO metadata the file held
 #' @keywords internal
 #' @noRd
 .audiomothWave <- function(bytes, info, expanded) {
@@ -417,10 +423,7 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
   )
   wave <- Wave(left=samples, samp.rate=info$sampleRate, bit=16, pcm=TRUE)
 
-  metadata <- .guanoFromBytes(bytes)
-  if (length(metadata) > 0L) {
-    attr(wave, "guano") <- metadata
-  }
+  guano(wave) <- .guanoFromBytes(bytes)
   return(wave)
 }
 

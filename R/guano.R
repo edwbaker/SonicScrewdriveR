@@ -526,7 +526,7 @@ guano <- function(x) {
     return(x)
   }
   if (inherits(x, "Wave") || inherits(x, "WaveMC")) {
-    metadata <- attr(x, "guano")
+    metadata <- .mdFromWave(x, "guano")
     return(if (is.null(metadata)) .guanoObject(list()) else metadata)
   }
   if (is.raw(x)) {
@@ -543,15 +543,23 @@ guano <- function(x) {
 
 #' Attach GUANO metadata to a Wave object
 #'
-#' Wave objects have no place to keep file metadata, so GUANO metadata read from
-#' a file is kept as an attribute, which [guano()] reads back. Writing the wave
-#' to a file does not carry the metadata with it: use [guanoWrite()] on the
-#' written file, or pass the metadata to [audiomothCompress()].
+#' Wave objects have no place to keep file metadata, so it is kept in the one
+#' store a wave carries for it, which [guano()] reads back: the metadata slot
+#' of a TaggedWave, or an attribute of a plain Wave. GUANO is recorded there
+#' alongside any other format the file carried, so setting it leaves the rest
+#' of what the wave says about its file alone, and [readMetadata()] reads all
+#' of it together.
 #'
-#' @param x A Wave or WaveMC object
+#' Writing the wave to a file does not carry the metadata with it: use
+#' [guanoWrite()] on the written file, or pass the metadata to
+#' [audiomothCompress()].
+#'
+#' @param x A Wave, WaveMC, TaggedWave or TaggedWaveMC object
 #' @param value A guano object, or NULL to remove the metadata
 #' @return The object with the metadata attached
 #' @export
+#' @seealso [`audioMetadata<-`] attaches a whole reading, of every format at
+#'   once.
 #' @examples
 #' \dontrun{
 #' guano(wave) <- guanoCreate(Make="Open Acoustic Devices", Model="AudioMoth")
@@ -564,8 +572,12 @@ guano <- function(x) {
   if (!is.null(value) && !inherits(value, "guano")) {
     stop("value must be a guano object, see guano() and guanoCreate().")
   }
-  attr(x, "guano") <- value
-  return(x)
+  # An empty guano object says no more than no guano object at all, and
+  # recording it would make the wave out to carry metadata it does not.
+  if (!is.null(value) && length(value) == 0L) {
+    value <- NULL
+  }
+  return(.mdSetSource(x, "guano", value))
 }
 
 #' Write GUANO metadata to a WAV file
