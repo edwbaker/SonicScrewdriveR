@@ -92,3 +92,14 @@ recording can meet and a triggered one can be renamed out of. A file
 whose comment has been lost can still be expanded by calling
 [`audiomothExpand()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.md)
 on it.
+
+A recorder that loses power part-way through a WAV file can stop before
+writing the size of the audio, leaving a file that declares an empty
+recording while still holding the audio it was recording at the time.
+The audio of such a file is read to the end of the file, with a warning,
+rather than returned as nothing. A file that really holds no audio is
+read as empty.
+
+Samples that are not finite numbers, which a floating-point file can
+hold, are read as zero with a warning, as they would otherwise spread
+through every measurement made from the wave.
