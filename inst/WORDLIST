@@ -2,6 +2,7 @@ ACI
 Acinipe
 Analyzer
 AnnotationList
+Astro
 AudioBlast
 AudioMoth
 Audioblast
@@ -56,6 +57,7 @@ WaveMC
 YYYYMMDD
 addProcess
 addSpectra
+aes
 alexanderi
 allChannels
 allardi
@@ -72,6 +74,7 @@ audiomothExpand
 audiomothWave
 autoBandPass
 av
+beatComplexity
 beatSpectrum
 bedoya
 bext
@@ -94,6 +97,7 @@ datetimes
 dayPhase
 dayPhases
 daysPhases
+defaultCluster
 diel
 dielFraction
 dielHistogram
