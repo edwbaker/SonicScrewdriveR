@@ -1,21 +1,19 @@
-#' @importFrom ggplot2 aes_string coord_polar element_line geom_segment ggplot scale_x_continuous scale_y_continuous theme_bw
+#' @importFrom ggplot2 .data aes coord_polar element_blank element_line geom_segment ggplot labs scale_x_continuous scale_y_continuous theme theme_bw
 directionPlot <- function(angles,
                           speeds,
                           angle.unit="degrees",
                           plot.mean=TRUE) {
-  #Please CRAN
-  Angles <- Speeds <- NULL
-
-
   angles <- convert2radians(angles, input.unit=angle.unit)
   #Named before the row is appended. data.frame(0, 0) names its columns X0 and
   #X0.1, which match nothing, so rbind() failed for every input.
   data <- data.frame(Angles=angles, Speeds=speeds)
   data <- rbind(data, data.frame(Angles=0, Speeds=0))
 
-  plot <- ggplot(data, aes_string(x = "Angles", y = "Speeds")) +
+  #The columns are named through .data, as elsewhere in the package. aes_string()
+  #has been deprecated since ggplot2 3.0.0 and warned on every call.
+  plot <- ggplot(data, aes(x = .data$Angles, y = .data$Speeds)) +
     coord_polar(start=pi) +
-    geom_segment(aes(y = 0, xend = Angles, yend = Speeds)) +
+    geom_segment(aes(y = 0, xend = .data$Angles, yend = .data$Speeds)) +
     scale_x_continuous(limits = c(-pi,pi),
                        breaks=c(0, pi/2, pi, -pi/2, pi/4),
                        labels = c(0,90,180,-90, "")
@@ -27,9 +25,15 @@ directionPlot <- function(angles,
     theme(panel.grid.major.y = element_line(color="grey")) +
     theme(axis.text.y = element_blank())
   if (plot.mean) {
-    mean.x = mean(abs(angles))
-    mean.y = mean(speeds)
-    plot <- plot +     geom_segment(aes(x = -mean.x, y = mean.y, xend = mean.x, yend = mean.y))
+    #One segment, so it is given a row of its own. Taken from the data of the
+    #plot it was a single value against as many rows as there were directions,
+    #which ggplot2 warns about.
+    mean.x <- mean(abs(angles))
+    mean.y <- mean(speeds)
+    plot <- plot + geom_segment(
+      aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend),
+      data = data.frame(x=-mean.x, y=mean.y, xend=mean.x, yend=mean.y)
+    )
   }
   return(plot)
 }

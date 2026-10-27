@@ -260,3 +260,58 @@ test_that("pulseDetection dispatches to pd_threshold", {
     pd_threshold(w, threshold=0.2, U=5)
   )
 })
+
+#A quiet wave with a loud burst in it, which the detectors should find.
+burstWave <- function(n=8000, samp.rate=4000) {
+  samples <- rep(0, n)
+  samples[2001:3000] <- 10000
+  tuneR::Wave(samples, samp.rate=samp.rate, bit=16)
+}
+
+test_that("a method the package does not have is refused", {
+  expect_error(pulseDetection(burstWave(), method="telepathy"), "No valid method supplied.")
+})
+
+test_that("the simple method is the default", {
+  wave <- burstWave()
+  expect_equal(pulseDetection(wave), pd_simple(wave))
+  expect_equal(pulseDetection(wave, method="simple"), pd_simple(wave))
+})
+
+test_that("each named method is dispatched to its own detector", {
+  wave <- burstWave()
+  expect_equal(pulseDetection(wave, method="dietrich2004"), pd_dietrich2004(wave))
+  expect_equal(pulseDetection(wave, method="threshold"), pd_threshold(wave))
+})
+
+test_that("arguments are passed through to the detector", {
+  wave <- burstWave()
+  expect_equal(pulseDetection(wave, method="simple", U=60), pd_simple(wave, U=60))
+  expect_false(identical(pulseDetection(wave, U=60), pulseDetection(wave, U=240)))
+})
+
+test_that("a stereo wave is analysed one channel at a time", {
+  wave <- burstWave()
+  #The right channel is silent, so the two channels give different answers and
+  #analysing only the left would not show it.
+  stereo <- tuneR::Wave(
+    left=wave@left, right=rep(0, length(wave@left)),
+    samp.rate=wave@samp.rate, bit=16
+  )
+  res <- pulseDetection(stereo)
+  expect_length(res, 2)
+  expect_equal(res[[1]], pd_simple(wave))
+  expect_false(any(res[[2]]$pulse))
+})
+
+test_that("a multi-channel wave is analysed one channel at a time", {
+  wave <- burstWave()
+  mc <- tuneR::WaveMC(
+    data = cbind(wave@left, rep(0, length(wave@left)), wave@left),
+    samp.rate = wave@samp.rate, bit = 16
+  )
+  res <- pulseDetection(mc)
+  expect_length(res, 3)
+  expect_equal(res[[1]], res[[3]])
+  expect_false(any(res[[2]]$pulse))
+})

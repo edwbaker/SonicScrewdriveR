@@ -176,3 +176,74 @@ test_that("pseudoWave rejects a type it cannot generate", {
     "Unsupported PseudoWave type: dog"
   )
 })
+
+test_that("a file PseudoWave needs a file to be named", {
+  expect_error(pseudoWave("file"), "Filename must be specified")
+  expect_error(pseudoWave("file", NA_character_), "Filename must be specified")
+})
+
+test_that("a file PseudoWave names a file that is there", {
+  missing <- file.path(tempdir(), "no-such-pseudowave.wav")
+  expect_error(pseudoWave("file", missing), "File does not exist")
+})
+
+test_that("a stereo file PseudoWave fills both channels to the length wanted", {
+  f <- tempfile(fileext=".wav")
+  withr::defer(unlink(f))
+  left <- tuneR::sine(300, duration=500, samp.rate=44100, bit=16, pcm=TRUE)
+  stereo <- tuneR::Wave(
+    left = left@left,
+    right = rev(left@left),
+    samp.rate = 44100, bit = 16, pcm = TRUE
+  )
+  tuneR::writeWave(stereo, f)
+  pw <- pseudoWave("file", f)
+
+  for (n in c(200, 500, 1300)) {
+    target <- tuneR::Wave(
+      left = rep(0, n), right = rep(0, n), samp.rate = 44100, bit = 16, pcm = TRUE
+    )
+    result <- target + pw
+    expect_true(result@stereo)
+    expect_equal(length(result@left), n)
+    expect_equal(length(result@right), n)
+  }
+})
+
+test_that("a seeded PseudoWave leaves a session that had no random stream without one", {
+  #The stream is put back as it was, which where there was none means removing
+  #the one that setting the seed created.
+  if (exists(".Random.seed", envir=globalenv(), inherits=FALSE)) {
+    saved <- get(".Random.seed", envir=globalenv(), inherits=FALSE)
+    withr::defer(assign(".Random.seed", saved, envir=globalenv()))
+    rm(".Random.seed", envir=globalenv())
+  }
+  target <- tuneR::Wave(rep(0, 100), samp.rate=44100, bit=16, pcm=TRUE)
+  invisible(target + pseudoWave("noise", "white", seed=5))
+  expect_false(exists(".Random.seed", envir=globalenv(), inherits=FALSE))
+})
+
+test_that("a seeded PseudoWave still gives the same samples with no stream to start from", {
+  dropStream <- function() {
+    if (exists(".Random.seed", envir=globalenv(), inherits=FALSE)) {
+      rm(".Random.seed", envir=globalenv())
+    }
+  }
+  if (exists(".Random.seed", envir=globalenv(), inherits=FALSE)) {
+    saved <- get(".Random.seed", envir=globalenv(), inherits=FALSE)
+    withr::defer(assign(".Random.seed", saved, envir=globalenv()))
+  }
+  target <- tuneR::Wave(rep(0, 100), samp.rate=44100, bit=16, pcm=TRUE)
+  pw <- pseudoWave("noise", "white", seed=5)
+
+  dropStream()
+  first <- (target + pw)@left
+  dropStream()
+  second <- (target + pw)@left
+  expect_equal(first, second)
+})
+
+test_that("a PseudoWave takes a single seed", {
+  expect_error(pseudoWave("noise", "white", seed=c(1, 2)), "single seed")
+  expect_error(pseudoWave("noise", "white", seed=numeric(0)), "single seed")
+})

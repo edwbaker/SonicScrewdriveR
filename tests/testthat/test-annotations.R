@@ -232,3 +232,59 @@ test_that("merge_annotations works as expected",{
 
   expect_true(all.equal(merge_annotations(a7), test))
 })
+
+test_that("an annotation running past the end of the file is cut to the file", {
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  wave <- readWave(f)
+  d <- seewave::duration(wave)
+  a <- annotation(f, start=0, end=d + 10)
+
+  #The whole file is written rather than an error being raised, and the reason
+  #is said out loud.
+  expect_message(writeAnnotationWave(a), "greater than the duration")
+  out <- paste0("AUDIOMOTH_0-", d + 10, ".wav")
+  withr::defer(unlink(out))
+  expect_true(file.exists(out))
+  expect_equal(seewave::duration(readWave(out)), d, tolerance=0.01)
+})
+
+test_that("merging no annotations gives no annotations", {
+  expect_equal(merge_annotations(list()), list())
+  expect_length(merge_annotations(list()), 0)
+})
+
+test_that("a single annotation is returned as it is, in either domain", {
+  a <- annotation(start=0, end=10, low=100, high=200)
+  expect_equal(.merge_annotations(list(a)), list(a))
+  expect_equal(.merge_annotations(list(a), domain="frequency"), list(a))
+  expect_equal(.merge_annotations(list()), list())
+})
+
+test_that("merging in a domain the package does not know is refused by name", {
+  a <- annotation(start=0, end=10)
+  b <- annotation(start=5, end=15)
+  expect_error(
+    .merge_annotations(list(a, b), domain="amplitude"),
+    "Unknown domain for merge_annotations: amplitude"
+  )
+})
+
+test_that("overlapping annotations are merged in the frequency domain", {
+  a <- annotation(low=100, high=300)
+  b <- annotation(low=200, high=500)
+  c <- annotation(low=900, high=1000)
+  merged <- .merge_annotations(list(a, b, c), domain="frequency")
+  expect_length(merged, 2)
+  expect_equal(merged[[1]]@low, 100)
+  expect_equal(merged[[1]]@high, 500)
+  expect_equal(merged[[2]]@low, 900)
+})
+
+test_that("a list holding something other than an annotation is refused", {
+  a <- annotation(start=0, end=10)
+  expect_error(
+    AnnotationList2DataFrame(list(a, "not an annotation")),
+    "All items in list must be Annotation objects."
+  )
+  expect_error(AnnotationList2DataFrame(list(1, 2)), "must be Annotation objects")
+})

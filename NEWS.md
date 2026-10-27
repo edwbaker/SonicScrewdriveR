@@ -182,8 +182,14 @@
   has eight characters for a time and the specification asks for seconds in
   them, but writers leave the seconds off and pad the rest, and the time is
   there to be read. 24 of the 241 Broadcast Wave files of the BioAcoustica
-  corpus are written this way. A time that is unreadable for any
-  other reason still gives the date at midnight rather than nothing, as before.
+  corpus are written this way. A time that is unreadable for any other reason
+  still gives the date at midnight rather than nothing, as before.
+- readBirdNet() took the name of a file by splitting its path on a forward
+  slash, so on Windows, where a path is separated with backslashes, the whole
+  path was read as the name. filename_parsing="audiomoth" and "timestamp" then
+  parsed the directories rather than the name and gave NA start and end times
+  for every detection. The name is taken with basename(), which reads either
+  separator.
 - readAudio() failed on an AudioMoth triggered (T.WAV) recording with "argument
   "units" is missing, with no default". The renaming of the unit arguments left
   the call that cuts an expanded recording passing the deprecated argument,
@@ -234,6 +240,33 @@
   the two disagree they returned the phases of the wrong day. A recording made at
   08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
   day's phases.
+- dayPhase() dropped every phase bounded by a solar event that does not occur at
+  the latitude and date asked for, so a recording made during such a phase was
+  reported as belonging to no phase at all and nothing said so. At the default
+  location in midsummer, which is the example in ?dayPhase, there is no
+  astronomical night: Night and the phases either side of it were dropped, and
+  14241 of the recording's 40000 seconds, the whole of the short night, were
+  unaccounted for. Further north more of them went, a summer night at 58 degrees
+  coming back with the moon and no solar phase at all, and polar day returning no
+  rows whatever. Each phase now runs from the event that begins it to the next
+  event that does occur, which can be the following morning or, in polar day, two
+  months later, so that the phases account for the whole of a recording wherever it
+  was made. A phase lasting longer than a day is named for the sun's altitude
+  within it rather than for the event it began at, as the sun does not stay where
+  that event left it: the midnight sun begins with the sun's disc touching the
+  horizon, which is the Sunset phase, and then climbs away from it for weeks, and
+  is reported as Day.
+- dayPhase() and dayPhases() dropped the moon's interval wherever the moon did not
+  set on the day it rose or the day after, which at high latitudes it does not for
+  days on end, and dayPhase() also missed moonlight that began before the days it
+  gathered. Both the set that ends a night's moonlight and the rise that began it
+  are now searched for across the days around the recording: at 65 degrees north
+  the moon rises on 11 April 2024 and stays up until it sets on 17 April, which is
+  now one interval rather than none.
+- dayPhase() numbered repeated phases by the day they were found on, so a recording
+  spanning two days gave Day1 and Day2 and none called Day. They are numbered among
+  the rows returned instead, as Day and Day1, and the solar phases are now given
+  before the moon's rows rather than interleaved with them.
 - The tests of convert2seconds() and dayPhases() compared values the size of an
   epoch with the tolerance expect_equal() allows, which is relative and so comes
   to about 25 seconds at a present-day date. They passed whether or not the
@@ -637,6 +670,19 @@
   now says which column the NA was in. NA amplitudes are still coerced to zero.
 
 ## Internal
+- directionPlot() named its columns with aes_string(), deprecated since ggplot2
+  3.0.0, and drew the mean direction against the whole of the plot's data, which
+  ggplot2 warned about on every call. Both are now written as the rest of the
+  package writes them, and the plot is drawn without warnings.
+- Tests were added for the parts of the package that had none: readBirdNet(),
+  gs_transcribe() and the Google Speech wrappers, labelPadding() and
+  labelReduction(), directionPlot(), beatSpectrum() and beatComplexity(),
+  autoBandPass(), dielHistogram(), pd_simple(), ntd(), defaultCluster() and the
+  retry intervals. Tests were also added for the input guards, polar-latitude
+  cases and error paths of daysPhases(), writeAudio(), fcis(), package.installed(),
+  pseudoWave(), audioblast(), the Annotation functions, pulseDetection(),
+  pythonInstall() and dielPlot(). Nothing in them reaches the network, a paid API
+  or an installer: the packages those functions call are stood in for.
 - validateFreqIsPossible() and validateSpectrum() now test their input in one
   vectorised pass rather than looping over each frequency, or each cell of the
   spectrum, in turn.
