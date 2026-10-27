@@ -78,6 +78,23 @@ mdInfoField <- function(id, text) {
   return(c(charToRaw(id), mdU32(nchar(text, type="bytes") + 1L), body))
 }
 
+#' One field of an associated data list, which begins with the cue point it
+#' belongs to and, for a labelled text field, a header besides
+mdCueField <- function(id, cue, text, header=4L) {
+  body <- c(
+    mdU32(cue),
+    raw(max(0L, header - 4L)),
+    if (nzchar(text)) c(charToRaw(text), as.raw(0)) else raw(0)
+  )
+  # The size a field records is that of its body before the padding that
+  # brings the field to an even length.
+  size <- length(body)
+  if (length(body) %% 2L == 1L) {
+    body <- c(body, as.raw(0))
+  }
+  return(c(charToRaw(id), mdU32(size), body))
+}
+
 #' A bext chunk, with the description and originator given
 mdBextChunk <- function(description, originator="An Originator",
                         date="2011-05-23", time="14:22:03",

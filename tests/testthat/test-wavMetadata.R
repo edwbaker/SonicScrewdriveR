@@ -23,10 +23,60 @@ test_that("The fields of an INFO list are read by their own identifiers", {
 # its list as well and cannot be mistaken for something that does.
 test_that("A list that is not one of information is named by its kind", {
   f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
-    charToRaw("adtl"), mdInfoField("labl", "a cue label")
+    charToRaw("adtl"), mdCueField("labl", 3L, "a cue label")
   )), mdData()))
 
   expect_identical(wavInfo(f)[["adtl/labl"]], "a cue label")
+})
+
+# The fields of an associated data list begin with the identifier of the cue
+# point they belong to, and a labelled text field with a header of sample
+# counts and language codes besides. Reading those as text put a run of nuls
+# and mojibake in front of every label, which is how real files in the corpora
+# this was written against turned up.
+test_that("The cue point a label belongs to is not read as part of it", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+    charToRaw("adtl"),
+    mdCueField("labl", 3L, "Cue 3"),
+    mdCueField("note", 7L, "Desc."),
+    mdCueField("ltxt", 1L, "rgn", header=20L)
+  )), mdData()))
+  i <- wavInfo(f)
+
+  expect_identical(i[["adtl/labl"]], "Cue 3")
+  expect_identical(i[["adtl/note"]], "Desc.")
+  expect_identical(i[["adtl/ltxt"]], "rgn")
+})
+
+test_that("A label field holding nothing but its cue point is not reported", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+    charToRaw("adtl"),
+    mdCueField("labl", 3L, ""),
+    mdInfoField("INAM", "A Name")
+  )), mdData()))
+
+  expect_false("adtl/labl" %in% names(wavInfo(f)))
+})
+
+test_that("Several labels in one list are all kept", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+    charToRaw("adtl"),
+    mdCueField("labl", 1L, "Cue 3"),
+    mdCueField("labl", 2L, "Phrase 1")
+  )), mdData()))
+  i <- wavInfo(f)
+
+  expect_identical(i[["adtl/labl"]], "Cue 3")
+  expect_identical(i[["adtl/labl.2"]], "Phrase 1")
+})
+
+# An INFO field holds nothing but text, so nothing is passed over there.
+test_that("A field of an INFO list keeps its first four bytes", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+    charToRaw("INFO"), mdInfoField("ICMT", "Recorded well")
+  )), mdData()))
+
+  expect_identical(wavInfo(f)[["ICMT"]], "Recorded well")
 })
 
 # A file may hold a list of cue labels and a list of information, in either
@@ -34,7 +84,7 @@ test_that("A list that is not one of information is named by its kind", {
 test_that("Every list in the file is read, whichever comes first", {
   f <- mdFile(mdWav(
     mdFmt(),
-    mdChunk("LIST", c(charToRaw("adtl"), mdInfoField("labl", "a cue label"))),
+    mdChunk("LIST", c(charToRaw("adtl"), mdCueField("labl", 1L, "a cue label"))),
     mdChunk("LIST", c(charToRaw("INFO"), mdInfoField("INAM", "A Name"))),
     mdData()
   ))

@@ -129,10 +129,40 @@
 
 # ----------------------------------------------------------------- LIST INFO --
 
+#' Bytes of a field of an associated data list that come before its text
+#'
+#' The fields of an INFO list hold nothing but text. Those of an associated
+#' data list, which is what carries the labels of cue points, begin with the
+#' identifier of the cue point they belong to, and the labelled text field
+#' begins with a whole header of sample counts, purposes and language codes
+#' besides. Reading those bytes as text gives a run of nuls and mojibake in
+#' front of the label.
+#'
+#' @param kind The kind of list the field is in
+#' @param id The identifier of the field
+#' @return The number of bytes to pass over
+#' @keywords internal
+#' @noRd
+.infoPrefix <- function(kind, id) {
+  if (kind != "adtl") {
+    return(0L)
+  }
+  # A cue point identifier.
+  if (id %in% c("labl", "note")) {
+    return(4L)
+  }
+  # A cue point identifier, a sample count, a purpose, and the country,
+  # language, dialect and code page the text is written for.
+  if (id == "ltxt") {
+    return(20L)
+  }
+  return(0L)
+}
+
 #' Read the fields of one RIFF list
 #'
 #' A list holds its kind in its first four bytes and then a run of fields, each
-#' an identifier, a size and that many bytes of text.
+#' an identifier, a size and that many bytes of body.
 #'
 #' @param body The body of a LIST chunk
 #' @param fields The fields read from earlier lists
@@ -151,7 +181,12 @@
     if (size < 0 || pos + 8L + size - 1 > length(body)) {
       break
     }
-    value <- if (size > 0) .mdDecode(body[(pos + 8L):(pos + 8L + size - 1)]) else ""
+    skip <- .infoPrefix(kind, id)
+    value <- if (size > skip) {
+      .mdDecode(body[(pos + 8L + skip):(pos + 8L + size - 1)])
+    } else {
+      ""
+    }
     if (nzchar(value)) {
       # A list of information is the usual one and its fields are named by
       # their own identifiers. Anything else is named by its list as well, so
