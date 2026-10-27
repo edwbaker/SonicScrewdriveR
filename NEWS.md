@@ -116,6 +116,16 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- naturalFrequency() and resonantFrequency() documented their default capacitance
+  as the IUPAC standard pressure, in SI units, but used 100 rather than 1e5
+  Pascals, so supplying the documented value explicitly gave a different answer
+  from leaving it out, and in SI units gave NaN. The default is now 1e5 Pascals,
+  and is shown in the argument list rather than standing behind a sentinel value.
+  Results that relied on the old default change: pass C=100 to keep them.
+- naturalFrequency() returned NaN for an overdamped system, in which the damping
+  term exceeds the stiffness term and there is no real natural frequency. It now
+  raises an error saying so. A critically damped system, where the two terms are
+  equal, still gives a frequency of zero.
 - readAudio() returned an empty wave for a file whose data chunk size was never
   written, which is what a recorder leaves behind when it loses power part-way
   through a file, discarding the whole recording the file still held. The audio
