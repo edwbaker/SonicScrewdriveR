@@ -23,6 +23,7 @@ HHMM
 HHMMSS
 IUPAC
 Inf
+LC
 MoleFracCO
 OAD
 Oecanthus
@@ -157,6 +158,7 @@ ntd
 numpy
 org
 oscillogram
+overdamped
 parseFilename
 pbapply
 plotix

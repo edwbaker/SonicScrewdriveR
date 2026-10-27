@@ -181,6 +181,16 @@
   "units" is missing, with no default". The renaming of the unit arguments left
   the call that cuts an expanded recording passing the deprecated argument,
   which has no default, rather than the one that replaced it.
+- naturalFrequency() and resonantFrequency() documented their default capacitance
+  as the IUPAC standard pressure, in SI units, but used 100 rather than 1e5
+  Pascals, so supplying the documented value explicitly gave a different answer
+  from leaving it out, and in SI units gave NaN. The default is now 1e5 Pascals,
+  and is shown in the argument list rather than standing behind a sentinel value.
+  Results that relied on the old default change: pass C=100 to keep them.
+- naturalFrequency() returned NaN for an overdamped system, in which the damping
+  term exceeds the stiffness term and there is no real natural frequency. It now
+  raises an error saying so. A critically damped system, where the two terms are
+  equal, still gives a frequency of zero.
 - generateNoise() could send samples outside the range the format holds. The
   noise was scaled by its largest positive sample rather than by its largest
   either way, so noise with a deeper trough than peak went past the level asked
