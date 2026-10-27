@@ -13,7 +13,9 @@ parseFilename(file, format = NULL, timezone = "UTC")
 
 - file:
 
-  A filename (or list of filenames).
+  A filename, or several filenames as either a list or a character
+  vector (the shape returned by
+  [`list.files()`](https://rdrr.io/r/base/list.files.html)).
 
 - format:
 
