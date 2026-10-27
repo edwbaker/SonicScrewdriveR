@@ -7,10 +7,10 @@
 #' @param wave A Wave object
 #' @param bw Either -3dB or -10dB. This is calculated by \code{frequencyStats}
 #' @param n.bw The number of bandwidths either side of the centre of the centre to keep
-#' @param lowcut Frequency (in Hz) below which the recording is ignored.
-#'   High-pass filtering is applied here before the centre frequency and
-#'   bandwidth are calculated, and the same frequency is the floor of that
-#'   calculation, so no band below it is chosen.
+#' @param lowcut Frequency (in Hz) below which the recording is ignored, which
+#'   must be below half the sample rate. High-pass filtering is applied here
+#'   before the centre frequency and bandwidth are calculated, and the same
+#'   frequency is the floor of that calculation, so no band below it is chosen.
 #' @return A band-pass filtered Wave object
 #' @examples
 #' \dontrun{
@@ -39,15 +39,25 @@ autoBandPass <- function(
     stop("n.bw must be at least 1, as a band needs a bandwidth either side of its centre.")
   }
   .validateChoice(bw, c("-3dB", "-10dB"), "bw", "autoBandPass", prep="for")
+  #validateFreq() accepts a vector, where one frequency is meant, and an NA
+  #reaches it as a comparison that is neither true nor false.
+  if (length(lowcut) != 1 || is.na(lowcut)) {
+    stop("lowcut must be a single frequency in Hz.")
+  }
+  validateFreq(lowcut)
+  #A high-pass at or above the Nyquist frequency leaves nothing to measure, and
+  #seewave reports a band starting there as an error about its own arguments.
+  if (lowcut >= wave@samp.rate/2) {
+    stop("lowcut must be below half the sample rate, which is where the recording ends.")
+  }
   wave2 <- seewave::ffilter(wave, from=lowcut, output="Wave")
   wave_spec <- seewave::meanspec(wave2, norm=FALSE, plot=FALSE)
-  #frequencyStats() takes its low cut in kHz, the unit of the spectrum it
-  #measures, where this function takes Hz. Leaving it to its own default left a
-  #floor of 1kHz in place whatever was asked for here, so that no band below
-  #1kHz could be chosen however low the high-pass was set. Its warnings about a
-  #single bin are raised for both thresholds, only one of which is used here, so
-  #the one that bears on the filter is raised below instead.
-  data <- frequencyStats(wave2, wave_spec=wave_spec, lowcut=lowcut/1000, warn=FALSE)
+  #The low cut was not passed on at all, which left the default of
+  #frequencyStats() standing whatever was asked for here, so no band below that
+  #default could be chosen however low the high-pass was set. Its warnings about
+  #a single bin are raised for both thresholds, only one of which is used here,
+  #so the one that bears on the filter is raised below instead.
+  data <- frequencyStats(wave2, wave_spec=wave_spec, lowcut=lowcut, warn=FALSE)
   rm(wave2)
   centre <- data[[bw]]$centre * 1000
   bandwidth <- data[[bw]]$bandwidth * 1000

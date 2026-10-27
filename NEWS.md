@@ -669,18 +669,28 @@
   when a spectrum held an NA in its frequency column and NAs were being coerced. It
   now says which column the NA was in. NA amplitudes are still coerced to zero.
 - autoBandPass() measured the centre frequency and bandwidth with a floor of 1kHz
-  whatever lowcut it was given, so a band below 1kHz could never be chosen. Its own
-  lowcut is in Hz, where the lowcut of frequencyStats(), which takes the
-  measurement for it, is in kHz, the unit of the spectrum that function measures;
-  the value was passed on unconverted, which left the 1kHz default of
-  frequencyStats() standing however low the high-pass was set. A recording whose
-  signal lies below 1kHz, as the call of a mole cricket does, came back filtered to
-  a band holding nothing but numerical residue, and nothing warned. The frequency
-  is now converted, so lowcut=0 measures the whole recording as its documentation
-  says. Results at the default lowcut of 1000Hz are unchanged, that being the floor
-  which was already applied. The unit each argument is in is now given in both help
-  pages, and frequencyStats() keeps kHz, the unit of the spectrum it measures and
-  of every frequency it returns.
+  whatever lowcut it was given, so a band below 1kHz could never be chosen. It
+  high-passed the recording at lowcut but did not pass that frequency on to
+  frequencyStats(), which takes the measurement for it, so the default floor of
+  that function stood however low the high-pass was set. A recording whose signal
+  lies below 1kHz, as the call of a mole cricket does, came back filtered to a band
+  holding nothing but numerical residue, and nothing warned. The frequency is now
+  passed on, so lowcut=0 measures the whole recording as the documentation says it
+  does. Results at the default lowcut of 1000Hz are unchanged, that being the floor
+  which was already applied.
+- the lowcut of frequencyStats() is now in Hz, as every other frequency the package
+  takes is. It was in kHz, the unit of the spectrum that function measures, which
+  left two arguments of the same name in neighbouring functions holding the same
+  quantity in different units. The default is the same frequency as before, written
+  as 1000 rather than 1, so a call that leaves it alone is unaffected. A call that
+  gives it explicitly needs the value multiplied by a thousand, and applies a cut a
+  thousand times lower than the one asked for until it is. The frequencies and
+  bandwidths frequencyStats() returns are in kHz as they were, and both help pages
+  now give the unit of every frequency they take or return.
+- autoBandPass() now refuses a lowcut that is not one frequency the recording
+  holds: several frequencies, an NA, text, a negative frequency, or one at or above
+  half the sample rate, where the high-pass leaves nothing to measure and seewave
+  reported the band it was handed as an error about its own arguments.
 - autoBandPass() failed on a signal narrow enough to fall in a single bin of the
   spectrum, such as a pure tone or a stable insect call, with "'from' should be
   strictly inferior to 'to'" from seewave, which named neither the function nor the

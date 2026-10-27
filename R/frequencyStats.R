@@ -9,10 +9,10 @@
 #'   generated), with its frequencies in kHz as seewave::meanspec() returns them.
 #' @param plot IF TRUE displays values
 #' @param warn If TRUE provides warnings when values are not consistent
-#' @param lowcut Frequency below which values are ignored, in kHz. That is the
-#'   unit of the spectrum measured here and of every frequency returned, where
-#'   the frequency arguments of the filtering functions, such as autoBandPass(),
-#'   are in Hz.
+#' @param lowcut Frequency below which values are ignored, in Hz, as every other
+#'   frequency the package takes is. This argument was in kHz in earlier
+#'   releases: the default is the same frequency as before, but a value given
+#'   explicitly needs multiplying by a thousand.
 #' @importFrom graphics abline plot title
 #' @importFrom seewave sfm
 #' @return A list of frequency statistics, with an entry for each of the -3dB
@@ -23,7 +23,7 @@ frequencyStats <- function(
   wave,
   wave_spec = NULL,
   warn = TRUE,
-  lowcut=1,
+  lowcut=1000,
   plot=FALSE
 ) {
   if (.useAllChannels(wave)) {
@@ -42,8 +42,9 @@ frequencyStats <- function(
   x <- wave_spec[,1]
   y <- wave_spec[,2]
 
-  #lowcut
-  y[x < lowcut] <- 0
+  #The spectrum has its frequency axis in kHz, where lowcut, like every other
+  #frequency the package takes, is in Hz.
+  y[x < lowcut/1000] <- 0
 
   y<- y^2
   #With nothing above the low cut every threshold is zero, no bin exceeds it, and

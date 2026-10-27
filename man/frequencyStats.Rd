@@ -4,7 +4,13 @@
 \alias{frequencyStats}
 \title{Various measurements of frequency values for a Wave object}
 \usage{
-frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
+frequencyStats(
+  wave,
+  wave_spec = NULL,
+  warn = TRUE,
+  lowcut = 1000,
+  plot = FALSE
+)
 }
 \arguments{
 \item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
@@ -15,10 +21,10 @@ generated), with its frequencies in kHz as seewave::meanspec() returns them.}
 
 \item{warn}{If TRUE provides warnings when values are not consistent}
 
-\item{lowcut}{Frequency below which values are ignored, in kHz. That is the
-unit of the spectrum measured here and of every frequency returned, where
-the frequency arguments of the filtering functions, such as autoBandPass(),
-are in Hz.}
+\item{lowcut}{Frequency below which values are ignored, in Hz, as every other
+frequency the package takes is. This argument was in kHz in earlier
+releases: the default is the same frequency as before, but a value given
+explicitly needs multiplying by a thousand.}
 
 \item{plot}{IF TRUE displays values}
 }

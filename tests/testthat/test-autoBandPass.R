@@ -53,6 +53,19 @@ test_that("fewer than one bandwidth either side is refused", {
   expect_error(autoBandPass(wave, n.bw=-1), "n.bw must be at least 1")
 })
 
+test_that("a low cut that is not one frequency the recording holds is refused", {
+  #bandWave() is sampled at 8kHz, so its recording ends at 4kHz.
+  wave <- bandWave()
+  expect_error(autoBandPass(wave, lowcut=c(0, 1000)), "lowcut must be a single frequency")
+  expect_error(autoBandPass(wave, lowcut=NA), "lowcut must be a single frequency")
+  expect_error(autoBandPass(wave, lowcut="1000"), "Frequency must be numeric")
+  expect_error(autoBandPass(wave, lowcut=-100), "Frequency must be positive")
+  #At or above half the sample rate the high-pass leaves nothing to measure, and
+  #seewave reported a band starting there as an error about its own arguments.
+  expect_error(autoBandPass(wave, lowcut=4000), "lowcut must be below half the sample rate")
+  expect_error(autoBandPass(wave, lowcut=9000), "lowcut must be below half the sample rate")
+})
+
 test_that("a whole number written as a double is accepted", {
   #1 rather than 1L is a double, which is also the default of the function.
   wave <- bandWave()
