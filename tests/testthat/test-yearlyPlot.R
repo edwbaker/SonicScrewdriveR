@@ -37,18 +37,22 @@ test_that("yearlyPositions gives expected results", {
 })
 
 test_that("yearlyFraction rejects unknown input", {
-  expect_error(yearlyFraction(24, input="firefly"), "Unknown input: firefly")
+  expect_error(
+    yearlyFraction(24, input.unit="firefly"),
+    "Unknown input.unit to yearlyFraction(): firefly. Valid units are: POSIX, day",
+    fixed=TRUE
+  )
 })
 
 test_that("yearlyFraction gives expected results", {
   expect_equal(yearlyFraction(as.POSIXlt("2000-01-01 00:00:00"), year=2000), 0)
   expect_lte(abs(2*pi - yearlyFraction(as.POSIXlt("2000-12-31 23:59:59"))), 0.1)
 
-  expect_equal(yearlyFraction(as.POSIXlt("2018-01-01 00:00:00"), year=2018, unit="fraction"), 0)
-  expect_lte(abs(1 - yearlyFraction(as.POSIXlt("2018-12-31 23:59:59"), unit="fraction")), 0.1)
+  expect_equal(yearlyFraction(as.POSIXlt("2018-01-01 00:00:00"), year=2018, output.unit="fraction"), 0)
+  expect_lte(abs(1 - yearlyFraction(as.POSIXlt("2018-12-31 23:59:59"), output.unit="fraction")), 0.1)
 
-  expect_equal(yearlyFraction(0, input="day"), 0)
-  expect_lte(abs(2*pi - yearlyFraction(365, input="day")), 0.1)
+  expect_equal(yearlyFraction(0, input.unit="day"), 0)
+  expect_lte(abs(2*pi - yearlyFraction(365, input.unit="day")), 0.1)
 })
 
 test_that("Plotting does not throw errors", {

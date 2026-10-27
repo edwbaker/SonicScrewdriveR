@@ -21,23 +21,27 @@ frequencySound <- function(wl, s=soundSpeed(medium="air")) {
 #' resistance and related quantities. All units are SI.
 #'
 #' For isothermal compression, the bulk modulus is equal to the pressure. The default value of C therefore is the IUPAC
-#' standard pressure.
+#' standard pressure, which in SI units is 1e5 Pascals.
+#'
+#' A system in which the damping term exceeds the stiffness term (R^2/(4L^2) > 1/(LC)) is overdamped: it returns to
+#' rest without oscillating, and so has no real natural frequency. This raises an error rather than returning NaN.
 #'
 #' @param L Inductance
-#' @param C Capacitance, by default IUPAC standard pressure.
+#' @param C Capacitance, by default the IUPAC standard pressure of 1e5 Pascals.
 #' @param R Resistance
 #' @importFrom utils data
 #' @examples
-#' naturalFrequency(L=20,R=0.5)
+#' naturalFrequency(L=20,R=0.01)
 #' naturalFrequency(L=20,C=1/4,R=0.5)
 #' @return The natural frequency, in Hertz.
 #' @export
 #'
-naturalFrequency <- function(L, C="default", R) {
-  if (C=="default") {
-    C <- 100
+naturalFrequency <- function(L, C=1e5, R) {
+  discriminant <- (1/(L*C)) - R^2/(4*L^2)
+  if (any(discriminant < 0)) {
+    stop("System is overdamped (R^2/(4L^2) > 1/(LC)), so has no real natural frequency. Note that C is in SI units, the default being the IUPAC standard pressure of 1e5 Pascals.")
   }
-  F_nat <- sqrt((1/(L*C)) - R^2/(4*L^2)) / (2 * pi)
+  F_nat <- sqrt(discriminant) / (2 * pi)
   return(validateFreq(F_nat))
 }
 
@@ -48,17 +52,17 @@ naturalFrequency <- function(L, C="default", R) {
 #' resistance and related quantities. All units are SI.
 #'
 #' For isothermal compression, the bulk modulus is equal to the pressure. The default value of C therefore is the IUPAC
-#' standard pressure.
+#' standard pressure, which in SI units is 1e5 Pascals.
 #'
 #' @param L Inductance
-#' @param C Capacitance, by default IUPAC standard pressure.
+#' @param C Capacitance, by default the IUPAC standard pressure of 1e5 Pascals.
 #' @importFrom utils data
 #' @examples
 #' f <- resonantFrequency(L=1)
 #' @return The resonant frequency, in Hertz.
 #' @export
 #'
-resonantFrequency <- function(L, C="default") {
+resonantFrequency <- function(L, C=1e5) {
   F_res <- naturalFrequency(L,C,0)
   return(validateFreq(F_res))
 }

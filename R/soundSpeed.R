@@ -116,9 +116,9 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
                                   RH=50,
                                   MoleFracCO2=400^-6) {
   validateRH(RH)
-  K <- convert2Kelvin(temp, temp.unit)
-  celsius <- convert2Celsius(temp, temp.unit)
-  P <- convert2Pascals(pressure, pressure.unit)
+  K <- convert2Kelvin(temp, input.unit=temp.unit)
+  celsius <- convert2Celsius(temp, input.unit=temp.unit)
+  P <- convert2Pascals(pressure, input.unit=pressure.unit)
 
   #Davis, Metrologia, 29, p67, 1992
   ENH <- pi * 10^-8 * P + 1.00062 + celsius^2 * 5.6 * 10^-7
@@ -131,7 +131,7 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
   MoleFracH20 <- MolConH20/100
 
   C1 <- 0.603055*celsius + 331.5024- celsius^2*5.28*10^-4 + (0.1495874*celsius + 51.471935 - celsius^2*7.82*10^-4)*MoleFracH20
-  C2 <- (-1.82*10^-7+3.73*10^-8*T-celsius^2*2.93*10^-10)*P+(-85.20931-0.228525*celsius+ celsius^2*5.91*10^-5)*MoleFracCO2
+  C2 <- (-1.82*10^-7+3.73*10^-8*celsius-celsius^2*2.93*10^-10)*P+(-85.20931-0.228525*celsius+ celsius^2*5.91*10^-5)*MoleFracCO2
   C3 = MoleFracH20^2*2.835149 + P^2*2.15*10^-13 - MoleFracCO2^2*29.179762 - 4.86*10^-4*MoleFracH20*P*MoleFracCO2
   C = C1+C2-C3
   return(C)

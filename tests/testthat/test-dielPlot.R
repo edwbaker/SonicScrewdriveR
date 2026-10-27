@@ -31,8 +31,16 @@ test_that("dielPositions gives expected output", {
 })
 
 test_that("dielFraction rejects unknown formats", {
-  expect_error(dielFraction(2, "wombat"), "Unknown input for dielFraction: wombat")
-  expect_error(dielFraction(2, "hours", "worms"), "Unknown output for dielFraction: worms")
+  expect_error(
+    dielFraction(2, "wombat"),
+    "Unknown input.unit to dielFraction(): wombat",
+    fixed=TRUE
+  )
+  expect_error(
+    dielFraction(2, "hours", "worms"),
+    "Unknown output.unit to dielFraction(): worms. Valid units are: radians, fraction",
+    fixed=TRUE
+  )
 })
 
 test_that("dielFraction gives expected output", {

@@ -33,6 +33,14 @@ generateNoise <- function(
       stop("wave must be a Wave like object, or a list of such objects.")
     }
   }
+  .tagApplyOne(
+    wave, .addNoise, "generateNoise", NULL, FALSE,
+    noise = noise, noise.add = noise.add, noise.ratio = noise.ratio,
+    noise.ref = noise.ref
+  )
+}
+
+.addNoise <- function(wave, noise, noise.add, noise.ratio, noise.ref) {
   duration <- length(wave)
   if (length(noise) == 1) {
     n <- tuneR::noise(
@@ -73,18 +81,6 @@ generateNoise <- function(
     for (i in 1:ncol(wave@.Data)) {
       wave@.Data[,i] <- (wave@.Data[,i] + noise.frac * n@left) / (1 + noise.frac)
     }
-  }
-  if (.isTagged(wave)) {
-    wave <- addProcess(
-      wave,
-      "generateNoise",
-      list(
-        "noise" = noise,
-        "noise.add" = noise.add,
-        "noise.ratio" = noise.ratio,
-        "noise.ref" = noise.ref
-      )
-    )
   }
   return(wave)
 }

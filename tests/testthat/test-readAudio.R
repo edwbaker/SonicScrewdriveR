@@ -7,7 +7,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), units="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), input.unit="samples")
   expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -23,7 +23,7 @@ test_that("Reading files works", {
   expect_equal
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, units="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -31,7 +31,7 @@ test_that("Reading files works", {
   expect_equal(length(w@left), w@samp.rate)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from = 1, to = 2, units = "seconds")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from = 1, to = 2, input.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -48,7 +48,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), units="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), input.unit="samples")
   expect_equal(length(w@left), 241920)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -64,7 +64,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), mime="audio/mpeg", from = 1, to = 2, units = "seconds")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), mime="audio/mpeg", from = 1, to = 2, input.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -80,14 +80,14 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), units="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), input.unit="samples")
   expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=48001, to=48000*2, units="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -95,7 +95,7 @@ test_that("Reading files works", {
   expect_equal(length(w@left), w@samp.rate)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=1, to=2, units="seconds")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=1, to=2, input.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -112,7 +112,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=1, to=2, units="seconds")
+  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=1, to=2, input.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
@@ -121,7 +121,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, units="samples")
+  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -138,7 +138,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=1, to=2, units="seconds")
+  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=1, to=2, input.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
@@ -147,7 +147,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=48001, to=48000*2, units="samples")
+  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)

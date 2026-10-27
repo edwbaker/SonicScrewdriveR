@@ -3,11 +3,11 @@ test_that("Reject invalid input", {
 })
 
 test_that("Conversion is correct", {
-  expect_equal(convert2bytes(8, input="bits"), 1)
-  expect_equal(convert2bytes(1, input="bytes"), 1)
-  expect_equal(convert2bytes(1, input="kB"), 1000)
-  expect_equal(convert2bytes(1, input="MB"), 1000000)
-  expect_equal(convert2bytes(1, input="GB"), 1000000000)
+  expect_equal(convert2bytes(8, input.unit="bits"), 1)
+  expect_equal(convert2bytes(1, input.unit="bytes"), 1)
+  expect_equal(convert2bytes(1, input.unit="kB"), 1000)
+  expect_equal(convert2bytes(1, input.unit="MB"), 1000000)
+  expect_equal(convert2bytes(1, input.unit="GB"), 1000000000)
 })
 
 test_that("humanBytes is correct", {

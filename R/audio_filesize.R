@@ -2,15 +2,16 @@
 #'
 #' Calculates the raw size of audio date at set sample rate, bit depth and duration.
 #'
-#' By default `humanBytes()` is used to convert the output to human readable format,
-#' however this can be changed by setting `output.unit` to "bits" or "bytes".
+#' The output is in bits unless `output.unit` is set to "bytes", or to "human"
+#' for a human readable size from `humanBytes()`.
 #'
 #' @param samp.rate Sample rate
 #' @param bit.depth Bit depth
 #' @param channels The number of audio channels
 #' @param duration Duration of recording
-#' @param duration.unit One of seconds, minutes, hours, days
-#' @param output.unit "human", "bits" or  "bytes"
+#' @param duration.unit The unit the duration is given in, one of "seconds",
+#'   "minutes", "hours", "days", "years", "HHMM", "POSIX".
+#' @param output.unit "bits", "bytes" or "human"
 #' @export
 #' @return The size of the audio file in the specified unit
 #' @examples
@@ -21,15 +22,15 @@
 #' audio_filesize(samp.rate=96000, bit.depth=24, channels=2, duration=1, duration.unit="years")
 #'
 audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1, duration.unit="seconds", output.unit="bits") {
-  duration <- convert2seconds(duration, duration.unit)
+  output.unit <- .validateUnit(
+    output.unit, c("bits", "bytes", "human"), "audio_filesize", "output.unit"
+  )
+  duration <- convert2seconds(duration, input.unit=duration.unit)
   bits <- samp.rate * bit.depth * duration * channels
-  if (output.unit == "bits") {
-    return (bits)
-  } else if (output.unit == "bytes") {
-    return (convert2bytes(bits, "bits"))
-  } else if (output.unit == "human") {
-    return (humanBytes(convert2bytes(bits, "bits")))
-  } else {
-    stop(paste("Unknown output unit:", output.unit))
-  }
+  return(switch(
+    output.unit,
+    "bits"  = bits,
+    "bytes" = convert2bytes(bits, "bits"),
+    "human" = humanBytes(convert2bytes(bits, "bits"))
+  ))
 }

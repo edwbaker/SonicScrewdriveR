@@ -4,16 +4,27 @@
 \alias{yearlyFraction}
 \title{Calculate the fraction of a year given by a value}
 \usage{
-yearlyFraction(t, year = 2022, input = "POSIX", unit = "radians")
+yearlyFraction(
+  t,
+  year = 2022,
+  input.unit = "POSIX",
+  output.unit = "radians",
+  input,
+  unit
+)
 }
 \arguments{
 \item{t}{Object to be converted to a fraction}
 
 \item{year}{Year to calculate fractions of (allows for leap years)}
 
-\item{input}{One of POSIXlt (default)}
+\item{input.unit}{The unit the date is given in, one of "POSIX", "day".}
 
-\item{unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
+\item{output.unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
+
+\item{input}{Deprecated, use input.unit instead.}
+
+\item{unit}{Deprecated, use output.unit instead.}
 }
 \value{
 The position of the date within the year, in radians or as a fraction of a year.

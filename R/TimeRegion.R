@@ -20,27 +20,26 @@ setClass(
 #' Specify a region with a file to analyse
 #'
 #' Specifies a time-bounded region to analyse.
-#' @param unit Unit of time (one of samples, seconds, minutes, hours)
+#' @param input.unit Unit the from and to values are given in, one of
+#'   "samples", "seconds", "minutes", "hours".
 #' @param from Start time
 #' @param to End time
+#' @param unit Deprecated, use input.unit instead.
 #' @return A TimeRegion object.
 #' @export
-region <- function(unit, from=0, to=Inf) {
-  if (!unit %in% c("samples", "seconds", "minutes", "hours")) {
-    stop("Unit must be one of samples, seconds, minutes, hours")
+region <- function(input.unit, from=0, to=Inf, unit) {
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "input.unit", "region")
+    input.unit <- unit
   }
-  if (unit == "samples") {
-    return(.samples(from, to))
-  }
-  if (unit == "seconds") {
-    return(.seconds(from, to))
-  }
-  if (unit == "minutes") {
-    return(.minutes(from, to))
-  }
-  if (unit == "hours") {
-    return(.hours(from, to))
-  }
+  input.unit <- .validateUnit(input.unit, .wavePositionUnits(), "region")
+  return(switch(
+    input.unit,
+    "samples" = .samples(from, to),
+    "seconds" = .seconds(from, to),
+    "minutes" = .minutes(from, to),
+    "hours"   = .hours(from, to)
+  ))
 }
 
 .samples <- function(from, to) {

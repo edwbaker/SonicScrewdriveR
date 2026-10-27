@@ -17,6 +17,10 @@
 #' }
 #'
 cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
+  .tagApplyOne(wave, .cutws, "cutws", NULL, FALSE, from = from, to = to, plot = plot)
+}
+
+.cutws <- function(wave, from, to, plot) {
   validateIsWaveLike(wave)
   if (is.infinite(to)) {
     to <- length(wave)
@@ -36,7 +40,7 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   }
 
   if (plot) {
-    seewave::oscillo(wave)
+    seewave::oscillo(untagWave(wave))
     graphics::abline(v=sDuration(c(from,to), wave=wave), col="red", lty=2)
   }
   return(cutwave)

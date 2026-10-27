@@ -11,6 +11,7 @@ audioblast(
   check = TRUE,
   max_pages = NULL,
   page = 1,
+  page_size = 50,
   quiet = FALSE,
   on.issue = stop,
   output = "data.frame",
@@ -24,11 +25,16 @@ audioblast(
 
 \item{endpoint}{Optionally specify endpoint of an audioBlast module.}
 
-\item{check}{Logical. Performs sanity check on input before sending to audioBLAST.}
+\item{check}{Logical. Checks that the module and endpoint exist before
+sending the query to audioBlast.}
 
-\item{max_pages}{Maximum number of data pages to return, by default this is set to NULL and returns all pages.}
+\item{max_pages}{Maximum number of data pages to return, by default this is
+set to NULL and returns all pages.}
 
 \item{page}{First page of results to request, defaults to 1.}
+
+\item{page_size}{Number of results on each page, defaults to 50. Larger pages
+need fewer requests to fetch many results.}
 
 \item{quiet}{If true will not print progress. Silence is a virtue.}
 
@@ -36,19 +42,54 @@ audioblast(
 a standard R error. Setting to \code{warning} will instead a warning.}
 
 \item{output}{By default a \code{data.frame}. "Annotations" will return a list of
-\code{Annotation} objects.}
+\code{Annotation} objects. "JSON-LD" and "Turtle" return the RDF that audioBlast
+gives for modules that describe their records as linked data, as a
+character vector with one element for each page.}
 
-\item{...}{Fields and values to filter on. Any field defined by audioBLAST.}
+\item{...}{Fields and values to filter on. Any field defined by audioBlast.}
 }
 \value{
-A data frame
+A data frame, a list of \code{Annotation} objects or a character vector,
+depending on \code{output}. \code{NULL} if nothing matches the query.
 }
 \description{
-Search for data or analyses on audioBlast.
+Search for data or analyses on \href{https://audioblast.org}{audioBlast}.
+}
+\details{
+Filters are given as named arguments in \code{...}. audioBlast refuses a filter
+that a module does not have with an error naming it, and
+\code{\link[=audioblastFilters]{audioblastFilters()}} lists the filters a module has.
+
+A filter that audioBlast lists as taking several values can be given a
+vector, e.g. \code{id = c(10754, 11096)}, which matches a row holding any one of
+them. audioBlast takes at most 100 values in a request, so longer vectors are
+sent as several requests and their results combined.
+
+A filter on a range (e.g. \code{duration} or \code{lat}) can be given a single value,
+matched exactly, or a range made with \code{\link[=ab_range]{ab_range()}}, e.g.
+\code{duration = ab_range(10, 20)}.
+
+Columns that audioBlast describes as numeric are returned as numbers, and
+all others as character strings.
 }
 \examples{
 \dontrun{
 audioblast("data", "recordings", taxon="Gryllotalpa vineae")
+
+# Several recordings at once
+audioblast("data", "recordings", source="bio.acousti.ca", id=c(10754, 11096))
+
+# Recordings between 10 and 20 seconds long
+audioblast("data", "recordings", source="bio.acousti.ca",
+           duration=ab_range(10, 20), max_pages=1)
+
+# The classification of a taxon, from the root down
+audioblast("data", "taxa", "classification", source="bio.acousti.ca", id=247)
 }
 
+}
+\seealso{
+\code{\link[=audioblastFilters]{audioblastFilters()}} for the filters a module takes,
+\code{\link[=audioblastRecord]{audioblastRecord()}} to fetch one record, and \code{\link[=audioblastDownload]{audioblastDownload()}} to
+download the recordings found.
 }

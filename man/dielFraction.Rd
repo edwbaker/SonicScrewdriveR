@@ -4,14 +4,19 @@
 \alias{dielFraction}
 \title{Calculate the fraction of a day given by a value}
 \usage{
-dielFraction(t, input = "POSIX", unit = "radians")
+dielFraction(t, input.unit = "POSIX", output.unit = "radians", input, unit)
 }
 \arguments{
 \item{t}{Object to be converted to a fraction}
 
-\item{input}{One of POSIX (default) or HHMM}
+\item{input.unit}{The unit the time is given in, one of "seconds",
+"minutes", "hours", "days", "years", "HHMM", "POSIX".}
 
-\item{unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
+\item{output.unit}{If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.}
+
+\item{input}{Deprecated, use input.unit instead.}
+
+\item{unit}{Deprecated, use output.unit instead.}
 }
 \value{
 The position of the time within the day, in radians or as a fraction of a day.

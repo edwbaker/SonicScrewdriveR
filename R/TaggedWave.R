@@ -18,20 +18,36 @@
 #' The TaggedWave class extended the Wave class from the tuneR package so
 #' that it can include extended metadata and the results of analyses.
 #'
+#' @slot origin The origin of the object.
 #' @slot metadata A list for storing metadata.
-#' @slot analyses A list for storing analyses.
+#' @slot processing A list recording, in order, each process applied to the object.
+#' @slot spectrogram_maad_power A scikit-maad power spectrogram.
 setClass(
   "TaggedWave",
   contains="Wave",
   slots=.tagSlots()
 )
 
-.addProcess <- function(object, process, output, duration) {
-  if (length(object@processing) == 0) {
-    object@processing <- list(list("process" = process, "output" = output))
-  } else {
-    object@processing <- list(object@processing, list("process" = process, "output" = output))
-  }
+#' Build a process record
+#'
+#' Optional fields are only included when supplied, so a record made with just
+#' `process` and `output` keeps its original two-field form.
+#' @keywords internal
+#' @noRd
+.processRecord <- function(process, output=NULL, duration=NULL, func=NULL,
+                           params=NULL, time=NULL, input_hash=NULL, output_hash=NULL) {
+  entry <- list("process" = process, "output" = output)
+  optional <- list(
+    func = func, params = params, time = time, duration = duration,
+    input_hash = input_hash, output_hash = output_hash
+  )
+  c(entry, optional[!vapply(optional, is.null, logical(1))])
+}
+
+.addProcess <- function(object, process, output=NULL, duration=NULL, func=NULL,
+                        params=NULL, time=NULL, input_hash=NULL, output_hash=NULL) {
+  entry <- .processRecord(process, output, duration, func, params, time, input_hash, output_hash)
+  object@processing <- c(object@processing, list(entry))
   return(object)
 }
 
@@ -40,15 +56,25 @@ setClass(
 #' This function takes a `TaggedWave` or `TaggedWaveMC` object and adds a process
 #' to the `processing` slot. This is used to keep a record of the processes that
 #' have been applied to the object.
+#'
+#' This is the low-level step used by [tagApply()], which is the function to
+#' use to record a process.
 #' @param object An object.
 #' @param process A description of the process.
 #' @param output The output of the process.
 #' @param duration The duration of the process in seconds.
+#' @param func Optional. The name of the function that performed the process.
+#' @param params Optional. A list of the arguments the function was called with.
+#' @param time Optional. When the process was run (a `POSIXct` time).
+#' @param input_hash Optional. A digest of the object before the process.
+#' @param output_hash Optional. A digest of the object after the process.
 #' @return The object with the process added.
 #' @docType methods
 #' @rdname addProcess-methods
-#' @export
-setGeneric("addProcess", function(object, process, output=NULL, duration=NULL)
+#' @keywords internal
+setGeneric("addProcess", function(object, process, output=NULL, duration=NULL,
+                                  func=NULL, params=NULL, time=NULL,
+                                  input_hash=NULL, output_hash=NULL)
   standardGeneric("addProcess") )
 
 #' @rdname addProcess-methods
@@ -60,8 +86,10 @@ setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 #' The TaggedWaveMC class extended the WaveMC class from the tuneR package so
 #' that it can include extended metadata and the results of analyses.
 #'
+#' @slot origin The origin of the object.
 #' @slot metadata A list for storing metadata.
-#' @slot analyses A list for storing analyses.
+#' @slot processing A list recording, in order, each process applied to the object.
+#' @slot spectrogram_maad_power A scikit-maad power spectrogram.
 setClass(
   "TaggedWaveMC",
   contains="WaveMC",

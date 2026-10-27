@@ -36,7 +36,7 @@ test_that("output is the same when filter is nothing (TaggedWave)", {
 
   # Check description is added
   expect_equal(typeof(filtered[[1]]@processing[[1]]), "list")
-  expect_equal(length(filtered[[1]]@processing[[1]]), 2)
+  expect_true(all(c("process", "output", "func", "time") %in% names(filtered[[1]]@processing[[1]])))
   expect_equal(filtered[[1]]@processing[[1]]$process, "Do absolutely nowt")
 })
 
@@ -68,6 +68,44 @@ test_that("bandpass filter works as expected", {
   expect_true(all(ss[ss[,1] >= 2.1, 2] < 0.01))
 })
 
+test_that("filterWave records the function and arguments of a named filter", {
+  tw <- tagWave(noise("white", duration=4410, samp.rate=44100))
+  tw@metadata <- list(site = "here")
+  fw <- filterWave(tw, bandpass(1000, 2000))
+  expect_s4_class(fw, "TaggedWave")
+  expect_equal(fw@metadata$site, "here")
+  rec <- fw@processing[[1]]
+  expect_equal(rec$process, "bandpass 1000-2000 Hz")
+  expect_equal(rec$func, "seewave::ffilter")
+  expect_equal(rec$params$from, 1000)
+  expect_equal(rec$params$to, 2000)
+  expect_equal(rec$input_hash, .waveHash(tw))
+  expect_equal(rec$output_hash, .waveHash(fw))
+})
+
+test_that("a filter without a name is recorded as an anonymous function", {
+  tw <- tagWave(noise("white", duration=4410, samp.rate=44100))
+  filt <- new("WaveFilter", description="Do absolutely nowt")
+  expect_true(is.na(filt@func_name))
+  expect_equal(filterWave(tw, filt)@processing[[1]]$func, "<anonymous function>")
+})
+
+test_that("a filter can be rebuilt from its record", {
+  tw <- tagWave(noise("white", duration=4410, samp.rate=44100))
+  fw <- filterWave(tw, bandpass(1000, 2000))
+
+  filt <- .filterFromRecord(fw@processing[[1]])
+  expect_true(is(filt, "WaveFilter"))
+  expect_equal(filt@func_name, "seewave::ffilter")
+  expect_equal(filt@description, "bandpass 1000-2000 Hz")
+
+  # applying the rebuilt filter gives the same result
+  expect_equal(.waveHash(filterWave(tw, filt)), .waveHash(fw))
+
+  expect_error(.filterFromRecord(list(process="x", func="<anonymous function>")), "cannot be rebuilt")
+  expect_error(.filterFromRecord(list(process="x")), "cannot be rebuilt")
+})
+
 test_that("filterWave() works with cluster", {
   if (.Platform$OS.type == "windows") {
     return()
@@ -95,7 +133,7 @@ test_that("filterWave() works with cluster", {
 
   # Check description is added
   expect_equal(typeof(filtered[[1]]@processing[[1]]), "list")
-  expect_equal(length(filtered[[1]]@processing[[1]]), 2)
+  expect_true(all(c("process", "output", "func", "time") %in% names(filtered[[1]]@processing[[1]])))
   expect_equal(filtered[[1]]@processing[[1]]$process, "Do absolutely nowt")
 
   parallel::stopCluster(cl)

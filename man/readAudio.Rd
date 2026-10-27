@@ -4,7 +4,14 @@
 \alias{readAudio}
 \title{Read an audio file}
 \usage{
-readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
+readAudio(
+  file,
+  mime = "auto",
+  from = 0,
+  to = Inf,
+  input.unit = "seconds",
+  units
+)
 }
 \arguments{
 \item{file}{File to read}
@@ -15,7 +22,10 @@ readAudio(file, mime = "auto", from = 0, to = Inf, units = "seconds")
 
 \item{to}{End point in file to return}
 
-\item{units}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
+\item{input.unit}{The unit the from and to values are given in, one of
+"samples", "seconds", "minutes", "hours". Default is "seconds".}
+
+\item{units}{Deprecated, use input.unit instead.}
 }
 \value{
 A Wave object
@@ -24,4 +34,10 @@ A Wave object
 This file is used to read an audio file and return a Wave object, it is an abstraction
 function for various specific audio reading functions. If no existing method can be identified
 an attempt is made to use the av package to read the audio.
+}
+\details{
+A file named following the AudioMoth convention for triggered recordings,
+ending in T.WAV, is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is read, so that
+the periods that did not trigger a recording are returned as silence and the
+timing of the triggered recordings is preserved.
 }

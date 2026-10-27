@@ -7,7 +7,8 @@
 #' @param f1 End frequency
 #' @param mode One of "linear", "log"
 #' @param sweep.time Duration of swept wave
-#' @param time.unit One of "seconds", "samples"
+#' @param time.unit The unit sweep.time is given in, one of "seconds",
+#'   "samples".
 #' @param samp.rate Sample rate of swept wave
 #' @param output "wave" for a Wave object, or "vector"
 #' @param ... Additional arguments to pass to data2Wave
@@ -33,13 +34,14 @@ sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="s
   if (f1 <= f0) {
     stop("sweptsine: f1 must be greater than f0")
   }
-  if (time.unit == "seconds") {
-    vector_length <- samp.rate*sweep.time
-  } else if (time.unit == "samples") {
-    vector_length <- sweep.time
-  } else {
-    stop("time.unit must be one of 'seconds' or 'samples'")
-  }
+  time.unit <- .validateUnit(
+    time.unit, c("seconds", "samples"), "sweptsine", "time.unit"
+  )
+  vector_length <- switch(
+    time.unit,
+    "seconds" = samp.rate * sweep.time,
+    "samples" = sweep.time
+  )
 
   #Duration in seconds, however sweep.time was specified
   sweep.duration <- vector_length / samp.rate

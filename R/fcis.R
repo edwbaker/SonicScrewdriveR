@@ -1,8 +1,10 @@
 scaleRGB <- function(vector, no.diff=255) {
+  #as.numeric() first: fcis() passes matrices, and unique() on a matrix returns
+  #unique rows, so the test below would never be TRUE for one.
+  vector <- as.numeric(vector)
   if (length(unique(vector)) == 1) {
     return(rep(no.diff, length(vector)))
   }
-  vector <- as.numeric(vector)
   vector <- (255 / (max(vector) - min(vector))) * (vector - min(vector))
   vector[is.na(vector)] <- 0
   return(as.integer(vector))
@@ -121,6 +123,75 @@ fcisIndexNames <- function() {
   return(x)
 }
 
+#' Percentile clipping for false-colour index spectrograms
+#'
+#' Returns a function suitable for the \code{scale} argument of \code{\link{fcis}},
+#' which limits an index to a range of percentiles before it is mapped to a colour
+#' channel.
+#'
+#' Mapping an index linearly between its smallest and largest value gives most of
+#' the colour range to a handful of extreme windows. Indices that span several
+#' orders of magnitude, such as power, are worse still, and are better mapped after
+#' taking logarithms.
+#'
+#' @param probs The lower and upper percentiles to clip to.
+#' @param log If TRUE, take base 10 logarithms first. Values of zero or less have
+#'   no logarithm and are treated as the lower limit.
+#' @export
+#' @return A function of one argument, returning the clipped values.
+#' @importFrom stats quantile
+#' @examples
+#' \dontrun{
+#' #Power spans many orders of magnitude, so map it on a log scale.
+#' plot(fcis(wave, window.length=44100, scale=list(fcisClip(log=TRUE), fcisClip(), fcisClip())))
+#' }
+fcisClip <- function(probs=c(0.02, 0.98), log=FALSE) {
+  if (length(probs) != 2 || anyNA(probs) || probs[1] >= probs[2]) {
+    stop("probs must be an increasing pair of percentiles.")
+  }
+  function(x) {
+    if (log) {
+      x[x <= 0] <- NA
+      x <- log10(x)
+    }
+    limits <- quantile(x, probs, na.rm=TRUE)
+    #A channel that is constant within the percentiles is left for scaleRGB to
+    #recognise as having no differences to show.
+    if (limits[[2]] == limits[[1]]) {
+      return(x)
+    }
+    x[is.na(x)] <- limits[[1]]
+    return(pmin(pmax(x, limits[[1]]), limits[[2]]))
+  }
+}
+
+#' Apply the scaling functions for a false-colour index spectrogram
+#'
+#' @param values A named list of three matrices, one per channel
+#' @param scale NULL, a function, or a list of three functions
+#' @return The list of matrices, transformed.
+#' @noRd
+.fcisScale <- function(values, scale) {
+  if (is.null(scale)) {
+    return(values)
+  }
+  if (is.function(scale)) {
+    scale <- list(scale, scale, scale)
+  }
+  if (!is.list(scale) || length(scale) != 3 || !all(vapply(scale, is.function, logical(1)))) {
+    stop("scale must be NULL, a function, or a list of three functions.")
+  }
+  scaled <- lapply(seq_along(values), function(i) {
+    channel <- scale[[i]](values[[i]])
+    if (length(channel) != length(values[[i]])) {
+      stop("A scale function must return one value for each frequency bin and window.")
+    }
+    return(channel)
+  })
+  names(scaled) <- names(values)
+  return(scaled)
+}
+
 #' Calculate per-frequency-bin indices for one window
 #'
 #' @param wave A Wave object
@@ -197,6 +268,10 @@ fcisIndexNames <- function() {
 #'   file gives a single column.
 #' @param indices The three indices to map to the red, green and blue channels.
 #' @param wl Window length used for the spectrograms.
+#' @param scale NULL to map each index linearly between its smallest and largest
+#'   value, or a function, or a list of three functions, applied to the matrix of
+#'   values for each channel before the colours are calculated. See
+#'   \code{\link{fcisClip}}.
 #' @param cluster A cluster from the 'parallel' package for multi-core computation.
 #'   This is only worthwhile when x is a filename and the windows are long, as each
 #'   worker then reads its own part of the file. Passing a Wave object sends a copy
@@ -218,7 +293,8 @@ fcis <- function(
   window.length = NULL,
   indices = c("power", "ACI", "entropy"),
   wl = 256,
-  cluster = NULL
+  cluster = NULL,
+  scale = NULL
 ) {
   if (length(indices) != 3) {
     stop("Three indices are required, one for each of the red, green and blue channels.")
@@ -248,7 +324,8 @@ fcis <- function(
 
   #Scaling happens here rather than per window, so that a colour means the same
   #thing across the whole spectrogram.
-  colours <- map2RGB(values[[1]], values[[2]], values[[3]])
+  scaled <- .fcisScale(values, scale)
+  colours <- map2RGB(scaled[[1]], scaled[[2]], scaled[[3]])
   dim(colours) <- c(bins, length(columns))
 
   samp.rate <- .fcisSampleRate(x)

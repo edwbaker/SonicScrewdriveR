@@ -1,6 +1,23 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- audiomothExpand() expands an AudioMoth triggered (T.WAV) recording, in which
+  the periods that did not trigger a recording are left out, restoring them as
+  silence so that the timing of the triggered recordings is preserved. It gives
+  either a Wave object or an ordinary wave file, and its output is identical to
+  that of the reference implementation published by Open Acoustic Devices.
+  readAudio() expands a file named following the T.WAV convention as it reads
+  it, so existing code works on triggered recordings unchanged.
+- audiomothCompress() writes a Wave as a T.WAV file, leaving out the segments
+  whose peak amplitude falls below an amplitude threshold, as an AudioMoth
+  device does.
+- guano() reads GUANO metadata, the format used by many bioacoustic recorders
+  and by current AudioMoth firmware, from a wave file or from a Wave object it
+  is attached to. guanoCreate() and guanoParse() build it, guanoWrite() writes
+  it to a wave file, and `guano<-` attaches it to a Wave. Fields the GUANO
+  specification defines are converted to the types it gives them, and any other
+  field is kept as written. Metadata is carried through expansion of a T.WAV
+  file, and audiomothCompress() can write it.
 - Wave methods for reticulate allow wave objects to be passed between R and Python
 - Initial support for scikit-maad Python package
 - dolbear() can now perform Dolbear's law calculations for more species
@@ -10,6 +27,51 @@
   are calculated for each frequency bin of each time window and mapped to the red,
   green and blue channels of an image. Any three of the indices listed by
   fcisIndexNames() can be used, and there is a plot() method for the result.
+- tagApply() applies a function to a TaggedWave and records the call in its
+  processing slot: function, arguments, time, duration, and digests of the input
+  and output. It also works on lists of waves, in parallel if given a cluster, and
+  gives results that are not waves a processing attribute.  generateNoise(), concat() and filterWave() record their
+  processes by calling it, so all processing records have the same form. WaveFilter objects have a func_name
+  slot, so that the function a filter used is recorded by name.
+- tagApply() gives functions from other packages, such as seewave, an
+  untagged wave, as they do not accept TaggedWave and TaggedWaveMC objects, and
+  puts the tags back on the result. filterWave() with bandpass() now works on
+  tagged waves.
+- normalise(), upsample(), cutws(), autoBandPass(), generateTimeMask() and
+  generateTimeShift() record themselves on TaggedWave and TaggedWaveMC objects.
+  Their results for Wave and WaveMC objects are unchanged, and are not tagged.
+- generateTimeMask() given a list now passes dutyCycle and n.periods to each wave;
+  previously they were dropped.
+- addProcess() is no longer exported; use tagApply(). It now appends to the processing slot; previously each call nested
+  the earlier history inside a new list. bandpass() filters now have a description.
+
+## audioBlast
+- audioblast() uses the current audioBlast API:
+  - a filter can be given a vector of values, e.g. id = c(10754, 11096), and
+    vectors of more than the 100 values audioBlast takes are sent in batches;
+  - filters on a range, such as duration or lat, can be given a range made by the
+    new ab_range();
+  - page_size sets how many results come in each page, so that many results can
+    be fetched in fewer requests;
+  - columns that audioBlast describes as numeric are returned as numbers;
+  - output = "JSON-LD" or "Turtle" returns results as linked data;
+  - when audioBlast refuses a query, e.g. for a filter the module does not have,
+    the error gives audioBlast's explanation;
+  - check = TRUE works again for module endpoints, and module information is
+    cached for the session.
+- audioblastRecord() fetches a single record, as data or linked data.
+- audioblastFilters() lists the filters an audioBlast module takes.
+- audioblastDownload():
+  - saves files in binary mode, which corrupted audio files on Windows;
+  - skips files that already exist in dir, rather than in the working directory;
+  - no longer fails when every file has already been downloaded;
+  - names files by source and ID where their URL does not end in a file name,
+    rather than saving every xeno-canto file as "download";
+  - leaves no partial file behind when a download fails;
+  - checks files against the SHA-256 hash audioBlast measured of them;
+  - returns the paths of the files, invisibly.
+- audioblast(on.issue = warning) gives a warning, as documented, rather than an
+  error.
 
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each
@@ -28,7 +90,45 @@
   every window, so the saving grows with the length of the recording: around 9 times
   faster for one minute of audio and 37 times for four minutes.
 
+## Deprecations
+- unit arguments are now named consistently across the package. A function takes
+  input.unit for the unit a value is supplied in, output.unit for the unit a result
+  is returned in, and <quantity>.unit (as in temp.unit, pressure.unit) where it
+  takes several quantities that each need a unit. The former names still work and
+  warn, and will be removed in a future release:
+  - input became input.unit in convert2Pascals(), convert2dyne_cm2(),
+    convert2Kelvin(), convert2Celsius(), convert2Fahrenheit(), convert2degrees(),
+    convert2radians(), convert2bytes(), convert2seconds(), dielFraction() and
+    yearlyFraction().
+  - units became input.unit in readAudio() and readRespeaker6().
+  - unit became input.unit in humanTime() and region().
+  - unit became output.unit in referencePressure(), referenceIntensity(),
+    wavelength(), dielFraction() and yearlyFraction().
+  - the first argument of convert2seconds() was named T, which shadows the base R
+    value TRUE. It is now named t.
+  The unit argument of normalise() and data2Wave() is unchanged: it is passed to
+  normalize() from tuneR, where it selects a bit depth rather than a unit of
+  measurement.
+- an unrecognised unit now raises an error listing the units that are recognised,
+  so the accepted set does not have to be looked up in the documentation. The set
+  is also checked before any conversion is attempted, which it previously was only
+  in convert2seconds().
+
 ## Fixes
+- naturalFrequency() and resonantFrequency() documented their default capacitance
+  as the IUPAC standard pressure in SI units, but used 100 rather than 1e5
+  Pascals, so a user who supplied the documented value explicitly got a different
+  answer from the default. The default is now 1e5 Pascals, and is shown in the
+  argument list rather than hidden behind a sentinel value. Results that relied on
+  the old default change: pass C=100 to keep them.
+- naturalFrequency() returned NaN, or an error about a missing value, for an
+  overdamped system, in which the damping term exceeds the stiffness term and
+  there is no real natural frequency. It now raises an error saying so.
+- soundSpeed() with method="cramer" used the value TRUE in place of the temperature
+  in one term of Cramer's equation, because the term referred to an undefined
+  variable named T. The speed of sound was therefore slightly wrong at every
+  temperature other than 1 degree Celsius, by about 0.05 m/s at 14 degrees and
+  standard pressure.
 - audiomothWave() raised an error on recordings made with a band-pass filter. The
   two cut-off frequencies are now returned as filter.limit, as they already were
   for low-pass and high-pass recordings.
@@ -67,6 +167,19 @@
 ## Documentation
 - convert2bytes() was described as converting time measurements into seconds, and its
   "bytes" input was undocumented.
+- every conversion function accepts its own output unit, so that a value already in
+  the wanted unit passes through unchanged, but six of the seven did not say so:
+  convert2Pascals() ("Pa"), convert2Kelvin() ("K"), convert2Celsius() ("C"),
+  convert2degrees() ("degrees"), convert2radians() ("radians") and convert2seconds()
+  ("seconds" and "POSIX"). convert2dyne_cm2() listed an input of "P", which it has
+  never accepted, and did not list "dyne_cm2", which it does.
+- dielFraction() gave its input as one of POSIX or HHMM, and yearlyFraction() gave
+  its input as POSIXlt. dielFraction() accepts every unit convert2seconds() does,
+  and yearlyFraction() accepts "POSIX" or "day".
+- audio_filesize() gave its duration.unit as one of seconds, minutes, hours or days,
+  although it accepts every unit convert2seconds() does, and one of its own examples
+  uses "years". It also described humanBytes() output as the default when the
+  default is bits.
 - audiomothConfig() gave its return value as a data frame of matching annotations.
 - yearlyPositions() was described as generating label positions for a dielPlot().
 - corrected spellings of "processed", "metadata" and "rhythmicity" in the

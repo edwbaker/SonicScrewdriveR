@@ -4,16 +4,23 @@
 \alias{convert2radians}
 \title{Convert angle to radians}
 \usage{
-convert2radians(A, input = "degrees")
+convert2radians(A, input.unit = "degrees", input)
 }
 \arguments{
 \item{A}{The angle value to convert}
 
-\item{input}{The unit of angle to convert, allowed values are "degrees".}
+\item{input.unit}{The unit of angle to convert, one of "degrees", "radians".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in radians
 }
 \description{
-Converts angle measurements into radians
+Converts angle measurements into radians.
+}
+\examples{
+convert2radians(180, input.unit="degrees")
+convert2radians(pi, input.unit="radians")
+
 }

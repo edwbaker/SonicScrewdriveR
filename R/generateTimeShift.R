@@ -40,30 +40,37 @@ generateTimeShift <- function(
     stop("All elements of wave must be Wave-like objects.")
   }
   ret <- list()
-  original.length <- length(wave)
-  if (type == "silent") {
-    for (i in 1:length(amount)) {
-      insert <- .silence(wave, round(amount[i] * wave@samp.rate))
-      if (where %in% c("start", "both")) {
-        #Insertion at the start pushes the end of the wave off the end
-        ret[[length(ret)+1]] <- cutws(concat(insert, wave), to=original.length)
-      }
-      if (where %in% c("end", "both")) {
-        #Insertion at the end pushes the start of the wave off the start
-        ret[[length(ret)+1]] <- cutws(concat(wave, insert), from=length(insert)+1)
-      }
-    }
-  }
-  if (type == "rotate") {
-    for (i in 1:length(amount)) {
-      offset <- round(amount[i] * wave@samp.rate)
-      ret[[length(ret)+1]] <- concat(
-        cutws(wave, from=original.length-offset+1),
-        cutws(wave, to=original.length-offset)
+  # A rotation is the same wherever it is applied, so gives one wave per amount
+  wheres <- if (type == "rotate") "start" else if (where == "both") c("start", "end") else where
+  for (i in 1:length(amount)) {
+    for (w in wheres) {
+      # Each shifted wave is recorded as a process of its own
+      ret[[length(ret)+1]] <- .tagApplyOne(
+        wave, .timeShift, "generateTimeShift", NULL, FALSE,
+        type = type, amount = amount[i], where = w
       )
     }
   }
   return(ret)
+}
+
+.timeShift <- function(wave, type, amount, where) {
+  original.length <- length(wave)
+  if (type == "silent") {
+    insert <- .silence(wave, round(amount * wave@samp.rate))
+    if (where == "start") {
+      #Insertion at the start pushes the end of the wave off the end
+      return(cutws(concat(insert, wave), to=original.length))
+    }
+    #Insertion at the end pushes the start of the wave off the start
+    return(cutws(concat(wave, insert), from=length(insert)+1))
+  }
+  # type is "rotate"
+  offset <- round(amount * wave@samp.rate)
+  concat(
+    cutws(wave, from=original.length-offset+1),
+    cutws(wave, to=original.length-offset)
+  )
 }
 
 #' Silence of the same class, sample rate and channels as a wave

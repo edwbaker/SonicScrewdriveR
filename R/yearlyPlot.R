@@ -71,27 +71,36 @@ yearlyPositions <- function(year=2022, format="months") {
 #'
 #' @param t Object to be converted to a fraction
 #' @param year Year to calculate fractions of (allows for leap years)
-#' @param input One of POSIXlt (default)
-#' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param input.unit The unit the date is given in, one of "POSIX", "day".
+#' @param output.unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param input Deprecated, use input.unit instead.
+#' @param unit Deprecated, use output.unit instead.
 #' @return The position of the date within the year, in radians or as a fraction of a year.
 #' @export
-yearlyFraction <- function(t, year=2022, input="POSIX", unit="radians") {
-  if(!input %in% c("POSIX", "day")) {
-    stop(paste("Unknown input:",input))
+yearlyFraction <- function(t, year=2022, input.unit="POSIX", output.unit="radians", input, unit) {
+  if (!missing(input)) {
+    .deprecatedArg("input", "input.unit", "yearlyFraction")
+    input.unit <- input
   }
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "output.unit", "yearlyFraction")
+    output.unit <- unit
+  }
+  input.unit <- .validateUnit(input.unit, c("POSIX", "day"), "yearlyFraction")
+  output.unit <- .validateUnit(output.unit, .fractionUnits(), "yearlyFraction", "output.unit")
   if (.isLeapYear(year)) {
     dc <- 366
   } else {
     dc <- 365
   }
-  if (input=="POSIX") {
+  if (input.unit=="POSIX") {
     t <- unclass(as.POSIXlt(t))
     f <- t$yday/dc
-  } else if (input=="day") {
+  } else if (input.unit=="day") {
     f <- t/dc
   }
 
-  if (unit=="radians") {
+  if (output.unit=="radians") {
     return(2*pi*f)
   }
   return(f)

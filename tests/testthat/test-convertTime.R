@@ -1,25 +1,29 @@
 Sys.setenv(TZ='UTC')
 
 test_that("Reject invalid input", {
-  expect_error(convert2seconds(1, "dog"), "Unknown input to convert2seconds: dog")
+  expect_error(
+    convert2seconds(1, "dog"),
+    "Unknown input.unit to convert2seconds(): dog",
+    fixed=TRUE
+  )
 })
 
 test_that("Test conversions", {
-  expect_equal(convert2seconds(1, input="seconds"), 1)
-  expect_equal(convert2seconds(1, input="minutes"), 60)
-  expect_equal(convert2seconds(1, input="hours"), 60*60)
-  expect_equal(convert2seconds(1, input="days"), 60*60*24)
-  expect_equal(convert2seconds(1, input="years"), 60*60*24*365)
+  expect_equal(convert2seconds(1, input.unit="seconds"), 1)
+  expect_equal(convert2seconds(1, input.unit="minutes"), 60)
+  expect_equal(convert2seconds(1, input.unit="hours"), 60*60)
+  expect_equal(convert2seconds(1, input.unit="days"), 60*60*24)
+  expect_equal(convert2seconds(1, input.unit="years"), 60*60*24*365)
   expect_error(convert2seconds("croc", "HHMM"), "HHMM input must be numeric")
-  expect_equal(convert2seconds("1200", input="HHMM"), 60*60*12)
-  expect_equal(convert2seconds(1200, input="HHMM"), 60*60*12)
+  expect_equal(convert2seconds("1200", input.unit="HHMM"), 60*60*12)
+  expect_equal(convert2seconds(1200, input.unit="HHMM"), 60*60*12)
   expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="day"), 60*60*12)
   expect_equal(convert2seconds(as.POSIXct("2024-02-11 12:00", tz="UTC"), "POSIX", origin="unix"), 1707652800)
-  expect_equal(convert2seconds("0000", input="HHMM"), 0)
-  expect_equal(convert2seconds("0100", input="HHMM"), 60*60)
-  expect_equal(convert2seconds(0100, input="HHMM"), 60*60)
-  expect_equal(convert2seconds(0130, input="HHMM"), 90*60)
-  expect_equal(convert2seconds(2400, input="HHMM"), 60*60*24)
+  expect_equal(convert2seconds("0000", input.unit="HHMM"), 0)
+  expect_equal(convert2seconds("0100", input.unit="HHMM"), 60*60)
+  expect_equal(convert2seconds(0100, input.unit="HHMM"), 60*60)
+  expect_equal(convert2seconds(0130, input.unit="HHMM"), 90*60)
+  expect_equal(convert2seconds(2400, input.unit="HHMM"), 60*60*24)
 })
 
 test_that("Human time", {

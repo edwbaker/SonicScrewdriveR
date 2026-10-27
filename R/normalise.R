@@ -11,6 +11,10 @@
 #' @return Normalised Wave or WaveMC object
 #' @export
 normalise <- function(wave, unit = NULL, ...) {
+  .tagApplyOne(wave, .normalise, "normalise", NULL, FALSE, unit = unit, ...)
+}
+
+.normalise <- function(wave, unit = NULL, ...) {
   if (is.null(unit)) {
     unit <- as.character(wave@bit)
   }

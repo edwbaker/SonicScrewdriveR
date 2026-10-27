@@ -4,10 +4,12 @@
 \alias{referencePressure}
 \title{Reference pressure}
 \usage{
-referencePressure(unit = "Pa")
+referencePressure(output.unit = "Pa", unit)
 }
 \arguments{
-\item{unit}{Unit to return, "Pa" or "dyne_cm2"}
+\item{output.unit}{Unit to return, one of "Pa", "dyne_cm2".}
+
+\item{unit}{Deprecated, use output.unit instead.}
 }
 \value{
 The reference sound pressure, in the unit specified.
@@ -17,5 +19,5 @@ Provides the standard reference pressure level.
 }
 \examples{
 rp <- referencePressure()
-rp <- referencePressure(unit="dyne_cm2")
+rp <- referencePressure(output.unit="dyne_cm2")
 }

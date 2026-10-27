@@ -210,3 +210,16 @@ test_that("a wave of exactly one window length is analysed once", {
                       FUN=function(wave, start, window.length) 1)
   expect_equal(length(counts), 1)
 })
+
+test_that("no complete windows gives an empty list rather than an error", {
+  w <- noise("white", duration=2000, samp.rate=48000)
+
+  expect_silent(l <- windowing(w, window.length=3000,
+                               FUN=function(wave, start, window.length) 1))
+  expect_equal(length(l), 0)
+
+  # bind.wave must not evaluate the first result when there is none.
+  expect_silent(b <- windowing(w, window.length=3000, bind.wave=TRUE,
+                               FUN=function(wave, start, window.length) wave))
+  expect_equal(length(b), 0)
+})

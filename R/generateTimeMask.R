@@ -12,9 +12,16 @@
 generateTimeMask <- function(wave, method="squarewave", dutyCycle=0.95, n.periods=10) {
   if (is(wave, "list")) {
     if (all(sapply(wave, function(x) inherits(x, c("Wave", "WaveMC"))))) {
-      return(lapply(wave, generateTimeMask, method=method))
+      return(lapply(wave, generateTimeMask, method=method, dutyCycle=dutyCycle, n.periods=n.periods))
     }
   }
+  .tagApplyOne(
+    wave, .timeMask, "generateTimeMask", NULL, FALSE,
+    method = method, dutyCycle = dutyCycle, n.periods = n.periods
+  )
+}
+
+.timeMask <- function(wave, method, dutyCycle, n.periods) {
   if (!method %in% c("squarewave", "random")) {
     stop(paste("Unknown method parameter to generateTimeMask:",method))
   }

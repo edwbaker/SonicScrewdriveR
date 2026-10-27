@@ -4,21 +4,24 @@
 #'
 #' @param frequency Frequency of the sound in Hertz
 #' @param speed Speed of sound (defaults to the speed of sound in air)
-#' @param unit Unit to return the wavelength in, either "m" or "cm"
+#' @param output.unit Unit to return the wavelength in, one of "m", "cm".
+#' @param unit Deprecated, use output.unit instead.
 #' @return Wavelength of the sound in the unit specified
 #' @examples
 #' wl <- wavelength(1000)
 #' wl <- wavelength(1000, speed=soundSpeed(medium="steel"))
-#' wl <- wavelength(1000, unit="cm")
+#' wl <- wavelength(1000, output.unit="cm")
 #' @export
 #'
-wavelength <- function(frequency, speed=soundSpeed(medium="air"), unit="m") {
-  if (unit == "m") {
-    return (speed/frequency)
+wavelength <- function(frequency, speed=soundSpeed(medium="air"), output.unit="m", unit) {
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "output.unit", "wavelength")
+    output.unit <- unit
   }
-  if (unit == "cm") {
-    return (100 * speed/frequency)
-  }
-  stop("Invalid unit selection: ", unit)
+  output.unit <- .validateUnit(output.unit, .lengthUnits(), "wavelength", "output.unit")
+  return(switch(
+    output.unit,
+    "m"  = speed / frequency,
+    "cm" = 100 * speed / frequency
+  ))
 }
-

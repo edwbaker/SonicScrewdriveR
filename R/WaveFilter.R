@@ -8,17 +8,22 @@
 #' documenting its action.
 #'
 #' @slot description Description of the filter.
-#' @slot func Name of function.
+#' @slot func The function that applies the filter.
+#' @slot func_name Name of the function, as `pkg::name` for a function in a
+#'   package. This is what is recorded in the `processing` slot, and it lets a
+#'   filter be rebuilt from its record. `NA` if the filter has no name.
 #' @slot params List of additional parameters to pass to the function.
 setClass(
   "WaveFilter",
   slots=list(
     func="function",
+    func_name="character",
     description="character",
     params="list"
   ),
   prototype = list(
     func = function(x) {return(x)},
+    func_name=NA_character_,
     description=NA_character_,
     params = list()
   )
@@ -39,13 +44,12 @@ setClass(
 #' @return A filtered Wave or WaveMC object, or a list of such objects if given a list.
 #' @export
 filterWave <- function(w, filt, cl=NULL) {
-  if (inherits(w, c("TaggedWave", "TaggedWaveMC"))) {
-    fw <- do.call(match.fun(filt@func), c(list(w), filt@params))
-    fw <- addProcess(fw, filt@description)
-    return(fw)
-  }
   if (inherits(w, c("Wave", "WaveMC"))) {
-    return(do.call(match.fun(filt@func), c(list(w), filt@params)))
+    label <- if (is.na(filt@description)) NULL else filt@description
+    func_name <- if (is.na(filt@func_name)) "<anonymous function>" else filt@func_name
+    # Functions from other packages, such as seewave::ffilter, are given an
+    # untagged wave by .tagApplyOne(), which puts the tags back on the result.
+    return(do.call(.tagApplyOne, c(list(w, filt@func, func_name, label, NA), filt@params)))
   }
   if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
     if (is.null(cl)) {
@@ -80,6 +84,34 @@ bandpass <- function( from, to, ...) {
   if (!package.installed("seewave")) {
     stop("seewave package is required for the bandpass WaveFilter.")
   }
-  filt <- new("WaveFilter", func=seewave::ffilter, params=list(from=from,to=to,output="Wave",...))
+  filt <- new("WaveFilter", func=seewave::ffilter, func_name="seewave::ffilter", description=paste0("bandpass ", from, "-", to, " Hz"), params=list(from=from,to=to,output="Wave",...))
   return(filt)
+}
+
+#' Rebuild a WaveFilter from a process record
+#'
+#' Looks up the function named in a record made by [filterWave()] and builds the
+#' `WaveFilter` that made it, so that the same filter can be applied again.
+#'
+#' @param record One entry of the `processing` slot of a `TaggedWave` or
+#'   `TaggedWaveMC`.
+#' @return A `WaveFilter` object.
+#' @keywords internal
+#' @noRd
+.filterFromRecord <- function(record) {
+  func_name <- record$func
+  if (is.null(func_name) || is.na(func_name) || identical(func_name, "<anonymous function>")) {
+    stop("The record does not name the function, so the filter cannot be rebuilt.")
+  }
+  parts <- strsplit(func_name, ":::?")[[1]]
+  func <- if (length(parts) == 2) {
+    utils::getFromNamespace(parts[2], parts[1])
+  } else {
+    match.fun(func_name)
+  }
+  params <- record$params
+  if (is.null(params)) {
+    params <- list()
+  }
+  new("WaveFilter", func = func, func_name = func_name, description = record$process, params = params)
 }

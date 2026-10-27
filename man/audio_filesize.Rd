@@ -22,9 +22,10 @@ audio_filesize(
 
 \item{duration}{Duration of recording}
 
-\item{duration.unit}{One of seconds, minutes, hours, days}
+\item{duration.unit}{The unit the duration is given in, one of "seconds",
+"minutes", "hours", "days", "years", "HHMM", "POSIX".}
 
-\item{output.unit}{"human", "bits" or  "bytes"}
+\item{output.unit}{"bits", "bytes" or "human"}
 }
 \value{
 The size of the audio file in the specified unit
@@ -33,8 +34,8 @@ The size of the audio file in the specified unit
 Calculates the raw size of audio date at set sample rate, bit depth and duration.
 }
 \details{
-By default \code{humanBytes()} is used to convert the output to human readable format,
-however this can be changed by setting \code{output.unit} to "bits" or "bytes".
+The output is in bits unless \code{output.unit} is set to "bytes", or to "human"
+for a human readable size from \code{humanBytes()}.
 }
 \examples{
 # One minute of mono 16-bit audio sampled at 44.1kHz

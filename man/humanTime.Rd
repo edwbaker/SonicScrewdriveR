@@ -4,17 +4,20 @@
 \alias{humanTime}
 \title{Converts time to human readable form}
 \usage{
-humanTime(S, unit = "seconds")
+humanTime(S, input.unit = "seconds", unit)
 }
 \arguments{
-\item{S}{Time to convert in unit}
+\item{S}{Time to convert, in input.unit}
 
-\item{unit}{The unit of time to convert}
+\item{input.unit}{The unit of time to convert, one of "seconds", "minutes",
+"hours", "days", "years", "HHMM", "POSIX".}
+
+\item{unit}{Deprecated, use input.unit instead.}
 }
 \value{
 String in human readable format
 }
 \description{
-Given an input of bytes calculates the result in a sensible output unit (e.g.
-minutes, hours).
+Given an input of seconds calculates the result in a sensible output unit
+(e.g. minutes, hours).
 }

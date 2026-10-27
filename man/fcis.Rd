@@ -9,7 +9,8 @@ fcis(
   window.length = NULL,
   indices = c("power", "ACI", "entropy"),
   wl = 256,
-  cluster = NULL
+  cluster = NULL,
+  scale = NULL
 )
 }
 \arguments{
@@ -27,6 +28,11 @@ file gives a single column.}
 This is only worthwhile when x is a filename and the windows are long, as each
 worker then reads its own part of the file. Passing a Wave object sends a copy
 of it to every worker, which takes longer than the calculation itself.}
+
+\item{scale}{NULL to map each index linearly between its smallest and largest
+value, or a function, or a list of three functions, applied to the matrix of
+values for each channel before the colours are calculated. See
+\code{\link{fcisClip}}.}
 }
 \value{
 An object of class "fcis", being a list of the colours as a character

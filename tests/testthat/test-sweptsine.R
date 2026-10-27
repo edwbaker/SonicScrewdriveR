@@ -4,7 +4,11 @@ test_that("Duration of swept sine", {
 })
 
 test_that("Reject incorrect input", {
-  expect_error(sweptsine(1, 10, time.unit="dogs", "time.unit must be one of 'seconds' or 'samples'"))
+  expect_error(
+    sweptsine(1, 10, time.unit="dogs"),
+    "Unknown time.unit to sweptsine(): dogs. Valid units are: seconds, samples",
+    fixed=TRUE
+  )
   expect_error(sweptsine(1, 10, output="cats"), "output must be one of 'wave' or 'vector'")
   expect_error(sweptsine(10,1), "sweptsine: f1 must be greater than f0")
   expect_error(sweptsine(1,10, mode="hare"), "sweptsine: mode must be one of 'linear' or 'log'")

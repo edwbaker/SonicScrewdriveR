@@ -14,6 +14,10 @@
 #' wave2 <- upsample(wave, 88200)
 #'
 upsample <- function(wave, upsample.rate, method="basic") {
+  .tagApplyOne(wave, .upsample, "upsample", NULL, FALSE, upsample.rate = upsample.rate, method = method)
+}
+
+.upsample <- function(wave, upsample.rate, method) {
   validateIsWave(wave)
   sf <- upsample.rate / wave@samp.rate
   if (sf != round(sf)) {

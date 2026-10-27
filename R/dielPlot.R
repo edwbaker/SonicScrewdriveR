@@ -53,20 +53,27 @@ dielPositions <- function(format="3hourly") {
 #' format, return the fraction of a day represented by the object.
 #'
 #' @param t Object to be converted to a fraction
-#' @param input One of POSIX (default) or HHMM
-#' @param unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param input.unit The unit the time is given in, one of "seconds",
+#'   "minutes", "hours", "days", "years", "HHMM", "POSIX".
+#' @param output.unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
+#' @param input Deprecated, use input.unit instead.
+#' @param unit Deprecated, use output.unit instead.
 #' @return The position of the time within the day, in radians or as a fraction of a day.
 #' @export
-dielFraction <- function(t, input="POSIX", unit="radians") {
-  if (!input %in% .convertable2seconds()) {
-    stop(paste("Unknown input for dielFraction:",input))
+dielFraction <- function(t, input.unit="POSIX", output.unit="radians", input, unit) {
+  if (!missing(input)) {
+    .deprecatedArg("input", "input.unit", "dielFraction")
+    input.unit <- input
   }
-  if (!unit %in% c("radians", "fraction")) {
-    stop(paste("Unknown output for dielFraction:",unit))
+  if (!missing(unit)) {
+    .deprecatedArg("unit", "output.unit", "dielFraction")
+    output.unit <- unit
   }
-  s <- convert2seconds(t, input=input, origin="day")
+  input.unit <- .validateUnit(input.unit, .convertable2seconds(), "dielFraction")
+  output.unit <- .validateUnit(output.unit, .fractionUnits(), "dielFraction", "output.unit")
+  s <- convert2seconds(t, input.unit=input.unit, origin="day")
   f <- s/(24*60*60)
-  if (unit=="radians") {
+  if (output.unit=="radians") {
     return(2*pi*f)
   }
   return(f)
@@ -260,8 +267,8 @@ dielRings <- function(names, starts, ends, cols = "grey", format="HHMM", limits=
   cols <- rep_len(cols, length.out = length(names))
 
   #Convert to fractional circle
-  starts <- dielFraction(starts, input=format)
-  ends <- dielFraction(ends, input=format)
+  starts <- dielFraction(starts, input.unit=format)
+  ends <- dielFraction(ends, input.unit=format)
 
   arc_step <- (limits[2] - limits[1]) / length(names)
   arcs <- limits[1] + arc_step * (1:length(names)-1)

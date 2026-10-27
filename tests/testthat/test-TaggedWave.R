@@ -97,8 +97,28 @@ test_that("addProcess works as expected", {
   tw <- addProcess(tw, "Aslan")
   tw <- addProcess(tw, "AsCran", "the pedantic lion")
   expect_equal(typeof(tw@processing), "list")
-  expect_equal(tw@processing[[1]], list(list("process" = "Aslan", "output" = NULL)))
+  tw <- addProcess(tw, "Cair", duration=1.5)
+  expect_equal(length(tw@processing), 3)
+  expect_equal(tw@processing[[1]], list("process" = "Aslan", "output" = NULL))
   expect_equal(tw@processing[[2]], list("process" = "AsCran", "output" = "the pedantic lion"))
+  expect_equal(tw@processing[[3]]$duration, 1.5)
+})
+
+test_that("addProcess stores optional record fields only when supplied", {
+  tw <- tagWave(tuneR::sine(440, duration=44100, samp.rate=44100))
+  t0 <- Sys.time()
+  tw <- addProcess(
+    tw, "filter", func="seewave::ffilter", params=list(from=1, to=2),
+    time=t0, input_hash="a", output_hash="b"
+  )
+  rec <- tw@processing[[1]]
+  expect_equal(names(rec), c("process", "output", "func", "params", "time", "input_hash", "output_hash"))
+  expect_equal(rec$func, "seewave::ffilter")
+  expect_equal(rec$params, list(from=1, to=2))
+  expect_equal(rec$time, t0)
+
+  tw <- addProcess(tw, "plain")
+  expect_equal(names(tw@processing[[2]]), c("process", "output"))
 })
 
 test_that(".isTagged() works as expected", {

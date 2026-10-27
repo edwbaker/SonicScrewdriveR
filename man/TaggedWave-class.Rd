@@ -11,8 +11,12 @@ that it can include extended metadata and the results of analyses.
 \section{Slots}{
 
 \describe{
+\item{\code{origin}}{The origin of the object.}
+
 \item{\code{metadata}}{A list for storing metadata.}
 
-\item{\code{analyses}}{A list for storing analyses.}
+\item{\code{processing}}{A list recording, in order, each process applied to the object.}
+
+\item{\code{spectrogram_maad_power}}{A scikit-maad power spectrogram.}
 }}
 

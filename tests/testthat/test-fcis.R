@@ -106,3 +106,61 @@ test_that("the background index matches quantile(), including for very quiet bin
   }
   expect_true(all(actual[c(2, 4, 6)] > 0))
 })
+
+test_that("scaleRGB recognises a constant channel given as a matrix", {
+  # fcis() always passes matrices, and unique() on a matrix compares rows, so a
+  # constant channel used to be scaled to zero rather than to no.diff.
+  expect_equal(unique(sonicscrewdriver:::scaleRGB(matrix(0, 4, 3))), 255)
+  expect_equal(unique(sonicscrewdriver:::scaleRGB(matrix(7, 4, 3))), 255)
+
+  expect_equal(
+    map2RGB(matrix(0, 4, 3), matrix(1:12, 4), matrix(1:12, 4)),
+    map2RGB(rep(0, 12), 1:12, 1:12)
+  )
+})
+
+test_that("a silent wave gives a single colour rather than black", {
+  w <- tuneR::Wave(left=rep(0, 4800), samp.rate=4800, bit=16)
+  f <- fcis(w, window.length=1600, wl=128)
+
+  expect_equal(unique(as.vector(f$colours)), "#FFFFFF")
+})
+
+test_that("fcis rejects a window longer than the recording", {
+  w <- tuneR::Wave(left=rep(0, 4800), samp.rate=4800, bit=16)
+
+  expect_error(fcis(w, window.length=9600), "No complete windows")
+})
+
+test_that("scale transforms each channel before the colours are calculated", {
+  w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
+
+  default <- fcis(w, window.length=w@samp.rate, wl=128)
+  identity.scale <- fcis(w, window.length=w@samp.rate, wl=128, scale=function(x) x)
+  expect_equal(default$colours, identity.scale$colours)
+
+  clipped <- fcis(w, window.length=w@samp.rate, wl=128,
+                  scale=list(fcisClip(log=TRUE), fcisClip(), fcisClip()))
+  expect_equal(dim(clipped$colours), dim(default$colours))
+  expect_false(identical(clipped$colours, default$colours))
+
+  expect_error(fcis(w, window.length=w@samp.rate, wl=128, scale=list(log)),
+               "three functions")
+  expect_error(fcis(w, window.length=w@samp.rate, wl=128, scale=function(x) x[1]),
+               "one value for each")
+})
+
+test_that("fcisClip limits values to the requested percentiles", {
+  x <- matrix(c(-100, 1:98, 1000), nrow=10)
+
+  clipped <- fcisClip(probs=c(0.1, 0.9))(x)
+  expect_equal(dim(clipped), dim(x))
+  expect_equal(min(clipped), unname(stats::quantile(x, 0.1)))
+  expect_equal(max(clipped), unname(stats::quantile(x, 0.9)))
+
+  # Values with no logarithm are treated as the lower limit, not dropped.
+  logged <- fcisClip(log=TRUE)(matrix(c(0, 1, 10, 100), nrow=2))
+  expect_false(anyNA(logged))
+
+  expect_error(fcisClip(probs=c(0.9, 0.1)), "increasing")
+})

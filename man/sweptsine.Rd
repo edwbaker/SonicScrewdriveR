@@ -24,7 +24,8 @@ sweptsine(
 
 \item{sweep.time}{Duration of swept wave}
 
-\item{time.unit}{One of "seconds", "samples"}
+\item{time.unit}{The unit sweep.time is given in, one of "seconds",
+"samples".}
 
 \item{samp.rate}{Sample rate of swept wave}
 

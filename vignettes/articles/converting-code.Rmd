@@ -60,17 +60,20 @@ The same technique can be used for `TaggedWaveMC` objects with `inherits(w, "Wav
 
 #### Adding a process to a Tagged Wave-like object
 
-If you want to add a process to a `TaggedWave` object you can use the `addProcess` method. This can either be called by the end user, or by functions that are aware of the Tagged versions.
+If you want to record a process on a `TaggedWave` object use `tagApply()`. It runs a function on the wave and adds a record of the call to the `processing` slot, with the function, its arguments, the time, the duration and digests of the input and output. It can be called by the end user, or by functions that are aware of the Tagged versions.
 
 ```{r, eval=FALSE}
-# End user using non-Tagged aware function
-seewave::oscillo(untag(tw))
-addProcess(tw, "seewave::oscillo")
+# End user, using a function from another package
+tw <- tagApply(tw, tuneR::normalize, unit = "1")
+
+# seewave functions reject tagged waves, so tagApply() gives them an
+# untagged wave and puts the tags back on the result
+tw <- tagApply(tw, seewave::ffilter, from = 1000, to = 2000, output = "Wave")
 
 # Inside a Tagged aware function
-addProcess(
-  tw,
-  process = "mypkg::functionToCountChannels",
-  output = list(channels = 2)
-)
+myFunction <- function(w, ...) {
+  tagApply(w, .myFunction, ..., label = "mypkg::myFunction")
+}
 ```
+
+Only the outermost call is recorded, so a function that records itself in this way can be used inside another recorded call without the process appearing twice.

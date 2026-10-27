@@ -4,10 +4,12 @@
 \alias{referenceIntensity}
 \title{Reference intensity}
 \usage{
-referenceIntensity(unit = "watt_cm2")
+referenceIntensity(output.unit = "watt_cm2", unit)
 }
 \arguments{
-\item{unit}{Unit to return, "watt_cm2"}
+\item{output.unit}{Unit to return, "watt_cm2".}
+
+\item{unit}{Deprecated, use output.unit instead.}
 }
 \value{
 The reference sound intensity, in the unit specified.

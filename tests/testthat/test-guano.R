@@ -1,0 +1,197 @@
+test_that("Fields are read as the types the specification gives them", {
+  g <- guanoParse(paste(
+    "GUANO|Version:1.0",
+    "Make:Open Acoustic Devices",
+    "Samplerate:48000",
+    "Length:10.5",
+    "Loc Position:51.4964 -0.1224",
+    "TE:10",
+    "Tags:bat, roost, dusk",
+    "Species Manual ID:Pipistrellus pipistrellus,Myotis daubentonii",
+    "Timestamp:2020-11-03T11:24:30Z",
+    sep = "\n"
+  ))
+
+  expect_s3_class(g, "guano")
+  expect_identical(g[["Make"]], "Open Acoustic Devices")
+  expect_identical(g[["Samplerate"]], 48000L)
+  expect_identical(g[["Length"]], 10.5)
+  expect_equal(g[["Loc Position"]], c(51.4964, -0.1224))
+  expect_identical(g[["TE"]], 10L)
+  expect_identical(g[["Tags"]], c("bat", "roost", "dusk"))
+  expect_identical(
+    g[["Species Manual ID"]],
+    c("Pipistrellus pipistrellus", "Myotis daubentonii")
+  )
+  expect_s3_class(g[["Timestamp"]], "POSIXct")
+  expect_identical(format(g[["Timestamp"]], "%Y-%m-%d %H:%M:%S", tz="UTC"), "2020-11-03 11:24:30")
+})
+
+test_that("The timestamp forms the specification allows are read", {
+  stamp <- function(value) guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value))[["Timestamp"]]
+
+  expect_identical(format(stamp("2020-11-03T11:24:30Z"), "%H:%M:%S", tz="UTC"), "11:24:30")
+  expect_identical(format(stamp("2020-11-03T11:24:30+01:00"), "%H:%M:%S", tz="UTC"), "10:24:30")
+  expect_identical(format(stamp("2020-11-03T11:24:30"), "%H:%M:%S"), "11:24:30")
+  expect_identical(format(stamp("2020-11-03"), "%Y-%m-%d"), "2020-11-03")
+
+  # A time with no date has nothing to attach it to, so it stays as text.
+  expect_identical(stamp("11:24:30"), "11:24:30")
+})
+
+test_that("A timestamp is written back in a form that reads the same", {
+  g <- guanoCreate(Timestamp=as.POSIXct("2020-11-03 11:24:30", tz="UTC"))
+  expect_true(grepl("Timestamp:2020-11-03T11:24:30Z", as.character(g), fixed=TRUE))
+  expect_equal(guanoParse(as.character(g))[["Timestamp"]], g[["Timestamp"]])
+})
+
+test_that("Unknown and namespaced fields are kept as written", {
+  g <- guanoParse("GUANO|Version:1.0\nOAD|Battery Voltage:4.1\nXX|Thing:whatever")
+  expect_identical(g[["OAD|Battery Voltage"]], "4.1")
+  expect_identical(g[["XX|Thing"]], "whatever")
+  expect_true(grepl("OAD|Battery Voltage:4.1", as.character(g), fixed=TRUE))
+})
+
+test_that("A field that cannot be read as its type is kept and written as text", {
+  expect_warning(g <- guanoParse("GUANO|Version:1.0\nSamplerate:lots"), "as a number")
+  expect_identical(g[["Samplerate"]], "lots")
+  expect_true(grepl("Samplerate:lots", as.character(g), fixed=TRUE))
+
+  expect_warning(g <- guanoParse("GUANO|Version:1.0\nTimestamp:whenever"), "timestamp")
+  expect_identical(g[["Timestamp"]], "whenever")
+  expect_true(grepl("Timestamp:whenever", as.character(g), fixed=TRUE))
+})
+
+test_that("Values keep colons and whitespace is trimmed", {
+  g <- guanoParse("GUANO|Version:1.0\n  Note : a:b:c  ")
+  expect_identical(g[["Note"]], "a:b:c")
+})
+
+test_that("Escaped newlines in a note are read and written back", {
+  g <- guanoParse("GUANO|Version:1.0\nNote:first\\nsecond")
+  expect_identical(g[["Note"]], "first\nsecond")
+  expect_true(grepl("Note:first\\nsecond", as.character(g), fixed=TRUE))
+})
+
+test_that("Empty lines and lines with no value are skipped", {
+  expect_warning(
+    g <- guanoParse("GUANO|Version:1.0\n\nnonsense\nMake:X"),
+    "no value"
+  )
+  expect_identical(names(g), c("GUANO|Version", "Make"))
+})
+
+test_that("The version field is written first", {
+  g <- guanoCreate(Make="X")
+  expect_identical(names(g)[1], "GUANO|Version")
+  expect_true(startsWith(as.character(g), "GUANO|Version:1.0"))
+
+  g <- guanoParse("Make:X\nGUANO|Version:1.0")
+  expect_true(startsWith(as.character(g), "GUANO|Version:1.0"))
+})
+
+test_that("Metadata survives a write and read of a wave file", {
+  w <- tuneR::Wave(left=as.integer(stats::rnorm(1000, sd=1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  expect_length(guano(f), 0)
+
+  g <- guanoCreate(
+    Make = "Open Acoustic Devices",
+    Model = "AudioMoth",
+    Samplerate = 8000,
+    "Loc Position" = c(51.4964, -0.1224),
+    Timestamp = as.POSIXct("2020-11-03 11:24:30", tz="UTC")
+  )
+  guanoWrite(g, f)
+
+  back <- guano(f)
+  expect_identical(back[["Make"]], "Open Acoustic Devices")
+  expect_identical(back[["Samplerate"]], 8000L)
+  expect_equal(back[["Loc Position"]], c(51.4964, -0.1224))
+  expect_identical(format(back[["Timestamp"]], "%H:%M:%S", tz="UTC"), "11:24:30")
+
+  # The audio must be untouched.
+  expect_equal(tuneR::readWave(f)@left, w@left)
+})
+
+test_that("Writing metadata twice replaces it rather than adding a chunk", {
+  w <- tuneR::Wave(left=as.integer(stats::rnorm(1000, sd=1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+
+  guanoWrite(guanoCreate(Make="First", Note="a longer note than the next one"), f)
+  size <- file.size(f)
+  guanoWrite(guanoCreate(Make="Second"), f)
+
+  expect_identical(guano(f)[["Make"]], "Second")
+  expect_null(guano(f)[["Note"]])
+  expect_lt(file.size(f), size)
+  expect_equal(tuneR::readWave(f)@left, w@left)
+
+  bytes <- readBin(f, "raw", n=file.size(f))
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_equal(sum(ids == "guan"), 1)
+})
+
+test_that("Metadata can be written to a separate file", {
+  w <- tuneR::Wave(left=as.integer(stats::rnorm(1000, sd=1000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  out <- tempfile(fileext=".WAV")
+  on.exit(unlink(c(f, out)))
+  tuneR::writeWave(w, f)
+
+  guanoWrite(guanoCreate(Make="X"), f, out)
+  expect_length(guano(f), 0)
+  expect_identical(guano(out)[["Make"]], "X")
+})
+
+test_that("Metadata can be attached to a wave object", {
+  w <- tuneR::Wave(left=integer(100), samp.rate=8000, bit=16)
+  expect_length(guano(w), 0)
+
+  guano(w) <- guanoCreate(Make="X")
+  expect_identical(guano(w)[["Make"]], "X")
+
+  guano(w) <- NULL
+  expect_length(guano(w), 0)
+
+  expect_error(`guano<-`("not a wave", guanoCreate(Make="X")), "Wave")
+  expect_error(`guano<-`(w, list(Make="X")), "guano object")
+})
+
+test_that("Metadata survives expansion of a triggered file", {
+  samples <- as.integer(round(stats::rnorm(8000 * 4, sd=20)))
+  samples[8000:10000] <- 12000L
+  w <- tuneR::Wave(left=samples, samp.rate=8000, bit=16, pcm=TRUE)
+
+  f <- tempfile(fileext="T.WAV")
+  out <- tempfile(fileext=".WAV")
+  on.exit(unlink(c(f, out)))
+
+  g <- guanoCreate(Make="Open Acoustic Devices", Samplerate=8000)
+  audiomothCompress(w, f, threshold=1000, segment=1024, guano=g)
+
+  expect_identical(guano(f)[["Make"]], "Open Acoustic Devices")
+  expect_identical(guano(audiomothExpand(f))[["Make"]], "Open Acoustic Devices")
+
+  audiomothExpand(f, out)
+  expect_identical(guano(out)[["Make"]], "Open Acoustic Devices")
+  expect_equal(length(tuneR::readWave(out)@left), length(w@left))
+})
+
+test_that("Bad arguments are rejected", {
+  expect_error(guano(1), "file path")
+  expect_error(guano(tempfile()), "does not exist")
+  expect_error(guanoParse(c("a", "b")), "single string")
+  expect_error(guanoCreate("unnamed"), "named")
+  expect_error(guanoWrite(list(), tempfile()), "guano object")
+})
+
+test_that("Metadata prints", {
+  expect_output(print(guanoCreate(Make="X")), "GUANO|Version", fixed=TRUE)
+  expect_output(print(guanoParse("")), "no GUANO metadata")
+})

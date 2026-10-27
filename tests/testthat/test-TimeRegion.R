@@ -1,5 +1,9 @@
 test_that("Reject incorrect unit", {
-  expect_error(region("monkeys", 0, 10), "Unit must be one of samples, seconds, minutes, hours")
+  expect_error(
+    region("monkeys", 0, 10),
+    "Unknown input.unit to region(): monkeys. Valid units are: samples, seconds, minutes, hours",
+    fixed=TRUE
+  )
 })
 
 test_that("TimeRegion with samples", {

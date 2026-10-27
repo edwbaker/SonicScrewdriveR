@@ -1,4 +1,6 @@
 test_that("ab_diel_traits with real data", {
+  skip_on_cran()
+  skip_if_offline("api.audioblast.org")
   data <- audioblast(
     "data",
     "traits",

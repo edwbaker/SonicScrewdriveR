@@ -2,6 +2,10 @@
   if (!method %in% c("bind", "noClick")) {
     stop("Unknown concatenation method.")
   }
+  .tagApplyOne(object, .concatWaves, "concat", paste("concat", method, sep="-"), FALSE, ..., method = method)
+}
+
+.concatWaves <- function(object, ..., method) {
   objectTagged <- .isTagged(object)
   if (all(sapply(list(object, ...), inherits, "Wave"))) {
     allobjects <- untagWave(c(list(object), ...))
@@ -29,11 +33,6 @@
     } else {
       return(object2)
     }
-  }
-
-  # If tagged then get slots of objects concatenated
-  if (objectTagged) {
-    object <- addProcess(object, paste("concat", method, sep="-"), .getTags(list(...)))
   }
 
   return(object)

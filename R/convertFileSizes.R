@@ -3,27 +3,29 @@
 #' Converts file size measurements into bytes.
 #'
 #' @param S The value to convert
-#' @param input The unit to convert, allowed values are "bits", "bytes", "kB", "MB", "GB"
+#' @param input.unit The unit to convert, one of "bits", "bytes", "kB", "MB",
+#'   "GB".
+#' @param input Deprecated, use input.unit instead.
 #' @export
 #' @return The numeric value in bytes
+#' @examples
+#' convert2bytes(8, input.unit="bits")
+#' convert2bytes(1, input.unit="MB")
 #'
-convert2bytes <- function(S, input="bits") {
-  if (input == "bits") {
-    return(S/8)
+convert2bytes <- function(S, input.unit="bits", input) {
+  if (!missing(input)) {
+    .deprecatedArg("input", "input.unit", "convert2bytes")
+    input.unit <- input
   }
-  if (input =="bytes") {
-    return(S)
-  }
-  if (input == "kB") {
-    return(S*1e+3)
-  }
-  if (input == "MB") {
-    return(S*1e+6)
-  }
-  if (input == "GB") {
-    return(S*1e+9)
-  }
-  stop(paste("Unknown input to convert2bytes:",input))
+  input.unit <- .validateUnit(input.unit, .fileSizeUnits(), "convert2bytes")
+  return(switch(
+    input.unit,
+    "bits"  = S / 8,
+    "bytes" = S,
+    "kB"    = S * 1e+3,
+    "MB"    = S * 1e+6,
+    "GB"    = S * 1e+9
+  ))
 }
 
 #' Converts bytes in human readable form

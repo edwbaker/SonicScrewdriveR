@@ -7,7 +7,7 @@ directionPlot <- function(angles,
   Angles <- Speeds <- NULL
 
 
-  angles <- convert2radians(angles, input=angle.unit)
+  angles <- convert2radians(angles, input.unit=angle.unit)
   data <- data.frame(angles, speeds)
   data <- rbind(data, data.frame(0, 0))
   colnames(data) <- c("Angles", "Speeds")

@@ -25,8 +25,8 @@ test_that("bulk modulus and density calculation works", {
 })
 
 test_that("cramer method works as expected", {
-  expect_equal(soundSpeed(method="cramer", temp=14, pressure=3, RH=10), 342.68202)
-  expect_equal(soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10), 342.68202)
+  expect_equal(soundSpeed(method="cramer", temp=14, pressure=3, RH=10), 342.6834786, tolerance=1e-7)
+  expect_equal(soundSpeed(method="cramer", temp=14, temp.unit="C", pressure=3, pressure.unit="kPa", RH=10), 342.6834786, tolerance=1e-7)
 })
 
 test_that("seewave method works as expected", {

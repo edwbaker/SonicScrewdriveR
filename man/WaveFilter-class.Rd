@@ -17,7 +17,11 @@ documenting its action.
 \describe{
 \item{\code{description}}{Description of the filter.}
 
-\item{\code{func}}{Name of function.}
+\item{\code{func}}{The function that applies the filter.}
+
+\item{\code{func_name}}{Name of the function, as \code{pkg::name} for a function in a
+package. This is what is recorded in the \code{processing} slot, and it lets a
+filter be rebuilt from its record. \code{NA} if the filter has no name.}
 
 \item{\code{params}}{List of additional parameters to pass to the function.}
 }}

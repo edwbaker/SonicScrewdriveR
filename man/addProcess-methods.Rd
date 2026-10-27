@@ -7,11 +7,41 @@
 \alias{addProcess,TaggedWaveMC-method}
 \title{Add a process to a Tagged Wave or WaveMC object}
 \usage{
-addProcess(object, process, output = NULL, duration = NULL)
+addProcess(
+  object,
+  process,
+  output = NULL,
+  duration = NULL,
+  func = NULL,
+  params = NULL,
+  time = NULL,
+  input_hash = NULL,
+  output_hash = NULL
+)
 
-\S4method{addProcess}{TaggedWave}(object, process, output = NULL, duration = NULL)
+\S4method{addProcess}{TaggedWave}(
+  object,
+  process,
+  output = NULL,
+  duration = NULL,
+  func = NULL,
+  params = NULL,
+  time = NULL,
+  input_hash = NULL,
+  output_hash = NULL
+)
 
-\S4method{addProcess}{TaggedWaveMC}(object, process, output = NULL, duration = NULL)
+\S4method{addProcess}{TaggedWaveMC}(
+  object,
+  process,
+  output = NULL,
+  duration = NULL,
+  func = NULL,
+  params = NULL,
+  time = NULL,
+  input_hash = NULL,
+  output_hash = NULL
+)
 }
 \arguments{
 \item{object}{An object.}
@@ -21,6 +51,16 @@ addProcess(object, process, output = NULL, duration = NULL)
 \item{output}{The output of the process.}
 
 \item{duration}{The duration of the process in seconds.}
+
+\item{func}{Optional. The name of the function that performed the process.}
+
+\item{params}{Optional. A list of the arguments the function was called with.}
+
+\item{time}{Optional. When the process was run (a \code{POSIXct} time).}
+
+\item{input_hash}{Optional. A digest of the object before the process.}
+
+\item{output_hash}{Optional. A digest of the object after the process.}
 }
 \value{
 The object with the process added.
@@ -30,3 +70,8 @@ This function takes a \code{TaggedWave} or \code{TaggedWaveMC} object and adds a
 to the \code{processing} slot. This is used to keep a record of the processes that
 have been applied to the object.
 }
+\details{
+This is the low-level step used by \code{\link[=tagApply]{tagApply()}}, which is the function to
+use to record a process.
+}
+\keyword{internal}

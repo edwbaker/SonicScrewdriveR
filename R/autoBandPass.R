@@ -23,6 +23,11 @@ autoBandPass <- function(
   n.bw=1,
   lowcut=1000
 ) {
+  # seewave does not accept tagged waves, so the implementation is given an untagged one
+  .tagApplyOne(wave, .autoBandPass, "autoBandPass", NULL, TRUE, bw = bw, n.bw = n.bw, lowcut = lowcut)
+}
+
+.autoBandPass <- function(wave, bw, n.bw, lowcut) {
   validateIsWave(wave)
   if (!is.integer(n.bw)) {stop("n.bw must be an integer.")}
   wave2 <- seewave::ffilter(wave, from=lowcut, output="Wave")

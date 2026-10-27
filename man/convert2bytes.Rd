@@ -4,16 +4,24 @@
 \alias{convert2bytes}
 \title{Convert bits to bytes}
 \usage{
-convert2bytes(S, input = "bits")
+convert2bytes(S, input.unit = "bits", input)
 }
 \arguments{
 \item{S}{The value to convert}
 
-\item{input}{The unit to convert, allowed values are "bits", "bytes", "kB", "MB", "GB"}
+\item{input.unit}{The unit to convert, one of "bits", "bytes", "kB", "MB",
+"GB".}
+
+\item{input}{Deprecated, use input.unit instead.}
 }
 \value{
 The numeric value in bytes
 }
 \description{
 Converts file size measurements into bytes.
+}
+\examples{
+convert2bytes(8, input.unit="bits")
+convert2bytes(1, input.unit="MB")
+
 }

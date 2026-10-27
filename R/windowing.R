@@ -35,7 +35,7 @@ windowing <- function(
   ...){
   if (typeof(wave) == "character") {
     FUN2 <- function(start, wave, window.length, ...){
-      wave <- readAudio(wave, from=start,to=start+window.length-1,units="samples")
+      wave <- readAudio(wave, from=start,to=start+window.length-1,input.unit="samples")
       return(FUN(wave, start, window.length, ...))
     }
     info <- av::av_media_info(wave)
@@ -79,7 +79,9 @@ windowing <- function(
     }
   }
 
-  if (bind.wave & typeof(l[[1]]) == "S4" & class(l[[1]])[[1]] == "Wave") {
+  #&& rather than &: with no complete windows l is empty, and & would evaluate
+  #l[[1]] even when bind.wave is FALSE.
+  if (bind.wave && length(l) > 0 && typeof(l[[1]]) == "S4" && class(l[[1]])[[1]] == "Wave") {
     #tuneR::bind() copies everything it is given, so binding one window at a time
     #copies the whole of the output so far on every iteration. Collecting the parts
     #and binding them in a single call avoids that.
@@ -103,7 +105,7 @@ windowing <- function(
         if (inherits(wave, "Wave")) {
           parts[[2*i]] <- cutws(wave, from=gap.start, to=gap.end)
         } else {
-          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, units="samples")
+          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, input.unit="samples")
         }
       }
       l <- do.call(tuneR::bind, parts[!vapply(parts, is.null, logical(1))])
