@@ -7,7 +7,8 @@
 parseFilename(file, format = NULL, timezone = "UTC")
 }
 \arguments{
-\item{file}{A filename (or list of filenames).}
+\item{file}{A filename, or several filenames as either a list or a
+character vector (the shape returned by \code{list.files()}).}
 
 \item{format}{Optionally force a given format (see Details). If NULL (default)
 an attempt is made to automatically detect the format for each file. If "match"
