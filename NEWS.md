@@ -184,6 +184,17 @@
   reached makeCluster() and failed there with "numeric 'names' must be >= 1",
   naming neither the function nor the cores. Such a machine now gets a cluster
   of one.
+- pythonInstall() stopped with "the condition has length > 1", which names
+  neither Python nor pip, where the pip of an existing `sonicscrewdriver`
+  environment could not be imported. reticulate asks pip for its version before
+  installing into an environment, and compares what comes back against a
+  minimum; where the import fails, that comparison is handed the three lines of
+  a Python traceback in place of a version. pip being installed but not
+  importable is what an interrupted install leaves behind, and what a
+  file-syncing service does to an environment built inside a synced folder,
+  carrying off the loose files of the package and leaving its directories. The
+  import is now attempted first, and such an environment reported as needing a
+  rebuild.
 - bext() gave midnight for a recording whose origination time was written as
   hours and minutes, rather than the hour and minute the file gave. The field
   has eight characters for a time and the specification asks for seconds in
