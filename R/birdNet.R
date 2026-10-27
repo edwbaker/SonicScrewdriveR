@@ -13,8 +13,11 @@ readBirdNet <- function(file, filename_parsing="none") {
     cn <- colnames(ret)
     ret <- cbind(fn, ret)
     colnames(ret) <- c("filename", cn)
-    parts <- strsplit(file, '/')
-    filename <- parts[[1]][[length(parts[[1]])]]
+    #basename() takes the last element of the path whichever separator it uses.
+    #Splitting on a forward slash left the whole path in hand on Windows, where
+    #a path holds backslashes, and the filename parsing below then read the
+    #directories rather than the name.
+    filename <- basename(file)
     ret$`Begin.Time..s.` <- as.numeric(ret$`Begin.Time..s.`)
     ret$`End.Time..s.` <- as.numeric(ret$`End.Time..s.`)
     if (filename_parsing == "audiomoth") {

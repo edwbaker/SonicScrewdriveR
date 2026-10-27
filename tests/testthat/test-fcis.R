@@ -106,3 +106,68 @@ test_that("the background index matches quantile(), including for very quiet bin
   }
   expect_true(all(actual[c(2, 4, 6)] > 0))
 })
+
+test_that("the background of a single window is the window itself", {
+  #One column has no distribution to take a quantile of.
+  amp <- matrix(c(3, 7, 11), nrow=3)
+  expect_equal(sonicscrewdriver:::.fcisBackground(amp), c(3, 7, 11))
+  expect_equal(
+    sonicscrewdriver:::.fcisIndexFunctions$background(amp),
+    apply(amp, 1, stats::quantile, probs=0.1, names=FALSE)
+  )
+})
+
+test_that("the background matches quantile() where the quantile falls on a window", {
+  #Eleven columns put the tenth percentile exactly on the second lowest value,
+  #so no interpolation between two values is needed.
+  set.seed(7)
+  amp <- matrix(runif(33), nrow=3)
+  expect_equal(
+    sonicscrewdriver:::.fcisBackground(amp),
+    apply(amp, 1, stats::quantile, probs=0.1, names=FALSE)
+  )
+  #The same for a probability that does not land on a window.
+  expect_equal(
+    sonicscrewdriver:::.fcisBackground(amp, probs=0.25),
+    apply(amp, 1, stats::quantile, probs=0.25, names=FALSE)
+  )
+})
+
+test_that("no window length summarises the whole recording in one column", {
+  w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
+  f <- fcis(w, window.length=NULL, wl=128)
+  expect_s3_class(f, "fcis")
+  expect_equal(ncol(f$colours), 1)
+  expect_equal(nrow(f$colours), length(f$freq))
+  #There is no window, so there is no length of one to report.
+  expect_true(is.na(f$window.seconds))
+})
+
+test_that("a single column is plotted against windows rather than against time", {
+  w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
+  f <- fcis(w, window.length=NULL, wl=128)
+  expect_silent(plot(f))
+  expect_null(plot(f))
+  #A label given is still used.
+  expect_silent(plot(f, xlab="Recording"))
+})
+
+test_that("several files are analysed as one spectrogram", {
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+  w <- tuneR::readWave(f)
+  one <- fcis(f, window.length=w@samp.rate, wl=128)
+  two <- fcis(c(f, f), window.length=w@samp.rate, wl=128)
+  #The columns of both files, in the order the files were given.
+  expect_equal(ncol(two$colours), 2*ncol(one$colours))
+  expect_equal(nrow(two$colours), nrow(one$colours))
+  expect_equal(two$window.seconds, one$window.seconds)
+  expect_equal(two$freq, one$freq)
+})
+
+test_that("a window longer than the recording is reported rather than drawn empty", {
+  w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
+  expect_error(
+    fcis(w, window.length=length(w@left)*10, wl=128),
+    "No complete windows to analyse."
+  )
+})

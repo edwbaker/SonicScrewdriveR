@@ -331,3 +331,36 @@ for (tz in sessionTimezones) {
     })
   })
 }
+
+test_that("daysPhases refuses a period it does not know, by name", {
+  expect_error(
+    daysPhases(as.Date("2024-06-15"), period="fortnight"),
+    "Unknown period for daysPhases: fortnight"
+  )
+})
+
+test_that("daysPhases covers the period asked for", {
+  month <- daysPhases(as.Date("2024-06-15"), period="month", lat=LAT, lon=LON)
+  year <- daysPhases(as.Date("2024-06-15"), period="year", lat=LAT, lon=LON)
+  #Half a period either side of the date given.
+  expect_equal(nrow(month), 31)
+  expect_equal(nrow(year), 361)
+  expect_equal(as.Date(month$Date[1]), as.Date("2024-05-31"))
+  expect_equal(as.Date(month$Date[nrow(month)]), as.Date("2024-06-30"))
+})
+
+test_that("daysPhases plots the phases of each day without changing them", {
+  #Drawing happens on the null device opened for the tests, so nothing is
+  #written; what is checked is that the plotting runs and returns the same data.
+  drawn <- daysPhases(as.Date("2024-06-15"), period="month", lat=LAT, lon=LON, plot=TRUE)
+  quiet <- daysPhases(as.Date("2024-06-15"), period="month", lat=LAT, lon=LON, plot=FALSE)
+  expect_equal(drawn, quiet)
+})
+
+test_that("daysPhases plots a polar month, where some phases never arrive", {
+  #Inside the Arctic circle in June the sun does not set, so most of the phases
+  #are NA and the lines drawn have gaps in them.
+  expect_no_error(
+    daysPhases(as.Date("2024-06-15"), period="month", lat=78, lon=15, plot=TRUE)
+  )
+})
