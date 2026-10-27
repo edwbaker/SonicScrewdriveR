@@ -1094,3 +1094,24 @@ test_that("Reading closes the recording however it ends", {
 
   expect_equal(length(audiomothExpand(f)@left), 20000)
 })
+
+test_that("A triggered recording whose audio size was never written still expands", {
+  # The same recording, with the size of its audio left unwritten as a flat
+  # battery leaves it. The expansion has to come out as it does from the intact
+  # file, since the audio in it is the same.
+  f <- tempfile(fileext="T.WAV")
+  on.exit(unlink(f))
+  file.copy(system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver"), f)
+
+  bytes <- readBin(f, "raw", n=file.size(f))
+  info <- .wavFormat(bytes)
+  bytes[(info$dataStart - 4):(info$dataStart - 1)] <- raw(4)
+  bytes[5:8] <- .uintToRaw(8, 4L)
+  writeBin(bytes, f)
+
+  expect_warning(e <- audiomothExpand(f), "was never written")
+  expect_s4_class(e, "Wave")
+  expect_equal(e@left, audiomothExpand(
+    system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  )@left)
+})
