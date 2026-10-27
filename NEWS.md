@@ -177,6 +177,13 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- defaultCluster() asked for a cluster of NA workers on a machine where
+  parallel::detectCores() cannot count the cores, which it is documented to
+  report as NA. One was subtracted from the count and the result held at a
+  minimum of one with max(), but NA - 1L is NA and max() keeps it, so the NA
+  reached makeCluster() and failed there with "numeric 'names' must be >= 1",
+  naming neither the function nor the cores. Such a machine now gets a cluster
+  of one.
 - bext() gave midnight for a recording whose origination time was written as
   hours and minutes, rather than the hour and minute the file gave. The field
   has eight characters for a time and the specification asks for seconds in

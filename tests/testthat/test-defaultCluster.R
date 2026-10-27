@@ -19,6 +19,13 @@ test_that("a single core still gives a cluster of one rather than of none", {
   expect_equal(defaultCluster(fork=FALSE)$spec, 1L)
 })
 
+test_that("a machine whose cores cannot be counted gives a cluster of one", {
+  #detectCores() is documented to return NA where it cannot work out how many
+  #cores there are, and NA - 1L is NA rather than something max() will discard.
+  mockClusters(cores=NA_integer_)
+  expect_equal(defaultCluster(fork=FALSE)$spec, 1L)
+})
+
 test_that("fork=FALSE asks for a cluster that does not fork", {
   mockClusters()
   expect_equal(defaultCluster(fork=FALSE)$kind, "psock")
@@ -48,6 +55,6 @@ test_that("the cluster returned can be used and stopped", {
   cl <- defaultCluster()
   on.exit(parallel::stopCluster(cl), add=TRUE)
   expect_s3_class(cl, "cluster")
-  expect_equal(length(cl), max(1L, parallel::detectCores() - 1L))
+  expect_equal(length(cl), max(1L, parallel::detectCores() - 1L, na.rm=TRUE))
   expect_equal(unlist(parallel::clusterEvalQ(cl, 1 + 1))[[1]], 2)
 })
