@@ -51,7 +51,8 @@ are there is worth more than passing over them in silence.}
 \code{fields} holds whichever of \code{datetime}, \code{make}, \code{model}, \code{serial},
 \code{firmware}, \code{software}, \code{prefix}, \code{microphone}, \code{title}, \code{species},
 \code{recordist}, \code{comment}, \code{note}, \code{licence}, \code{url}, \code{location}, \code{elevation},
-\code{project} and \code{take} the file said anything about. \code{location} is a latitude
+\code{collection}, \code{project} and \code{take} the file said anything about. \code{location}
+is a latitude
 and a longitude in degrees, and \code{datetime} is a POSIXct wherever the file
 gave enough to make one.
 
@@ -70,12 +71,21 @@ never guessed at from a title.
 
 \subsection{Reading from a name}{
 
-\code{filename} reads the recorder filename conventions that \code{\link[=parseFilename]{parseFilename()}}
-knows. A name that is only digits is ambiguous: eight digits are read as a
-date and ten as a count of seconds since 1970, which is wrong for a
-collection that names its files by a numeric record identifier. Where those
-digits spell no real date, no \code{datetime} is reported rather than one that is
-missing. Pass \code{filename=FALSE} to read only what is inside the file.
+\code{filename} reads the filename conventions that \code{\link[=parseFilename]{parseFilename()}} knows, and
+is the one source nothing outranks: where the file itself said nothing, what
+its name says is the whole answer. Pass \code{filename=FALSE} to read only what
+is inside the file.
+
+Because nothing outranks it, a reading the name left in doubt gives no
+\code{datetime}. A name of nothing but digits is read as a date or as a count of
+seconds, and a collection that numbers its records gives names of exactly
+that shape, so a date taken from one would often be a confident wrong answer
+with nothing beside it to correct it. \code{\link[=parseFilename]{parseFilename()}} reports it there, for
+a caller who knows what their own files are named by.
+
+A TSA name gives a \code{species} and a \code{collection}. That corpus commonly holds
+no embedded metadata at all, so for those recordings its name is the only
+thing there is to read.
 }
 }
 \examples{

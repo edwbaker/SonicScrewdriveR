@@ -13,7 +13,7 @@
 .MD_FIELD_ORDER <- c(
   "datetime", "make", "model", "serial", "firmware", "software", "prefix",
   "microphone", "title", "species", "recordist", "comment", "note", "licence",
-  "url", "location", "elevation", "project", "take"
+  "url", "location", "elevation", "collection", "project", "take"
 )
 
 #' The order the sources are read in, which is the order they are trusted in
@@ -282,20 +282,33 @@
 #' @keywords internal
 #' @noRd
 .mdNormaliseFilename <- function(p) {
+  one <- function(value) {
+    if (length(value) == 1L && !is.na(value)) value else NULL
+  }
   return(list(
     # A name of eight or ten digits is read as a date or as a count of seconds,
     # and one that spells neither a real date nor a real time of day is read as
     # a time that is missing. Reporting that would put a field in the record
     # saying the recording has a date and that the date is not known, which is
     # a worse answer than the record simply not mentioning one.
-    datetime = if (inherits(p$datetime, "POSIXt") && length(p$datetime) == 1L &&
-                   !is.na(p$datetime)) {
+    #
+    # A reading the name itself left in doubt is not reported either. A
+    # collection that numbers its records gives names of the same shape as a
+    # date or a count of seconds, and this is the one source that nothing
+    # outranks: where the file said nothing, a guess from its name would be
+    # the whole answer, and a confident wrong date is worse than none.
+    datetime = if (isTRUE(p$ambiguous)) {
+      NULL
+    } else if (inherits(p$datetime, "POSIXt") && length(p$datetime) == 1L &&
+               !is.na(p$datetime)) {
       p$datetime
     } else {
       NULL
     },
-    model = if (length(p$model) == 1L && !is.na(p$model)) p$model else NULL,
-    prefix = if (length(p$prefix) == 1L && !is.na(p$prefix)) p$prefix else NULL
+    model = one(p$model),
+    prefix = one(p$prefix),
+    species = one(p$taxon),
+    collection = one(p$collection)
   ))
 }
 
@@ -463,7 +476,8 @@
 #' `fields` holds whichever of `datetime`, `make`, `model`, `serial`,
 #' `firmware`, `software`, `prefix`, `microphone`, `title`, `species`,
 #' `recordist`, `comment`, `note`, `licence`, `url`, `location`, `elevation`,
-#' `project` and `take` the file said anything about. `location` is a latitude
+#' `collection`, `project` and `take` the file said anything about. `location`
+#' is a latitude
 #' and a longitude in degrees, and `datetime` is a POSIXct wherever the file
 #' gave enough to make one.
 #'
@@ -480,12 +494,21 @@
 #' never guessed at from a title.
 #'
 #' ## Reading from a name
-#' `filename` reads the recorder filename conventions that [parseFilename()]
-#' knows. A name that is only digits is ambiguous: eight digits are read as a
-#' date and ten as a count of seconds since 1970, which is wrong for a
-#' collection that names its files by a numeric record identifier. Where those
-#' digits spell no real date, no `datetime` is reported rather than one that is
-#' missing. Pass `filename=FALSE` to read only what is inside the file.
+#' `filename` reads the filename conventions that [parseFilename()] knows, and
+#' is the one source nothing outranks: where the file itself said nothing, what
+#' its name says is the whole answer. Pass `filename=FALSE` to read only what
+#' is inside the file.
+#'
+#' Because nothing outranks it, a reading the name left in doubt gives no
+#' `datetime`. A name of nothing but digits is read as a date or as a count of
+#' seconds, and a collection that numbers its records gives names of exactly
+#' that shape, so a date taken from one would often be a confident wrong answer
+#' with nothing beside it to correct it. [parseFilename()] reports it there, for
+#' a caller who knows what their own files are named by.
+#'
+#' A TSA name gives a `species` and a `collection`. That corpus commonly holds
+#' no embedded metadata at all, so for those recordings its name is the only
+#' thing there is to read.
 #'
 #' @param x Path to an audio file, a Wave object with metadata attached, or a
 #'   raw vector holding a file

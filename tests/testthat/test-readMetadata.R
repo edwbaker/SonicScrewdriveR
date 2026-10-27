@@ -312,6 +312,69 @@ test_that("Metadata can only be attached to a wave, and only as a reading", {
   expect_error(audioMetadata(notAWave) <- NULL, "can only be attached to a Wave")
 })
 
+# The filename is the one source nothing outranks, so where the file said
+# nothing a guess from its name would be the whole answer. A collection that
+# numbers its records gives names of the same shape as a date or a count of
+# seconds, and a confident wrong date is worse than no date at all.
+test_that("A date the filename left in doubt is not reported", {
+  bytes <- mdWav(mdFmt(), mdData())
+  for (name in c("20190101.wav", "1234567890.wav", "12345678.wav")) {
+    path <- file.path(tempdir(), name)
+    on.exit(unlink(path), add=TRUE)
+    writeBin(bytes, path)
+    m <- readMetadata(path)
+
+    expect_null(m$fields$datetime)
+    # What the name said is still there to be looked at.
+    expect_true(isTRUE(m$sources$filename$ambiguous))
+  }
+})
+
+test_that("A name that says plainly what it is still gives its date", {
+  bytes <- mdWav(mdFmt(), mdData())
+  path <- file.path(tempdir(), "20240220_162231.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+
+  expect_identical(
+    format(readMetadata(path)$fields$datetime, "%Y-%m-%d %H:%M:%S"),
+    "2024-02-20 16:22:31"
+  )
+})
+
+# Much of the TSA corpus holds no embedded metadata at all, so for those
+# recordings the name is the only record of what was recorded.
+test_that("A TSA name gives the species and collection of a file holding nothing", {
+  bytes <- mdWav(mdFmt(), mdData())
+  path <- file.path(tempdir(), "TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+  m <- readMetadata(path)
+
+  expect_identical(m$fields$species, "Porzana parva")
+  expect_identical(m$fields$collection, "TSA")
+  expect_null(m$fields$datetime)
+  expect_identical(names(m$sources), "filename")
+})
+
+# A name is read only where the file itself did not say, so a recording that
+# carries its own species keeps it.
+test_that("What the file says about its species outranks its name", {
+  guano <- paste(
+    "GUANO|Version:1.0",
+    "Species Manual ID:Pipistrellus pipistrellus",
+    sep="\n"
+  )
+  bytes <- mdWav(mdFmt(), mdChunk("guan", charToRaw(guano)), mdData())
+  path <- file.path(tempdir(), "TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav")
+  on.exit(unlink(path), add=TRUE)
+  writeBin(bytes, path)
+  m <- readMetadata(path)
+
+  expect_identical(m$fields$species, "Pipistrellus pipistrellus")
+  expect_identical(m$sources$filename$taxon, "Porzana parva")
+})
+
 test_that("What a filename says is read, and can be left unread", {
   bytes <- mdWav(mdFmt(), mdData())
   named <- file.path(tempdir(), "PREFIX_20210712_043000.wav")

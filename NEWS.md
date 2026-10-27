@@ -35,6 +35,24 @@
   result rather than an error for a file that carries none.
 - A file is identified by its bytes rather than by its name, so an MP3 or an
   Ogg file under a .wav extension is read as what it is.
+- parseFilename() reads the filename convention of the TSA corpus and the
+  collections distributed with it, as
+  `TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav`, giving the collection,
+  the taxon, the accession number the collection gave the recording and the
+  hash of the file. readMetadata() reports the taxon as the species and the
+  collection beside it, which for much of that corpus is the only record of
+  what was recorded: those files commonly carry no embedded metadata at all.
+  A taxon is read only from a scientific name, so the part of the corpus named
+  by a German common name and a German word for the kind of call gives none
+  rather than a taxon invented from its first two words.
+- parseFilename() says when a reading was a guess. `ambiguous` is TRUE and
+  `alternatives` names every format the filename could have been in, where the
+  name itself could not settle it. A name of nothing but digits is the case
+  that matters: eight digits are read as a date and ten as a count of seconds,
+  and a collection that numbers its records gives names of exactly that shape.
+  readMetadata() therefore takes no date from such a name, since nothing
+  outranks a filename and a confident wrong date is worse than none; a format
+  asked for by name is not a guess and carries no alternatives.
 - Text declared as ISO-8859-1 that is in fact valid UTF-8 is read as UTF-8,
   which is what xeno-canto writes into the comment frame of its recordings.
 - audiomothExpand() expands an AudioMoth triggered (T.WAV) recording, in which
