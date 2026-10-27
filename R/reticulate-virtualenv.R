@@ -42,7 +42,50 @@ pythonInstall <- function(unattended=FALSE) {
       python = .pythonStarter()
     )
   }
+  if (!.pipUsable(reticulate::virtualenv_python("sonicscrewdriver"))) {
+    stop(paste0(
+      "The pip in the `sonicscrewdriver` environment cannot be imported, so no ",
+      "package can be installed into it. Remove the environment with ",
+      "reticulate::virtualenv_remove(\"sonicscrewdriver\") and call ",
+      "pythonInstall() again to build it afresh."
+    ))
+  }
   reticulate::virtualenv_install("sonicscrewdriver", c("scikit-maad", "numpy==1.26.4", "librosa", "tensorflow", "birdnetlib"))
+}
+
+#' Whether pip can be imported in a virtual environment
+#'
+#' `reticulate::virtualenv_install()` opens by asking the environment's pip for
+#' its version, running `import pip; pip.__version__` and comparing what comes
+#' back against a minimum. Where that import fails, the comparison is handed the
+#' three lines of a Python traceback in place of a version and the install stops
+#' on `the condition has length > 1`, which names neither pip nor the
+#' environment. The import fails whenever pip is installed but not importable:
+#' an interrupted install, or a file-syncing service that has carried off the
+#' loose files of the package and left its directories behind, which an
+#' environment built inside a synced folder is prone to.
+#'
+#' The same import is attempted here first so that such an environment can be
+#' reported as needing a rebuild. Only whether it succeeded is wanted, so the
+#' output is discarded rather than read: `system2()` then returns the exit
+#' status, and the traceback is kept off the console.
+#'
+#' @param python The Python executable of the environment to ask.
+#' @return TRUE if pip can be imported, FALSE if it cannot or there is no such
+#'   executable.
+#' @keywords internal
+#' @noRd
+.pipUsable <- function(python) {
+  if (!file.exists(python)) {
+    return(FALSE)
+  }
+  status <- suppressWarnings(system2(
+    python,
+    c("-c", shQuote("import pip; pip.__version__")),
+    stdout = FALSE,
+    stderr = FALSE
+  ))
+  return(identical(as.integer(status), 0L))
 }
 
 #' Python versions the sonicscrewdriver environment can be built on
