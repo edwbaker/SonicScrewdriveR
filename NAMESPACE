@@ -153,7 +153,6 @@ importFrom(Rdpack,reprompt)
 importFrom(ggplot2,
   .data,
   aes,
-  aes_string,
   coord_polar,
   element_blank,
   element_line,

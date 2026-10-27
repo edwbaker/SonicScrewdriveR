@@ -52,9 +52,17 @@
   # colons between the parts of the time, but allows any punctuation, and
   # writers differ.
   day <- gsub("[-:_/.]", "-", date)
-  parsed <- as.POSIXct(
-    paste(day, gsub("[-:_/.]", ":", time)), format="%Y-%m-%d %H:%M:%S", tz=""
-  )
+  clock <- gsub("[-:_/.]", ":", time)
+  parsed <- as.POSIXct(paste(day, clock), format="%Y-%m-%d %H:%M:%S", tz="")
+  if (is.na(parsed)) {
+    # A writer that cut the seconds off a field the specification gives eight
+    # characters to has still said what hour and minute the recording was made
+    # in, which is worth more than the midnight below. The whole time is tried
+    # first because a time read for its hour and minute alone stops at the
+    # minute and says nothing of what follows it, so asking that of a whole
+    # time would quietly drop the seconds it plainly gives.
+    parsed <- as.POSIXct(paste(day, clock), format="%Y-%m-%d %H:%M", tz="")
+  }
   if (is.na(parsed)) {
     # A time written in no layout the specification allows says nothing about
     # the date beside it, which the file gave plainly, so the date is kept at

@@ -40,9 +40,39 @@ test_that("A date is kept when the time beside it cannot be read", {
   )
 })
 
-test_that("A date is kept when the time beside it is cut short", {
+# 16930.wav of the bio.acousti.ca corpus holds "14:00" in a field the
+# specification gives eight characters to. The hour and minute are there to be
+# read, and reading them is worth more than the midnight a file with no time at
+# all gives.
+test_that("A time cut short to the minute keeps its hour and minute", {
   f <- mdFile(mdWav(mdFmt(), mdBextChunk(
     "A recording", date="2011-05-23", time="14:22"
+  ), mdData()))
+
+  expect_identical(
+    format(bext(f)[["datetime"]], "%Y-%m-%d %H:%M:%S"), "2011-05-23 14:22:00"
+  )
+})
+
+# Reading the hour and minute of a time stops at the minute and says nothing of
+# what follows, so trying it on a whole time would report the right minute and
+# quietly lose the seconds. The whole time has to be tried first, and this is
+# the test that says so.
+test_that("A whole time keeps its seconds", {
+  f <- mdFile(mdWav(mdFmt(), mdBextChunk(
+    "A recording", date="2011-05-23", time="14:22:59"
+  ), mdData()))
+
+  expect_identical(
+    format(bext(f)[["datetime"]], "%Y-%m-%d %H:%M:%S"), "2011-05-23 14:22:59"
+  )
+})
+
+# An hour or a minute outside the clock is not a time cut short, and gives the
+# date at midnight as any other unreadable time does.
+test_that("A time cut short to nonsense is still not read", {
+  f <- mdFile(mdWav(mdFmt(), mdBextChunk(
+    "A recording", date="2011-05-23", time="99:99"
   ), mdData()))
 
   expect_identical(
