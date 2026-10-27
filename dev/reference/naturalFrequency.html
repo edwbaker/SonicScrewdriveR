@@ -55,7 +55,7 @@ resistance and related quantities. All units are SI.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">naturalFrequency</span><span class="op">(</span><span class="va">L</span>, C <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">R</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">naturalFrequency</span><span class="op">(</span><span class="va">L</span>, C <span class="op">=</span> <span class="fl">1e+05</span>, <span class="va">R</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,7 +67,7 @@ resistance and related quantities. All units are SI.</p>
 
 
 <dt id="arg-c">C<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
-<dd><p>Capacitance, by default IUPAC standard pressure.</p></dd>
+<dd><p>Capacitance, by default the IUPAC standard pressure of 1e5 Pascals.</p></dd>
 
 
 <dt id="arg-r">R<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
@@ -81,13 +81,15 @@ resistance and related quantities. All units are SI.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For isothermal compression, the bulk modulus is equal to the pressure. The default value of C therefore is the IUPAC
-standard pressure.</p>
+standard pressure, which in SI units is 1e5 Pascals.</p>
+<p>A system in which the damping term exceeds the stiffness term (R^2/(4L^2) &gt; 1/(LC)) is overdamped: it returns to
+rest without oscillating, and so has no real natural frequency. This raises an error rather than returning NaN.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">naturalFrequency</span><span class="op">(</span>L<span class="op">=</span><span class="fl">20</span>,R<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.002950812</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">naturalFrequency</span><span class="op">(</span>L<span class="op">=</span><span class="fl">20</span>,R<span class="op">=</span><span class="fl">0.01</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0001052711</span>
 <span class="r-in"><span><span class="fu">naturalFrequency</span><span class="op">(</span>L<span class="op">=</span><span class="fl">20</span>,C<span class="op">=</span><span class="fl">1</span><span class="op">/</span><span class="fl">4</span>,R<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.07114845</span>
 </code></pre></div>

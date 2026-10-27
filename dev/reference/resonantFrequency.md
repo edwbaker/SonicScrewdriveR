@@ -8,7 +8,7 @@ resistance and related quantities. All units are SI.
 ## Usage
 
 ``` r
-resonantFrequency(L, C = NULL)
+resonantFrequency(L, C = 1e+05)
 ```
 
 ## Arguments
@@ -19,8 +19,7 @@ resonantFrequency(L, C = NULL)
 
 - C:
 
-  Capacitance, if NULL (the default) the IUPAC standard pressure is
-  used.
+  Capacitance, by default the IUPAC standard pressure of 1e5 Pascals.
 
 ## Value
 
@@ -29,7 +28,8 @@ The resonant frequency, in Hertz.
 ## Details
 
 For isothermal compression, the bulk modulus is equal to the pressure.
-The default value of C therefore is the IUPAC standard pressure.
+The default value of C therefore is the IUPAC standard pressure, which
+in SI units is 1e5 Pascals.
 
 ## Examples
 

@@ -55,7 +55,7 @@ resistance and related quantities. All units are SI.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">resonantFrequency</span><span class="op">(</span><span class="va">L</span>, C <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">resonantFrequency</span><span class="op">(</span><span class="va">L</span>, C <span class="op">=</span> <span class="fl">1e+05</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,7 +67,7 @@ resistance and related quantities. All units are SI.</p>
 
 
 <dt id="arg-c">C<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
-<dd><p>Capacitance, if NULL (the default) the IUPAC standard pressure is used.</p></dd>
+<dd><p>Capacitance, by default the IUPAC standard pressure of 1e5 Pascals.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -77,7 +77,7 @@ resistance and related quantities. All units are SI.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For isothermal compression, the bulk modulus is equal to the pressure. The default value of C therefore is the IUPAC
-standard pressure.</p>
+standard pressure, which in SI units is 1e5 Pascals.</p>
     </div>
 
     <div class="section level2">
