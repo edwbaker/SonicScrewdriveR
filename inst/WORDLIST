@@ -15,6 +15,7 @@ BirdNet
 CMD
 DataFrame
 Diel
+DISP
 Dolbear
 Dolbear's
 EBU
@@ -55,6 +56,7 @@ Varotsos
 WaveFilter
 WaveMC
 YYYYMMDD
+acousti
 addProcess
 addSpectra
 aes
@@ -99,6 +101,7 @@ dayPhases
 daysPhases
 defaultCluster
 diel
+disp
 dielFraction
 dielHistogram
 dielPlot
@@ -227,6 +230,7 @@ writeAudio
 writeAudioFlac
 writeWave
 xeno
+xmp
 yearlyFraction
 yearlyPlot
 yearlyPositions

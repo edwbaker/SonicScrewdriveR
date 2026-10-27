@@ -26,6 +26,15 @@ mdSyncsafe <- function(x) {
   ))
 }
 
+#' Text as the UTF-8 bytes a format that declares that encoding holds
+mdUtf8 <- function(text) charToRaw(enc2utf8(text))
+
+#' Text as the UTF-16 bytes, little end first, that a clipboard item holds
+mdUtf16 <- function(text) {
+  codes <- utf8ToInt(enc2utf8(text))
+  return(as.raw(c(rbind(codes %% 256L, codes %/% 256L))))
+}
+
 #' Text as a run of bytes of a fixed width, padded with nuls
 mdPad <- function(text, n) {
   bytes <- charToRaw(text)

@@ -37,6 +37,8 @@
   bext = "bext",
   wavInfo = "INFO",
   ixml = "iXML",
+  xmp = "XMP",
+  disp = "display name",
   vorbisComment = "Vorbis comment"
 )
 
