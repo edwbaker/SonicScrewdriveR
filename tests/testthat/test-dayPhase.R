@@ -45,6 +45,33 @@ test_that("dayPhases leaves phases that do not occur as NA", {
   expect_false(is.na(d["Day", "Start"]))
 })
 
+test_that("dayPhases runs a phase on to the next event that occurs", {
+  # Night does not start at 50 N in midsummer, so Dusk.Astro does not end when it
+  # would have: it runs through to the next morning's nauticalDawn. Taking the end
+  # from the next event in the day's own table left it NA.
+  d <- dayPhases(as.Date("2024-06-15"), lat=LAT, lon=LON, tz="UTC")
+  nextDay <- suncalc::getSunlightTimes(as.Date("2024-06-16"), lat=LAT, lon=LON, tz="UTC")
+  expect_false(is.na(d["Dusk.Astro", "End"]))
+  expect_equal(as.numeric(d["Dusk.Astro", "End"]), as.numeric(nextDay$nauticalDawn),
+               tolerance=0)
+})
+
+test_that("dayPhases gives no phase for a day on which no event occurs", {
+  # Polar day at Tromso: every event is missing, so no phase begins on this day and
+  # the one in effect began in May. dayPhase() reports that phase.
+  d <- dayPhases(as.Date("2024-06-20"), lat=69.65, lon=18.96, tz="Europe/Oslo")
+  expect_equal(nrow(d), 11)
+  expect_true(all(is.na(d$Start[1:10])))
+})
+
+test_that("dayPhases finds the moon's set beyond the following day", {
+  # At 65 N the moon rises on 11 April and stays up until it sets on the 17th, so
+  # the set was NA on both of the two days read and the interval was dropped.
+  d <- dayPhases(as.Date("2024-04-11"), lat=65, lon=15, tz="UTC")
+  expect_equal(as.Date(d["Moon", "Start"]), as.Date("2024-04-11"))
+  expect_equal(as.Date(d["Moon", "End"]), as.Date("2024-04-17"))
+})
+
 test_that("dayPhase covers a recording within a single day", {
   r <- dayPhase(time=as.POSIXct("2024-12-15 12:00:00", tz="UTC"), duration=3600,
                 lat=LAT, lon=LON, tz="UTC")
@@ -83,6 +110,100 @@ test_that("dayPhase relative times stay within the recording", {
   # never fired and the last phase ran past the end of the recording.
   expect_equal(max(r$End.relative), duration)
   expect_equal(min(r$Start.relative), 0)
+})
+
+# The seconds of a recording that the solar phases account for. The phases partition
+# the day, so a recording is in one of them at every moment and they should account
+# for all of it.
+solarCoverage <- function(r) {
+  solar <- r[!grepl("^Moon", rownames(r)), , drop=FALSE]
+  return(sum(solar$End.relative - solar$Start.relative))
+}
+
+test_that("dayPhase accounts for the whole of the documented example", {
+  # The example in ?dayPhase. Dusk.Astro, Night and Dawn.Astro were all bounded by
+  # an event that does not occur at 50 N in midsummer, so all three were dropped and
+  # 14241 of the 40000 seconds, the whole of the short night, were in no phase.
+  duration <- 40000
+  r <- dayPhase(time=as.POSIXct("2024-06-15 20:00:00", tz="UTC"), duration=duration,
+                lat=LAT, lon=LON, tz="UTC")
+  expect_equal(solarCoverage(r), duration)
+  expect_true("Dusk.Astro" %in% sub("[0-9]+$", "", rownames(r)))
+})
+
+test_that("dayPhase gives the phase of a summer night in southern Scandinavia", {
+  # At 58 N on this night nauticalDusk and nauticalDawn do not occur either, and the
+  # recording, which is in nautical twilight throughout, came back with the moon and
+  # no solar phase at all.
+  duration <- 3600
+  r <- dayPhase(time=as.POSIXct("2024-06-20 00:30:00", tz="Europe/Stockholm"),
+                duration=duration, lat=58, lon=12, tz="Europe/Stockholm")
+  expect_equal(sub("[0-9]+$", "", rownames(r))[1], "Dusk.Naut")
+  expect_equal(solarCoverage(r), duration)
+})
+
+test_that("dayPhase gives polar day as Day and polar night as Night", {
+  # Every event is missing for months on end, which returned no row at all for polar
+  # day and the moon alone for polar night. The phase is named for where the sun is.
+  day <- dayPhase(time=as.POSIXct("2024-06-20 23:00:00", tz="Europe/Oslo"),
+                  duration=3600, lat=69.65, lon=18.96, tz="Europe/Oslo")
+  expect_equal(sub("[0-9]+$", "", rownames(day))[1], "Day")
+  expect_equal(solarCoverage(day), 3600)
+
+  # At 85 N the sun stays below 18 degrees under the horizon from 10 December to
+  # 1 January, so noon on the solstice is in the middle of one Night phase.
+  night <- dayPhase(time=as.POSIXct("2024-12-21 12:00:00", tz="UTC"),
+                    duration=3600, lat=85, lon=15, tz="UTC")
+  expect_equal(sub("[0-9]+$", "", rownames(night))[1], "Night")
+  expect_equal(solarCoverage(night), 3600)
+})
+
+test_that("dayPhase accounts for the whole of a recording wherever it was made", {
+  # The phases partition the day at every latitude, so there is no date or place at
+  # which part of a recording belongs to no phase.
+  duration <- 40000
+  dates <- seq.Date(as.Date("2024-01-05"), as.Date("2024-12-31"), by=31)
+  for (lat in c(LAT, 69.65, 85)) {
+    coverage <- vapply(dates, function(d) {
+      r <- dayPhase(time=as.POSIXct(paste(d, "20:00:00"), tz="UTC"), duration=duration,
+                    lat=lat, lon=15, tz="UTC")
+      solarCoverage(r)
+    }, numeric(1))
+    expect_equal(coverage, rep(duration, length(dates)),
+                 info=paste("latitude", lat))
+  }
+})
+
+test_that("dayPhase gives contiguous solar phases", {
+  r <- dayPhase(time=as.POSIXct("2024-06-15 20:00:00", tz="UTC"), duration=40000,
+                lat=LAT, lon=LON, tz="UTC")
+  solar <- r[!grepl("^Moon", rownames(r)), , drop=FALSE]
+  expect_equal(solar$End.relative[-nrow(solar)], solar$Start.relative[-1])
+  expect_equal(as.numeric(solar$End[-nrow(solar)]), as.numeric(solar$Start[-1]),
+               tolerance=0)
+})
+
+test_that("dayPhase finds moonlight that began days before the recording", {
+  # At 65 N the moon rose on 11 April and did not set until the 17th, so a recording
+  # made between the two is in moonlight that began well outside the days the phases
+  # of a recording are otherwise gathered from.
+  r <- dayPhase(time=as.POSIXct("2024-04-14 02:00:00", tz="UTC"), duration=3600,
+                lat=65, lon=15, tz="UTC")
+  expect_true("Moon" %in% rownames(r))
+  expect_equal(as.Date(r["Moon", "Start"]), as.Date("2024-04-11"))
+})
+
+test_that("dayPhase numbers repeated phases among the rows it returns", {
+  # The phases are found by searching outwards from the recording, which at high
+  # latitudes runs over hundreds of days, and the numbering used to count those.
+  r <- dayPhase(time=as.POSIXct("2024-06-20 23:00:00", tz="Europe/Oslo"),
+                duration=3600, lat=69.65, lon=18.96, tz="Europe/Oslo")
+  expect_equal(rownames(r), "Day")
+
+  twoDays <- dayPhase(time=as.POSIXct("2024-06-15 20:00:00", tz="UTC"), duration=40000,
+                      lat=LAT, lon=LON, tz="UTC")
+  expect_equal(sum(grepl("^Day", rownames(twoDays))), 2)
+  expect_true(all(c("Day", "Day1") %in% rownames(twoDays)))
 })
 
 test_that("dayPhases works on every day of the year", {
