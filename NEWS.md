@@ -177,6 +177,17 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- readAudio() chose its reader by the extension of the file, so a file under
+  the wrong one was read as the wrong format. A wave file called .mp3 was
+  given to `tuneR::readMP3()`, which does not refuse it: it finds a frame
+  header somewhere in the PCM and decodes from there, and a 44.1 kHz mono
+  recording of 43.6 seconds came back as 9.8 seconds of 22.05 kHz stereo with
+  nothing raised. An MP3 called .wav was read by the av package instead of by
+  `tuneR::readMP3()`, returning the same audio at a different bit depth and
+  length than the same file under its own name. The reader is now chosen from
+  the first bytes of the file, which say which container it is, and the name
+  used only where those bytes identify nothing. Passing `mime` is still taken
+  as given.
 - defaultCluster() asked for a cluster of NA workers on a machine where
   parallel::detectCores() cannot count the cores, which it is documented to
   report as NA. One was subtracted from the count and the result held at a
