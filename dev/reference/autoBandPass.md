@@ -27,8 +27,11 @@ autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 
 - lowcut:
 
-  High-pass filtering is applied at this frequency before calculating
-  the centre frequency and bandwidth
+  Frequency (in Hz) below which the recording is ignored, which must be
+  below half the sample rate. High-pass filtering is applied here before
+  the centre frequency and bandwidth are calculated, and the same
+  frequency is the floor of that calculation, so no band below it is
+  chosen.
 
 ## Value
 

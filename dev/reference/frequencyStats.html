@@ -52,7 +52,13 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">frequencyStats</span><span class="op">(</span><span class="va">wave</span>, wave_spec <span class="op">=</span> <span class="cn">NULL</span>, warn <span class="op">=</span> <span class="cn">TRUE</span>, lowcut <span class="op">=</span> <span class="fl">1</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">frequencyStats</span><span class="op">(</span></span>
+<span>  <span class="va">wave</span>,</span>
+<span>  wave_spec <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  warn <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  lowcut <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  plot <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -65,7 +71,8 @@ allChannels(), which returns one set of statistics per channel.</p></dd>
 
 
 <dt id="arg-wave-spec">wave_spec<a class="anchor" aria-label="anchor" href="#arg-wave-spec"></a></dt>
-<dd><p>A precomputed spectrum (optional, if not present will be generated)</p></dd>
+<dd><p>A precomputed spectrum (optional, if not present will be
+generated), with its frequencies in kHz as seewave::meanspec() returns them.</p></dd>
 
 
 <dt id="arg-warn">warn<a class="anchor" aria-label="anchor" href="#arg-warn"></a></dt>
@@ -73,7 +80,10 @@ allChannels(), which returns one set of statistics per channel.</p></dd>
 
 
 <dt id="arg-lowcut">lowcut<a class="anchor" aria-label="anchor" href="#arg-lowcut"></a></dt>
-<dd><p>Frequency (in kHz) values below which are ignored.</p></dd>
+<dd><p>Frequency below which values are ignored, in Hz, as every other
+frequency the package takes is. This argument was in kHz in earlier
+releases: the default is the same frequency as before, but a value given
+explicitly needs multiplying by a thousand.</p></dd>
 
 
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
@@ -82,7 +92,8 @@ allChannels(), which returns one set of statistics per channel.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of frequency statistics, with an entry for each of the -3dB and -10dB thresholds.</p>
+    <p>A list of frequency statistics, with an entry for each of the -3dB
+and -10dB thresholds. Frequencies and bandwidths are in kHz.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

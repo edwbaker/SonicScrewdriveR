@@ -75,7 +75,10 @@ or -10dB.</p>
 
 
 <dt id="arg-lowcut">lowcut<a class="anchor" aria-label="anchor" href="#arg-lowcut"></a></dt>
-<dd><p>High-pass filtering is applied at this frequency before calculating the centre frequency and bandwidth</p></dd>
+<dd><p>Frequency (in Hz) below which the recording is ignored, which
+must be below half the sample rate. High-pass filtering is applied here
+before the centre frequency and bandwidth are calculated, and the same
+frequency is the floor of that calculation, so no band below it is chosen.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -7,7 +7,13 @@ Bennett-Clark (1999) \<doi: 10.1080/09524622.1999.9753408\>.
 ## Usage
 
 ``` r
-frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
+frequencyStats(
+  wave,
+  wave_spec = NULL,
+  warn = TRUE,
+  lowcut = 1000,
+  plot = FALSE
+)
 ```
 
 ## Arguments
@@ -19,7 +25,8 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 
 - wave_spec:
 
-  A precomputed spectrum (optional, if not present will be generated)
+  A precomputed spectrum (optional, if not present will be generated),
+  with its frequencies in kHz as seewave::meanspec() returns them.
 
 - warn:
 
@@ -27,7 +34,10 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 
 - lowcut:
 
-  Frequency (in kHz) values below which are ignored.
+  Frequency below which values are ignored, in Hz, as every other
+  frequency the package takes is. This argument was in kHz in earlier
+  releases: the default is the same frequency as before, but a value
+  given explicitly needs multiplying by a thousand.
 
 - plot:
 
@@ -36,4 +46,4 @@ frequencyStats(wave, wave_spec = NULL, warn = TRUE, lowcut = 1, plot = FALSE)
 ## Value
 
 A list of frequency statistics, with an entry for each of the -3dB and
--10dB thresholds.
+-10dB thresholds. Frequencies and bandwidths are in kHz.
