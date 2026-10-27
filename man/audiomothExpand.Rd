@@ -37,6 +37,12 @@ are attached to a returned Wave object as a "guano" attribute, which
 Writing to \code{output} streams the expanded file to disk, so a recording that
 expands to more than memory can hold can still be expanded. Returning a Wave
 object necessarily holds the whole expanded recording in memory.
+
+A recording cut short by a recorder that lost power is reported with a
+warning classed \code{truncatedAudio}, or \code{unwrittenAudioSize} where the size of
+the audio was never written, and the audio that is there is expanded. Both
+are also classed \code{audioFileWarning}; see \code{\link[=readAudio]{readAudio()}} for the warnings that
+share those classes and for handling one of them without silencing the rest.
 }
 \examples{
 \dontrun{

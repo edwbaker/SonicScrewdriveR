@@ -642,3 +642,233 @@ test_that(".zeroNonFinite replaces samples that are not finite numbers", {
   clean <- c(1, 2, 3)
   expect_identical(.zeroNonFinite(clean, "test.wav"), clean)
 })
+
+# A wave file holding silence, with the sample rate it declares in its header
+# and whatever metadata chunks it is given. The bytes are written by hand, as
+# the point of these tests is a file whose header and metadata disagree, which
+# nothing in this package would write.
+rateWav <- function(rate, ..., envir=parent.frame()) {
+  path <- withr::local_tempfile(fileext=".wav", .local_envir=envir)
+  writeBin(mdWav(mdFmt(rate), ..., mdData(32L)), path)
+  return(path)
+}
+
+# The warnings a call raised, with their classes, so that a test can assert
+# that a file was read in silence as well as what was said about one that was
+# not.
+rateWarnings <- function(expr) {
+  found <- list()
+  value <- withCallingHandlers(
+    expr,
+    warning=function(cond) {
+      found[[length(found) + 1L]] <<- cond
+      invokeRestart("muffleWarning")
+    }
+  )
+  return(list(
+    value = value,
+    messages = vapply(found, conditionMessage, character(1)),
+    classes = unlist(lapply(found, class))
+  ))
+}
+
+test_that("A header that disagrees with the GUANO sample rate is reported", {
+  # Fault D3 of the malformed wave files set: a header at a tenth of the rate
+  # the recorder itself recorded, so the recording reads as ten times its
+  # length and a 40kHz bat call lands at 4kHz.
+  f <- rateWav(38400, mdGuanoChunk("Samplerate:384000"))
+
+  expect_warning(readAudio(f), class="sampleRateMismatch")
+  expect_warning(readAudio(f), "38400 Hz, but its GUANO metadata records 384000 Hz")
+
+  # The wave is returned at the rate the samples were read at, whichever of the
+  # two turns out to be right.
+  w <- suppressWarnings(readAudio(f))
+  expect_equal(w@samp.rate, 38400)
+  expect_equal(length(w@left), 16)
+})
+
+test_that("A header that agrees with the metadata is read in silence", {
+  quiet <- rateWarnings(readAudio(rateWav(48000, mdGuanoChunk("Samplerate:48000"))))
+  expect_equal(quiet$messages, character(0))
+  expect_equal(quiet$value@samp.rate, 48000)
+
+  # A file carrying no metadata has nothing to disagree with.
+  expect_equal(rateWarnings(readAudio(rateWav(48000)))$messages, character(0))
+
+  # Nor has one whose metadata says nothing about the sample rate.
+  expect_equal(
+    rateWarnings(readAudio(rateWav(48000, mdGuanoChunk("Make:A Recorder"))))$messages,
+    character(0)
+  )
+})
+
+test_that("A time-expanded recording is not reported as a mismatch", {
+  # A recording stored at a tenth of the rate it was made at, which is what
+  # time expansion is, and which GUANO records in its TE field.
+  expanded <- rateWav(38400, mdGuanoChunk("Samplerate:384000", "TE:10"))
+  expect_equal(rateWarnings(readAudio(expanded))$messages, character(0))
+
+  # An expansion that does not account for the gap is still a mismatch: a
+  # factor of two leaves a file stored at 38400 claiming to hold 76800.
+  wrong <- rateWav(38400, mdGuanoChunk("Samplerate:384000", "TE:2"))
+  expect_warning(readAudio(wrong), class="sampleRateMismatch")
+
+  # A file that records no expansion, or one that is no factor at all, is
+  # taken to be stored at the rate it was made at.
+  for (te in c("TE:1", "TE:0", "TE:-10")) {
+    expect_warning(
+      readAudio(rateWav(38400, mdGuanoChunk("Samplerate:384000", te))),
+      class="sampleRateMismatch"
+    )
+  }
+})
+
+test_that("The rate a bext coding history records is compared with the header", {
+  disagrees <- rateWav(
+    48000, mdBextChunk("A recording", history="A=PCM,F=96000,W=16,M=mono")
+  )
+  expect_warning(
+    readAudio(disagrees),
+    "the coding history of its bext chunk records 96000 Hz"
+  )
+
+  agrees <- rateWav(
+    48000, mdBextChunk("A recording", history="A=PCM,F=48000,W=16,M=mono")
+  )
+  expect_equal(rateWarnings(readAudio(agrees))$messages, character(0))
+
+  # A coding history holds one line per generation the recording has been
+  # through, and the generation that meets the header is enough to say the file
+  # agrees with itself.
+  generations <- rateWav(48000, mdBextChunk(
+    "A recording",
+    history="A=PCM,F=96000,W=24,M=mono\r\nA=PCM,F=48000,W=16,M=mono"
+  ))
+  expect_equal(rateWarnings(readAudio(generations))$messages, character(0))
+
+  # A generation that says nothing about the rate leaves the others to speak.
+  analogue <- rateWav(48000, mdBextChunk(
+    "A recording",
+    history="A=ANALOGUE,M=stereo,T=original\r\nA=PCM,F=48000,W=16,M=mono"
+  ))
+  expect_equal(rateWarnings(readAudio(analogue))$messages, character(0))
+})
+
+test_that("Two sources that both disagree are reported in one warning", {
+  f <- rateWav(
+    48000,
+    mdGuanoChunk("Samplerate:384000"),
+    mdBextChunk("A recording", history="A=PCM,F=96000,W=16,M=mono")
+  )
+  raised <- rateWarnings(readAudio(f))
+  expect_length(raised$messages, 1)
+  expect_match(raised$messages, "its GUANO metadata records 384000 Hz")
+  expect_match(
+    raised$messages, "the coding history of its bext chunk records 96000 Hz"
+  )
+})
+
+test_that("A metadata rate that is not a number is passed over in silence", {
+  # guano() keeps a field it cannot read as a number as the text it is, and
+  # complains as it does so. Reading the metadata is a cross-check on the audio
+  # rather than something the caller asked for, so that complaint is not raised
+  # from under a call to read the audio, and there is no rate to compare the
+  # header against.
+  f <- rateWav(48000, mdGuanoChunk("Samplerate:lots"))
+  expect_equal(rateWarnings(readAudio(f))$messages, character(0))
+})
+
+test_that(".wavCodingRates reads the F field of each generation", {
+  expect_equal(.wavCodingRates("A=PCM,F=48000,W=16,M=mono"), 48000)
+  expect_equal(
+    .wavCodingRates("A=PCM,F=96000,W=24,M=mono\r\nA=PCM,F=48000,W=16,M=mono"),
+    c(96000, 48000)
+  )
+  # The same rate in every generation is one rate.
+  expect_equal(
+    .wavCodingRates("A=PCM,F=48000,W=24\r\nA=PCM,F=48000,W=16"), 48000
+  )
+  # A field whose name happens to end in F is not the sample rate.
+  expect_equal(.wavCodingRates("A=PCM,REF=48000,W=16"), numeric(0))
+  expect_equal(.wavCodingRates("A=PCM,W=16,M=mono"), numeric(0))
+  expect_equal(.wavCodingRates(""), numeric(0))
+  expect_equal(.wavCodingRates(NA_character_), numeric(0))
+  expect_equal(.wavCodingRates(character(0)), numeric(0))
+  # A rate of zero is no rate at all.
+  expect_equal(.wavCodingRates("A=PCM,F=0,W=16"), numeric(0))
+})
+
+test_that(".wavRateValue reads only a field that holds one number", {
+  expect_equal(.wavRateValue(48000), 48000)
+  expect_equal(.wavRateValue("48000"), 48000)
+  expect_true(is.na(.wavRateValue("lots")))
+  expect_true(is.na(.wavRateValue(NULL)))
+  expect_true(is.na(.wavRateValue(c(1, 2))))
+  expect_true(is.na(.wavRateValue(NA)))
+  expect_true(is.na(.wavRateValue(Inf)))
+})
+
+test_that("A rate of a million or more is written as a number, not in notation", {
+  expect_equal(.wavRateText(1000000), "1000000")
+  expect_equal(.wavRateText(c(48000, 1000000)), c("48000", "1000000"))
+})
+
+test_that(".wavRateWarning says nothing about a wave with no usable rate", {
+  f <- rateWav(38400, mdGuanoChunk("Samplerate:384000"))
+  w <- suppressWarnings(readAudio(f))
+
+  # Reached by a wave built from a file that declared a rate of zero, which
+  # there is nothing to compare against.
+  w@samp.rate <- 0
+  expect_equal(rateWarnings(.wavRateWarning(w, f))$messages, character(0))
+
+  # A file that is not a wave file at all carries no metadata to compare
+  # against, and asking it is not an error.
+  junk <- withr::local_tempfile(fileext=".wav")
+  writeBin(as.raw(rep(7L, 40)), junk)
+  expect_equal(.wavRateClaims(junk), list())
+})
+
+test_that("The warnings readAudio() raises each carry a class of their own", {
+  mismatch <- rateWav(38400, mdGuanoChunk("Samplerate:384000"))
+  expect_warning(readAudio(mismatch), class="sampleRateMismatch")
+  expect_warning(readAudio(mismatch), class="audioFileWarning")
+
+  unwritten <- malformedWav(
+    as.integer(rep(c(400L, -400L), 100)), dataSize=0, riffSize=8
+  )
+  on.exit(unlink(unwritten))
+  expect_warning(readAudio(unwritten), class="unwrittenAudioSize")
+  expect_warning(readAudio(unwritten), class="audioFileWarning")
+
+  nonFinite <- malformedWav(c(0.1, NaN, -0.2), bits=32, format=3)
+  on.exit(unlink(nonFinite), add=TRUE)
+  expect_warning(readAudio(nonFinite), class="nonFiniteSamples")
+  expect_warning(readAudio(nonFinite), class="audioFileWarning")
+
+  # One kind can be silenced without silencing the rest.
+  expect_silent(withCallingHandlers(
+    readAudio(mismatch),
+    sampleRateMismatch=function(cond) invokeRestart("muffleWarning")
+  ))
+})
+
+test_that("A warning about a file that was read reaches the caller", {
+  # The reading is guarded so that a file readWave() cannot make sense of is
+  # read by the av package instead, which must not swallow what is said about a
+  # file that was read: under options(warn=2) the warning is an error, and
+  # catching it here would read the file a second time by other means and lose
+  # the answer the caller asked for.
+  f <- rateWav(38400, mdGuanoChunk("Samplerate:384000"))
+  withr::local_options(warn=2)
+  expect_error(readAudio(f), "GUANO metadata records 384000 Hz")
+})
+
+test_that("A file readWave() cannot read is still passed on to be read another way", {
+  # Nothing can read this, so it reaches the end of readAudio() rather than
+  # stopping at the wave reader.
+  junk <- withr::local_tempfile(fileext=".wav")
+  writeBin(as.raw(rep(7L, 400)), junk)
+  expect_error(suppressWarnings(readAudio(junk)))
+})
