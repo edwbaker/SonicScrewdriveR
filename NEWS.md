@@ -177,6 +177,13 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- defaultCluster() asked for a cluster of NA workers on a machine where
+  parallel::detectCores() cannot count the cores, which it is documented to
+  report as NA. One was subtracted from the count and the result held at a
+  minimum of one with max(), but NA - 1L is NA and max() keeps it, so the NA
+  reached makeCluster() and failed there with "numeric 'names' must be >= 1",
+  naming neither the function nor the cores. Such a machine now gets a cluster
+  of one.
 - pythonInstall() stopped with "the condition has length > 1", which names
   neither Python nor pip, where the pip of an existing `sonicscrewdriver`
   environment could not be imported. reticulate asks pip for its version before

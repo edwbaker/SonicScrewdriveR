@@ -1,7 +1,8 @@
 #' Create Default Cluster for Windowing
 #'
 #' Creates a default cluster using one less than the total cores available on
-#' the system. By default this uses forking, which is not be available on Windows.
+#' the system. Where the number of cores cannot be determined a cluster of one
+#' is created. By default this uses forking, which is not be available on Windows.
 #' Hence, the fork parameter has no effect on Windows.
 #'
 #' @param fork If TRUE uses forking to create the cluster (Unix like systems only)
@@ -17,7 +18,9 @@
 #' }
 #'
 defaultCluster <- function(fork=TRUE) {
-  cores <- max(1L, detectCores() - 1L)
+  #detectCores() returns NA where it cannot count the cores, and NA - 1L is NA,
+  #so the lower bound of one has to be applied with na.rm=TRUE to catch it.
+  cores <- max(1L, detectCores() - 1L, na.rm=TRUE)
 
   if (.Platform$OS.type == "windows") {
     fork <- FALSE
