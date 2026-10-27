@@ -175,6 +175,12 @@
   at a time. Joining them one at a time copied the whole of the output so far on
   every window, so the saving grows with the length of the recording: around 9 times
   faster for one minute of audio and 37 times for four minutes.
+- guanoWrite() copies the recording across a buffer at a time rather than reading
+  it into memory to rewrite it. Replacing a few hundred bytes of metadata needed
+  an allocation several times the length of the recording, which fails on a
+  machine that cannot find it: changing one field of a 300MB recording peaked at
+  1.9GB, and now takes no more memory than changing it in a short one, whatever
+  the recording is.
 
 ## Fixes
 - pythonInstall() stopped with "the condition has length > 1", which names
