@@ -31,6 +31,8 @@
   : Apply a function to all channels of a Wave or WaveMC object
 - [`annotation()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotation.md)
   : Create a new Annotation object
+- [`` `audioMetadata<-`() ``](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioMetadata-set.md)
+  : Attach metadata to a Wave object
 - [`audio_filesize()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audio_filesize.md)
   : Calculated size of raw audio files
 - [`audioblast()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblast.md)
@@ -55,6 +57,8 @@
   : Beat spectrum complexity
 - [`beatSpectrum()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatSpectrum.md)
   : Computes a beat spectrum
+- [`bext()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/bext.md)
+  : Read Broadcast Wave metadata
 - [`birdNetAnalyse()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/birdNetAnalyse.md)
   : Analyse sound files using BirdNET-Analyzer
 - [`channels_se()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/channels_se.md)
@@ -161,6 +165,10 @@
   : Converts bytes in human readable form
 - [`humanTime()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanTime.md)
   : Converts time to human readable form
+- [`id3()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/id3.md)
+  : Read ID3 metadata
+- [`ixml()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/ixml.md)
+  : Read the iXML metadata of a wave file
 - [`jitter()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/jitter.md)
   : Calculate the jitter in a Wave object
 - [`labelPadding()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/labelPadding.md)
@@ -235,6 +243,8 @@
   : Read an audio file
 - [`readBirdNet()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readBirdNet.md)
   : Read output files from BirdNet Analyser
+- [`readMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readMetadata.md)
+  : Read every kind of metadata a file carries
 - [`readRespeaker6()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readRespeaker6.md)
   : Read a file from Seeed Studio Respeaker 6 mic array
 - [`referenceIntensity()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/referenceIntensity.md)
@@ -289,6 +299,12 @@
   : Upsample a wave
 - [`validateIsWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/validateIsWave.md)
   : Check an object is a Wave object
+- [`vorbisComment()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/vorbisComment.md)
+  : Read Vorbis comments
+- [`wamd()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wamd.md)
+  : Read Wildlife Acoustics metadata
+- [`wavInfo()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavInfo.md)
+  : Read the INFO metadata of a wave file
 - [`wavelength()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavelength.md)
   : Get the wavelength from frequency and speed of sound
 - [`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)

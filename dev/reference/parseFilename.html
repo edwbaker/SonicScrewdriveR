@@ -83,7 +83,12 @@ to "UTC" (see Details).</p></dd>
 given then a list of such lists is returned.
 <br><br>
 It is possible to determine additional properties from some files, these will
-be added to the list.</p>
+be added to the list. Which properties those are depends on the format: a
+Wildlife Acoustics name gives a model, a prefix, a microphone and a
+deployment, a TSA name gives a collection, a taxon, an accession number and a
+hash, and a reading the name left in doubt gives <code>ambiguous</code> and
+<code>alternatives</code>. A format carrying no time, which TSA names do not, reports
+<code>datetime</code> as NA rather than leaving it out.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -97,6 +102,19 @@ a filename, e.g. when an eight-digit 'AudioMoth HEX' only contains numbers it
 could be confused with a YYYYMMDD format. If a list of filenames is given
 and the "match" format is specified then an effort will be made to determine
 the most likely format that applies to all filenames.</p>
+<p>A reading that could not be settled from the name says so: <code>ambiguous</code> is
+TRUE and <code>alternatives</code> names every format the filename could be in, the one
+that was picked included. Neither field is present where the format was not
+in doubt. A name of nothing but digits is the case that matters, because a
+collection that numbers its records gives names of exactly that shape: eight
+digits are read as a date and ten as a count of seconds, and both read just
+as well as a record number. <code><a href="readMetadata.html">readMetadata()</a></code> therefore takes no date from
+such a name, as a confident wrong date is worse than none, though it is
+reported here for a caller that knows what its own files are named by.</p>
+<p>Asking for a format by name settles it: a format given in <code>format</code> is not a
+guess and carries no alternatives. Finding one that fits every name in a
+list, with <code>format = "match"</code>, does not settle it, since a list of record
+numbers agrees with itself exactly as readily as a list of dates does.</p>
 </div>
 
 <div class="section">
@@ -128,6 +146,22 @@ hexadecimal characters giving the number of seconds since
 .</p></li>
 <li><p><strong>timestamp</strong> - A standard date-time format. Uses the R standard origin of
 1970-01-01 00:00:00 UTC.</p></li>
+<li><p><strong>TSA</strong> - The convention of the TSA corpus and the collections distributed
+with it, as <code>TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav</code>: a
+collection, the taxon or common name of the animal recorded with the
+accession number the collection gave it, and a hash of the file. Gives
+<code>collection</code>, <code>taxon</code>, <code>accession</code> and <code>hash</code>, and no datetime, as these
+names carry no time. Much of that corpus holds no embedded metadata at
+all, so for those recordings the name is the only record of what was
+recorded.</p>
+<p>A <code>taxon</code> is read only where the name carries a scientific name, which is
+a capitalised genus and a lowercase specific epithet joined by an
+underscore or a hyphen. Part of the corpus is named by a German common
+name and a German word for the kind of call instead; no taxon is read from
+those, as reporting their first words as a genus and a species would
+invent one. A subspecies cannot be told from an accession number that
+happens to be a bare word, so the first two parts of a scientific name are
+taken as the name and the rest as the accession number.</p></li>
 <li><p><strong>Wildlife Acoustics SM2</strong> - Can also be used for Wildlife Acoustics SM4
 devices. The filename is split by a call to <code><a href="https://rdrr.io/pkg/seewave/man/songmeter.html" class="external-link">seewave::songmeter()</a></code>.</p></li>
 <li><p><strong>Wildlife Acoustics SM3</strong> - The filename is split by a call to
@@ -143,6 +177,11 @@ devices. The filename is split by a call to <code><a href="https://rdrr.io/pkg/s
 “Seewave, a free modular tool for sound analysis and synthesis.”
 <em>Bioacoustics</em>, <b>18</b>(2), 213–226.</p>
     </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="readMetadata.html">readMetadata()</a></code> reads a file's own embedded metadata and puts what
+its name says beside it.</p></div>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -156,6 +195,12 @@ devices. The filename is split by a call to <code><a href="https://rdrr.io/pkg/s
 <span class="r-out co"><span class="r-pr">#&gt;</span> $datetime</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2020-04-10 16:54:44 UTC"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="fu">parseFilename</span><span class="op">(</span><span class="st">"TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav"</span><span class="op">)</span><span class="op">$</span><span class="va">taxon</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Porzana parva"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Eight digits could be a date or a record number, and the reading says so.</span></span></span>
+<span class="r-in"><span><span class="fu">parseFilename</span><span class="op">(</span><span class="st">"20240220.wav"</span><span class="op">)</span><span class="op">$</span><span class="va">alternatives</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "YYYYMMDD"      "AudioMoth HEX" "record number"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

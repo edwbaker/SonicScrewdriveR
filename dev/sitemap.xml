@@ -27,6 +27,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/addSpectra.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/allChannels.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotation.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioMetadata-set.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audio_filesize.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblast.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.html</loc></url>
@@ -39,6 +40,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/bearing.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatComplexity.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/beatSpectrum.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/bext.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/birdNetAnalyse.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/channels_se.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/circularise.html</loc></url>
@@ -91,7 +93,9 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/guanoWrite.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanBytes.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/humanTime.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/id3.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/index.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/ixml.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/jitter.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/labelPadding.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/labelReduction.html</loc></url>
@@ -129,6 +133,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudacityLabels.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/readBirdNet.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/readMetadata.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/readRespeaker6.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/referenceIntensity.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/referencePressure.html</loc></url>
@@ -156,6 +161,9 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/untagWave.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/upsample.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/validateIsWave.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/vorbisComment.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/wamd.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavInfo.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavelength.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAnnotationWave.html</loc></url>
