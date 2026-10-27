@@ -177,6 +177,13 @@
   faster for one minute of audio and 37 times for four minutes.
 
 ## Fixes
+- bext() gave midnight for a recording whose origination time was written as
+  hours and minutes, rather than the hour and minute the file gave. The field
+  has eight characters for a time and the specification asks for seconds in
+  them, but writers leave the seconds off and pad the rest, and the time is
+  there to be read. 24 of the 241 Broadcast Wave files of the BioAcoustica
+  corpus are written this way. A time that is unreadable for any
+  other reason still gives the date at midnight rather than nothing, as before.
 - readAudio() failed on an AudioMoth triggered (T.WAV) recording with "argument
   "units" is missing, with no default". The renaming of the unit arguments left
   the call that cuts an expanded recording passing the deprecated argument,
