@@ -90,6 +90,18 @@ is trusted over one written for broadcast, and anything written inside
 the file over anything read from its name. Nothing is thrown away by
 this, as `sources` still holds what every format said.
 
+That order says which format to believe, not which copy a writer got
+right. A file can carry the same string in two places and have been
+written correctly in one and badly in the other, and the record then
+takes whichever the order puts first, mistake and all. One file of 972
+in a cached copy of the iNaturalist corpus holds an original filename in
+both its INFO list and its ID3 tag, where the recorder wrote UTF-8 into
+the tag and the same text double-encoded into the list; the list
+outranks the tag, so `title` comes back mangled although the file holds
+a good copy. Both readings are in `sources` and neither is altered, so
+where a field matters and the file carries it twice, it is worth
+comparing `sources` rather than taking `fields` on its own.
+
 A field that holds only a year gives no `datetime`, as it has no month
 or day to make one with; the year can still be read from the source that
 gave it. Species are taken only from a format that names a species as
