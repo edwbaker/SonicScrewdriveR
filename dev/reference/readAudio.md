@@ -33,11 +33,12 @@ readAudio(
 
 - from:
 
-  Start point in file to return
+  Start point in file to return, which must fall within the recording
 
 - to:
 
-  End point in file to return
+  End point in file to return, read as the end of the recording where it
+  is beyond it
 
 - input.unit:
 
@@ -110,9 +111,30 @@ The audio of such a file is read to the end of the file, with a warning,
 rather than returned as nothing. A file that really holds no audio is
 read as empty.
 
+A recording too long for the 4 GiB a RIFF header can describe is written
+in the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
+[`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html) does
+not read these forms, so they are read through the av package, by those
+sizes. One whose sizes were never written is recovered as above. One
+whose ds64 chunk disagrees with the rest of the file, or miscounts its
+sample frames, is still read, with a warning saying what is wrong with
+it.
+
 Samples that are not finite numbers, which a floating-point file can
 hold, are read as zero with a warning, as they would otherwise spread
 through every measurement made from the wave.
+
+### Reading part of a recording
+
+`from` and `to` give the part of the recording to return. An end point
+beyond the end of the recording reads to the end of it, as the default
+end of `Inf` does. A start point at or beyond the end is an error, of
+class `startPastEnd`, saying how long the recording is, whatever the
+format of the file and whatever the unit of the start: the part asked
+for holds no audio at all, and a start past the end is most often one
+given in the wrong unit, which an empty wave would carry into everything
+measured from it without saying so. A start of zero is the start of any
+recording, so a file that holds no audio is read from there as empty.
 
 ### A header that disagrees with the recorder's own metadata
 
@@ -138,7 +160,9 @@ it was last written.
 
 Each warning above carries a class of its own, so that one of them can
 be handled without silencing the rest: `sampleRateMismatch`,
-`unwrittenAudioSize` and `nonFiniteSamples`, and `truncatedAudio` from
+`unwrittenAudioSize` and `nonFiniteSamples`; `badDs64` and
+`frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
+believed or miscounts its sample frames; and `truncatedAudio` from
 [`audiomothExpand()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.md).
 All of them are also classed `audioFileWarning`, for handling every
 warning about the file at once, and `warning`, so
