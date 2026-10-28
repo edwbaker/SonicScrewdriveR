@@ -1,6 +1,5 @@
 test_that("ASITSN rejects unknown input", {
-  skip_on_cran()
-  skip_if_no_audioblast()
+  local_audioblast()
   expect_error(
     .audioblast_ASITSN("standalone", "chipmunk"),
     "chipmunk module does not exist."
@@ -13,8 +12,7 @@ test_that("ASITSN rejects unknown input", {
 
 
 test_that("audioblast rejects unknown output", {
-  skip_on_cran()
-  skip_if_no_audioblast()
+  local_audioblast()
   expect_error(
     audioblast("data", "recordings", source="bio.acousti.ca", output="koala"),
     "koala is not a valid output type."
@@ -24,13 +22,12 @@ test_that("audioblast rejects unknown output", {
     "Query does not gives results that can be turned into Annotation objects."
   )
   expect_silent(
-    audioblast("data", "annomate", max_pages=1, on.issue=invsible, output="Annotations")
+    audioblast("data", "annomate", max_pages=1, on.issue=invisible, output="Annotations")
   )
 })
 
 test_that("audioblast works with real data", {
-  skip_on_cran()
-  skip_if_no_audioblast()
+  local_audioblast()
   data <- audioblast("data", "recordings", max_pages = 1, source="bio.acousti.ca")
   expect_equal(nrow(data), 50)
 
@@ -50,8 +47,8 @@ test_that("audioblast works with real data", {
 })
 
 test_that("audioblastDownload works as expected", {
-  skip_on_cran()
-  skip_if_no_audioblast()
+  local_audioblast()
+  local_mocked_bindings(download.file=.audioblastDownload)
   if (dir.exists("ab_dl_test")) {
     unlink("ab_dl_test", recursive=TRUE)
   }
@@ -72,8 +69,7 @@ test_that("audioblastDownload works as expected", {
 })
 
 test_that("Annotation output is as expected", {
-  skip_on_cran()
-  skip_if_no_audioblast()
+  local_audioblast()
   # Get annotations from audioblast as data.frame
   data <- audioblast("data", "annomate", max_pages = 1, source="bio.acousti.ca")
   expect_true(is.data.frame(data))
