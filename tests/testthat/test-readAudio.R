@@ -2011,6 +2011,51 @@ test_that("A decode that stopped before the part asked for is told from a short 
   expect_true(.avFellShort(short, 1, 48000, 0, 5, "seconds", NULL))
 })
 
+test_that("A decode that stopped early is read again without a bound", {
+  # No file measured falls short of the end point by anything like the second
+  # it is given, so the recording is made to: the first call gives a fraction
+  # of what was asked for, and the audio returned must be the part asked for,
+  # which only the second call can have provided.
+  f <- system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver")
+  # Each end point asked for, NA where none was: assigning NULL to a list
+  # element removes it, which would hide the second call entirely.
+  asked <- numeric()
+  local_mocked_bindings(
+    read_audio_bin = function(audio, channels=NULL, sample_rate=NULL,
+                              start_time=NULL, end_time=NULL) {
+      asked <<- c(asked, if (is.null(end_time)) NA_real_ else end_time)
+      if (is.null(end_time)) {
+        return(structure(rep(0, 240000), sample_rate=48000, channels=1L))
+      }
+      return(structure(rep(0, 1000), sample_rate=48000, channels=1L))
+    },
+    .package = "av"
+  )
+  w <- suppressWarnings(readAudio(f, from=0, to=2))
+
+  expect_identical(asked, c(3, NA_real_))
+  expect_identical(length(w), 96000L)
+})
+
+test_that("A recording that really is short is not read a second time", {
+  # The same shortfall, but the file says it holds no more than came back, so
+  # there is nothing to read again and one call is all it takes.
+  f <- system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver")
+  asked <- numeric()
+  local_mocked_bindings(
+    read_audio_bin = function(audio, channels=NULL, sample_rate=NULL,
+                              start_time=NULL, end_time=NULL) {
+      asked <<- c(asked, if (is.null(end_time)) NA_real_ else end_time)
+      return(structure(rep(0, 240000), sample_rate=48000, channels=1L))
+    },
+    .package = "av"
+  )
+  w <- suppressWarnings(readAudio(f, from=0, to=4))
+
+  expect_identical(asked, 5)
+  expect_identical(length(w), 192000L)
+})
+
 test_that("Bounding the decode does not change the audio that comes back", {
   # A FLAC file is read through the av package, so this is the path that was
   # changed. A part read with an end point must be the same samples as that

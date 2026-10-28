@@ -1138,11 +1138,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     }
     return(to / rate + 1)
   }
-  seconds <- convert2seconds(to, input.unit=input.unit)
-  if (!is.finite(seconds)) {
-    return(NULL)
-  }
-  return(seconds + 1)
+  # A point that is no point at all was refused before anything was read, so
+  # convert2seconds() is given a finite number here and gives one back.
+  return(convert2seconds(to, input.unit=input.unit) + 1)
 }
 
 #' Did a bounded decode stop before the part that was asked for?
