@@ -288,7 +288,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     source <- if (is.null(repaired)) file else repaired
 
     #Using av package
-    info <- av::av_media_info(source)$audio
+    media <- av::av_media_info(source)
+    info <- media$audio
     channels <- info[['channels']]
     if (is.null(channels)) {
       stop("Could not determine number of channels.")
@@ -308,6 +309,18 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     samp.rate <- attr(samples, "sample_rate")
     if (is.null(samp.rate)) {
       samp.rate <- info[['sample_rate']]
+    }
+    # The audio is cut to the part asked for below, and that cut stops at the
+    # last sample there is: a recording that ends early and a decode that
+    # stopped early look the same to it. So where the audio falls short of the
+    # part asked for and the file says it is longer than that, the end point
+    # was not enough and the recording is read again without one. Nothing
+    # measured needs this - what comes back has fallen 0.019 seconds short of
+    # the point asked for at worst, against the second added to it - but a
+    # recording quietly cut short is not a thing to leave to a margin.
+    if (!is.null(endTime) && .avFellShort(samples, channels, samp.rate,
+                                          from, to, input.unit, media$duration)) {
+      samples <- av::read_audio_bin(source, channels=channels)
     }
     #read_audio_bin() attaches sample_rate and channels to the vector it returns,
     #and they would be carried into the slots of the Wave object if left on it.
@@ -1130,6 +1143,48 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     return(NULL)
   }
   return(seconds + 1)
+}
+
+#' Did a bounded decode stop before the part that was asked for?
+#'
+#' The cut that follows a decode stops at the last sample there is, so audio
+#' that ends early because the decode was bounded is indistinguishable to it
+#' from audio that ends early because the recording does. This tells them
+#' apart: the audio falls short of the part asked for, and the file says it
+#' holds more than that.
+#'
+#' The duration the av package reports is rounded to the microsecond, so it
+#' cannot be compared to a frame count exactly. A tenth of a second of slack is
+#' allowed, which is five times the worst shortfall measured and far less than
+#' the second the end point is given.
+#'
+#' @param samples What av::read_audio_bin() returned
+#' @param channels Number of channels in the file
+#' @param rate Sample rate of the recording
+#' @param from Start point as given to readAudio()
+#' @param to End point as given to readAudio()
+#' @param input.unit The unit they are given in
+#' @param duration Duration of the file in seconds, as the av package reports
+#' @return TRUE where the decode stopped too early
+#' @keywords internal
+#' @noRd
+.avFellShort <- function(samples, channels, rate, from, to, input.unit,
+                         duration) {
+  if (is.null(rate) || !is.finite(rate) || rate <= 0 || channels < 1) {
+    return(FALSE)
+  }
+  wanted <- .samplesAsked(from, to, input.unit, rate)[2]
+  if (!is.finite(wanted)) {
+    return(FALSE)
+  }
+  frames <- length(samples) / channels
+  if (frames >= wanted) {
+    return(FALSE)
+  }
+  if (is.null(duration) || !is.finite(duration)) {
+    return(TRUE)
+  }
+  return(frames / rate + 0.1 < min(duration, wanted / rate))
 }
 
 #' Bit depth of the audio decoded by the av package

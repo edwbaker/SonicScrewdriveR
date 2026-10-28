@@ -1987,6 +1987,30 @@ test_that("The whole of a recording is asked for as the whole of it", {
   expect_null(.avEndTime(48000, "samples", 0))
 })
 
+test_that("A decode that stopped before the part asked for is told from a short recording", {
+  # The cut stops at the last sample there is, so it cannot tell audio that
+  # ends early because the decode was bounded from audio that ends early
+  # because the recording does. Fewer frames than were asked for, and a file
+  # that says it is longer, is the first of those.
+  short <- rep(0, 48000)                       # one second of frames
+  expect_true(.avFellShort(short, 1, 48000, 0, 5, "seconds", 5))
+  # As many frames as were asked for is never short, whatever the file says.
+  expect_false(.avFellShort(rep(0, 48000), 1, 48000, 0, 1, "seconds", 5))
+  expect_false(.avFellShort(rep(0, 96000), 1, 48000, 0, 1, "seconds", 5))
+  # A recording that really is one second long is not short when two were
+  # asked for: there is no more of it to read.
+  expect_false(.avFellShort(short, 1, 48000, 0, 2, "seconds", 1))
+  # Interleaved channels are frames, not samples.
+  expect_true(.avFellShort(rep(0, 96000), 2, 48000, 0, 5, "seconds", 5))
+  expect_false(.avFellShort(rep(0, 96000), 2, 48000, 0, 1, "seconds", 5))
+  # A whole read asks for no end, and a rate that could not be read cannot be
+  # measured against.
+  expect_false(.avFellShort(short, 1, 48000, 0, Inf, "seconds", 5))
+  expect_false(.avFellShort(short, 1, NULL, 0, 5, "seconds", 5))
+  # A duration the file does not give leaves the frame count to speak.
+  expect_true(.avFellShort(short, 1, 48000, 0, 5, "seconds", NULL))
+})
+
 test_that("Bounding the decode does not change the audio that comes back", {
   # A FLAC file is read through the av package, so this is the path that was
   # changed. A part read with an end point must be the same samples as that
