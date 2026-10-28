@@ -46,10 +46,10 @@ audiomothCompress(
 
 - comment:
 
-  Comment string to store in the header, as read by
-  [`audiomothWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.md).
-  The threshold is recorded after it, as an AudioMoth device records it,
-  which is how
+  Comment string to store in the header, of the kind
+  [`readMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readMetadata.md)
+  reads back as its `audiomoth` source. The threshold is recorded after
+  it, as an AudioMoth device records it, which is how
   [`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
   knows to expand the file.
 

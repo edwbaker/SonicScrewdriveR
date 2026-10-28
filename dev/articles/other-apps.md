@@ -34,17 +34,27 @@ the `audioBlastDownload()` function.
 ### AudioMoth
 
 [AudioMoth](https://www.openacousticdevices.info/audiomoth)
-configuration files and wave files can be read into R using the
+configuration files can be read into R using the
 [`audiomothConfig()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothConfig.md)
-and
+function, which takes a path to a configuration file and returns a data
+frame of the configuration settings.
+
+The metadata an AudioMoth writes into a wave file is read by
+[`readMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readMetadata.md),
+as its `audiomoth` source:
+
+``` r
+
+m <- readMetadata("20201103_112430.WAV")
+m$sources$audiomoth$serial
+m$sources$audiomoth$temperature
+
+# The recording time, as a POSIXct in the zone the device was set to
+m$fields$datetime
+```
+
 [`audiomothWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.md)
-functions, respectively. The
-[`audiomothConfig()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothConfig.md)
-function takes a path to a configuration file and returns a data frame
-of the configuration settings. The
-[`audiomothWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.md)
-function takes a path to a wave file and returns a list of extracted
-parameters.
+did the same for a wave file alone and is deprecated in favour of this.
 
 #### Triggered recordings
 

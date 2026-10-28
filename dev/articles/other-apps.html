@@ -113,12 +113,21 @@ function.</p>
 <h3 id="audiomoth">AudioMoth<a class="anchor" aria-label="anchor" href="#audiomoth"></a>
 </h3>
 <p><a href="https://www.openacousticdevices.info/audiomoth" class="external-link">AudioMoth</a>
-configuration files and wave files can be read into R using the
-<code><a href="../reference/audiomothConfig.html">audiomothConfig()</a></code> and <code><a href="../reference/audiomothWave.html">audiomothWave()</a></code>
-functions, respectively. The <code><a href="../reference/audiomothConfig.html">audiomothConfig()</a></code> function
-takes a path to a configuration file and returns a data frame of the
-configuration settings. The <code><a href="../reference/audiomothWave.html">audiomothWave()</a></code> function takes
-a path to a wave file and returns a list of extracted parameters.</p>
+configuration files can be read into R using the
+<code><a href="../reference/audiomothConfig.html">audiomothConfig()</a></code> function, which takes a path to a
+configuration file and returns a data frame of the configuration
+settings.</p>
+<p>The metadata an AudioMoth writes into a wave file is read by
+<code><a href="../reference/readMetadata.html">readMetadata()</a></code>, as its <code>audiomoth</code> source:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readMetadata.html">readMetadata</a></span><span class="op">(</span><span class="st">"20201103_112430.WAV"</span><span class="op">)</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">sources</span><span class="op">$</span><span class="va">audiomoth</span><span class="op">$</span><span class="va">serial</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">sources</span><span class="op">$</span><span class="va">audiomoth</span><span class="op">$</span><span class="va">temperature</span></span>
+<span></span>
+<span><span class="co"># The recording time, as a POSIXct in the zone the device was set to</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">fields</span><span class="op">$</span><span class="va">datetime</span></span></code></pre></div>
+<p><code><a href="../reference/audiomothWave.html">audiomothWave()</a></code> did the same for a wave file alone and
+is deprecated in favour of this.</p>
 <div class="section level4">
 <h4 id="triggered-recordings">Triggered recordings<a class="anchor" aria-label="anchor" href="#triggered-recordings"></a>
 </h4>
@@ -132,7 +141,7 @@ the timing of the events in the recording.</p>
 silence, so that the triggered recordings sit where they were recorded.
 It returns a Wave object, or writes an ordinary wave file if given a
 path to write to.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audiomothExpand.html">audiomothExpand</a></span><span class="op">(</span><span class="st">"20201103_112430T.WAV"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Or expand every triggered recording on a card to a wave file</span></span>
@@ -147,7 +156,7 @@ extension: a name is only a convention, which an ordinary recording can
 meet and a triggered one can be renamed out of. <code><a href="../reference/windowing.html">windowing()</a></code>
 reads such a file the same way, so windows are scheduled over the
 recording rather than over what is left of it on disk.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readAudio.html">readAudio</a></span><span class="op">(</span><span class="st">"20201103_112430T.WAV"</span>, from<span class="op">=</span><span class="fl">60</span>, to<span class="op">=</span><span class="fl">120</span>, units<span class="op">=</span><span class="st">"seconds"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/audiomothCompress.html">audiomothCompress()</a></code> goes the other way, writing a Wave
 as a triggered file and leaving out the segments whose peak amplitude
@@ -155,7 +164,7 @@ falls below a threshold. Audio left out is not recoverable, as it is not
 recoverable on the device. The threshold is recorded in the file’s
 comment, as a device records it, which is what lets the file be read
 back as a triggered recording.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/audiomothCompress.html">audiomothCompress</a></span><span class="op">(</span><span class="va">w</span>, <span class="st">"20201103_112430T.WAV"</span>, threshold<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -164,7 +173,7 @@ back as a triggered recording.</p>
 <p>Current AudioMoth firmware writes <a href="https://github.com/riggsd/guano-spec" class="external-link">GUANO</a> metadata, a format
 used by many bioacoustic recorders, which <code><a href="../reference/guano.html">guano()</a></code> reads
 from any wave file that carries it.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/guano.html">guano</a></span><span class="op">(</span><span class="st">"20201103_112430.WAV"</span><span class="op">)</span></span>
 <span><span class="va">m</span><span class="op">[[</span><span class="st">"Loc Position"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">m</span><span class="op">[[</span><span class="st">"Timestamp"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
@@ -175,14 +184,14 @@ field such as <code>OAD|Battery Voltage</code>, is kept as written.
 Metadata can be edited as a list and written back with
 <code><a href="../reference/guanoWrite.html">guanoWrite()</a></code>, which replaces only the metadata and leaves
 the audio untouched.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span><span class="op">[[</span><span class="st">"Species Manual ID"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Pipistrellus pipistrellus"</span></span>
 <span><span class="fu"><a href="../reference/guanoWrite.html">guanoWrite</a></span><span class="op">(</span><span class="va">m</span>, <span class="st">"20201103_112430.WAV"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/guanoCreate.html">guanoCreate()</a></code> builds metadata from scratch, which
 <code><a href="../reference/guanoWrite.html">guanoWrite()</a></code> can add to a file that has none, and
 <code><a href="../reference/audiomothCompress.html">audiomothCompress()</a></code> can write into a triggered file.
 Expanding a triggered file carries its metadata over.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/guanoCreate.html">guanoCreate</a></span><span class="op">(</span></span>
 <span>  Make <span class="op">=</span> <span class="st">"Open Acoustic Devices"</span>,</span>
 <span>  Model <span class="op">=</span> <span class="st">"AudioMoth"</span>,</span>
@@ -205,10 +214,10 @@ function takes a list of sound files and analyses them using the
 <code>BirdNET-Analyzer</code>. The function either returns a data frame
 with the results of the analysis or a list of <code>Annotation</code>
 objects.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install the Python environment</span></span>
 <span><span class="fu"><a href="../reference/pythonInstall.html">pythonInstall</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Analyse sound files using BirdNET-Analyzer</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"AUDIOMOTH.WAV"</span>, package<span class="op">=</span><span class="st">"sonicscrewdriver"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/birdNetAnalyse.html">birdNetAnalyse</a></span><span class="op">(</span><span class="va">f</span>, lat<span class="op">=</span><span class="fl">51.5</span>, lon<span class="op">=</span><span class="fl">0.1</span>, date<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-01-01"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -225,10 +234,10 @@ scikit-maad functions are prefixed with <code>maad_</code>.</p>
 <p>The functions provided accept standard Wave-like objects
 (i.e. <code>tuneR</code> <code>Wave</code> or <code>WaveMC</code>
 objects, as well as their tagged equivalents from this package).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install the Python environment</span></span>
 <span><span class="fu"><a href="../reference/pythonInstall.html">pythonInstall</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"AUDIOMOTH.WAV"</span>, package<span class="op">=</span><span class="st">"sonicscrewdriver"</span><span class="op">)</span></span>
 <span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">readWave</span><span class="op">(</span><span class="va">f</span><span class="op">)</span></span>
 <span></span>
@@ -246,7 +255,7 @@ the Mole Cricket <em>Gryllotalpa vineae</em> from the <a href="https://bio.acous
 and annotations from BioAcoustica are made available through the <a href="https://audioblast.org" class="external-link">audioBlast</a> API.</p>
 <p>First we will download the audio file and annotations from
 audioBlast.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Find the file on audioblast</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, id<span class="op">=</span><span class="fl">10754</span><span class="op">)</span></span>
 <span></span>
@@ -258,7 +267,7 @@ includes more information about the audio file retrieved from
 audioBlast.</p>
 <p>Next, we will download the annotations for this file from
 audioBlast.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fetch annotations from audioBlast as `Annotation` objects</span></span>
 <span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"annomate"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, source_id<span class="op">=</span><span class="fl">10754</span>, output<span class="op">=</span><span class="st">"Annotations"</span><span class="op">)</span></span></code></pre></div>
 <p>This has downloaded the annotations from audioBlast and converted
@@ -267,12 +276,12 @@ are converted to <code>Annotation</code> objects they can be easily
 manipulated into a number of other useful formats.</p>
 <p>In this case, we will convert the <code>Annotation</code> objects to
 an Audacity label file.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert the annotations to an Audacity label file</span></span>
 <span><span class="fu"><a href="../reference/writeAudacityLabels.html">writeAudacityLabels</a></span><span class="op">(</span><span class="va">a</span>, <span class="st">"mole_cricket/annotations.txt"</span><span class="op">)</span></span></code></pre></div>
 <p>When we are finished, we can tidy our workspace by removing the
 <code>mole_cricket</code> directory.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="st">"mole_cricket"</span>, recursive<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
@@ -283,17 +292,17 @@ an Audacity label file.</p>
 sound files using the <code>BirdNET-Analyzer</code>.</p>
 <p>Get the output of the BirdNET Analyzer as a list of
 <code>Annotation</code> objects.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Analyse sound files using BirdNET-Analyzer</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"AUDIOMOTH.WAV"</span>, package<span class="op">=</span><span class="st">"sonicscrewdriver"</span><span class="op">)</span></span>
 <span><span class="va">annotations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/birdNetAnalyse.html">birdNetAnalyse</a></span><span class="op">(</span><span class="va">f</span>, output<span class="op">=</span><span class="st">"Annotation"</span><span class="op">)</span></span></code></pre></div>
 <p>Convert the <code>Annotation</code> objects to an Audacity label
 file.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert the annotations to an Audacity label file</span></span>
 <span><span class="fu"><a href="../reference/writeAudacityLabels.html">writeAudacityLabels</a></span><span class="op">(</span><span class="va">annotations</span>, <span class="st">"birdnet_annotations.txt"</span><span class="op">)</span></span></code></pre></div>
 <p>Cleaning up the workspace.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="st">"birdnet_annotations.txt"</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

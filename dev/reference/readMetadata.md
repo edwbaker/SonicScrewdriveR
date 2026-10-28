@@ -136,10 +136,12 @@ The readers for one format at a time:
 [`bext()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/bext.md),
 [`ixml()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/ixml.md),
 [`wavInfo()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavInfo.md),
-[`id3()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/id3.md),
-[`vorbisComment()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/vorbisComment.md)
+[`id3()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/id3.md)
 and
-[`audiomothWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.md).
+[`vorbisComment()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/vorbisComment.md).
+The AudioMoth comment has no reader of its own any more:
+[`audiomothWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothWave.md)
+is deprecated in favour of the `audiomoth` source this returns.
 `audioMetadata<-` attaches a reading to a Wave object.
 
 ## Examples
