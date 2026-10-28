@@ -888,9 +888,14 @@
   Behaviour is unchanged except where noted under Fixes.
 - generateTimeShift() no longer takes an output argument. It accepted only the value
   "list" and never used it.
-- The tests that query the audioBlast API now skip when it cannot be reached, rather
-  than failing. The API answers R's default user agent with a 403, so R CMD check
-  failed on any machine behind that.
+- The tests that query the audioBlast API read it where they can, and where they
+  cannot, use responses saved from it, rather than failing. The API answers R's
+  default user agent with a 403 in some places, and a request to it that timed out
+  ended the whole of R CMD check on CI, not only the test that made it. Once one
+  request fails, the rest of the run uses the saved responses, so it does not wait
+  out a timeout for each. On CRAN the saved responses are used from the start, and
+  running the tests with AUDIOBLAST_RECORD=true saves what the live API answers in
+  their place.
 
 ## Documentation
 - convert2bytes() was described as converting time measurements into seconds, and its
