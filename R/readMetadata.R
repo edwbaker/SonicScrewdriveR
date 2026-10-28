@@ -627,23 +627,33 @@ readMetadata <- function(x, filename=TRUE) {
 #' @keywords internal
 #' @noRd
 .mdFromFileAll <- function(file, filename=NA_character_) {
-  container <- .mdContainer(.mdFileHead(file, 16L))
+  # Each reader below looks for a chunk of its own, and each walked the file to
+  # find it: a file carrying GUANO, wamd, bext, iXML, a list, an XMP packet, a
+  # display name and an ID3 tag was opened and walked eight times over. The walk
+  # is the same every time, so it is done once here and the readers are given
+  # the map of it, which they take in place of a path. A file that is not a wave
+  # file has no map, and those readers are not asked for one.
+  map <- .mdWavMap(file)
+  from <- if (is.null(map)) file else map
+  container <- .mdContainer(.mdFileHead(from, 16L))
   sources <- list()
   unparsed <- character(0)
 
   if (.mdWaveContainer(container)) {
-    sources$guano <- guano(file)
-    sources$wamd <- wamd(file)
-    sources$bext <- bext(file)
-    sources$ixml <- ixml(file)
-    sources$wavInfo <- wavInfo(file)
-    sources$xmp <- xmp(file)
-    sources$disp <- disp(file)
+    sources$guano <- guano(from)
+    sources$wamd <- wamd(from)
+    sources$bext <- bext(from)
+    sources$ixml <- ixml(from)
+    sources$wavInfo <- wavInfo(from)
+    sources$xmp <- xmp(from)
+    sources$disp <- disp(from)
+    # audiomothWave() reads the recording rather than a chunk of it, so it is
+    # given the path whatever the map holds.
     sources$audiomoth <- .mdAudiomothSource(file, sources$wavInfo)
-    unparsed <- .mdUnparsed(.mdWavChunkIds(file))
+    unparsed <- .mdUnparsed(.mdWavChunkIds(from))
   }
   if (.mdWaveContainer(container) || identical(container, "MP3")) {
-    sources$id3 <- id3(file)
+    sources$id3 <- id3(from)
   }
   if (identical(container, "FLAC") || identical(container, "Ogg")) {
     sources$vorbisComment <- vorbisComment(file)
