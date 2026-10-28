@@ -209,6 +209,19 @@
   the recording is.
 
 ## Fixes
+- guano() and guanoParse() kept as text, with a warning, the timestamp a
+  Wildlife Acoustics Song Meter Mini Bat writes, 2025-09-15 21:31:57+2:00, so
+  it never became a time a caller could compute with. It departs from the
+  specification twice, with a space between the date and the time where a T
+  belongs and an offset hour of a single digit. Both are now read, as is an
+  offset with no colon, with a message naming what departs from the
+  specification, and the value is written back in the form the specification
+  gives. readMetadata() fared worse with it, as the text was read as a date and
+  time in the zone of the machine, with the offset after it dropped, and now
+  gives the moment the recording was made. A timestamp with an offset from UTC
+  is written back with that offset, as the specification recommends: one of
+  +01:00 was written back moved to UTC, as Z, so changing any other field of the
+  metadata lost the offset the recorder was set to.
 - readAudio() given a start point at or beyond the end of the recording failed
   in words that said nothing of what had been asked for, and in different words
   for different units and formats: "'from' cannot be superior to 'to'" in
@@ -220,6 +233,27 @@
   second, is at or beyond the end of 'f.wav', which is 0.5 seconds long." A
   start of zero is still the start of any recording, so a file holding no audio
   is read from there as empty.
+- readAudio() given an end point that left no audio after the start point gave
+  a different answer for each format and unit. An end before the start failed
+  with "'from' cannot be superior to 'to'" in seconds and "In cutws to must be
+  greater than from" in samples. An end at the start, `from = 0.3, to = 0.3`,
+  gave an empty wave from a WAVE file but two samples, in reverse order, from
+  FLAC, MP3 or a triggered AudioMoth recording; in samples an end just before
+  the start, such as `from = 0, to = 0`, gave an empty wave from WAVE and an
+  error from the rest. Each of these is now an error of class `endBeforeStart`
+  whatever the format and the unit, saying what was asked for: "The end point
+  asked for, 0.2 seconds, is before the start point, 0.3 seconds, so no audio
+  of 'f.wav' was asked for." In samples the end point is the last sample
+  returned, so an end at the start still gives that one sample.
+- readAudio() cut a WAVE file a sample away from every other format where a
+  start time fell half way between two samples, as `tuneR::readWave()` rounds
+  such a time differently from `seewave::cutw()`: two parts asked for either
+  side of such a time lost a sample between them or both held it. Every format
+  is now cut at the same samples, and two parts meeting at a time meet without
+  a sample lost or repeated. A wave file whose format is unknown (0), which
+  `tuneR::readWave()` reads as PCM, is now held against the audio it holds in
+  the same way, so a start past its end and an end before its start are
+  refused as they are for any other file.
 - guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
   nothing for a wave file in the RF64 or BW64 form, which is how a recording is
   written once it passes the 4 GiB a RIFF header can describe, so the metadata
