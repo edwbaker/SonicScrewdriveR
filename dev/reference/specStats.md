@@ -14,7 +14,8 @@ specStats(spectra, stats = "minMax", line.col = "black", ribbon.col = "grey70")
 
 - spectra:
 
-  A list of spectra
+  A list of spectra, with their frequencies in kHz as
+  seewave::meanspec() returns them
 
 - stats:
 
@@ -30,4 +31,5 @@ specStats(spectra, stats = "minMax", line.col = "black", ribbon.col = "grey70")
 
 ## Value
 
-A ggplot2 object
+A ggplot2 object, with its frequency axis in kHz, the unit of the
+spectra it draws

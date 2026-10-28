@@ -9,7 +9,7 @@ Plot a false-colour index spectrogram
 plot(
   x,
   xlab = NULL,
-  ylab = "Frequency (kHz)",
+  ylab = "Frequency (Hz)",
   main = "False-colour index spectrogram",
   ...
 )
@@ -27,7 +27,8 @@ plot(
 
 - ylab:
 
-  Label for the y axis
+  Label for the y axis, which is drawn in Hz, the unit of the
+  frequencies fcis() returns
 
 - main:
 

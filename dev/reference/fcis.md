@@ -50,8 +50,9 @@ fcis(
 
 An object of class "fcis", being a list of the colours as a character
 matrix of one entry per frequency bin and window, the matrix of values
-for each index, the frequencies of the bins in kHz, the duration of a
-window in seconds, and the names of the indices used.
+for each index, the frequencies of the bins in Hz, the duration of a
+window in seconds, and the names of the indices used. The frequencies
+were in kHz, as seewave::spectro() gives them, in earlier releases.
 
 ## Details
 

@@ -73,8 +73,11 @@ A list of extracted parameters:
 
 - filter.limit:
 
-  Filter frequency in kHz, two values separated by a hyphen for a
-  band-pass filter, or FALSE if no filter was applied
+  Filter frequency as the recorder writes it in its comment: text, in
+  kHz, such as `"5.0"`, or two values separated by a hyphen for a
+  band-pass filter, such as `"1.0-5.0"`. It is not converted to Hz, the
+  unit of the frequencies the package measures, as it is a reading of
+  the recorder's own record. FALSE if no filter was applied
 
 - cancelled:
 

@@ -23,11 +23,11 @@ objects.
 
 - `low`:
 
-  Low frequency of annotation.
+  Low frequency of annotation (Hz).
 
 - `high`:
 
-  High frequency of annotation.
+  High frequency of annotation (Hz).
 
 - `source`:
 

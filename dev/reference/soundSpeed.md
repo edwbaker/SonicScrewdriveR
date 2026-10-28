@@ -34,7 +34,7 @@ soundSpeed(
 
 - f:
 
-  Frequency
+  Frequency, in Hz
 
 - bulkModulus:
 

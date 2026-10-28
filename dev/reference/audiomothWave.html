@@ -109,8 +109,12 @@ before 1.4.0, which did not record it</p></dd>
 was applied</p></dd>
 
 <dt>filter.limit</dt>
-<dd><p>Filter frequency in kHz, two values separated by a
-hyphen for a band-pass filter, or FALSE if no filter was applied</p></dd>
+<dd><p>Filter frequency as the recorder writes it in its
+comment: text, in kHz, such as <code>"5.0"</code>, or two values separated by
+a hyphen for a band-pass filter, such as <code>"1.0-5.0"</code>. It is not
+converted to Hz, the unit of the frequencies the package measures,
+as it is a reading of the recorder's own record. FALSE if no filter was
+applied</p></dd>
 
 <dt>cancelled</dt>
 <dd><p>Why the recording stopped early, or FALSE if it ran to

@@ -22,11 +22,11 @@ sweptsine(
 
 - f0:
 
-  Start frequency
+  Start frequency, in Hz
 
 - f1:
 
-  End frequency
+  End frequency, in Hz
 
 - mode:
 
