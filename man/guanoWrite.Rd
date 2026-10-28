@@ -22,6 +22,11 @@ Replaces the GUANO metadata of a WAV file, adding a guan chunk if the file
 has none. Only the metadata chunk and the sizes in the file header are
 changed, so the audio data and every other chunk are left as they were.
 }
+\details{
+The recording is copied across a buffer at a time rather than read into
+memory, so changing one field of the metadata of a file of several gigabytes
+takes no more memory than changing it in a short one.
+}
 \examples{
 \dontrun{
 m <- guano("20201103_112430.WAV")
