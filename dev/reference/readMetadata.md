@@ -62,15 +62,16 @@ all of them:
 - sources:
 
   The formats that were found, each as the object its own reader gives,
-  named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`, `wavInfo`, `id3`,
-  `vorbisComment` and `filename`. A format the file does not carry is
-  left out.
+  named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`, `wavInfo`, `xmp`,
+  `disp`, `id3`, `vorbisComment` and `filename`. A format the file does
+  not carry is left out.
 
 - unparsed:
 
   The identifiers of any chunks the file holds that carry metadata this
-  package cannot read, such as an XMP packet. Knowing they are there is
-  worth more than passing over them in silence.
+  package cannot read, such as the proprietary block an editor leaves
+  behind. Knowing they are there is worth more than passing over them in
+  silence.
 
 ### The normalised record
 

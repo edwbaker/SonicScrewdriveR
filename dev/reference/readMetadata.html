@@ -111,13 +111,14 @@ package recognises</p></dd>
 <dt>sources</dt>
 <dd><p>The formats that were found, each as the object its own
 reader gives, named <code>guano</code>, <code>wamd</code>, <code>audiomoth</code>, <code>bext</code>, <code>ixml</code>,
-<code>wavInfo</code>, <code>id3</code>, <code>vorbisComment</code> and <code>filename</code>. A format the file does
-not carry is left out.</p></dd>
+<code>wavInfo</code>, <code>xmp</code>, <code>disp</code>, <code>id3</code>, <code>vorbisComment</code> and <code>filename</code>. A
+format the file does not carry is left out.</p></dd>
 
 <dt>unparsed</dt>
 <dd><p>The identifiers of any chunks the file holds that carry
-metadata this package cannot read, such as an XMP packet. Knowing they
-are there is worth more than passing over them in silence.</p></dd>
+metadata this package cannot read, such as the proprietary block an
+editor leaves behind. Knowing they are there is worth more than passing
+over them in silence.</p></dd>
 
 
 </dl><div class="section">

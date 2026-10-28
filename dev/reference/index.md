@@ -109,6 +109,8 @@
   : Generate positions of labels for a diel plot
 - [`dielRings()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dielRings.md)
   : Plot rings on a diel plot
+- [`disp()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/disp.md)
+  : Read the display name of a wave file
 - [`dolbear()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dolbear.md)
   : Dolbear's law
 - [`.annotation_check_overlap()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-annotation_check_overlap.md)
@@ -315,6 +317,8 @@
   : Write an Audacity label file
 - [`writeAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudio.md)
   : Write an audio file
+- [`xmp()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/xmp.md)
+  : Read the XMP metadata of a wave file
 - [`yearlyFraction()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyFraction.md)
   : Calculate the fraction of a year given by a value
 - [`yearlyLabels()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/yearlyLabels.md)
