@@ -95,6 +95,13 @@ or day to make one with; the year can still be read from the source that
 gave it. Species are taken only from a format that names a species as
 such, and never guessed at from a title.
 
+A time in an ID3 tag that names no zone is read as UTC, which version
+2.4 of the format says every time in it is, rather than as a wall clock
+in the zone of the session, as one in an INFO list, an XMP packet or a
+Vorbis comment is read. It comes back in UTC, so it prints as the tag
+wrote it whatever the zone of the session, and it may stop at the hour,
+as the format allows.
+
 ### Reading from a name
 
 `filename` reads the filename conventions that
