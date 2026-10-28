@@ -55,7 +55,7 @@ test_that("The bundled triggered recording reads through readAudio", {
 
 test_that("The bundled triggered recording still carries a readable comment", {
   f <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
-  d <- audiomothWave(f)
+  d <- readMetadata(f)$sources$audiomoth
   expect_equal(d$start_time, "21:06:00")
   expect_equal(d$start_date, "14/05/2026")
   expect_equal(d$serial, "247AB4055C7B17DB")
