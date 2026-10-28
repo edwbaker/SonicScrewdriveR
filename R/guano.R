@@ -46,20 +46,41 @@
 #' Read a GUANO timestamp
 #'
 #' The specification allows a date, a time, a local date and time, a UTC date
-#' and time, or a date and time with a UTC offset.
+#' and time, or a date and time with a UTC offset written as +HH:MM. Three
+#' departures from it whose meaning is plain are read as well, with a message
+#' saying so: a space between the date and the time where the specification
+#' has a T, an offset hour of a single digit, and an offset with no colon. A
+#' Wildlife Acoustics Song Meter writes the first two, as 2025-09-15
+#' 21:31:57+2:00. What is written back is in the form the specification gives.
 #' @noRd
 .guanoDatetime <- function(value) {
   # A time on its own has no date to attach it to, so it is kept as text.
   if (grepl("^[0-9]{2}:[0-9]{2}", value)) {
     return(value)
   }
+  # Each departure is put right before the value is read, and noted, so that
+  # the caller can be told the value was not as the specification has it.
+  departures <- character(0)
+  text <- value
+  if (grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2} ", text)) {
+    departures <- c(departures, "a space where a T belongs")
+    text <- sub("^([0-9]{4}-[0-9]{2}-[0-9]{2}) ", "\\1T", text)
+  }
+  if (grepl("[+-][0-9]:[0-9]{2}$", text)) {
+    departures <- c(departures, "an offset hour of one digit")
+    text <- sub("([+-])([0-9]):([0-9]{2})$", "\\10\\2:\\3", text)
+  } else if (grepl("[0-9][+-][0-9]{4}$", text)) {
+    departures <- c(departures, "no colon in the offset")
+  }
   # R does not accept the colon that ISO 8601 puts in a numeric UTC offset.
-  text <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", value)
+  text <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", text)
   # Every form is read in UTC, including those that name no zone: reading those
   # in the zone of the machine would make the moment a recording was made, and
   # what is written back, depend on where the file was opened, and shift it at
-  # a daylight saving change. The form a value was written in is kept, so that
-  # one naming no zone is not given one it never had.
+  # a daylight saving change. Whether a value named a zone, and the offset it
+  # gave, are kept, so that one naming no zone is not given one it never had,
+  # and one written with an offset is written back with it rather than moved to
+  # UTC.
   # The shape of each form is checked before it is read, as as.POSIXct() is
   # content with a value that merely begins with one: without this, a time of
   # 25:00:00 would be read as the date alone and the hour quietly dropped,
@@ -67,7 +88,7 @@
   clock <- "[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?"
   forms <- list(
     list(shape=paste0("^[0-9]{4}-[0-9]{2}-[0-9]{2}T", clock, "[+-][0-9]{4}$"),
-         format="%Y-%m-%dT%H:%M:%OS%z", zone="utc"),
+         format="%Y-%m-%dT%H:%M:%OS%z", zone="offset"),
     list(shape=paste0("^[0-9]{4}-[0-9]{2}-[0-9]{2}T", clock, "Z$"),
          format="%Y-%m-%dT%H:%M:%OSZ", zone="utc"),
     list(shape=paste0("^[0-9]{4}-[0-9]{2}-[0-9]{2}T", clock, "$"),
@@ -81,8 +102,21 @@
     }
     parsed <- as.POSIXct(text, format=form$format, tz="UTC")
     if (!is.na(parsed)) {
-      if (form$zone != "utc") {
+      if (form$zone == "offset") {
+        # The offset, in seconds east of UTC, from the +HHMM the text ends in.
+        hhmm <- substring(text, nchar(text) - 4L)
+        attr(parsed, "guanoOffset") <-
+          (as.numeric(substr(hhmm, 2L, 3L)) * 3600 + as.numeric(substr(hhmm, 4L, 5L)) * 60) *
+          if (startsWith(hhmm, "-")) -1 else 1
+      } else if (form$zone != "utc") {
         attr(parsed, "guanoZone") <- form$zone
+      }
+      if (length(departures) > 0L) {
+        message(
+          "The GUANO timestamp '", value, "' departs from the specification, with ",
+          paste(departures, collapse=" and "), ". It is read as ",
+          .guanoFormatDatetime(parsed), ", the form it will be written in."
+        )
       }
       return(parsed)
     }
@@ -129,6 +163,18 @@
   }
   if (identical(zone, "local")) {
     return(paste0(format(at, "%Y-%m-%dT%H:%M:%S", tz="UTC"), fraction))
+  }
+  # One read with an offset is written with that offset, as the specification
+  # very strongly recommends keeping the offset a recorder was set to rather
+  # than giving the time in UTC alone. It was read in UTC, and one since given
+  # a zone of its own is written in that zone instead.
+  offset <- attr(x, "guanoOffset")
+  if (!is.null(offset) && identical(tz, "UTC")) {
+    minutes <- abs(offset) %/% 60
+    return(paste0(
+      format(at + offset, "%Y-%m-%dT%H:%M:%S", tz="UTC"), fraction,
+      sprintf("%s%02d:%02d", if (offset < 0) "-" else "+", minutes %/% 60, minutes %% 60)
+    ))
   }
 
   if (tz %in% c("UTC", "GMT")) {
@@ -251,6 +297,13 @@
 #' specification defines are converted to the type it gives them, and any other
 #' field, which includes every namespaced field, is kept as the string it
 #' appears as in the file.
+#'
+#' A `Timestamp` written in a form the specification does not allow, but whose
+#' meaning is plain, is read, with a message naming what departs from it: a
+#' space between the date and the time where the specification has a T, as a
+#' Wildlife Acoustics Song Meter writes, an offset hour of one digit, or an
+#' offset with no colon. It is written back in the form the specification
+#' gives, keeping its offset from UTC.
 #'
 #' @param text A string holding a GUANO metadata block
 #' @return A guano object, which is a named list of fields

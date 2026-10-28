@@ -963,6 +963,15 @@ test_that("A metadata rate that is not a number is passed over in silence", {
   expect_equal(rateWarnings(readAudio(f))$messages, character(0))
 })
 
+test_that("A timestamp departing from the specification is not noted by readAudio()", {
+  # guano() says so when it reads a timestamp written as a Song Meter writes
+  # one. Reading the audio is not reading the metadata, so that is not said
+  # from under a call to read the audio either.
+  f <- rateWav(48000, mdGuanoChunk("Timestamp:2025-09-15 21:31:57+2:00", "Samplerate:48000"))
+  expect_message(guano(f), "departs from the specification")
+  expect_silent(readAudio(f))
+})
+
 test_that(".wavCodingRates reads the F field of each generation", {
   expect_equal(.wavCodingRates("A=PCM,F=48000,W=16,M=mono"), 48000)
   expect_equal(
