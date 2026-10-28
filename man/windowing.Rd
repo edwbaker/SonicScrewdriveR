@@ -30,7 +30,8 @@ negative value will result in a gap between windows.}
 combined into a single object}
 
 \item{complete.windows}{If TRUE (default) the final window will not be
-processed unless it has a length equal to window.length.}
+processed unless it has a length equal to window.length. If FALSE it is
+processed holding what is left of the audio, which can be shorter.}
 
 \item{cluster}{A cluster form the 'parallel' package for multi-core computation.}
 
@@ -44,6 +45,18 @@ Separates a Wave object into windows of a defined length and runs a function
 on the window section. Windows may overlap, and the function can make use of
 'parallel' package for multi-core processing. It will also show a progress bar
 if the 'pbapply' package is installed.
+}
+\details{
+A file is read a window at a time by \code{\link[=readAudio]{readAudio()}}, so its windows are
+placed over the audio the file holds, which is what readAudio() reads. A
+recording cut short, by a flat battery, a full card or a copy that did not
+finish, declares more audio than it holds, and its windows stop where its
+audio does: with \code{complete.windows=TRUE} the last window is the last one its
+audio fills, and with \code{complete.windows=FALSE} a final, shorter window holds
+what is left of it, as for a Wave object holding the same audio. A wave
+file whose audio size was never written is windowed over the audio
+readAudio() recovers from it, and a file or Wave object holding no audio
+gives no windows.
 }
 \examples{
 \dontrun{
