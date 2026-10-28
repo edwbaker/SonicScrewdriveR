@@ -71,6 +71,123 @@ test_that("The timestamp forms the specification allows are read", {
   expect_identical(stamp("11:24:30"), "11:24:30")
 })
 
+test_that("A timestamp departing from the specification is read, and said to be", {
+  # A Song Meter writes a space between the date and the time, where the
+  # specification has a T, and an offset hour of one digit. Both left the value
+  # as text. They are read now, with a message naming what departs.
+  stamp <- function(value) {
+    guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value))[["Timestamp"]]
+  }
+  utc <- function(t) format(t, "%Y-%m-%d %H:%M:%S", tz="UTC")
+
+  expect_message(
+    t <- stamp("2025-09-15 21:31:57+2:00"),
+    paste0(
+      "'2025-09-15 21:31:57+2:00' departs from the specification, with a space ",
+      "where a T belongs and an offset hour of one digit. It is read as ",
+      "2025-09-15T21:31:57+02:00, the form it will be written in."
+    ),
+    fixed=TRUE
+  )
+  expect_s3_class(t, "POSIXct")
+  expect_identical(utc(t), "2025-09-15 19:31:57")
+
+  expect_message(t <- stamp("2025-09-15T21:31:57-5:30"), "with an offset hour of one digit\\.")
+  expect_identical(utc(t), "2025-09-16 03:01:57")
+  expect_message(t <- stamp("2025-09-15T21:31:57+0200"), "with no colon in the offset\\.")
+  expect_identical(utc(t), "2025-09-15 19:31:57")
+  expect_message(t <- stamp("2025-09-15 21:31:57Z"), "with a space where a T belongs\\.")
+  expect_identical(utc(t), "2025-09-15 21:31:57")
+  expect_message(t <- stamp("2025-09-15 21:31:57"), "with a space where a T belongs\\.")
+  expect_identical(utc(t), "2025-09-15 21:31:57")
+})
+
+test_that("A timestamp the specification allows is read in silence", {
+  values <- c(
+    "2025-09-15T21:31:57+02:00", "2025-09-15T21:31:57-05:30",
+    "2025-09-15T21:31:57.5+02:00", "2025-09-15T21:31:57.123456Z",
+    "2025-09-15T21:31:57", "2025-09-15", "21:31"
+  )
+  for (value in values) {
+    expect_silent(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))
+  }
+})
+
+test_that("A timestamp is written back in the form the specification gives", {
+  # Changing any other field of the metadata writes this one back. One the
+  # specification allows comes back as it was written, offset and all, rather
+  # than moved to UTC. One that departs from it comes back in the form the
+  # specification gives, at the same moment and in the same offset.
+  written <- function(value) {
+    g <- suppressMessages(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))
+    sub("^Timestamp:", "", strsplit(as.character(g), "\n")[[1]][2])
+  }
+  conforming <- c(
+    "2025-09-15T21:31:57+02:00", "2025-09-15T21:31:57-05:30",
+    "2025-09-15T21:31:57+00:00", "2025-09-15T21:31:57.25+02:00",
+    "2025-09-15T21:31:57Z", "2025-09-15T21:31:57"
+  )
+  for (value in conforming) {
+    expect_identical(written(value), value)
+  }
+
+  departing <- c(
+    "2025-09-15 21:31:57+2:00" = "2025-09-15T21:31:57+02:00",
+    "2025-09-15T21:31:57-5:30" = "2025-09-15T21:31:57-05:30",
+    "2025-09-15T21:31:57-0:30" = "2025-09-15T21:31:57-00:30",
+    "2025-09-15T21:31:57+0200" = "2025-09-15T21:31:57+02:00",
+    "2025-09-15 21:31:57.25+2:00" = "2025-09-15T21:31:57.25+02:00",
+    "2025-09-15 21:31:57Z" = "2025-09-15T21:31:57Z",
+    "2025-09-15 21:31:57" = "2025-09-15T21:31:57"
+  )
+  for (value in names(departing)) {
+    expect_identical(written(value), departing[[value]])
+    # What is written reads back, in silence, as the moment that was read.
+    read <- suppressMessages(guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value)))
+    expect_silent(back <- guanoParse(as.character(read)))
+    expect_equal(as.numeric(back[["Timestamp"]]), as.numeric(read[["Timestamp"]]))
+  }
+})
+
+test_that("A timestamp moved after it was read is written as the moment it is", {
+  # The offset is the form the value is written in, not the moment, so a value
+  # moved after reading is written at its new moment.
+  g <- guanoParse("GUANO|Version:1.0\nTimestamp:2025-09-15T21:31:57+02:00")
+  read <- g[["Timestamp"]]
+  for (by in c(3600, -86400, 0.5)) {
+    g[["Timestamp"]] <- read + by
+    back <- guanoParse(as.character(g))[["Timestamp"]]
+    expect_equal(as.numeric(back), as.numeric(read) + by)
+  }
+})
+
+test_that("A timestamp given a zone after it was read is written in that zone", {
+  # Keeping the offset a value was read with must not overrule a zone the
+  # caller has since given it, which is how it was written before.
+  read <- guanoParse("GUANO|Version:1.0\nTimestamp:2025-09-15T21:31:57+02:00")[["Timestamp"]]
+  zoned <- read
+  attr(zoned, "tzone") <- "America/New_York"
+  expect_identical(.guanoFormatDatetime(zoned), "2025-09-15T15:31:57-04:00")
+  expect_identical(.guanoFormatDatetime(read), "2025-09-15T21:31:57+02:00")
+})
+
+test_that("No more than those three departures from the specification is read", {
+  # Two spaces, an offset hour of one digit with no colon, and a minute of one
+  # digit are kept as the text they are, as is a time that is no time at all,
+  # and none of them is said to have been read.
+  values <- c(
+    "2025-09-15  21:31:57", "2025-09-15 21:31:57+200",
+    "2025-09-15 21:31:57+2:0", "2025-09-15 25:00:00+2:00"
+  )
+  for (value in values) {
+    expect_no_message(expect_warning(
+      t <- guanoParse(paste0("GUANO|Version:1.0\nTimestamp:", value))[["Timestamp"]],
+      "timestamp"
+    ))
+    expect_identical(t, value)
+  }
+})
+
 test_that("A timestamp is written back in a form that reads the same", {
   g <- guanoCreate(Timestamp=as.POSIXct("2020-11-03 11:24:30", tz="UTC"))
   expect_true(grepl("Timestamp:2020-11-03T11:24:30Z", as.character(g), fixed=TRUE))

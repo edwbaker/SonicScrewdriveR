@@ -209,6 +209,19 @@
   the recording is.
 
 ## Fixes
+- guano() and guanoParse() kept as text, with a warning, the timestamp a
+  Wildlife Acoustics Song Meter Mini Bat writes, 2025-09-15 21:31:57+2:00, so
+  it never became a time a caller could compute with. It departs from the
+  specification twice, with a space between the date and the time where a T
+  belongs and an offset hour of a single digit. Both are now read, as is an
+  offset with no colon, with a message naming what departs from the
+  specification, and the value is written back in the form the specification
+  gives. readMetadata() fared worse with it, as the text was read as a date and
+  time in the zone of the machine, with the offset after it dropped, and now
+  gives the moment the recording was made. A timestamp with an offset from UTC
+  is written back with that offset, as the specification recommends: one of
+  +01:00 was written back moved to UTC, as Z, so changing any other field of the
+  metadata lost the offset the recorder was set to.
 - guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
   nothing for a wave file in the RF64 or BW64 form, which is how a recording is
   written once it passes the 4 GiB a RIFF header can describe, so the metadata

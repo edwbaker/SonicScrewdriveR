@@ -776,12 +776,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @noRd
 .wavRateClaims <- function(file) {
   # Reading the metadata is a cross-check on the audio, not something the
-  # caller asked for, so a complaint about how a field is written is not raised
-  # from under a call to read the audio.
-  read <- suppressWarnings(tryCatch(
+  # caller asked for, so neither a complaint about how a field is written nor a
+  # note that it departs from its specification is raised from under a call to
+  # read the audio.
+  read <- suppressMessages(suppressWarnings(tryCatch(
     list(guano=guano(file), bext=bext(file)),
     error=function(cond) NULL
-  ))
+  )))
   if (is.null(read)) {
     return(list())
   }
