@@ -21,6 +21,15 @@ guanoParse(text)
 
 A guano object, which is a named list of fields
 
+## Details
+
+A `Timestamp` written in a form the specification does not allow, but
+whose meaning is plain, is read, with a message naming what departs from
+it: a space between the date and the time where the specification has a
+T, as a Wildlife Acoustics Song Meter writes, an offset hour of one
+digit, or an offset with no colon. It is written back in the form the
+specification gives, keeping its offset from UTC.
+
 ## References
 
 Riggs, D. GUANO: Grand Unified Acoustic Notation Ontology.

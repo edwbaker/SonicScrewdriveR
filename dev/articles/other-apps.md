@@ -219,6 +219,9 @@ data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
 
 # Download the file to the mole_cricket directory
 audioblastDownload(data, dir="mole_cricket/")
+#> Warning: There was an issue downloading the requested file via audioblast.
+#> downloaded length 588782 != reported length 33516044
+#> If this issue continues please contact the audioblast team.
 ```
 
 This has downloaded the audio file to the `mole_cricket` directory. It
