@@ -26,8 +26,10 @@ readAudio(
 
 - mime:
 
-  MIME type of file to read, or "auto". Supported types are
-  "audio/x-wav" and "audio/mpeg" (MP3)
+  MIME type of file to read, or "auto" to read the type from the bytes
+  of the file rather than from its name. Supported types are
+  "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
+  package.
 
 - from:
 
@@ -62,6 +64,14 @@ writes either back out, and functions that take multichannel audio, such
 as
 [`tdoa()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tdoa.md),
 take the result directly.
+
+Which reader a file is given to is decided by the first bytes of the
+file, not by its extension, as a name is only a convention and the two
+disagree often enough in a real collection to matter: a wave file called
+.mp3 read as an MP3 comes back as a shorter recording at the wrong
+sample rate, without complaint. The name is used only where the bytes
+identify nothing. Passing `mime` says what the file is and is taken as
+given, whatever it holds.
 
 WAVE files are read by
 [`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html)
