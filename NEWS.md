@@ -186,6 +186,13 @@
   warning handler treat them as the warnings they are.
 
 ## Deprecations
+- audiomothWave() is deprecated in favour of readMetadata(), whose `audiomoth`
+  source holds the same fields and whose normalised record additionally gives
+  the recording time as a `datetime` rather than the separate `start_date`,
+  `start_time` and `time_zone` strings the recorder wrote. It warns and will be
+  removed in a future release. The parsing it did is unchanged and is now
+  reached through readMetadata(), which reads the comment out of the chunk list
+  it has already walked instead of sending a second reader back to the file.
 - unit arguments are now named consistently across the package. A function takes
   input.unit for the unit a value is supplied in, output.unit for the unit a
   result is returned in, and <quantity>.unit (as in temp.unit, pressure.unit)
@@ -259,6 +266,34 @@
   the recording is.
 
 ## Fixes
+- The AudioMoth comment of a wave file was found only where the recorder had
+  written its list of fields ahead of the audio, found by auditing a cached
+  copy of the xeno-canto corpus. The comment was looked for by reading the
+  first 60 text strings from the start of the file, so where the
+  `LIST` trails the `data` chunk — an ordinary layout, and the one two of the
+  five AudioMoth recordings in a 127-file sample of that corpus use — those
+  strings were spent on the audio instead. The reader then reported no
+  AudioMoth metadata at all, having first warned 47 times that it had broken a
+  string off part way through. The comment is now read from the chunk it sits
+  in, so the order of the chunks no longer matters, no warning is raised, and
+  the file is not read a second time to find what the chunk list already held.
+  An AudioMoth comment copied into the `COMM` frame of the ID3 chunk a wave can
+  carry is read as well, and the comment is now read from raw bytes and not
+  only from a path, so a wave held in memory reports its `audiomoth` source as
+  a file does.
+- An AudioMoth recording transcoded to MP3 kept the recorder's comment in its
+  ID3 tag, where nothing looked for it: the comment was read only from a wave,
+  so such a file reported a recordist and a comment and nothing else. Found in
+  a cached copy of the iNaturalist corpus, where 2 of 372 files sampled are
+  AudioMoth recordings in MP3. readMetadata() now looks for the comment in the
+  tag of an MP3 as well as in the list of a wave, under the `COMM` frame of a
+  version 2 tag and the fixed comment field of a version 1 tag alike. How much
+  that recovers depends on the tag: a version 2 frame holds the whole comment
+  and so gives every field, while version 1 allows the comment 30 bytes, which
+  the recorder's wording fills before it reaches the date, so those two files
+  gain the make and model of the recorder and the time of day and nothing
+  further. The serial number of such a file is in its artist field, which is
+  already read.
 - Three chunk identifiers a wave file writes metadata under were not looked
   for, found by auditing a cached copy of the TSA corpus. An ID3 tag chunk is
   read whether it is named `id3 `, `ID3 ` or `ID32`, the last of which 96 files

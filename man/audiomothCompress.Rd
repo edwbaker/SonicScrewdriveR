@@ -27,9 +27,10 @@ a segment is kept. This is the amplitude threshold of an AudioMoth device.}
 longer than the 488-byte header. The default of 32768 is what current
 AudioMoth firmware uses.}
 
-\item{comment}{Comment string to store in the header, as read by
-\code{\link[=audiomothWave]{audiomothWave()}}. The threshold is recorded after it, as an AudioMoth
-device records it, which is how \code{\link[=readAudio]{readAudio()}} knows to expand the file.}
+\item{comment}{Comment string to store in the header, of the kind
+\code{\link[=readMetadata]{readMetadata()}} reads back as its \code{audiomoth} source. The threshold is
+recorded after it, as an AudioMoth device records it, which is how
+\code{\link[=readAudio]{readAudio()}} knows to expand the file.}
 
 \item{artist}{Artist string to store in the header}
 

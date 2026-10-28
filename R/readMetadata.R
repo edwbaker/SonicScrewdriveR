@@ -139,7 +139,7 @@
 #' The comment gives a wall clock and, in brackets after it, the offset from
 #' UTC the device was set to.
 #'
-#' @param a The fields audiomothWave() read
+#' @param a The fields read from an AudioMoth comment
 #' @return A POSIXct, or NULL where the comment held no time
 #' @keywords internal
 #' @noRd
@@ -452,18 +452,28 @@
   return(!is.null(source) && length(source) > 0L)
 }
 
-#' Read the AudioMoth comment of a wave file, if it has one
+#' Read the AudioMoth comment a wave carries, if it carries one
 #'
-#' The comment is read by [audiomothWave()], which takes a path, so this is
-#' only read from a file and not from bytes already in hand.
+#' The comment has already been read out of the chunk list by the time this is
+#' called, as the `ICMT` of the list or the `COMM` of an ID3 tag, so it is
+#' parsed where it stands rather than read again. Working from the chunk means
+#' a wave whose `LIST` trails its `data` reads the same as one whose `LIST`
+#' comes first, and that bytes in hand are as good as a path.
 #' @keywords internal
 #' @noRd
-.mdAudiomothSource <- function(file, info) {
-  comment <- .mdPick(info, "ICMT")
-  if (is.null(comment) || !any(grepl("Recorded at", comment, fixed=TRUE))) {
+.mdAudiomothSource <- function(info, tag=NULL) {
+  # A version 2 tag names the frame COMM, and names it by its description
+  # besides; a version 1 tag has a fixed comment field, which this package
+  # reads under the name "comment". Version 1 allows it 30 bytes, so a comment
+  # found there is the start of one and the fields past the cut are not there
+  # to be read.
+  comment <- c(
+    .mdPick(info, "ICMT"), .mdPickPrefix(tag, "COMM"), .mdPick(tag, "comment")
+  )
+  if (length(comment) == 0L) {
     return(NULL)
   }
-  read <- tryCatch(audiomothWave(file), error=function(cond) NULL)
+  read <- .audiomothComment(comment)
   if (!.mdHasFields(read)) {
     return(NULL)
   }
@@ -668,8 +678,10 @@
 #'   was read that this package has a normalised name for.
 #' @export
 #' @seealso The readers for one format at a time: [guano()], [wamd()],
-#'   [bext()], [ixml()], [wavInfo()], [id3()], [vorbisComment()] and
-#'   [audiomothWave()]. [`audioMetadata<-`] attaches a reading to a Wave object.
+#'   [bext()], [ixml()], [wavInfo()], [id3()] and [vorbisComment()]. The
+#'   AudioMoth comment has no reader of its own any more: [audiomothWave()] is
+#'   deprecated in favour of the `audiomoth` source this returns.
+#'   [`audioMetadata<-`] attaches a reading to a Wave object.
 #' @examples
 #' f <- system.file("extdata/AUDIOMOTH_GUANO.WAV", package="sonicscrewdriver")
 #' m <- readMetadata(f)
@@ -709,6 +721,15 @@ readMetadata <- function(x, filename=TRUE) {
   sources <- list()
   unparsed <- character(0)
 
+  # The tag is read before the sources are filled because the AudioMoth comment
+  # may be in it rather than in the list, and it is recorded in its own place
+  # below so that the order the sources are reported in does not change.
+  tag <- if (.mdWaveContainer(container) || identical(container, "MP3")) {
+    id3(from)
+  } else {
+    NULL
+  }
+
   if (.mdWaveContainer(container)) {
     sources$guano <- guano(from)
     sources$wamd <- wamd(from)
@@ -717,13 +738,14 @@ readMetadata <- function(x, filename=TRUE) {
     sources$wavInfo <- wavInfo(from)
     sources$xmp <- xmp(from)
     sources$disp <- disp(from)
-    # audiomothWave() reads the recording rather than a chunk of it, so it is
-    # given the path whatever the map holds.
-    sources$audiomoth <- .mdAudiomothSource(file, sources$wavInfo)
     unparsed <- .mdUnparsed(.mdWavChunkIds(from))
   }
   if (.mdWaveContainer(container) || identical(container, "MP3")) {
-    sources$id3 <- id3(from)
+    sources$id3 <- tag
+    # A recording transcoded to MP3 keeps the recorder's comment in its tag,
+    # so the comment is looked for there as well as in a wave's list. The
+    # sources are reported in a fixed order, so this reads the same either way.
+    sources$audiomoth <- .mdAudiomothSource(sources$wavInfo, tag)
   }
   if (identical(container, "FLAC") || identical(container, "Ogg")) {
     sources$vorbisComment <- vorbisComment(file)
@@ -747,6 +769,12 @@ readMetadata <- function(x, filename=TRUE) {
   sources <- list()
   unparsed <- character(0)
 
+  tag <- if (.mdWaveContainer(container) || identical(container, "MP3")) {
+    id3(bytes)
+  } else {
+    NULL
+  }
+
   if (.mdWaveContainer(container)) {
     sources$guano <- guano(bytes)
     sources$wamd <- wamd(bytes)
@@ -758,7 +786,10 @@ readMetadata <- function(x, filename=TRUE) {
     unparsed <- .mdUnparsed(.mdWavChunkIds(bytes))
   }
   if (.mdWaveContainer(container) || identical(container, "MP3")) {
-    sources$id3 <- id3(bytes)
+    sources$id3 <- tag
+    # Bytes in hand carry the comment as readably as a file does, so this is
+    # read here as well, which it could not be while it took a path.
+    sources$audiomoth <- .mdAudiomothSource(sources$wavInfo, tag)
   }
   if (identical(container, "FLAC") || identical(container, "Ogg")) {
     sources$vorbisComment <- vorbisComment(bytes)
