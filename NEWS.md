@@ -266,6 +266,26 @@
   asked for, 0.2 seconds, is before the start point, 0.3 seconds, so no audio
   of 'f.wav' was asked for." In samples the end point is the last sample
   returned, so an end at the start still gives that one sample.
+- windowing() given a file placed its windows over the length the header of
+  the file declares, as the av package reports it, rather than over the audio
+  the file holds. A recording cut short, by a flat battery, a full card or a
+  copy that did not finish, declares more than it holds, and as readAudio()
+  now refuses a start beyond the end of the audio, windowing() stopped with a
+  `startPastEnd` error at the first window past it, where it had handed `FUN`
+  empty windows before. A wave file of 1 second cut short after 4500 of its
+  8000 samples failed at the sixth window of 1000. The windows are now placed
+  over the audio the file holds, counted as readAudio() counts it, so they
+  stop where the audio does: with `complete.windows = TRUE` at the last window
+  the audio fills, and with `complete.windows = FALSE` at a final, shorter
+  window holding what is left of it, as for a Wave object of the same audio.
+  The gaps that `bind.wave = TRUE` reads back in between windows end there
+  too. Any other file is measured from the duration the av package gives,
+  which it rounds to the microsecond, so a FLAC file of 3000 samples at
+  44.1 kHz was 2999.99 samples long and gave no window of 3000 and only two of
+  1000, while one of 12345 samples at 48 kHz was given a second window of
+  12345 when `complete.windows = FALSE`, starting beyond its end, which
+  failed. Its length is now rounded to the nearest sample. A file or Wave object holding no audio
+  at all failed in `seq_len()`, and now gives no windows.
 - readAudio() cut a WAVE file a sample away from every other format where a
   start time fell half way between two samples, as `tuneR::readWave()` rounds
   such a time differently from `seewave::cutw()`: two parts asked for either
