@@ -270,6 +270,18 @@ test_that("A recording cut short is expanded with a warning", {
   expect_warning(wave <- audiomothExpand(f), "truncated")
   expect_s4_class(wave, "Wave")
   expect_gt(length(wave@left), 0)
+
+  # readAudio() expands it as it reads it, and says so once, not a second time
+  # for the file it expanded.
+  classes <- character()
+  withCallingHandlers(
+    readAudio(f),
+    warning=function(cond) {
+      classes <<- c(classes, class(cond)[1])
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_equal(classes, "truncatedAudio")
 })
 
 test_that("Files that are not mono 16-bit PCM are rejected", {

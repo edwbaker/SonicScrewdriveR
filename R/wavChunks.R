@@ -451,7 +451,7 @@
       fields <- .wavFmtFields(read(fmt$start, held), fmt$size)
     }
   }
-  fixed <- !is.null(fields) && fields$format %in% c(1, 3) && fields$frameSize > 0
+  fixed <- .wavFixedFrames(fields)
   ds64$frameSize <- if (fixed) fields$frameSize else NA
   ds64$countAgrees <- ds64$sampleCount == 0 || !fixed ||
     is.null(.wavFindChunk(chunks, "data")) ||
@@ -492,6 +492,21 @@
     bits = bits,
     frameSize = channels * ceiling(bits / 8)
   ))
+}
+
+#' Does every sample frame of a format take the same number of bytes?
+#'
+#' Only PCM and floating-point audio can be counted in sample frames from the
+#' number of bytes it takes. A compressed format packs its samples into blocks
+#' of its own.
+#'
+#' @param fields The fields of a format chunk, as .wavFmtFields() reads them,
+#'   or NULL where they could not be read
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.wavFixedFrames <- function(fields) {
+  return(!is.null(fields) && fields$format %in% c(1, 3) && fields$frameSize > 0)
 }
 
 #' Where the sizes of a wave file are written, and what to write there

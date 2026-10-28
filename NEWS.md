@@ -160,13 +160,13 @@
   metadata, `unwrittenAudioSize` for a recording whose size was never written,
   `nonFiniteSamples` for samples that are not finite numbers, `badDs64` and
   `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
-  believed or miscounts its sample frames, and `truncatedAudio` from
-  audiomothExpand(). A corpus known to hold truncated
-  recordings can now pass over that one warning and still hear about the others,
-  which matching the wording of a message could not do. All of them are also
-  classed `audioFileWarning`, for handling every warning about the file at once,
-  and `warning`, so `suppressWarnings()` and an ordinary warning handler treat
-  them as the warnings they are.
+  believed or miscounts its sample frames, and `truncatedAudio` for a recording
+  that was cut short, which audiomothExpand() raises as well. A corpus known to
+  hold truncated recordings can now pass over that one warning and still hear
+  about the others, which matching the wording of a message could not do. All
+  of them are also classed `audioFileWarning`, for handling every warning about
+  the file at once, and `warning`, so `suppressWarnings()` and an ordinary
+  warning handler treat them as the warnings they are.
 
 ## Deprecations
 - unit arguments are now named consistently across the package. A function takes
@@ -362,6 +362,18 @@
   audiomothExpand() warns on a triggered recording left the same way. A file
   that really does hold no audio, such as one an AudioMoth writes when its
   battery fails as it starts to record, is still read as empty.
+- readAudio() returned the audio of a wave file that had been cut short, by a
+  flat battery, a full card or a copy that did not finish, without saying so.
+  The C2 file of the malformed wave files reference set declares 5.67 seconds
+  of audio and holds 3.40, and came back as 3.40 seconds of recording with
+  nothing to tell it from one that was meant to be that long. It is now read
+  with a warning classed `truncatedAudio` naming the sample frames the file
+  declares and the frames it holds. A file cut short part-way through a sample
+  frame fared worse: read as WAVE, the rest of the frame was made up by
+  recycling the samples before it, which only a warning from `matrix()` hinted
+  at, so the wave ended in a sample that was never recorded; read through the
+  av package, as an RF64 file is, it was refused. Only the whole sample frames
+  such a file holds are now read.
 - readAudio() returned samples that were not finite numbers, which a
   floating-point file can hold, so that every measurement made from the wave
   came back as NaN. They are now read as zero, with a warning saying how many.
