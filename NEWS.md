@@ -243,6 +243,29 @@
   is written back with that offset, as the specification recommends: one of
   +01:00 was written back moved to UTC, as Z, so changing any other field of the
   metadata lost the offset the recorder was set to.
+- wamd() and readMetadata() read a timestamp whose offset from UTC has an hour
+  of one digit, as 2025-09-15 21:31:57+2:00, as though it had no offset at all.
+  The time was taken as a wall clock in the zone of the machine reading it, so
+  the moment given was wrong by the difference between that zone and the
+  recorder's, with nothing to say so. readMetadata() did the same with any
+  offset after a date and a time separated by a space, as 2025-09-15
+  21:31:57+02:00, in an INFO list, an XMP packet, an ID3 tag or a Vorbis
+  comment. Both are now read with their offset. A value that only begins with a
+  date and a time was read as far as that and the rest dropped, so a time
+  followed by something neither reader knew, such as 2025-09-15 21:31:57 junk,
+  was read as a wall clock, and a date followed by a time readMetadata() could
+  not read was read as midnight. wamd() now keeps such a value as text, with a
+  warning, as it already did one it could not read at all, and readMetadata()
+  gives no time from it.
+- readMetadata() read a date and time that stops at the minute, as
+  2025-09-15T21:31, which an ID3v2.4 tag and an XMP packet both allow, as
+  midnight at the start of that date in the zone of the machine, with the time
+  and any offset from UTC after it dropped. It is now read to the minute, in the
+  forms a time to the second is read in: with a T or a space between the date
+  and the time, and with Z or an offset written as +02:00, +0200 or +2:00. wamd()
+  and guano() still keep such a timestamp as text, with a warning, as neither
+  format is known to write one, and readMetadata() reads its time from that
+  text.
 - readAudio() given a start point at or beyond the end of the recording failed
   in words that said nothing of what had been asked for, and in different words
   for different units and formats: "'from' cannot be superior to 'to'" in

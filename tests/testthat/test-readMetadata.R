@@ -208,6 +208,178 @@ test_that("A year on its own gives no time", {
   expect_identical(m$sources$wavInfo[["ICRD"]], "2018")
 })
 
+# An offset hour of one digit was not recognised as an offset, nor was any
+# offset after a date and time separated by a space, and in both cases the time
+# was read as a wall clock in the zone of the session and the offset dropped.
+for (tz in sessionTimezones) {
+  test_that(paste0("A date written with an offset gives its moment in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15 21:31:57+2:00", "2025-09-15T19:31:57Z"),
+        c("2025-09-15T21:31:57-5:30", "2025-09-16T03:01:57Z"),
+        c("2025-09-15 21:31:57+02:00", "2025-09-15T19:31:57Z"),
+        c("2025-09-15 21:31:57-0530", "2025-09-16T03:01:57Z"),
+        c("2025-9-5 9:31:57+2:00", "2025-09-05T07:31:57Z")
+      )) {
+        f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+          charToRaw("INFO"), mdInfoField("ICRD", case[1])
+        )), mdData()))
+        m <- readMetadata(f, filename=FALSE)
+
+        expect_identical(
+          format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2]
+        )
+      }
+    })
+  })
+}
+
+test_that("A wamd timestamp whose offset hour has one digit gives its moment", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(5, "2025-09-15 21:31:57+2:00")
+  )), mdData()))
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_identical(
+    format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:57Z"
+  )
+})
+
+# as.POSIXct() reads a value that merely begins with a date or a time, so the
+# rest was dropped: a time followed by anything was read as a wall clock, and a
+# date followed by a time it could not read as midnight.
+test_that("A date followed by anything else gives no time", {
+  for (text in c(
+    "2025-09-15 21:31:57 junk",
+    "2025-09-15T21:31:57+02:00junk",
+    "2025-09-15 junk",
+    "2025-09-15T25:00:00"
+  )) {
+    f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+      charToRaw("INFO"), mdInfoField("ICRD", text)
+    )), mdData()))
+    m <- readMetadata(f, filename=FALSE)
+
+    expect_null(m$fields$datetime)
+    expect_identical(m$sources$wavInfo[["ICRD"]], text)
+  }
+})
+
+# ID3v2.4 and XMP both allow a time that stops at the minute. It was read as
+# midnight, and then, once the whole value had to be a form this knew, as no
+# time at all.
+mdIcrdDatetime <- function(text) {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+    charToRaw("INFO"), mdInfoField("ICRD", text)
+  )), mdData()))
+  readMetadata(f, filename=FALSE)$fields$datetime
+}
+
+for (tz in sessionTimezones) {
+  test_that(paste0("A time to the minute with an offset gives its moment in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15T21:31Z", "2025-09-15T21:31:00Z"),
+        c("2025-09-15 21:31Z", "2025-09-15T21:31:00Z"),
+        c("2025-09-15T21:31+02:00", "2025-09-15T19:31:00Z"),
+        c("2025-09-15 21:31+0200", "2025-09-15T19:31:00Z"),
+        c("2025-09-15T21:31+2:00", "2025-09-15T19:31:00Z"),
+        c("2025-09-15 21:31-5:30", "2025-09-16T03:01:00Z"),
+        c("2025-09-15T21:31 -05:30", "2025-09-16T03:01:00Z"),
+        c("2025-9-5 9:31+2:00", "2025-09-05T07:31:00Z")
+      )) {
+        expect_identical(
+          format(mdIcrdDatetime(case[1]), "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2]
+        )
+      }
+    })
+  })
+
+  # With nothing to say which zone it was written in, a time to the minute is
+  # read as a time to the second is.
+  test_that(paste0("A time to the minute with no offset is read as that time to the second in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15T21:31", "2025-09-15T21:31:00"),
+        c("2025-09-15 21:31", "2025-09-15 21:31:00"),
+        c("2025-9-5 9:31", "2025-9-5 9:31:00")
+      )) {
+        minute <- mdIcrdDatetime(case[1])
+
+        expect_s3_class(minute, "POSIXct")
+        expect_equal(as.numeric(minute), as.numeric(mdIcrdDatetime(case[2])), tolerance=0)
+      }
+      expect_identical(
+        format(mdIcrdDatetime("2025-09-15T21:31"), "%Y-%m-%d %H:%M:%S"), "2025-09-15 21:31:00"
+      )
+    })
+  })
+
+  # The two formats that allow it, and the three others whose dates reach the
+  # same reader. GUANO and wamd do not allow it, so their own readers keep it as
+  # text, with a warning, and readMetadata() reads that text.
+  test_that(paste0("A time to the minute is read from every format in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      xmpPacket <- paste0(
+        "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">",
+        "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">",
+        "<rdf:Description rdf:about=\"\" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"",
+        " xmp:CreateDate=\"2025-09-15T21:31+02:00\"/>",
+        "</rdf:RDF></x:xmpmeta>"
+      )
+      m <- readMetadata(mdFile(mdWav(
+        mdFmt(), mdChunk("_PMX", mdUtf8(xmpPacket)), mdData()
+      )), filename=FALSE)
+      expect_identical(
+        format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:00Z"
+      )
+
+      m <- readMetadata(mdFile(c(
+        mdId3Tag(mdTextFrame("TDRC", "2025-09-15T21:31")), mdMp3Frame()
+      ), ".mp3"), filename=FALSE)
+      expect_identical(format(m$fields$datetime, "%Y-%m-%d %H:%M:%S"), "2025-09-15 21:31:00")
+
+      m <- readMetadata(mdFile(mdFlac(mdVorbisBlock(
+        "libFLAC", "DATE=2025-09-15T21:31"
+      )), ".flac"), filename=FALSE)
+      expect_identical(format(m$fields$datetime, "%Y-%m-%d %H:%M:%S"), "2025-09-15 21:31:00")
+
+      f <- mdFile(mdWav(
+        mdFmt(),
+        mdChunk("guan", charToRaw("GUANO|Version:1.0\nTimestamp:2025-09-15T21:31+02:00")),
+        mdData()
+      ))
+      expect_warning(m <- readMetadata(f, filename=FALSE), "Could not read the GUANO timestamp")
+      expect_identical(
+        format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:00Z"
+      )
+
+      f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+        mdWamdField(5, "2025-09-15 21:31+2:00")
+      )), mdData()))
+      expect_warning(m <- readMetadata(f, filename=FALSE), "Could not read the wamd timestamp")
+      expect_identical(
+        format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:00Z"
+      )
+    })
+  })
+}
+
+test_that("A time to the minute followed by anything else, or out of range, gives no time", {
+  for (text in c(
+    "2025-09-15T21:31 junk",
+    "2025-09-15T21:31+02",
+    "2025-09-15T21:31+02:00junk",
+    "2025-09-15T21:31:",
+    "2025-09-15T21",
+    "2025-09-15T25:00",
+    "2025-09-15T21:60",
+    "2025-09-15T21:31+2400"
+  )) {
+    expect_null(mdIcrdDatetime(text))
+  }
+})
+
 test_that("A file carrying nothing gives an empty reading rather than an error", {
   f <- mdFile(mdWav(mdFmt(), mdData()))
   m <- readMetadata(f, filename=FALSE)
