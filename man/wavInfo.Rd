@@ -26,7 +26,8 @@ Fields of the list of information are named by their own four-character
 identifiers. A file may hold other lists, most often \code{adtl}, which carries
 the labels of cue points rather than anything about the recording as a
 whole; the fields of those are named by their list as well, as in
-\code{adtl/labl}.
+\code{adtl/labl}. A label read here is the text alone: \code{\link[=wavCues]{wavCues()}} reads the same
+labels with the positions in the recording they name.
 }
 \examples{
 f <- system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver")

@@ -47,6 +47,23 @@
   format, which is how most writers that mention the chunk leave it, gives
   nothing rather than an empty title, and one holding an image names the format
   so that a caller can tell the file carries something other than text.
+- wavCues() reads the cue points of a wave file together with the labels that
+  name them. The two halves of an annotation are written in different chunks:
+  a cue chunk holds positions and nothing else, and the text naming them is in
+  a list of kind `adtl`, each field beginning with the identifier of the point
+  it belongs to. wavInfo() reads that text and passes over the identifier,
+  which is right for a list of information about the recording as a whole but
+  leaves a label with nothing to attach it to — a file in a cached copy of
+  bio.acousti.ca says "Phrase 1" without saying that the phrase begins at the
+  start of the recording and runs for ten minutes. Both are now read and put
+  back together, one row per point, with the position in samples and in
+  seconds, the label, the note, the length and purpose of a labelled region,
+  and the chunk the position is into, since a cue into a wave list is an offset
+  into that part of the audio rather than into the recording. A label whose cue
+  point is missing is reported without a position rather than dropped, and a
+  point with no label is reported without text: nine files in that corpus
+  declare ninety-nine points and name none of them, which is a writer
+  reserving the room rather than marking anything.
 - wavChunks() lists the chunks a wave file holds: every one of them, in the
   order the file holds them, with where its body begins, how large it is,
   whether it was cut short, and, for a list, which kind of list it is. The
