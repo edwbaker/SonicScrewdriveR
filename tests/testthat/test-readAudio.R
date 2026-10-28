@@ -1319,10 +1319,11 @@ test_that("An end that leaves no audio is refused for every format, in every uni
       readAudio(path, from=1, to=0, input.unit="samples"),
       class="endBeforeStart", info=file
     )
-    # -Inf is no end of the recording, and used to read the whole of it.
+    # -Inf is no end of the recording, and used to read the whole of it. It is
+    # refused as negative, as a negative point is in every unit.
     expect_error(
       readAudio(path, from=0, to=-Inf, input.unit="samples"),
-      class="endBeforeStart", info=file
+      class="invalidPoint", info=file
     )
     # A negative time is still refused as one.
     expect_error(readAudio(path, from=1, to=-2), "cannot be negative", info=file)
@@ -1487,4 +1488,214 @@ test_that(".samplesAsked places a time at the boundary nearest it", {
   # A whole file asks nothing of the unit it is given in.
   expect_equal(.samplesAsked(0, Inf, "furlongs", 8000), c(1, Inf))
   expect_error(.samplesAsked(0, -Inf, "seconds", 8000), "cannot be negative")
+})
+
+# A point that is no point of a recording was read differently by every
+# reader, where it was read at all. readWave() seeks to a fraction of a sample,
+# or to a sample before the first, as readily as to a sample, and gave audio
+# made of the bytes of two samples, or of the header, where cutws() refused a
+# fraction with "In cutws both from and to must be integers". NA, NaN and an
+# empty vector failed with "missing value where TRUE/FALSE needed" or "argument
+# is of length zero"; text was compared as text, and a factor or a difftime was
+# read as the number R keeps it as.
+
+test_that("A point that is no point of a recording is refused for every format, in every unit", {
+  for (file in bundledFiles) {
+    path <- system.file("extdata", file, package="sonicscrewdriver")
+
+    # A fraction of a sample, as a start, an end, or both.
+    expect_error(
+      readAudio(path, from=2.5, to=10, input.unit="samples"), class="invalidPoint", info=file
+    )
+    expect_error(
+      readAudio(path, from=1, to=10.5, input.unit="samples"), class="invalidPoint", info=file
+    )
+    expect_error(readAudio(path, from=2.5, input.unit="samples"), class="invalidPoint", info=file)
+    expect_error(
+      readAudio(path, from=0.5, to=1.5, input.unit="samples"), class="invalidPoint", info=file
+    )
+    # An end of half a sample was refused as before the first sample, which it
+    # is not, being no sample at all.
+    expect_error(
+      readAudio(path, from=0, to=0.5, input.unit="samples"), class="invalidPoint", info=file
+    )
+
+    # A negative point, in samples as in time.
+    expect_error(
+      readAudio(path, from=-1, to=10, input.unit="samples"), class="invalidPoint", info=file
+    )
+    expect_error(readAudio(path, from=-1), class="invalidPoint", info=file)
+    expect_error(readAudio(path, from=1, to=-2), class="invalidPoint", info=file)
+    expect_error(
+      readAudio(path, from=-1 / 60, input.unit="minutes"), class="invalidPoint", info=file
+    )
+    expect_error(readAudio(path, from=-Inf), class="invalidPoint", info=file)
+    expect_error(
+      readAudio(path, from=-Inf, input.unit="samples"), class="invalidPoint", info=file
+    )
+
+    # No number at all, as a start and as an end, in either kind of unit.
+    for (unit in c("seconds", "samples")) {
+      for (bad in list(NA, NA_real_, NA_integer_, NaN, "1", "a", TRUE, factor("2"),
+                       as.difftime(1, units="mins"), NULL, numeric(0), c(1, 2),
+                       list(1))) {
+        info <- paste(c(file, unit, deparse(bad)), collapse=" ")
+        expect_error(
+          readAudio(path, from=bad, input.unit=unit), class="invalidPoint", info=info
+        )
+        expect_error(readAudio(path, to=bad, input.unit=unit), class="invalidPoint", info=info)
+      }
+    }
+
+    # A start of Inf is still a start past the end, and an end of Inf the end.
+    expect_error(readAudio(path, from=Inf), class="startPastEnd", info=file)
+    expect_error(
+      readAudio(path, from=Inf, input.unit="samples"), class="startPastEnd", info=file
+    )
+    expect_equal(
+      length(readAudio(path, from=0, to=Inf, input.unit="samples")),
+      length(readAudio(path)), info=file
+    )
+  }
+})
+
+test_that("A number of samples a double misses by its last bits is read as the whole number", {
+  # 0.009 * 48000 is 431.99999999999994, and 0.017 * 48000 is
+  # 816.00000000000011. readWave() read the first from the byte before sample
+  # 432, and every other reader refused both.
+  below <- 0.009 * 48000
+  above <- 0.017 * 48000
+  expect_lt(below, 432)
+  expect_gt(above, 816)
+
+  for (file in bundledFiles) {
+    path <- system.file("extdata", file, package="sonicscrewdriver")
+    whole <- readAudio(path)
+    expect_equal(
+      readAudio(path, from=below, to=below + 4, input.unit="samples")@left,
+      whole@left[432:436], info=file
+    )
+    expect_equal(
+      readAudio(path, from=above, to=above + 4, input.unit="samples")@left,
+      whole@left[816:820], info=file
+    )
+    # An end that misses the whole number below it is the same end.
+    expect_equal(
+      length(readAudio(path, from=1, to=below, input.unit="samples")), 432, info=file
+    )
+    # Integers are whole numbers, of whatever type.
+    expect_equal(
+      readAudio(path, from=432L, to=436L, input.unit="samples")@left,
+      whole@left[432:436], info=file
+    )
+  }
+
+  # Within a millionth of a sample of a whole number, and no further.
+  f <- malformedWav(1:4000, rate=8000)
+  on.exit(unlink(f))
+  expect_equal(readAudio(f, from=10 - 1e-7, to=12 + 1e-7, input.unit="samples")@left, 10:12)
+  expect_error(readAudio(f, from=10 - 1e-5, input.unit="samples"), class="invalidPoint")
+  # An end that close to zero is an end of zero, before the first sample.
+  expect_error(readAudio(f, from=0, to=1e-7, input.unit="samples"), class="endBeforeStart")
+  # A start of zero a hair below it is the start, not a negative sample.
+  zero <- (0.3 - 0.1 - 0.2) * 48000
+  expect_lt(zero, 0)
+  expect_equal(readAudio(f, from=zero, to=3, input.unit="samples")@left, 1:3)
+  expect_error(readAudio(f, from=-1e-5, input.unit="samples"), class="invalidPoint")
+})
+
+test_that("A point that is no point of a recording says what was asked for", {
+  w <- tuneR::Wave(left=rep(c(-1000L, 1000L), 2000), samp.rate=8000, bit=16)
+  wav <- withr::local_tempfile(fileext=".wav")
+  flac <- withr::local_tempfile(fileext=".flac")
+  tuneR::writeWave(w, wav)
+  writeAudio(w, flac)
+
+  for (f in c(wav, flac)) {
+    expect_error(
+      readAudio(f, from=2.5, to=10, input.unit="samples"),
+      "^The start point asked for, sample 2.5, is not a whole number of samples, so no part of '.*' was read\\.$",
+      info=f
+    )
+    expect_error(
+      readAudio(f, from=1, to=10.5, input.unit="samples"),
+      "^The end point asked for, sample 10.5, is not a whole number of samples", info=f
+    )
+    expect_error(
+      readAudio(f, from=1, to=-2),
+      "^The end point asked for, -2 seconds, cannot be negative, so no part of '.*' was read\\.$",
+      info=f
+    )
+    expect_error(
+      readAudio(f, from=-0.5, input.unit="minutes"),
+      "The start point asked for, -0.5 minutes, cannot be negative", info=f
+    )
+    expect_error(
+      readAudio(f, from=-1, input.unit="samples"),
+      "The start point asked for, sample -1, cannot be negative", info=f
+    )
+    expect_error(
+      readAudio(f, from="9", input.unit="samples"),
+      "The start point asked for, \"9\", is not a number", info=f
+    )
+    expect_error(readAudio(f, to=NA), "The end point asked for, NA, is not a number", info=f)
+    expect_error(readAudio(f, from=NaN), "The start point asked for, NaN, is not a number", info=f)
+    expect_error(
+      readAudio(f, from=c(1, 2)), "The start point asked for, 2 values, is not a single number",
+      info=f
+    )
+    expect_error(
+      readAudio(f, from=NULL), "The start point asked for, 0 values, is not a single number",
+      info=f
+    )
+    # The fraction of a sample refused is shown, however far in it is.
+    expect_error(
+      readAudio(f, from=123456789.5, input.unit="samples"), "sample 123456789.5,", info=f
+    )
+
+    # However the arguments arrive.
+    expect_error(readAudio(f, "auto", 2.5, 10, "samples"), class="invalidPoint", info=f)
+    expect_error(readAudio(f, fr=NA), class="invalidPoint", info=f)
+    expect_error(
+      do.call(readAudio, list(f, from=2.5, input.unit="samples")), class="invalidPoint", info=f
+    )
+    expect_error(
+      suppressWarnings(readAudio(f, from=2.5, units="samples")), class="invalidPoint", info=f
+    )
+  }
+
+  # Nothing is read before the points are held up, so a file that is not there
+  # is not what is reported.
+  expect_error(
+    readAudio(file.path(tempdir(), "no such file.wav"), from=2.5, input.unit="samples"),
+    class="invalidPoint"
+  )
+})
+
+test_that("A WAVE file is not read from part-way into a sample", {
+  # The first value readWave() gave for a start of sample 2.5 of a file
+  # holding 1:4000 was 768, the high byte of 2 and the low byte of 3, and for a
+  # start of sample -1 the size of the data chunk.
+  f <- malformedWav(1:4000, rate=8000)
+  on.exit(unlink(f))
+  expect_error(readAudio(f, from=2.5, to=10, input.unit="samples"), class="invalidPoint")
+  expect_error(readAudio(f, from=-1, to=10, input.unit="samples"), class="invalidPoint")
+  expect_equal(readAudio(f, from=3, to=10, input.unit="samples")@left, 3:10)
+})
+
+test_that("A point that is no point of a multichannel recording is refused", {
+  skip_if_not_installed("av")
+  w <- .fourChannel()
+  wav <- withr::local_tempfile(fileext=".wav")
+  flac <- withr::local_tempfile(fileext=".flac")
+  writeAudio(w, wav)
+  writeAudio(w, flac)
+
+  for (f in c(wav, flac)) {
+    expect_error(readAudio(f, from=2.5, input.unit="samples"), class="invalidPoint", info=f)
+    expect_error(readAudio(f, from=-1, input.unit="samples"), class="invalidPoint", info=f)
+    expect_error(readAudio(f, to=NA), class="invalidPoint", info=f)
+    part <- readAudio(f, from=0.009 * 48000, to=433, input.unit="samples")
+    expect_equal(unname(part@.Data), unname(w@.Data[432:433, ]), info=f)
+  }
 })

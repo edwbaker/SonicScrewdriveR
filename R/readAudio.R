@@ -81,6 +81,17 @@
 #' recording is the same part however the file holds it, and two parts that
 #' meet at a time meet without a sample lost or repeated between them.
 #'
+#' A start or end point is a single number, and is never negative, in any
+#' unit; in samples it is a whole number too, as there is no part of a sample
+#' to start or end at. Any other point is an error of class `invalidPoint`,
+#' raised before the file is read, whatever its format. A fraction of a sample
+#' was read from a WAVE file from part-way into a sample, as audio made of the
+#' bytes of two samples, and a point written as text, or held as a factor or a
+#' time difference, was read as something other than what it said. A number of
+#' samples worked out from a time that misses the whole number it stands for
+#' by the last bits of a double, as `0.009 * 48000`, which is
+#' 431.99999999999994, does, is read as that whole number.
+#'
 #' ## A header that disagrees with the recorder's own metadata
 #' A recorder can write a sample rate into its metadata that disagrees with the
 #' one in the format chunk of the header, and the header can be the one that is
@@ -122,10 +133,11 @@
 #'   bytes of the file rather than from its name. Supported types are
 #'   "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
 #'   package.
-#' @param from Start point in file to return, which must fall within the
-#'   recording
-#' @param to End point in file to return, which must leave some audio after
-#'   the start point, read as the end of the recording where it is beyond it
+#' @param from Start point in file to return, a number that is not negative,
+#'   and a whole number in samples, which must fall within the recording
+#' @param to End point in file to return, a number that is not negative, and a
+#'   whole number in samples, which must leave some audio after the start
+#'   point, read as the end of the recording where it is beyond it
 #' @param input.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 #' @param units Deprecated, use input.unit instead.
 #' @return A Wave object, or a WaveMC object for a file with more than two
@@ -142,6 +154,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   if (!is.null(redone)) {
     return(redone[[1]])
   }
+  # Held up before anything is read, as nothing in the file can make a point
+  # that is no point at all into one. Every reader below is given the points
+  # these return, so a number of samples a double misses by its last bits is
+  # read as the whole number it stands for by all of them alike.
+  from <- .pointValid(file, from, "start", input.unit)
+  to <- .pointValid(file, to, "end", input.unit)
   if (mime == "auto") {
     mime <- .audioMime(file)
   }
@@ -685,6 +703,79 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     wave <- .mdSetStore(wave, metadata)
   }
   return(wave)
+}
+
+#' Refuse a start or end point that is no point of any recording
+#'
+#' A point is a single number, and cannot be negative, in any unit; in samples
+#' it is a whole number too, as there is no part of a sample to start or end
+#' at. Anything else was read differently by every reader, where it was read
+#' at all. `tuneR::readWave()` seeks to a fraction of a sample, or to a sample
+#' before the first, as readily as to a sample, and returned audio made of the
+#' bytes of two samples, or of the header, where `cutws()` refused a fraction
+#' with "In cutws both from and to must be integers". Text was compared as
+#' text, so that sample "9" was beyond the end of a recording of 240000
+#' samples, and a factor or a time difference was read as the number R keeps
+#' it as, so that a start of one minute was a start of one second. Each is
+#' refused here, saying what was asked for, before anything is read.
+#'
+#' A number of samples worked out from a time can miss the whole number it
+#' stands for by the last bits of a double: `0.009 * 48000` is
+#' 431.99999999999994, which `tuneR::readWave()` read from the byte before
+#' sample 432. A point within a millionth of a sample of a whole number is
+#' taken as that number, as nothing finer than that is a fraction anyone means
+#' to ask for.
+#'
+#' An end of `Inf` is the end of any recording. A start of `Inf` is left to be
+#' refused as past the end of it, as any other start past the end is.
+#'
+#' @param file The file being read, to name in the error
+#' @param point The start or end point as given to readAudio()
+#' @param which "start" or "end", to name in the error
+#' @param input.unit The unit the point is given in
+#' @return The point, as the whole number it stands for where it is given in
+#'   samples
+#' @keywords internal
+#' @noRd
+.pointValid <- function(file, point, which, input.unit) {
+  problem <- NULL
+  if (length(point) != 1L) {
+    shown <- .countText(length(point), "value")
+    problem <- "is not a single number"
+  } else if (!is.numeric(point) || is.na(point)) {
+    shown <- deparse(point, nlines=1L)
+    problem <- "is not a number"
+  } else {
+    # Enough digits to show the fraction of a sample that is refused, which the
+    # seven format() gives by default do not for a long recording.
+    text <- format(point, digits=15, scientific=FALSE, trim=TRUE)
+    shown <- if (input.unit == "samples") paste0("sample ", text) else paste(text, input.unit)
+    # The whole number is taken first, so that a start of zero worked out as
+    # (0.3 - 0.1 - 0.2) * 48000, which is a hair below it, is the start.
+    if (input.unit == "samples" && is.finite(point)) {
+      if (abs(point - round(point)) > 1e-6) {
+        problem <- "is not a whole number of samples"
+      } else {
+        point <- round(point)
+      }
+    }
+    if (is.null(problem) && point < 0) {
+      problem <- "cannot be negative"
+    }
+  }
+  if (is.null(problem)) {
+    return(point)
+  }
+  stop(structure(
+    class = c("invalidPoint", "error", "condition"),
+    list(
+      message = paste0(
+        "The ", which, " point asked for, ", shown, ", ", problem,
+        ", so no part of '", file, "' was read."
+      ),
+      call = NULL
+    )
+  ))
 }
 
 #' Refuse a start point at or beyond the end of the recording
