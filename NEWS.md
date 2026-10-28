@@ -1,6 +1,35 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- readMetadata() reads the record a xeno-canto comment holds. Every recording
+  from that collection carries one, written into its ID3 tag and beginning
+  with the collection's catalogue number, as `XC428067 (c) A Recordist //
+  Locality (1.4, 103.7), Singapore // 10m // 15:00h, 2019-02-03 // call //
+  remarks`. It was reported as one opaque comment string, so a corpus of close
+  to a million recordings gave no time and no position although both are
+  written in every file. It is now read into a `xenoCanto` source holding the
+  catalogue number, recordist, locality, latitude, longitude, country,
+  elevation, time, date, kind of vocalisation, remarks, whether the bird was
+  seen, whether playback was used and the other species audible, and it gives
+  the normalised record a datetime, a location and an elevation.
+
+  Of 15,834 comments read from a cached copy of the collection, all 15,834
+  parse: 90% give a datetime, 96% a position and 88% an elevation. The rest are
+  what the collection was never told, which it writes as a placeholder — a time
+  of `?h`, an elevation of `?m`, a date with a zero month or day — rather than
+  leaving out, so an absence is read as one. A time nothing can read costs only
+  the datetime, as the date is still in the source. 158 of those comments give
+  the time as am or pm, and 30 are an afternoon written before noon, which a
+  reader taking the clock alone would place twelve hours early.
+
+  The catalogue number at the head of the comment is what marks it, so a
+  comment somebody else wrote is left alone: asked of cached copies of
+  bio.acousti.ca and TSA, 150,737 metadata values between them, nothing matched
+  it anywhere. The number is the recording's rather than the file's, so a
+  recording downloaded from the collection and uploaded elsewhere is read the
+  same under its new name, as three files in a cached copy of iNaturalist are,
+  and as two files in the collection's own cache are, whose comment and whose
+  url agree on a number their filename does not.
 - readMetadata() reads the embedded metadata of an audio file, whatever format
   that metadata is in and whatever container the file is, and gives back both
   what each format said and one normalised record built from all of them. A
