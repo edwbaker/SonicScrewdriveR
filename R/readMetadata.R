@@ -508,8 +508,11 @@
 #' @noRd
 .mdUnparsed <- function(ids) {
   # The chunks read above, and those that hold no metadata to read: the audio
-  # itself, the sizes that describe it, the padding a writer leaves to make
-  # room for metadata it may add later, and the cue points.
+  # itself, the sizes that describe it, and the padding a writer leaves to make
+  # room for metadata it may add later. The cue points are read too, by
+  # wavCues(), which puts them back together with the labels that name them;
+  # they are positions in a recording rather than facts about it, so they are
+  # not among the fields of the record.
   known <- c("fmt ", "data", "fact", "ds64", "guan", "wamd", "bext", "iXML",
              "LIST", "_PMX", "DISP", "id3 ", "ID3 ", "PAD ", "JUNK", "junk",
              "cue ")

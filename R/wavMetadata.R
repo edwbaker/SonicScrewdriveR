@@ -224,7 +224,8 @@
 #' identifiers. A file may hold other lists, most often `adtl`, which carries
 #' the labels of cue points rather than anything about the recording as a
 #' whole; the fields of those are named by their list as well, as in
-#' `adtl/labl`.
+#' `adtl/labl`. A label read here is the text alone: [wavCues()] reads the same
+#' labels with the positions in the recording they name.
 #'
 #' @param x Path to a wave file, a Wave object with INFO metadata attached, a
 #'   raw vector holding a wave file, or a wavInfo object
