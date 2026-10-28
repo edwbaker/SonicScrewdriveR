@@ -10,8 +10,8 @@
 #' The copyright sign is part of the mark rather than merely the number, so
 #' that a comment carrying a catalogue number and nothing else of the shape -
 #' the first bytes of one, say, read off a truncated tag - is not taken for a
-#' record it cannot fill. All 610 comments read from a cached copy of the
-#' collection carry it.
+#' record it cannot fill. All 15,834 comments read from a cached copy of the
+#' collection carry it, so requiring the sign costs nothing.
 #'
 #' The number is not taken from the filename. A recording downloaded from the
 #' collection and uploaded somewhere else keeps the comment and gains a new
@@ -25,7 +25,7 @@
 #'
 #' The comment is a fixed sequence of fields separated by " // ", and the first
 #' four are always the catalogue number and recordist, the place, the
-#' elevation and the time: of 610 comments read from a cached copy of the
+#' elevation and the time: of 15,834 comments read from a cached copy of the
 #' collection, every one had them in that order. What follows varies, so it is
 #' read by what it looks like rather than by where it sits: an "also:" field is
 #' always last where there is one, and the rest is the recordist's remarks.
@@ -43,7 +43,7 @@
   if (is.na(text) || !grepl(.XC_MARK, text)) {
     return(NULL)
   }
-  # Two comments of 610 end in a separator with nothing after it, which would
+  # Some comments end in a separator with nothing after it, which would
   # otherwise leave the slashes on the end of the last field read.
   text <- sub("[[:space:]]*/+[[:space:]]*$", "", text)
   parts <- trimws(strsplit(text, " // ", fixed=TRUE)[[1]])
@@ -57,7 +57,7 @@
   ))
 
   # 2: the place, with the position in brackets where the recordist gave one
-  # and the country after it. 26 of 610 gave no position.
+  # and the country after it. 4% of 15,834 gave no position.
   if (length(parts) >= 2) {
     place <- .mdXcPlace(parts[2])
     f$locality <- place$locality
@@ -74,9 +74,10 @@
   }
 
   # 4: the time and the date. The date is written to a pattern; the time is
-  # whatever the recordist typed, and of 610 comments 11 held something no
-  # pattern reads ("amh", "10;45amh", "xx:xxh"). They are read apart so that a
-  # time nothing can make sense of does not cost the date beside it.
+  # whatever the recordist typed, and of 15,834 comments some hundreds held
+  # something no pattern reads ("amh", "10;45amh", "xx:xxh"). They are read
+  # apart so that a time nothing can make sense of does not cost the date
+  # beside it.
   if (length(parts) >= 4) {
     f$time <- .mdXcNonEmpty(sub("h,.*$", "", parts[4]))
     f$date <- .mdXcNonEmpty(sub("^.*h,[[:space:]]*", "", parts[4]))
@@ -192,9 +193,10 @@
 #' The clock a time field gives, as "HH:MM:SS", or NULL where it gives none
 #'
 #' The field is whatever the recordist typed. Most of it is a 24-hour clock,
-#' but of 610 comments read from a cached copy of the collection five carried
-#' am or pm and one of those, "2:00 pm", would be read as two in the morning
-#' by a reader that ignored it. The marker is read where it is there, and a
+#' but of 15,834 comments read from a cached copy of the collection 158 carried
+#' am or pm, and 30 of those are an afternoon time written before noon, as
+#' "2:00 pm" is, which a reader that ignored the marker would place twelve
+#' hours early. The marker is read where it is there, and a
 #' field holding no clock at all gives nothing rather than a guess.
 #' @keywords internal
 #' @noRd
