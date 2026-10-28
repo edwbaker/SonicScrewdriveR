@@ -283,6 +283,20 @@
   wamd(), which kept such a timestamp as text with a warning that it could not
   be read, now reads it in the same forms. guano() still keeps one as text, with
   a warning, and readMetadata() reads its time from that text.
+- readMetadata() read a time in an ID3 tag that names no zone, as
+  2018-02-14T06:30:00, as a wall clock in the zone of the machine, so one tag
+  gave a different moment in every zone a machine was set to, and none at all
+  on a machine whose clock skipped the hour it named. Version 2.4 of ID3 says
+  that all of its timestamps are UTC, and they are now read as UTC, in a
+  version 2.3 tag as well, which commonly carries TDRC although only version
+  2.4 defines it. The time comes back in UTC, so it prints as the tag wrote it
+  whatever the zone of the session. Of 9,218 recordings from xeno-canto,
+  iNaturalist, bio.acousti.ca and OSF, the only ones whose tags give a time
+  naming no zone in a form ID3 allows were made with Easy Voice Recorder, and
+  where the records iNaturalist keeps of them settle which it is, the time is
+  UTC. A timestamp that stops at the hour, as 2018-02-14T06, which the format
+  allows, gave no time and is now read as that hour. A time naming no zone in
+  an INFO list, an XMP packet or a Vorbis comment is read as before.
 - readAudio() given a start point at or beyond the end of the recording failed
   in words that said nothing of what had been asked for, and in different words
   for different units and formats: "'from' cannot be superior to 'to'" in

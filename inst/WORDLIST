@@ -28,6 +28,7 @@ Inf
 LC
 MoleFracCO
 OAD
+OSF
 Oecanthus
 POSIXct
 POSIXlt
@@ -44,6 +45,7 @@ Skordas
 SonicScrewdriveR
 SonicScrewriveR
 TDOA
+TDRC
 TSA
 TaggedWave
 TaggedWaveMC
@@ -147,6 +149,7 @@ hardRain
 hilbert
 humanBytes
 humanTime
+iNaturalist
 iXML
 indexSpec
 ixml
