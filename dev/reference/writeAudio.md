@@ -41,7 +41,7 @@ writeAudio(wave, file, mime = "auto", ...)
   Additional arguments passed to the function performing the write:
   [`tuneR::writeWave()`](https://rdrr.io/pkg/tuneR/man/writeWave.html)
   for WAVE files, and
-  [`av::av_audio_convert()`](https://docs.ropensci.org/av//reference/encoding.html)
+  [`av::av_audio_convert()`](https://docs.ropensci.org/av/reference/encoding.html)
   (e.g. `bit_rate`) for other formats.
 
 ## Value

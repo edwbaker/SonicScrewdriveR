@@ -367,6 +367,8 @@ London.
   : PseudoWave scalar addition
 - [`` `+`( ``*`<numeric>`*`,`*`<PseudoWave>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-numeric-PseudoWave-method.md)
   : Numeric addition by PseudoWave
+- [`print(`*`<wavChunks>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/print.wavChunks.md)
+  : Print the chunks of a wave file
 - [`pseudoWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pseudoWave.md)
   : Create a PseudoWave object
 - [`pulse()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pulse.md)
@@ -451,6 +453,8 @@ London.
   : Read Vorbis comments
 - [`wamd()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wamd.md)
   : Read Wildlife Acoustics metadata
+- [`wavChunks()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavChunks.md)
+  : List the RIFF chunks a wave file holds
 - [`wavInfo()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavInfo.md)
   : Read the INFO metadata of a wave file
 - [`wavelength()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavelength.md)
