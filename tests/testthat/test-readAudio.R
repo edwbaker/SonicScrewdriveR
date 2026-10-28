@@ -1301,3 +1301,188 @@ test_that("A file that cannot be read gives nothing to compare the header agains
   w <- suppressWarnings(readAudio(f))
   expect_equal(rateWarnings(.wavRateWarning(w, gone))$messages, character(0))
 })
+
+# A start point at or beyond the end of the recording was refused by whichever
+# function cut the wave, each in its own words: "'from' cannot be superior to
+# 'to'" from seewave::cutw() in time units, "In cutws to must be greater than
+# from" in samples, and "subscript out of bounds" for a start at the very end of
+# a file the av package read. readWave() gave an empty wave for that same start.
+
+test_that("A start at or beyond the end is refused for every format, in every unit", {
+  files <- c("AUDIOMOTH.WAV", "AUDIOMOTH.mp3", "AUDIOMOTH.flac",
+             "STEREO.WAV", "STEREO.mp3", "STEREO.flac", "AUDIOMOTHT.WAV")
+  for (file in files) {
+    path <- system.file("extdata", file, package="sonicscrewdriver")
+    whole <- readAudio(path)
+    n <- length(whole)
+    sr <- whole@samp.rate
+    end <- n / sr
+
+    # At the end, and beyond it, with and without an end point.
+    expect_error(readAudio(path, from=end), class="startPastEnd", info=file)
+    expect_error(readAudio(path, from=end + 1), class="startPastEnd", info=file)
+    expect_error(readAudio(path, from=end + 1, to=end + 2), class="startPastEnd", info=file)
+    expect_error(
+      readAudio(path, from=(end + 1) / 60, input.unit="minutes"),
+      class="startPastEnd", info=file
+    )
+    expect_error(readAudio(path, from=n + 1, input.unit="samples"), class="startPastEnd", info=file)
+    expect_error(
+      readAudio(path, from=n + 1000, to=n + 2000, input.unit="samples"),
+      class="startPastEnd", info=file
+    )
+
+    # The last sample is still within the recording, however it is asked for.
+    expect_equal(length(readAudio(path, from=n, input.unit="samples")), 1, info=file)
+    expect_equal(length(readAudio(path, from=(n - 1) / sr)), 1, info=file)
+  }
+})
+
+test_that("A start past the end says how long the recording is", {
+  w <- tuneR::Wave(left=rep(c(-1000L, 1000L), 2000), samp.rate=8000, bit=16)
+  wav <- withr::local_tempfile(fileext=".wav")
+  flac <- withr::local_tempfile(fileext=".flac")
+  tuneR::writeWave(w, wav)
+  writeAudio(w, flac)
+
+  for (f in c(wav, flac)) {
+    expect_error(
+      readAudio(f, from=1),
+      "^The start point asked for, 1 second, is at or beyond the end of '.*', which is 0.5 seconds long\\.$",
+      info=f
+    )
+    # A start in another unit of time is said in seconds, as the length is.
+    expect_error(readAudio(f, from=2 / 60, input.unit="minutes"), "2 seconds, is at or beyond", info=f)
+    expect_error(
+      readAudio(f, from=5000, to=6000, input.unit="samples"),
+      "^The start point asked for, sample 5000, is beyond the end of '.*', which holds 4000 samples\\.$",
+      info=f
+    )
+    # However the arguments arrive.
+    expect_error(readAudio(f, "auto", 5000, Inf, "samples"), class="startPastEnd", info=f)
+    expect_error(
+      suppressWarnings(readAudio(f, from=5000, units="samples")), class="startPastEnd", info=f
+    )
+  }
+
+  one <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(tuneR::Wave(left=rep(100L, 8000), samp.rate=8000, bit=16), one)
+  expect_error(readAudio(one, from=2), "which is 1 second long")
+  tuneR::writeWave(tuneR::Wave(left=100L, samp.rate=8000, bit=16), one)
+  expect_error(readAudio(one, from=2, input.unit="samples"), "which holds 1 sample\\.")
+})
+
+test_that("A start past the end of a multichannel file is refused", {
+  skip_if_not_installed("av")
+  w <- .fourChannel()
+  wav <- withr::local_tempfile(fileext=".wav")
+  flac <- withr::local_tempfile(fileext=".flac")
+  writeAudio(w, wav)
+  writeAudio(w, flac)
+
+  for (f in c(wav, flac)) {
+    expect_error(readAudio(f, from=2), "which is 2 seconds long", class="startPastEnd", info=f)
+    expect_error(
+      readAudio(f, from=length(w) + 1, input.unit="samples"),
+      "which holds 16000 samples", class="startPastEnd", info=f
+    )
+    expect_equal(length(readAudio(f, from=length(w), input.unit="samples")), 1, info=f)
+  }
+})
+
+test_that("A start past the end of a recovered recording is held against what was recovered", {
+  # The header of such a file says it holds no audio, so it is the header of
+  # the copy whose size was filled in that the start is held against.
+  samples <- as.integer(round(sin(seq(0, 100, length.out=4800)) * 10000))
+  f <- malformedWav(samples, dataSize=0, riffSize=8)
+  on.exit(unlink(f))
+
+  expect_error(
+    readAudio(f, from=4801, input.unit="samples"), "which holds 4800 samples",
+    class="startPastEnd"
+  )
+  expect_warning(
+    w <- readAudio(f, from=4800, input.unit="samples"), "was never written"
+  )
+  expect_equal(length(w), 1)
+})
+
+test_that("A start past the end of a file cut short is held against the audio it holds", {
+  # The data chunk declares 8000 samples, of which the file holds the first
+  # 4000, and readWave() reads only those, giving an empty wave for a start
+  # between the two.
+  samples <- as.integer(round(sin(seq_len(8000) / 5) * 10000))
+  full <- malformedWav(samples, rate=8000)
+  on.exit(unlink(full))
+  short <- withr::local_tempfile(fileext=".wav")
+  writeBin(readBin(full, "raw", n=file.size(full))[1:(44 + 8000)], short)
+
+  expect_error(readAudio(short, from=0.6), "which is 0.5 seconds long", class="startPastEnd")
+  expect_error(
+    readAudio(short, from=4001, input.unit="samples"), "which holds 4000 samples",
+    class="startPastEnd"
+  )
+  expect_equal(length(readAudio(short, from=4000, input.unit="samples")), 1)
+})
+
+test_that("A start past the end of an RF64 recording is refused", {
+  skip_if_not_installed("av")
+  # readWave() cannot read this form, but its chunks can be walked, and the
+  # ds64 chunk says how much audio there is.
+  f <- mdFile(mdRf64Wav(rf64Samples))
+  expect_error(readAudio(f, from=0.1), "which is 0.1 seconds long", class="startPastEnd")
+  expect_equal(length(readAudio(f, from=4800, input.unit="samples")), 1)
+
+  # One whose ds64 chunk cannot be believed is counted by the av package as it
+  # reads it instead.
+  good <- mdRf64Wav(rf64Samples)
+  bad <- mdFile(mdRf64Wav(rf64Samples, riffSize=length(good)))
+  expect_null(.wavFramesHeld(bad))
+  expect_error(
+    suppressWarnings(readAudio(bad, from=0.1)), "which is 0.1 seconds long",
+    class="startPastEnd"
+  )
+})
+
+test_that(".wavFramesHeld counts only audio whose frames are all one size", {
+  # Not a wave file, and a wave file with no format to say how long a frame is.
+  junk <- withr::local_tempfile(fileext=".wav")
+  writeBin(as.raw(rep(7L, 40)), junk)
+  expect_null(.wavFramesHeld(junk))
+  noFmt <- withr::local_tempfile(fileext=".wav")
+  body <- c(charToRaw("WAVE"), charToRaw("data"), .uintToRaw(4, 4L), raw(4))
+  writeBin(c(charToRaw("RIFF"), .uintToRaw(length(body), 4L), body), noFmt)
+  expect_null(.wavFramesHeld(noFmt))
+
+  # A compressed format packs samples into the bytes of a frame in its own way,
+  # so its bytes are no count of its samples.
+  adpcm <- malformedWav(1:100, format=2)
+  on.exit(unlink(adpcm))
+  expect_null(.wavFramesHeld(adpcm))
+
+  pcm <- malformedWav(1:100, rate=8000)
+  on.exit(unlink(pcm), add=TRUE)
+  expect_equal(.wavFramesHeld(pcm), list(frames=100, rate=8000))
+  float <- malformedWav(c(0.1, -0.1), bits=32, format=3)
+  on.exit(unlink(float), add=TRUE)
+  expect_equal(.wavFramesHeld(float), list(frames=2, rate=48000))
+})
+
+test_that("An empty recording is still read from its start", {
+  f <- malformedWav(integer(0))
+  on.exit(unlink(f))
+
+  expect_equal(length(suppressWarnings(readAudio(f, from=0, to=1))), 0)
+  expect_equal(length(suppressWarnings(readAudio(f, input.unit="samples"))), 0)
+  expect_equal(length(suppressWarnings(readAudio(f, from=1, input.unit="samples"))), 0)
+  # Anything after its start is past its end.
+  expect_error(readAudio(f, from=0.5), "which is 0 seconds long", class="startPastEnd")
+  expect_error(readAudio(f, from=2, input.unit="samples"), "which holds 0 samples", class="startPastEnd")
+})
+
+test_that(".countText writes a count with its unit", {
+  expect_equal(.countText(1, "second"), "1 second")
+  expect_equal(.countText(0.5, "second"), "0.5 seconds")
+  expect_equal(.countText(0, "sample"), "0 samples")
+  expect_equal(.countText(1e6, "sample"), "1000000 samples")
+})

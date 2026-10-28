@@ -21,9 +21,11 @@ bytes of the file rather than from its name. Supported types are
 "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
 package.}
 
-\item{from}{Start point in file to return}
+\item{from}{Start point in file to return, which must fall within the
+recording}
 
-\item{to}{End point in file to return}
+\item{to}{End point in file to return, read as the end of the recording
+where it is beyond it}
 
 \item{input.unit}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
 
@@ -99,6 +101,19 @@ wrong with it.
 Samples that are not finite numbers, which a floating-point file can hold,
 are read as zero with a warning, as they would otherwise spread through every
 measurement made from the wave.
+\subsection{Reading part of a recording}{
+
+\code{from} and \code{to} give the part of the recording to return. An end point
+beyond the end of the recording reads to the end of it, as the default end
+of \code{Inf} does. A start point at or beyond the end is an error, of class
+\code{startPastEnd}, saying how long the recording is, whatever the format of the
+file and whatever the unit of the start: the part asked for holds no audio
+at all, and a start past the end is most often one given in the wrong unit,
+which an empty wave would carry into everything measured from it without
+saying so. A start of zero is the start of any recording, so a file that
+holds no audio is read from there as empty.
+}
+
 \subsection{A header that disagrees with the recorder's own metadata}{
 
 A recorder can write a sample rate into its metadata that disagrees with the

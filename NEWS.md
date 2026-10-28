@@ -209,6 +209,17 @@
   the recording is.
 
 ## Fixes
+- readAudio() given a start point at or beyond the end of the recording failed
+  in words that said nothing of what had been asked for, and in different words
+  for different units and formats: "'from' cannot be superior to 'to'" in
+  seconds, "In cutws to must be greater than from" in samples, and "subscript
+  out of bounds" for a start at the very end of a FLAC file, where a WAVE file
+  gave an empty wave instead. Such a start is now an error of class
+  `startPastEnd` whatever the format and the unit, saying how long the
+  recording is and what start was asked for: "The start point asked for, 1
+  second, is at or beyond the end of 'f.wav', which is 0.5 seconds long." A
+  start of zero is still the start of any recording, so a file holding no audio
+  is read from there as empty.
 - guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
   nothing for a wave file in the RF64 or BW64 form, which is how a recording is
   written once it passes the 4 GiB a RIFF header can describe, so the metadata
