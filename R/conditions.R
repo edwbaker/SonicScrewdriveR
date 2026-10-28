@@ -30,7 +30,10 @@
 # chunk reading that detects them lives: `unsupportedWav` by
 # `.unsupportedWav()`, and `badDs64`, a kind of `unsupportedWav`, by
 # `.badDs64()`. A file refused there for its ds64 chunk is warned about with
-# that same class where its audio is read all the same.
+# that same class where its audio is read all the same. `startPastEnd` is
+# raised by `.startWithin()` in readAudio.R, for a start point at or beyond the
+# end of the recording, so that a caller reading the same part of many
+# recordings can pass over the ones too short to hold it.
 
 #' Raise a warning about the file audio was read from
 #'
