@@ -22,6 +22,17 @@
 #' and anything written inside the file over anything read from its name: a
 #' name is a convention that a rename or a download can break, and the readings
 #' of a name that is only digits are ambiguous.
+#'
+#' The order between the INFO list and an ID3 tag is the one place here that
+#' rests on no such argument: both are general stores a writer of any kind
+#' fills in, and the list is ahead of the tag by convention rather than because
+#' it is the better record. Auditing the iNaturalist corpus turned up one file
+#' in 972 where that costs something — the recorder wrote a filename correctly
+#' into the tag and double-encoded into the list, so `title` comes back
+#' mangled. One file is not an argument for reordering, which would change
+#' every field of every wave carrying both; it is an argument for knowing that
+#' this pair is arbitrary, and for counting how often the two disagree, and
+#' which is right, before moving either.
 #' @keywords internal
 #' @noRd
 .MD_SOURCE_ORDER <- c(
@@ -621,6 +632,18 @@
 #' trusted over one written for broadcast, and anything written inside the file
 #' over anything read from its name. Nothing is thrown away by this, as
 #' `sources` still holds what every format said.
+#'
+#' That order says which format to believe, not which copy a writer got right.
+#' A file can carry the same string in two places and have been written
+#' correctly in one and badly in the other, and the record then takes whichever
+#' the order puts first, mistake and all. One file of 972 in a cached copy of
+#' the iNaturalist corpus holds an original filename in both its INFO list and
+#' its ID3 tag, where the recorder wrote UTF-8 into the tag and the same text
+#' double-encoded into the list; the list outranks the tag, so `title` comes
+#' back mangled although the file holds a good copy. Both readings are in
+#' `sources` and neither is altered, so where a field matters and the file
+#' carries it twice, it is worth comparing `sources` rather than taking
+#' `fields` on its own.
 #'
 #' A field that holds only a year gives no `datetime`, as it has no month or
 #' day to make one with; the year can still be read from the source that gave

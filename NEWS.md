@@ -1058,6 +1058,19 @@
   their place.
 
 ## Documentation
+- readMetadata() says what its order of precedence does not promise. The order
+  decides which format to believe where two of them say the same thing; it
+  cannot tell which copy the writer got right. A file carrying the same string
+  in two places, written correctly in one and badly in the other, gives the
+  normalised record whichever the order puts first, mistake and all. Auditing a
+  cached copy of the iNaturalist corpus turned up one file in 972 where that
+  costs something: the recorder wrote an original filename as UTF-8 into the
+  ID3 tag and the same text double-encoded into the INFO list, and the list
+  outranks the tag, so `title` comes back mangled although a good copy is in
+  the file. Both readings are in `sources` and neither is altered. The order
+  between those two in particular rests on convention rather than on an
+  argument that either is the better record, which is now said where the order
+  is defined, along with what would have to be counted before moving them.
 - convert2bytes() was described as converting time measurements into seconds, and its
   "bytes" input was undocumented.
 - audiomothConfig() gave its return value as a data frame of matching annotations.
