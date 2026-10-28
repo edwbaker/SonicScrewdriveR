@@ -115,6 +115,8 @@ m$sources$guano
 }
 \seealso{
 The readers for one format at a time: \code{\link[=guano]{guano()}}, \code{\link[=wamd]{wamd()}},
-\code{\link[=bext]{bext()}}, \code{\link[=ixml]{ixml()}}, \code{\link[=wavInfo]{wavInfo()}}, \code{\link[=id3]{id3()}}, \code{\link[=vorbisComment]{vorbisComment()}} and
-\code{\link[=audiomothWave]{audiomothWave()}}. \code{\link{audioMetadata<-}} attaches a reading to a Wave object.
+\code{\link[=bext]{bext()}}, \code{\link[=ixml]{ixml()}}, \code{\link[=wavInfo]{wavInfo()}}, \code{\link[=id3]{id3()}} and \code{\link[=vorbisComment]{vorbisComment()}}. The
+AudioMoth comment has no reader of its own any more: \code{\link[=audiomothWave]{audiomothWave()}} is
+deprecated in favour of the \code{audiomoth} source this returns.
+\code{\link{audioMetadata<-}} attaches a reading to a Wave object.
 }

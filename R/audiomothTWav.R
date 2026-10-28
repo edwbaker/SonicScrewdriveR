@@ -534,9 +534,10 @@ audiomothExpand <- function(file, output=NULL, overwrite=FALSE) {
 #' @param segment Length of a segment in bytes. Must be a multiple of 512 and
 #'   longer than the 488-byte header. The default of 32768 is what current
 #'   AudioMoth firmware uses.
-#' @param comment Comment string to store in the header, as read by
-#'   [audiomothWave()]. The threshold is recorded after it, as an AudioMoth
-#'   device records it, which is how [readAudio()] knows to expand the file.
+#' @param comment Comment string to store in the header, of the kind
+#'   [readMetadata()] reads back as its `audiomoth` source. The threshold is
+#'   recorded after it, as an AudioMoth device records it, which is how
+#'   [readAudio()] knows to expand the file.
 #' @param artist Artist string to store in the header
 #' @param guano GUANO metadata to store in the file, as a guano object from
 #'   [guano()] or [guanoCreate()], or NULL for none

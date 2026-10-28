@@ -51,8 +51,14 @@ audiomothField <- function(x, pattern) {
 
 #' Read AudioMoth metadata from a wave file
 #'
-#' Reads and parses metadata stored in wave files produced by
+#' Deprecated. Reads and parses metadata stored in wave files produced by
 #' AudioMoth devices.
+#'
+#' Deprecated in favour of [readMetadata()], which reads the AudioMoth comment
+#' along with every other kind of metadata a file carries and returns these
+#' same fields as its `sources$audiomoth`. It also normalises the recording
+#' time into a `datetime`, which this function leaves as the separate
+#' `start_date`, `start_time` and `time_zone` strings the recorder wrote.
 #'
 #' The comment written into the wave header has been reworded several times
 #' across AudioMoth-Firmware-Basic releases, most significantly in 1.6.0, where
@@ -101,15 +107,75 @@ audiomothField <- function(x, pattern) {
 #'   \item{cancelled}{Why the recording stopped early, or FALSE if it ran to
 #'     completion}
 #' }
+#' @seealso [readMetadata()], which reads this alongside every other kind of
+#'   metadata a file holds, and whose `sources$audiomoth` is what this function
+#'   returns.
 #' @export
 #' @examples
 #' \dontrun{
-#' audiomothWave("./FILENAME.WAV")
+#' # Deprecated. Prefer:
+#' readMetadata("./FILENAME.WAV")$sources$audiomoth
 #' }
 #'
 audiomothWave <- function(filename) {
-  f <- readBin(filename, "character", n=60L)
-  raw <- f[grep("Recorded", f, useBytes = TRUE)]
+  .Deprecated(
+    "readMetadata",
+    package="sonicscrewdriver",
+    msg=paste(
+      "audiomothWave() is deprecated and will be removed in a future release.",
+      "Use readMetadata(), whose $sources$audiomoth holds the same fields."
+    )
+  )
+  return(.audiomothComment(.audiomothWaveComment(filename)))
+}
+
+#' The AudioMoth comment a wave file holds, if it holds one
+#'
+#' The recorder writes its comment into a `LIST`/`INFO` `ICMT` chunk, and a
+#' writer that has since touched the file may have copied it into an ID3
+#' `COMM` frame as well. Either will do, so both are offered to the parser.
+#'
+#' Reading the chunk is what makes the order of the chunks irrelevant. Scanning
+#' the start of the file instead, as this once did, found the comment only
+#' where the recorder had written `LIST` ahead of `data`; a file whose `LIST`
+#' trails its audio read as though it held no AudioMoth comment at all.
+#'
+#' @param x A path, raw bytes, or a chunk map
+#' @return A character vector of candidate comments, empty where there are none
+#' @keywords internal
+#' @noRd
+.audiomothWaveComment <- function(x) {
+  # A file that is not there is the caller's mistake and is worth saying so,
+  # where a file that is there but holds no list is simply a file with no
+  # AudioMoth comment in it.
+  if (is.character(x)) {
+    .mdCheckFile(x)
+  }
+  out <- character(0)
+  info <- tryCatch(wavInfo(x), error=function(cond) NULL)
+  if (!is.null(info)) {
+    out <- c(out, .mdPick(info, "ICMT"))
+  }
+  tag <- tryCatch(id3(x), error=function(cond) NULL)
+  if (!is.null(tag)) {
+    out <- c(out, .mdPickPrefix(tag, "COMM"))
+  }
+  return(out[!is.na(out)])
+}
+
+#' Read the fields an AudioMoth comment carries
+#'
+#' The parsing itself, kept apart from where the comment came from, so that a
+#' caller already holding one — [readMetadata()] has read it out of the chunk
+#' list before it asks — does not send the reader back to the file for it.
+#'
+#' @param x One or more candidate comment strings
+#' @return The fields [audiomothWave()] documents, or an empty list where no
+#'   string carries an AudioMoth comment
+#' @keywords internal
+#' @noRd
+.audiomothComment <- function(x) {
+  raw <- x[grep("Recorded", x, useBytes = TRUE)]
 
   if (length(raw)==0) {
     return(list())

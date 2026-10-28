@@ -29,7 +29,20 @@ The [audioBlast API](https://api.audioblast.org) can be accessed using the `audi
 
 ### AudioMoth
 
-[AudioMoth](https://www.openacousticdevices.info/audiomoth) configuration files and wave files can be read into R using the `audiomothConfig()` and `audiomothWave()` functions, respectively. The `audiomothConfig()` function takes a path to a configuration file and returns a data frame of the configuration settings. The `audiomothWave()` function takes a path to a wave file and returns a list of extracted parameters.
+[AudioMoth](https://www.openacousticdevices.info/audiomoth) configuration files can be read into R using the `audiomothConfig()` function, which takes a path to a configuration file and returns a data frame of the configuration settings.
+
+The metadata an AudioMoth writes into a wave file is read by `readMetadata()`, as its `audiomoth` source:
+
+```{r, eval=FALSE}
+m <- readMetadata("20201103_112430.WAV")
+m$sources$audiomoth$serial
+m$sources$audiomoth$temperature
+
+# The recording time, as a POSIXct in the zone the device was set to
+m$fields$datetime
+```
+
+`audiomothWave()` did the same for a wave file alone and is deprecated in favour of this.
 
 #### Triggered recordings
 

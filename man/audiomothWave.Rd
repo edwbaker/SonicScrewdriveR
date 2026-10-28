@@ -44,10 +44,16 @@ completion}
 }
 }
 \description{
-Reads and parses metadata stored in wave files produced by
+Deprecated. Reads and parses metadata stored in wave files produced by
 AudioMoth devices.
 }
 \details{
+Deprecated in favour of \code{\link[=readMetadata]{readMetadata()}}, which reads the AudioMoth comment
+along with every other kind of metadata a file carries and returns these
+same fields as its \code{sources$audiomoth}. It also normalises the recording
+time into a \code{datetime}, which this function leaves as the separate
+\code{start_date}, \code{start_time} and \code{time_zone} strings the recorder wrote.
+
 The comment written into the wave header has been reworded several times
 across AudioMoth-Firmware-Basic releases, most significantly in 1.6.0, where
 "at medium gain setting while battery state was" became "at medium gain while
@@ -64,7 +70,13 @@ Firmware before 1.4.0 wrote a gain index rather than a gain name, so
 }
 \examples{
 \dontrun{
-audiomothWave("./FILENAME.WAV")
+# Deprecated. Prefer:
+readMetadata("./FILENAME.WAV")$sources$audiomoth
 }
 
+}
+\seealso{
+\code{\link[=readMetadata]{readMetadata()}}, which reads this alongside every other kind of
+metadata a file holds, and whose \code{sources$audiomoth} is what this function
+returns.
 }
