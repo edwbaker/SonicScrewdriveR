@@ -46,11 +46,18 @@ mdWav <- function(...) {
   return(c(charToRaw("RIFF"), mdU32(length(body)), body))
 }
 
-#' A format chunk describing mono 16-bit audio
-mdFmt <- function() {
+#' A format chunk describing mono 16-bit audio at the given sample rate
+mdFmt <- function(rate=48000) {
   return(mdChunk("fmt ", c(
-    mdU16(1), mdU16(1), mdU32(48000), mdU32(96000), mdU16(2), mdU16(16)
+    mdU16(1), mdU16(1), mdU32(rate), mdU32(rate * 2), mdU16(2), mdU16(16)
   )))
+}
+
+#' A GUANO chunk holding the given fields, one to a line
+mdGuanoChunk <- function(...) {
+  return(mdChunk(
+    "guan", charToRaw(paste(c("GUANO|Version:1.0", ...), collapse="\n"))
+  ))
 }
 
 #' A data chunk holding silence

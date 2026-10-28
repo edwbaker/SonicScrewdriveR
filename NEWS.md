@@ -120,6 +120,17 @@
   MiB, as well as the decimal kB and MB, selected with the units argument. The units
   available are listed by the new fileSizeUnits(). audio_filesize() passes the choice
   on when its output.unit is "human".
+- The warnings readAudio() raises about the file it read each carry a class of
+  their own, so that one of them can be handled without silencing the rest:
+  `sampleRateMismatch` for a header that disagrees with the recorder's own
+  metadata, `unwrittenAudioSize` for a recording whose size was never written,
+  `nonFiniteSamples` for samples that are not finite numbers, and
+  `truncatedAudio` from audiomothExpand(). A corpus known to hold truncated
+  recordings can now pass over that one warning and still hear about the others,
+  which matching the wording of a message could not do. All of them are also
+  classed `audioFileWarning`, for handling every warning about the file at once,
+  and `warning`, so `suppressWarnings()` and an ordinary warning handler treat
+  them as the warnings they are.
 
 ## Deprecations
 - unit arguments are now named consistently across the package. A function takes
@@ -725,6 +736,20 @@
   reaching past either end of the recording, which several bandwidths either side
   of a low centre frequency do, is kept as far as the recording goes rather than
   reaching below zero, where seewave reported it as an error about subscripts.
+- readAudio() took the sample rate in the header of a wave file without comment
+  even where the recorder's own metadata disagreed with it, and the header can be
+  the one that is wrong. A file holding 384000 in its GUANO metadata and 38400 in
+  its header came back a tenth of its real rate, so the recording read as ten
+  times its length and a 40kHz bat call landed at 4kHz, with nothing in the wave
+  to show it. The disagreement is now reported with a warning naming both rates.
+  The wave is still returned at the rate the header gives, as that is the rate its
+  samples were read at, and nothing in the file says which of the two is right.
+  The rates compared against the header are the `Samplerate` of the GUANO
+  metadata and the `F=` rate of each generation of a bext coding history. A
+  time-expanded recording is stored at a lower rate than it was made at, which is
+  no fault: GUANO records the factor in its `TE` field, so a rate meeting the
+  header rate multiplied by that factor is agreement, and of a coding history
+  holding several generations any one of them meeting the header is enough.
 
 ## Internal
 - directionPlot() named its columns with aes_string(), deprecated since ggplot2
