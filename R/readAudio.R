@@ -294,7 +294,14 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       stop("Could not determine number of channels.")
     }
 
-    samples <- av::read_audio_bin(source, channels=channels)
+    # Only as far into the recording as the part asked for needs. .avEndTime()
+    # says why the start is not asked for as well.
+    endTime <- .avEndTime(to, input.unit, info[['sample_rate']])
+    samples <- if (is.null(endTime)) {
+      av::read_audio_bin(source, channels=channels)
+    } else {
+      av::read_audio_bin(source, channels=channels, end_time=endTime)
+    }
     if (!is.null(repaired) && is.null(truncation)) {
       .unwrittenWarning(file)
     }
@@ -1074,6 +1081,55 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   if (m <= 8388608) { return(24) }
   if (m <= 2147483648) { return(32) }
   stop("Bit depths above 32bit are not supported.")
+}
+
+#' How far into a recording the av package is asked to decode
+#'
+#' The av package decodes from the beginning of a file and stops at the end
+#' point it is given, so giving it one saves it decoding the rest. Before this
+#' it was given none: a one-second read of a 3.8 GB RF64 recording decoded all
+#' 6,663 seconds of it and then threw almost all of it away, and could not be
+#' read at all, as `av_realloc` refused the ten gigabytes that would have
+#' taken. The two RF64 files in a cached copy of the TSA corpus are the files
+#' that cannot be read by any other means, as tuneR reads only the RIFF form.
+#'
+#' A start point is not passed, and cannot be. What the av package returns for
+#' one does not begin where it was asked to: a FLAC file asked to start at
+#' sample 48,000 gives audio beginning at 49,152, a block boundary, and an MP3
+#' gives samples that match no part of a whole read, a decoder started
+#' mid-stream having none of the state the frames before it would have left.
+#' Either would shift the audio returned without saying so. The start is
+#' therefore cut from the decoded audio as it always was, and only the end is
+#' asked for, which gives exactly the first part of the whole: measured sample
+#' for sample against a whole read for WAV, MP3 and FLAC alike.
+#'
+#' A second is added. What comes back can fall short of what was asked for,
+#' by 0.019 seconds at worst across the files measured and only for MP3, where
+#' WAV and FLAC gave more than asked, and the cut that follows needs every
+#' sample up to the end point. An end point past the end of the recording costs
+#' nothing: the av package returns the whole of it rather than refusing.
+#'
+#' @param to End point as given to readAudio()
+#' @param input.unit The unit `to` is given in
+#' @param rate The sample rate the av package reports for the file
+#' @return The end point in seconds, or NULL where the whole file is wanted
+#' @keywords internal
+#' @noRd
+.avEndTime <- function(to, input.unit, rate) {
+  if (!is.finite(to)) {
+    return(NULL)
+  }
+  if (input.unit == "samples") {
+    if (is.null(rate) || !is.finite(rate) || rate <= 0) {
+      return(NULL)
+    }
+    return(to / rate + 1)
+  }
+  seconds <- convert2seconds(to, input.unit=input.unit)
+  if (!is.finite(seconds)) {
+    return(NULL)
+  }
+  return(seconds + 1)
 }
 
 #' Bit depth of the audio decoded by the av package

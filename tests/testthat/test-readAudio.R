@@ -1963,3 +1963,43 @@ test_that("A point that is no point of a multichannel recording is refused", {
     expect_equal(unname(part@.Data), unname(w@.Data[432:433, ]), info=f)
   }
 })
+
+# The av package decodes from the start of a file and stops where it is told,
+# so it is told, rather than decoding a recording in full to return a second of
+# it. The files that cannot be read any other way are the RF64 ones, which
+# tuneR will not read: decoding all 6,663 seconds of a 3.8 GB recording to
+# return one needs some ten gigabytes, and av_realloc refuses it.
+
+test_that("The av package is asked for no more of a recording than is wanted", {
+  expect_identical(.avEndTime(2, "seconds", 48000), 3)
+  expect_identical(.avEndTime(0.5, "seconds", 48000), 1.5)
+  # In samples the end point is divided by the rate the av package reported.
+  expect_identical(.avEndTime(96000, "samples", 48000), 3)
+  expect_identical(.avEndTime(1, "minutes", 48000), 61)
+})
+
+test_that("The whole of a recording is asked for as the whole of it", {
+  # Nothing is passed for an end of Inf, so a whole read is the call it always
+  # was, and a rate the av package could not report leaves a read in samples
+  # with nothing to divide by.
+  expect_null(.avEndTime(Inf, "seconds", 48000))
+  expect_null(.avEndTime(48000, "samples", NULL))
+  expect_null(.avEndTime(48000, "samples", 0))
+})
+
+test_that("Bounding the decode does not change the audio that comes back", {
+  # A FLAC file is read through the av package, so this is the path that was
+  # changed. A part read with an end point must be the same samples as that
+  # part of a recording read in full and cut afterwards.
+  f <- system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver")
+  whole <- readAudio(f)
+
+  expect_identical(readAudio(f, from=0, to=1)@left, whole@left[1:48000])
+  expect_identical(readAudio(f, from=1, to=2)@left, whole@left[48001:96000])
+  expect_identical(
+    readAudio(f, from=48001, to=96000, input.unit="samples")@left,
+    whole@left[48001:96000]
+  )
+  # An end past the end of the recording gives the recording, not an error.
+  expect_identical(readAudio(f, from=0, to=600)@left, whole@left)
+})
