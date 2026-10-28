@@ -239,3 +239,155 @@ test_that("complete.windows=FALSE hands FUN the shorter final window, not NA pad
                        FUN=function(wave, start, window.length) length(wave))
   expect_equal(unlist(lengths), c(300, 300, 300, 100))
 })
+
+# The bytes of a wave file cut short `keep` bytes into its audio, as a flat
+# battery, a full card or a copy that did not finish leaves a recording.
+cutShort <- function(bytes, keep) {
+  data <- .wavFindChunk(.wavChunks(bytes)$chunks, "data")
+  return(bytes[seq_len(data$start - 1 + keep)])
+}
+
+waveBytes <- function(wave) {
+  f <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(wave, f)
+  return(readBin(f, "raw", n=file.size(f)))
+}
+
+# Reading a file that was cut short may say so, which is not what these tests
+# are about, so only that warning is passed over.
+heldWindows <- function(...) {
+  return(suppressWarnings(windowing(...), classes="truncatedAudio"))
+}
+
+windowLengths <- function(wave, start, window.length) length(wave)
+
+test_that("A file cut short is windowed over the audio it holds", {
+  samples <- round(sin(seq_len(8000) / 5) * 10000)
+  w <- tuneR::Wave(samples, samp.rate=8000, bit=16)
+  # The header declares 8000 samples, of which the file holds 4500.
+  f <- mdFile(cutShort(waveBytes(w), 9000))
+  held <- tuneR::Wave(samples[1:4500], samp.rate=8000, bit=16)
+
+  expect_equal(unlist(heldWindows(f, window.length=1000, FUN=windowLengths)), rep(1000, 4))
+  expect_equal(
+    unlist(heldWindows(f, window.length=1000, complete.windows=FALSE, FUN=windowLengths)),
+    c(rep(1000, 4), 500)
+  )
+  # Ending at a window boundary leaves no shorter window to add.
+  whole <- mdFile(cutShort(waveBytes(w), 10000))
+  expect_equal(
+    unlist(heldWindows(whole, window.length=1000, complete.windows=FALSE, FUN=windowLengths)),
+    rep(1000, 5)
+  )
+
+  # Each window is what the Wave of the audio held gives.
+  samplesOf <- function(wave, start, window.length) wave@left
+  for (complete in c(TRUE, FALSE)) {
+    expect_equal(
+      heldWindows(f, window.length=1000, window.overlap=250, complete.windows=complete, FUN=samplesOf),
+      windowing(held, window.length=1000, window.overlap=250, complete.windows=complete, FUN=samplesOf),
+      info=complete
+    )
+  }
+})
+
+test_that("bind.wave fills the gaps between windows of a file cut short to its end", {
+  samples <- round(sin(seq_len(8000) / 5) * 10000)
+  w <- tuneR::Wave(samples, samp.rate=8000, bit=16)
+  idfun <- function(wave, start, window.length) wave
+
+  # 4500 samples end within the gap after the second window when only complete
+  # windows are analysed, and within a third, shorter window otherwise; 5000
+  # end with a window.
+  for (keep in c(4500, 5000)) {
+    f <- mdFile(cutShort(waveBytes(w), 2 * keep))
+    for (complete in c(TRUE, FALSE)) {
+      ws <- heldWindows(f, window.length=1000, window.overlap=-1000, bind.wave=TRUE,
+                        complete.windows=complete, FUN=idfun)
+      expect_equal(ws@left, samples[1:keep], info=paste(keep, complete))
+    }
+  }
+})
+
+test_that("An RF64 file cut short is windowed over the audio it holds", {
+  skip_if_not_installed("av")
+  f <- mdFile(cutShort(mdRf64Wav(1:8000, after=raw(0)), 9000))
+
+  expect_equal(unlist(heldWindows(f, window.length=1000, FUN=windowLengths)), rep(1000, 4))
+  expect_equal(
+    unlist(heldWindows(f, window.length=1000, complete.windows=FALSE, FUN=windowLengths)),
+    c(rep(1000, 4), 500)
+  )
+})
+
+test_that("A file whose audio size was never written is windowed over the audio recovered", {
+  samples <- round(sin(seq_len(8000) / 5) * 10000)
+  bytes <- waveBytes(tuneR::Wave(samples, samp.rate=8000, bit=16))
+  data <- .wavFindChunk(.wavChunks(bytes)$chunks, "data")
+  # The sizes a recorder writes as it starts, and never comes back to.
+  bytes[(data$start - 4):(data$start - 1)] <- .uintToRaw(0, 4L)
+  bytes[5:8] <- .uintToRaw(data$start - 9, 4L)
+  f <- mdFile(bytes)
+
+  ws <- suppressWarnings(
+    windowing(f, window.length=1000, FUN=windowLengths), classes="unwrittenAudioSize"
+  )
+  expect_equal(unlist(ws), rep(1000, 8))
+  ws <- suppressWarnings(
+    windowing(f, window.length=1000, window.overlap=-1000, bind.wave=TRUE,
+              FUN=function(wave, start, window.length) wave),
+    classes="unwrittenAudioSize"
+  )
+  expect_equal(ws@left, samples)
+})
+
+test_that("Audio holding no samples has no windows", {
+  w <- tuneR::Wave(round(sin(seq_len(8000) / 5) * 10000), samp.rate=8000, bit=16)
+  # Cut short before the first byte of audio, and part way through the first
+  # sample.
+  for (keep in c(0, 1)) {
+    f <- mdFile(cutShort(waveBytes(w), keep))
+    for (complete in c(TRUE, FALSE)) {
+      expect_equal(
+        heldWindows(f, window.length=1000, complete.windows=complete, FUN=windowLengths),
+        list(), info=paste(keep, complete)
+      )
+    }
+  }
+
+  empty <- tuneR::Wave(numeric(0), samp.rate=8000, bit=16)
+  expect_equal(windowing(empty, window.length=1000, FUN=windowLengths), list())
+  expect_equal(windowing(empty, window.length=1000, complete.windows=FALSE, FUN=windowLengths), list())
+  expect_equal(
+    windowing(empty, window.length=1000, bind.wave=TRUE, FUN=function(wave, start, window.length) wave),
+    list()
+  )
+})
+
+test_that("A file read through the av package is windowed over every sample it holds", {
+  skip_if_not_installed("av")
+  # The av package gives the duration of a FLAC file to the microsecond, so
+  # these lengths come back a fraction of a sample short or long.
+  short <- withr::local_tempfile(fileext=".flac")
+  writeAudio(tuneR::Wave(round(runif(3000, -1000, 1000)), samp.rate=44100, bit=16), short)
+  expect_equal(unlist(windowing(short, window.length=3000, FUN=windowLengths)), 3000)
+  expect_equal(unlist(windowing(short, window.length=1000, FUN=windowLengths)), rep(1000, 3))
+
+  long <- withr::local_tempfile(fileext=".flac")
+  writeAudio(tuneR::Wave(round(runif(12345, -1000, 1000)), samp.rate=48000, bit=16), long)
+  expect_equal(
+    unlist(windowing(long, window.length=12345, complete.windows=FALSE, FUN=windowLengths)),
+    12345
+  )
+
+  # A file that is not there is left to the av package to say so.
+  missing <- file.path(withr::local_tempdir(), "missing.wav")
+  expect_no_warning(expect_error(windowing(missing, FUN=windowLengths)))
+
+  # The FLAC and MP3 files shipped with the package are windowed as the wave
+  # file they were made from is.
+  for (x in c("AUDIOMOTH.flac", "AUDIOMOTH.mp3")) {
+    f <- system.file("extdata", x, package="sonicscrewdriver")
+    expect_equal(unlist(windowing(f, window.length=10000, FUN=windowLengths)), rep(10000, 24), info=x)
+  }
+})
