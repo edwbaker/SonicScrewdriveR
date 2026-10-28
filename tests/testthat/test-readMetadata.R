@@ -380,6 +380,136 @@ test_that("A time to the minute followed by anything else, or out of range, give
   }
 })
 
+# ID3v2.4 says that all of its timestamps are UTC, and allows one to stop at the
+# hour. A timestamp naming no zone was read as a wall clock in the zone of the
+# session, so one tag gave a different moment on every machine, and none at all
+# on a machine whose clock skipped the hour it named; one that stopped at the
+# hour gave no time.
+mdId3Datetime <- function(text, id="TDRC", major=4L) {
+  frame <- if (major == 3L) {
+    mdFrame23(id, c(as.raw(0), charToRaw(text)))
+  } else {
+    mdTextFrame(id, text)
+  }
+  f <- mdFile(c(mdId3Tag(frame, major=major), mdMp3Frame()), ".mp3")
+  readMetadata(f, filename=FALSE)$fields$datetime
+}
+
+mdXmpDatetime <- function(text) {
+  packet <- paste0(
+    "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">",
+    "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">",
+    "<rdf:Description rdf:about=\"\" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"",
+    " xmp:CreateDate=\"", text, "\"/>",
+    "</rdf:RDF></x:xmpmeta>"
+  )
+  f <- mdFile(mdWav(mdFmt(), mdChunk("_PMX", mdUtf8(packet)), mdData()))
+  readMetadata(f, filename=FALSE)$fields$datetime
+}
+
+mdVorbisDatetime <- function(text) {
+  f <- mdFile(mdFlac(mdVorbisBlock("libFLAC", paste0("DATE=", text))), ".flac")
+  readMetadata(f, filename=FALSE)$fields$datetime
+}
+
+for (tz in sessionTimezones) {
+  test_that(paste0("An ID3 timestamp naming no zone is read as UTC in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2018-02-14T06:30:00", "2018-02-14T06:30:00Z"),
+        c("2018-02-14T06:30", "2018-02-14T06:30:00Z"),
+        c("2018-02-14T06", "2018-02-14T06:00:00Z"),
+        c("2018-02-14", "2018-02-14T00:00:00Z"),
+        # The hours the clocks of New York and Sydney skip, which gave no time on
+        # a machine in either, and the hours they repeat.
+        c("2018-03-11T02:30:00", "2018-03-11T02:30:00Z"),
+        c("2018-10-07T02:30:00", "2018-10-07T02:30:00Z"),
+        c("2018-11-04T01:30:00", "2018-11-04T01:30:00Z"),
+        c("2018-04-01T02:30:00", "2018-04-01T02:30:00Z")
+      )) {
+        d <- mdId3Datetime(case[1])
+
+        expect_identical(format(d, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2], info=case[1])
+        # It comes back in UTC, so it shows the date and the time the tag wrote,
+        # where one read in Sydney showed the day before as a date.
+        expect_identical(attr(d, "tzone"), "UTC", info=case[1])
+        expect_identical(as.character(as.Date(d)), substr(case[1], 1, 10), info=case[1])
+      }
+    })
+  })
+
+  # Easy Voice Recorder, which made three of the iNaturalist recordings that
+  # carry a time naming no zone, writes TDRC into a version 2.3 tag. Version 2.3
+  # does not define the frame, so the definition version 2.4 gives is the only
+  # one it has, and where iNaturalist's records of those recordings settle which
+  # it is, the time is UTC.
+  test_that(paste0("Every ID3 timestamp frame, in a tag of any version, is read as UTC in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (id in c("TDRC", "TDRL", "TDOR")) {
+        for (major in c(3L, 4L)) {
+          expect_identical(
+            format(mdId3Datetime("2023-07-13T02:52:44", id=id, major=major), "%Y-%m-%dT%H:%M:%SZ", tz="UTC"),
+            "2023-07-13T02:52:44Z",
+            info=paste(id, major)
+          )
+        }
+      }
+
+      f <- mdFile(mdWav(mdFmt(), mdData(), mdChunk("id3 ", mdId3Tag(
+        mdTextFrame("TDRC", "2023-07-13T02:52:44")
+      ))))
+      expect_identical(
+        format(readMetadata(f, filename=FALSE)$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"),
+        "2023-07-13T02:52:44Z"
+      )
+    })
+  })
+
+  test_that(paste0("An ID3 timestamp naming a zone keeps it in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2018-02-14T06:30:00+08:00", "2018-02-13T22:30:00Z"),
+        c("2018-02-14T06:30+02:00", "2018-02-14T04:30:00Z"),
+        c("2014-11-02T20:39:50Z", "2014-11-02T20:39:50Z"),
+        # As three iNaturalist recordings carry it.
+        c("2019-05-09 11:49:44 +0000", "2019-05-09T11:49:44Z")
+      )) {
+        expect_identical(
+          format(mdId3Datetime(case[1]), "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2], info=case[1]
+        )
+      }
+    })
+  })
+
+  # The other formats leave the zone of a time to whoever wrote it, so a time in
+  # one of them that names no zone is still read as a wall clock in the zone of
+  # the session, and one that stops at the hour still gives no time.
+  test_that(paste0("Outside ID3, a time naming no zone is still read in the session in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      wall <- as.numeric(as.POSIXct("2018-02-14 06:30:00", tz=tz))
+      for (read in list(mdIcrdDatetime, mdXmpDatetime, mdVorbisDatetime)) {
+        expect_equal(as.numeric(read("2018-02-14T06:30:00")), wall, tolerance=0)
+        expect_null(read("2018-02-14T06"))
+      }
+    })
+  })
+}
+
+test_that("An ID3 timestamp that only begins with an hour, or stops short of a day, gives no time", {
+  for (text in c(
+    "2018-02-14T06 junk",
+    # A space where the T belongs is read in a time, as writers commonly put one
+    # there, but a date and a number after a space is not plainly an hour.
+    "2018-02-14 06",
+    "2018-02-14T25",
+    "2018-02-14T6:",
+    "2018-02",
+    "2018"
+  )) {
+    expect_null(mdId3Datetime(text), info=text)
+  }
+})
+
 test_that("A file carrying nothing gives an empty reading rather than an error", {
   f <- mdFile(mdWav(mdFmt(), mdData()))
   m <- readMetadata(f, filename=FALSE)

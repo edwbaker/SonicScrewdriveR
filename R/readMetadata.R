@@ -69,11 +69,16 @@
 #' written as +02:00, +0200 or +2:00. A value that only begins with a date, or
 #' with a date and a time, is not read.
 #'
+#' A value that names no zone is read in `tz`. Most formats leave the zone to
+#' whoever wrote the value, so by default it is read as a wall clock in the
+#' zone of the session.
+#'
 #' @param text The field as it is written
+#' @param tz The zone a value that names none is read in
 #' @return A POSIXct, or NULL where it is not a date this understands
 #' @keywords internal
 #' @noRd
-.mdDate <- function(text) {
+.mdDate <- function(text, tz="") {
   if (is.null(text)) {
     return(NULL)
   }
@@ -107,15 +112,15 @@
     list(shape=paste0(clock, "Z$"),
          format="%Y-%m-%dT%H:%M:%OSZ", tz="UTC"),
     list(shape=paste0(clock, "$"),
-         format="%Y-%m-%dT%H:%M:%OS", tz=""),
+         format="%Y-%m-%dT%H:%M:%OS", tz=tz),
     list(shape=paste0(minute, " *[+-][0-9]{4}$"),
          format="%Y-%m-%dT%H:%M%z", tz="UTC"),
     list(shape=paste0(minute, "Z$"),
          format="%Y-%m-%dT%H:%MZ", tz="UTC"),
     list(shape=paste0(minute, "$"),
-         format="%Y-%m-%dT%H:%M", tz=""),
+         format="%Y-%m-%dT%H:%M", tz=tz),
     list(shape=paste0(day, "$"),
-         format="%Y-%m-%d", tz="")
+         format="%Y-%m-%d", tz=tz)
   )
   for (form in forms) {
     if (!grepl(form$shape, wanted)) {
@@ -304,12 +309,37 @@
   ))
 }
 
+#' Read the time an ID3 tag gives
+#'
+#' Version 2.4 of ID3 says that all of its timestamps are UTC, so one that
+#' names no zone is read in UTC rather than as a wall clock in the zone of the
+#' session. That is so in a version 2.3 tag as well, which commonly carries
+#' these frames although only version 2.4 defines them, so the definition 2.4
+#' gives is the only one they have. A timestamp may stop at the hour, as the
+#' format allows, and is then read as that hour.
+#'
+#' @param text The frame as it is written
+#' @return A POSIXct, or NULL where it is not a time this understands
+#' @keywords internal
+#' @noRd
+.mdId3Date <- function(text) {
+  if (is.character(text) && length(text) > 0L) {
+    # Only here is a value that stops at the hour plainly an hour: in a field
+    # of free text, 2025-09-15T21 could as well be a time cut short, so the
+    # forms every format shares do not read it, and it is given its minutes.
+    text <- sub(
+      "^([0-9]{4}-[0-9]{1,2}-[0-9]{1,2}T[0-9]{1,2})$", "\\1:00", trimws(text[1])
+    )
+  }
+  return(.mdDate(text, tz="UTC"))
+}
+
 #' The normalised fields an ID3 tag gives
 #' @keywords internal
 #' @noRd
 .mdNormaliseId3 <- function(i) {
   return(list(
-    datetime = .mdDate(.mdPick(i, "TDRC", "TDRL", "TDOR")),
+    datetime = .mdId3Date(.mdPick(i, "TDRC", "TDRL", "TDOR")),
     # The three-character identifiers are those of version 2.2, and the
     # lowercase names those of a version 1 tag.
     title = .mdPick(i, "TIT2", "TT2", "title"),
@@ -595,6 +625,12 @@
 #' day to make one with; the year can still be read from the source that gave
 #' it. Species are taken only from a format that names a species as such, and
 #' never guessed at from a title.
+#'
+#' A time in an ID3 tag that names no zone is read as UTC, which version 2.4 of
+#' the format says every time in it is, rather than as a wall clock in the zone
+#' of the session, as one in an INFO list, an XMP packet or a Vorbis comment is
+#' read. It comes back in UTC, so it prints as the tag wrote it whatever the zone
+#' of the session, and it may stop at the hour, as the format allows.
 #'
 #' ## Reading from a name
 #' `filename` reads the filename conventions that [parseFilename()] knows, and
