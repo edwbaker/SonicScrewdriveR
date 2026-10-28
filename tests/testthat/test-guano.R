@@ -784,3 +784,66 @@ test_that("The interruption used by these tests is told from any other failure",
   expect_equal(interrupted(guanoWrite(guanoCreate(Make="Y"), f)), "interrupted")
   expect_identical(guano(f)[["Make"]], "X")
 })
+
+test_that("Metadata is written without reading the whole recording", {
+  # Reading a recording in to put a few hundred bytes of metadata into it needs
+  # as much memory as the recording is long, and fails on a machine that cannot
+  # find it. These sizes are what tell a file copied a buffer at a time from one
+  # read in whole.
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1200000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+  size <- file.size(f)
+  expect_gt(size, 2^21)
+  connections <- length(getAllConnections())
+
+  sizes <- function(expr) {
+    assign(".readSizes", numeric(0), .GlobalEnv)
+    trace(
+      readBin,
+      tracer = quote({
+        if (exists(".readSizes", .GlobalEnv) && !is.raw(con)) {
+          assign(".readSizes", c(get(".readSizes", .GlobalEnv), as.numeric(n)), .GlobalEnv)
+        }
+      }),
+      print = FALSE
+    )
+    on.exit({
+      untrace(readBin)
+      rm(".readSizes", envir=.GlobalEnv)
+    })
+    force(expr)
+    return(get(".readSizes", .GlobalEnv))
+  }
+
+  # Adding a chunk to a file that has none, and replacing the chunk added.
+  for (make in c("Open Acoustic Devices", "Wildlife Acoustics")) {
+    asked <- sizes(guanoWrite(guanoCreate(Make=make), f))
+    expect_gt(length(asked), 2)
+    expect_lte(max(asked), 2^20)
+    expect_lt(max(asked), size)
+    expect_identical(guano(f)[["Make"]], make)
+  }
+
+  # The recording came out of it whole, and the file still declares its length.
+  expect_equal(length(tuneR::readWave(f)@left), 1200000)
+  expect_equal(.wavChunksFile(f)$riffSize + 8, file.size(f))
+
+  # Nothing is left holding the recording open, which would stop the written
+  # file taking its place on systems that mind.
+  expect_equal(length(getAllConnections()), connections)
+})
+
+test_that("A file that cannot be walked is let go of", {
+  # The recording is held open while it is written, so a failure between
+  # opening it and writing must still close it.
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  writeLines("not a wave file at all, by any measure", f)
+  connections <- length(getAllConnections())
+
+  expect_error(guanoWrite(guanoCreate(Make="X"), f), "RIFF")
+  expect_equal(length(getAllConnections()), connections)
+  expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
+})

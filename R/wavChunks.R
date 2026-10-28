@@ -469,6 +469,74 @@
   invisible(NULL)
 }
 
+#' Copy a run of bytes from one file to another in bounded buffers
+#'
+#' Written a buffer at a time so that the memory needed does not grow with the
+#' length of the recording being copied.
+#'
+#' @param read A function of the one-based position of the first byte wanted and
+#'   the number of bytes to fetch, returning them as a raw vector, as
+#'   .wavConReader() gives
+#' @param con A binary connection to write to
+#' @param from One-based position of the first byte to copy
+#' @param to One-based position of the last byte to copy. Nothing is copied
+#'   where it comes before `from`, which is how a run of no bytes is asked for.
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.copyBytes <- function(read, con, from, to) {
+  bufferSize <- 2^20
+  # Counted in doubles, as a recording of 2GB or more is longer than a whole
+  # number can be counted in.
+  at <- as.numeric(from)
+  while (at <= to) {
+    n <- min(bufferSize, to - at + 1)
+    writeBin(read(at, n), con)
+    at <- at + n
+  }
+  invisible(NULL)
+}
+
+#' Copy a run of bytes, replacing some of them as it goes
+#'
+#' Used to carry a recording across while putting right the few bytes that have
+#' to change, the sizes a file declares, without holding the recording in
+#' memory or going back over what has been written.
+#'
+#' @param read A reader, as .copyBytes() takes
+#' @param con A binary connection to write to
+#' @param from One-based position of the first byte to copy
+#' @param to One-based position of the last byte to copy
+#' @param edits A list of replacements, each a list of `at`, the one-based
+#'   position in the source of the first byte it replaces, and `bytes`, the raw
+#'   vector to write there. An edit lying outside the run is left for whichever
+#'   run holds it, and one lying across its end is written as far as it goes.
+#'   Where two edits cover the same byte, the earlier of them writes it.
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.copyEdited <- function(read, con, from, to, edits=list()) {
+  at <- as.numeric(from)
+  where <- vapply(edits, function(edit) as.numeric(edit$at), numeric(1))
+  for (edit in edits[order(where)]) {
+    first <- as.numeric(edit$at)
+    last <- first + length(edit$bytes) - 1
+    # An edit before where the copy has reached, or past the end of the run,
+    # belongs to another run: this one has written past it, or stops short of
+    # it. Writing it here would send the copy backwards over what it has put
+    # out already.
+    if (last < at || first > to || at > to) {
+      next
+    }
+    .copyBytes(read, con, at, min(first, to + 1) - 1)
+    inside <- seq(max(first, at), min(last, to))
+    writeBin(edit$bytes[inside - first + 1], con)
+    at <- min(last, to) + 1
+  }
+  .copyBytes(read, con, at, to)
+  invisible(NULL)
+}
+
 #' Cut text to fit a fixed number of bytes, keeping whole characters
 #'
 #' A field of a WAV header holds a set number of bytes, and a character may
