@@ -24,8 +24,8 @@ package.}
 \item{from}{Start point in file to return, which must fall within the
 recording}
 
-\item{to}{End point in file to return, read as the end of the recording
-where it is beyond it}
+\item{to}{End point in file to return, which must leave some audio after
+the start point, read as the end of the recording where it is beyond it}
 
 \item{input.unit}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
 
@@ -104,6 +104,18 @@ at all, and a start past the end is most often one given in the wrong unit,
 which an empty wave would carry into everything measured from it without
 saying so. A start of zero is the start of any recording, so a file that
 holds no audio is read from there as empty.
+
+An end point that leaves no audio after the start point is an error of
+class \code{endBeforeStart}, for the same reason and in every format and unit
+alike: a start and an end swapped, or computed from different things, ask
+for nothing that can be measured. In samples the end point is the last
+sample returned, so an end at the start returns that one sample, and an end
+of zero is before the first. In a unit of time the two points are placed at
+the boundaries between samples nearest to them, so an end at the start holds
+no audio, nor does a part so short that both of its points are nearest the
+same boundary. Every format is cut at those same samples, so a part of a
+recording is the same part however the file holds it, and two parts that
+meet at a time meet without a sample lost or repeated between them.
 }
 
 \subsection{A header that disagrees with the recorder's own metadata}{
