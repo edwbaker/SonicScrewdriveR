@@ -57,16 +57,17 @@ autoBandPass <- function(
   #default could be chosen however low the high-pass was set. Its warnings about
   #a single bin are raised for both thresholds, only one of which is used here,
   #so the one that bears on the filter is raised below instead.
-  data <- frequencyStats(wave2, wave_spec=wave_spec, lowcut=lowcut, warn=FALSE)
+  data <- frequencyStats(wave2, wave_spec=wave_spec, lowcut=lowcut, warn=FALSE, output.unit="Hz")
   rm(wave2)
-  centre <- data[[bw]]$centre * 1000
-  bandwidth <- data[[bw]]$bandwidth * 1000
+  centre <- data[[bw]]$centre
+  bandwidth <- data[[bw]]$bandwidth
   #A signal narrow enough to fall in a single bin of the spectrum, such as a
   #pure tone, has no measurable bandwidth at that threshold, and a band from the
   #centre to the centre holds nothing. The width of a bin is used instead, so
-  #that the filter keeps the peak rather than failing in seewave.
+  #that the filter keeps the peak rather than failing in seewave. The spectrum
+  #has its frequencies in kHz, as seewave gives them.
   if (bandwidth == 0) {
-    bandwidth <- (wave_spec[2, 1] - wave_spec[1, 1]) * 1000
+    bandwidth <- .convertLinear(wave_spec[2, 1] - wave_spec[1, 1], "kHz", "Hz", .frequencyMultipliers())
     warning(
       bw, ": the signal has no measurable bandwidth, as it falls in a single ",
       "bin of the spectrum. A band one bin wide is kept around the centre."

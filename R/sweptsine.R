@@ -3,8 +3,8 @@
 #' Generates a frequency swept sine wave (either linear or logarithmic) and
 #' returns it as a Wave object or vector.
 #'
-#' @param f0 Start frequency
-#' @param f1 End frequency
+#' @param f0 Start frequency, in Hz
+#' @param f1 End frequency, in Hz
 #' @param mode One of "linear", "log"
 #' @param sweep.time Duration of swept wave
 #' @param time.unit One of "seconds", "samples"

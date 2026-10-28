@@ -62,6 +62,17 @@
   return(c(m=100, cm=1))
 }
 
+#' Relative size of each frequency unit
+#'
+#' Spectra from seewave have their frequencies in kHz, and everything else in
+#' the package is in Hz.
+#'
+#' @return A named numeric vector.
+#' @noRd
+.frequencyMultipliers <- function() {
+  return(c(Hz=1, kHz=1000))
+}
+
 #' Express a value in the largest unit that applies
 #'
 #' humanBytes() and humanTime() were the same findInterval() lookup written twice.

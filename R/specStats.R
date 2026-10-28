@@ -4,11 +4,13 @@
 #' a line, and either the minimum/maximum values or one standard deviation
 #' shown by a ribbon.
 #'
-#' @param spectra A list of spectra
+#' @param spectra A list of spectra, with their frequencies in kHz as
+#'   seewave::meanspec() returns them
 #' @param stats Either minMax or sd
 #' @param line.col Colour for the line
 #' @param ribbon.col Colour for the ribbon
-#' @return A ggplot2 object
+#' @return A ggplot2 object, with its frequency axis in kHz, the unit of the
+#'   spectra it draws
 #' @importFrom ggplot2 aes element_blank geom_line geom_ribbon labs theme .data
 #' @export
 #'

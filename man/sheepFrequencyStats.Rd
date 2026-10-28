@@ -5,12 +5,16 @@
 \alias{sheepFrequencyStats}
 \title{Sheep frequencyStats}
 \format{
-An object of class \code{list} of length 3.
+A list with an entry for each of the -3dB and -10dB thresholds and
+the spectral flatness, as described under the return value of
+\code{\link[=frequencyStats]{frequencyStats()}}.
 }
 \usage{
 sheepFrequencyStats
 }
 \description{
-The frequencyStats of the sheep data file from the seewave package.
+The frequencyStats of the sheep data file from the seewave package, as
+\code{frequencyStats(sheep, output.unit="Hz")} returns them, so that its
+frequencies and bandwidths are in Hz.
 }
 \keyword{datasets}

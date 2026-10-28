@@ -132,7 +132,7 @@ test_that("the low cut is applied before the centre frequency is measured", {
 })
 
 test_that("a band below 1kHz is chosen when the low cut allows it", {
-  #frequencyStats() takes its own low cut in kHz and defaults to 1kHz. That
+  #frequencyStats() takes a low cut of its own, which defaults to 1kHz. That
   #default was left standing whatever was asked for here, so everything below
   #1kHz was zeroed before the centre frequency was measured and no band below
   #1kHz could be chosen, however low the high-pass was set.
@@ -198,4 +198,20 @@ test_that("a threshold that does measure a bandwidth is not widened", {
   tone <- toneWave()
   expect_no_warning(filtered <- autoBandPass(tone, bw="-10dB"))
   expect_equal(peakFrequency(filtered), 2000)
+})
+
+test_that("the band is built from frequencies in Hz without a warning about their unit", {
+  #frequencyStats() warns when its unit is left to the default, which is
+  #changing. This function asks for Hz, the unit of the filter it builds, so
+  #nothing it does is affected by that change or warns of it.
+  state <- sonicscrewdriver:::.frequencyStatsState
+  warned <- state$warned
+  withr::defer(state$warned <- warned)
+  state$warned <- NULL
+
+  wave <- bandWave()
+  expect_no_warning(filtered <- autoBandPass(wave))
+  expect_gt(peakFrequency(filtered), 1800)
+  expect_lt(peakFrequency(filtered), 2200)
+  expect_null(state$warned)
 })
