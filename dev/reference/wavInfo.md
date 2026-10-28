@@ -32,7 +32,9 @@ carries the labels of cue points rather than anything about the
 recording as a whole; the fields of those are named by their list as
 well, as in `adtl/labl`. A label read here is the text alone:
 [`wavCues()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavCues.md)
-reads the same labels with the positions in the recording they name.
+reads the same labels with the positions in the recording they name. A
+list written as `list` rather than `LIST`, as some writers do, is read
+as any other.
 
 ## See also
 
