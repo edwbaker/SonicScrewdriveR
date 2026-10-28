@@ -33,12 +33,14 @@ readAudio(
 
 - from:
 
-  Start point in file to return, which must fall within the recording
+  Start point in file to return, a number that is not negative, and a
+  whole number in samples, which must fall within the recording
 
 - to:
 
-  End point in file to return, which must leave some audio after the
-  start point, read as the end of the recording where it is beyond it
+  End point in file to return, a number that is not negative, and a
+  whole number in samples, which must leave some audio after the start
+  point, read as the end of the recording where it is beyond it
 
 - input.unit:
 
@@ -158,6 +160,18 @@ points are nearest the same boundary. Every format is cut at those same
 samples, so a part of a recording is the same part however the file
 holds it, and two parts that meet at a time meet without a sample lost
 or repeated between them.
+
+A start or end point is a single number, and is never negative, in any
+unit; in samples it is a whole number too, as there is no part of a
+sample to start or end at. Any other point is an error of class
+`invalidPoint`, raised before the file is read, whatever its format. A
+fraction of a sample was read from a WAVE file from part-way into a
+sample, as audio made of the bytes of two samples, and a point written
+as text, or held as a factor or a time difference, was read as something
+other than what it said. A number of samples worked out from a time that
+misses the whole number it stands for by the last bits of a double, as
+`0.009 * 48000`, which is 431.99999999999994, does, is read as that
+whole number.
 
 ### A header that disagrees with the recorder's own metadata
 
