@@ -194,6 +194,63 @@ test_that("A year on its own gives no time", {
   expect_identical(m$sources$wavInfo[["ICRD"]], "2018")
 })
 
+# An offset hour of one digit was not recognised as an offset, nor was any
+# offset after a date and time separated by a space, and in both cases the time
+# was read as a wall clock in the zone of the session and the offset dropped.
+for (tz in sessionTimezones) {
+  test_that(paste0("A date written with an offset gives its moment in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15 21:31:57+2:00", "2025-09-15T19:31:57Z"),
+        c("2025-09-15T21:31:57-5:30", "2025-09-16T03:01:57Z"),
+        c("2025-09-15 21:31:57+02:00", "2025-09-15T19:31:57Z"),
+        c("2025-09-15 21:31:57-0530", "2025-09-16T03:01:57Z"),
+        c("2025-9-5 9:31:57+2:00", "2025-09-05T07:31:57Z")
+      )) {
+        f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+          charToRaw("INFO"), mdInfoField("ICRD", case[1])
+        )), mdData()))
+        m <- readMetadata(f, filename=FALSE)
+
+        expect_identical(
+          format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2]
+        )
+      }
+    })
+  })
+}
+
+test_that("A wamd timestamp whose offset hour has one digit gives its moment", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(5, "2025-09-15 21:31:57+2:00")
+  )), mdData()))
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_identical(
+    format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:57Z"
+  )
+})
+
+# as.POSIXct() reads a value that merely begins with a date or a time, so the
+# rest was dropped: a time followed by anything was read as a wall clock, and a
+# date followed by a time it could not read as midnight.
+test_that("A date followed by anything else gives no time", {
+  for (text in c(
+    "2025-09-15 21:31:57 junk",
+    "2025-09-15T21:31:57+02:00junk",
+    "2025-09-15 junk",
+    "2025-09-15T25:00:00"
+  )) {
+    f <- mdFile(mdWav(mdFmt(), mdChunk("LIST", c(
+      charToRaw("INFO"), mdInfoField("ICRD", text)
+    )), mdData()))
+    m <- readMetadata(f, filename=FALSE)
+
+    expect_null(m$fields$datetime)
+    expect_identical(m$sources$wavInfo[["ICRD"]], text)
+  }
+})
+
 test_that("A file carrying nothing gives an empty reading rather than an error", {
   f <- mdFile(mdWav(mdFmt(), mdData()))
   m <- readMetadata(f, filename=FALSE)

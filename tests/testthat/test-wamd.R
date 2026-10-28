@@ -79,6 +79,58 @@ test_that("A time this package cannot read is kept as the text it was", {
   expect_identical(w[["timestamp"]], "sometime last Tuesday")
 })
 
+# An offset hour of one digit, as the Song Meter Mini Bat writes in its GUANO,
+# was read as no offset at all: the time was taken as a wall clock in the zone
+# of the session, which on a machine in London put it an hour out and one in
+# Sydney ten hours, with nothing to say so.
+for (tz in sessionTimezones) {
+  test_that(paste0("A timestamp whose offset hour has one digit keeps its offset in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15 21:31:57+2:00", "2025-09-15T19:31:57Z"),
+        c("2025-09-15 21:31:57-5:30", "2025-09-16T03:01:57Z"),
+        c("2025-09-15T21:31:57.25+9:30", "2025-09-15T12:01:57Z"),
+        c("2025-09-15 9:31:57+2:00", "2025-09-15T07:31:57Z")
+      )) {
+        f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+          mdWamdField(5, case[1])
+        )), mdData()))
+        expect_silent(t <- wamd(f)[["timestamp"]])
+
+        expect_s3_class(t, "POSIXct")
+        expect_identical(format(t, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2])
+      }
+    })
+  })
+}
+
+# as.POSIXct() reads a value that merely begins with a time, so whatever came
+# after the time, an offset it could not read included, was dropped and the
+# time read as a wall clock.
+test_that("A timestamp followed by anything else is kept as the text it was", {
+  for (text in c(
+    "2015-10-28 20:21:13 junk",
+    "2015-10-28 20:21:13-04:00 junk",
+    "2015-10-28 20:21:13-04"
+  )) {
+    f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+      mdWamdField(5, text)
+    )), mdData()))
+
+    expect_warning(w <- wamd(f), "Could not read the wamd timestamp")
+    expect_identical(w[["timestamp"]], text)
+  }
+})
+
+test_that("Spaces around a timestamp and before its offset are read past", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(5, " 2015-10-28  20:21:13 -04:00 ")
+  )), mdData()))
+  t <- wamd(f)[["timestamp"]]
+
+  expect_identical(format(t, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2015-10-29T00:21:13Z")
+})
+
 test_that("A position is read as a latitude, a longitude and an altitude", {
   f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
     mdWamdField(6, "WGS84,42.1234N,71.5678W,100m")
