@@ -508,3 +508,77 @@ test_that("The fields of a format chunk are read only as far as they are held", 
   expect_equal(.wavFmtFields(extensible, 40)$format, 3)
   expect_null(.wavFmtFields(extensible[1:16], 40))
 })
+
+test_that("Bytes are copied in bounded buffers", {
+  source <- tempfile(fileext=".bin")
+  out <- tempfile(fileext=".bin")
+  on.exit(unlink(c(source, out)))
+  bytes <- as.raw(sample(0:255, 2.5 * 2^20, replace=TRUE))
+  writeBin(bytes, source)
+
+  con <- file(source, "rb")
+  on.exit(close(con), add=TRUE)
+  read <- .wavConReader(con)
+  asked <- numeric(0)
+  counting <- function(at, n) {
+    asked <<- c(asked, n)
+    return(read(at, n))
+  }
+
+  written <- file(out, "wb")
+  .copyBytes(counting, written, 1, length(bytes))
+  # A run that ends before it begins is a run of no bytes, and writes none.
+  .copyBytes(counting, written, 5, 4)
+  close(written)
+
+  expect_identical(readBin(out, "raw", n=file.size(out)), bytes)
+
+  # However long the run, nothing bigger than one buffer is ever asked for.
+  expect_gt(length(asked), 2)
+  expect_lte(max(asked), 2^20)
+})
+
+test_that("Bytes are replaced as they are copied", {
+  bytes <- charToRaw("ABCDEFGHIJ")
+  read <- function(at, n) bytes[at:(at + n - 1)]
+  copy <- function(from, to, edits=list()) {
+    con <- rawConnection(raw(0), "wb")
+    on.exit(close(con))
+    .copyEdited(read, con, from, to, edits)
+    return(rawToChar(rawConnectionValue(con)))
+  }
+
+  expect_equal(copy(1, 10), "ABCDEFGHIJ")
+
+  # Given in any order, each is written where it belongs.
+  expect_equal(
+    copy(1, 10, list(list(at=8, bytes=charToRaw("xy")),
+                     list(at=2, bytes=charToRaw("..")))),
+    "A..DEFGxyJ"
+  )
+
+  # An edit outside the run is left for whichever run holds it, which is how
+  # the same edits can be given for the bytes before the metadata and after.
+  expect_equal(copy(1, 4, list(list(at=8, bytes=charToRaw("xy")))), "ABCD")
+  expect_equal(copy(5, 10, list(list(at=2, bytes=charToRaw("..")))), "EFGHIJ")
+
+  # One lying across an end of the run is written as far as the run goes.
+  expect_equal(copy(1, 5, list(list(at=4, bytes=charToRaw("wxyz")))), "ABCwx")
+  expect_equal(copy(3, 6, list(list(at=1, bytes=charToRaw("wxyz")))), "yzEF")
+
+  # Bytes already written are past answering for, so where two edits cover the
+  # same byte the earlier of them writes it, rather than the copy running
+  # backwards over what it has already put out.
+  expect_equal(
+    copy(1, 10, list(list(at=3, bytes=charToRaw("wxyz")),
+                     list(at=5, bytes=charToRaw("..")))),
+    "ABwxyzGHIJ"
+  )
+  # Including where the first of them ran to the end of the run, which taken
+  # literally would have the second write backwards over it.
+  expect_equal(
+    copy(1, 4, list(list(at=3, bytes=charToRaw("wxyz")),
+                    list(at=4, bytes=charToRaw("pq")))),
+    "ABwx"
+  )
+})

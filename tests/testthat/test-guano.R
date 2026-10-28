@@ -836,11 +836,38 @@ test_that("An RF64 recording cut short has its sizes put right as metadata is wr
 test_that("A ds64 chunk that miscounts the frames is put right as metadata is written", {
   f <- mdFile(mdRf64Wav(frames=99))
 
-  expect_warning(guanoWrite(guanoCreate(Make="X"), f), "99 sample frames")
+  expect_warning(
+    guanoWrite(guanoCreate(Make="X"), f), "99 sample frames",
+    class="frameCountMismatch"
+  )
   info <- .wavChunksFile(f)
   expect_equal(info$ds64$sampleCount, 100)
   expect_true(info$ds64$countAgrees)
   expect_equal(.wavFindChunk(info$chunks, "data")$size, 200)
+})
+
+test_that("An RF64 file whose metadata comes before its audio keeps its sizes right", {
+  # The data chunk header then lies after the metadata, in the part of the file
+  # copied once the new chunk has been written, and is put right where it lies.
+  audio <- writeBin(1:100, raw(), size=2L, endian="little")
+  guan <- mdChunk("guan", charToRaw("GUANO|Version:1.0\nMake:X\n"))
+  f <- mdFile(mdRf64(mdFmt(), guan, mdDeferred("data", audio), dataSize=200, frames=99))
+
+  expect_warning(
+    guanoWrite(guanoCreate(Make="Y", Model="A model with a longer name"), f),
+    class="frameCountMismatch"
+  )
+  bytes <- readBin(f, "raw", n=file.size(f))
+  info <- .wavChunks(bytes)
+  data <- .wavFindChunk(info$chunks, "data")
+  expect_equal(info$riffSize + 8, length(bytes))
+  expect_equal(info$ds64$sampleCount, 100)
+  expect_equal(data$size, 200)
+  expect_identical(guano(f)[["Model"]], "A model with a longer name")
+  # The audio moved with the metadata, all of it, and its header still leaves
+  # its size to the ds64 chunk.
+  expect_identical(bytes[data$start:(data$start + 199)], audio)
+  expect_equal(bytes[(data$start - 4):(data$start - 1)], mdU32(4294967295))
 })
 
 test_that("A file whose ds64 chunk cannot be believed is not written to", {
@@ -854,4 +881,67 @@ test_that("A file whose ds64 chunk cannot be believed is not written to", {
   expect_length(guano(f), 0)
   expect_error(guanoWrite(guanoCreate(Make="Y"), f), class="badDs64")
   expect_identical(readBin(f, "raw", n=file.size(f)), before)
+})
+
+test_that("Metadata is written without reading the whole recording", {
+  # Reading a recording in to put a few hundred bytes of metadata into it needs
+  # as much memory as the recording is long, and fails on a machine that cannot
+  # find it. These sizes are what tell a file copied a buffer at a time from one
+  # read in whole.
+  w <- tuneR::Wave(left=as.integer(rep(500L, 1200000)), samp.rate=8000, bit=16)
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  tuneR::writeWave(w, f)
+  size <- file.size(f)
+  expect_gt(size, 2^21)
+  connections <- length(getAllConnections())
+
+  sizes <- function(expr) {
+    assign(".readSizes", numeric(0), .GlobalEnv)
+    trace(
+      readBin,
+      tracer = quote({
+        if (exists(".readSizes", .GlobalEnv) && !is.raw(con)) {
+          assign(".readSizes", c(get(".readSizes", .GlobalEnv), as.numeric(n)), .GlobalEnv)
+        }
+      }),
+      print = FALSE
+    )
+    on.exit({
+      untrace(readBin)
+      rm(".readSizes", envir=.GlobalEnv)
+    })
+    force(expr)
+    return(get(".readSizes", .GlobalEnv))
+  }
+
+  # Adding a chunk to a file that has none, and replacing the chunk added.
+  for (make in c("Open Acoustic Devices", "Wildlife Acoustics")) {
+    asked <- sizes(guanoWrite(guanoCreate(Make=make), f))
+    expect_gt(length(asked), 2)
+    expect_lte(max(asked), 2^20)
+    expect_lt(max(asked), size)
+    expect_identical(guano(f)[["Make"]], make)
+  }
+
+  # The recording came out of it whole, and the file still declares its length.
+  expect_equal(length(tuneR::readWave(f)@left), 1200000)
+  expect_equal(.wavChunksFile(f)$riffSize + 8, file.size(f))
+
+  # Nothing is left holding the recording open, which would stop the written
+  # file taking its place on systems that mind.
+  expect_equal(length(getAllConnections()), connections)
+})
+
+test_that("A file that cannot be walked is let go of", {
+  # The recording is held open while it is written, so a failure between
+  # opening it and writing must still close it.
+  f <- tempfile(fileext=".WAV")
+  on.exit(unlink(f))
+  writeLines("not a wave file at all, by any measure", f)
+  connections <- length(getAllConnections())
+
+  expect_error(guanoWrite(guanoCreate(Make="X"), f), "RIFF")
+  expect_equal(length(getAllConnections()), connections)
+  expect_length(list.files(dirname(f), pattern="[.]part$"), 0)
 })

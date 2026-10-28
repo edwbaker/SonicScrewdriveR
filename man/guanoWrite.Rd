@@ -24,6 +24,11 @@ changed: those in the file header, or in the ds64 chunk of an RF64 or BW64
 file, the form a recording over 4 GiB is written in. The audio data and every
 other chunk are left as they were.
 }
+\details{
+The recording is copied across a buffer at a time rather than read into
+memory, so changing one field of the metadata of a file of several gigabytes
+takes no more memory than changing it in a short one.
+}
 \examples{
 \dontrun{
 m <- guano("20201103_112430.WAV")

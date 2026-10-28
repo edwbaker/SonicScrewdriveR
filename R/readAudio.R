@@ -43,12 +43,49 @@
 #' the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
 #' `tuneR::readWave()` does not read these forms, so they are read through the
 #' av package, by those sizes. One whose sizes were never written is recovered
-#' as above. One whose ds64 chunk disagrees with the rest of the file is still
-#' read, with a warning saying what is wrong with it.
+#' as above. One whose ds64 chunk disagrees with the rest of the file, or
+#' miscounts its sample frames, is still read, with a warning saying what is
+#' wrong with it.
 #'
 #' Samples that are not finite numbers, which a floating-point file can hold,
 #' are read as zero with a warning, as they would otherwise spread through every
 #' measurement made from the wave.
+#'
+#' ## A header that disagrees with the recorder's own metadata
+#' A recorder can write a sample rate into its metadata that disagrees with the
+#' one in the format chunk of the header, and the header can be the one that is
+#' wrong. The wave is returned at the rate the header gives, as that is the rate
+#' the samples were read at, and the disagreement is reported with a warning
+#' naming both rates: nothing in the file says which of them is right, and a
+#' recording read at a tenth of the rate it was made at reads as ten times its
+#' length, with every frequency measured from it wrong by the same factor and
+#' nothing in the wave to show it.
+#'
+#' The rates compared against the header are the `Samplerate` of the GUANO
+#' metadata and the `F=` rate of each generation of a bext coding history. A
+#' time-expanded recording is stored at a lower rate than it was made at, which
+#' is no fault: GUANO records the factor in its `TE` field, so a rate that meets
+#' the header rate multiplied by that factor is agreement. Of a coding history
+#' holding several generations, any one of them meeting the header is enough,
+#' as the others describe the recording as it was before it was last written.
+#'
+#' ## Handling these warnings
+#' Each warning above carries a class of its own, so that one of them can be
+#' handled without silencing the rest: `sampleRateMismatch`,
+#' `unwrittenAudioSize` and `nonFiniteSamples`; `badDs64` and
+#' `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
+#' believed or miscounts its sample frames; and `truncatedAudio` from
+#' [audiomothExpand()]. All of them are also classed `audioFileWarning`, for
+#' handling every warning about the file at once, and `warning`, so
+#' `suppressWarnings()` and an ordinary warning handler treat them as the
+#' warnings they are.
+#'
+#' ```r
+#' withCallingHandlers(
+#'   readAudio(file),
+#'   sampleRateMismatch = function(cond) invokeRestart("muffleWarning")
+#' )
+#' ```
 #'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
@@ -96,6 +133,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       unsupportedWav = function(cond) NULL
     )
     if (!is.null(wave)) {
+      .wavRateWarning(wave, file)
       return(.cutAudio(wave, from, to, input.unit, fromS))
     }
   }
@@ -109,19 +147,27 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     if (!is.null(repaired)) {
       on.exit(unlink(repaired), add=TRUE)
     }
-    tryCatch({
-      wave <- readWave(
+    # Only the reading is guarded: a file readWave() cannot make sense of is
+    # read by the av package below instead. What is said about a file that was
+    # read is raised, rather than being caught here and the file quietly read a
+    # second time by other means. Under options(warn=2) these warnings are
+    # errors, and an error that is the warning the caller asked for must reach
+    # them.
+    wave <- tryCatch(
+      readWave(
         if (is.null(repaired)) file else repaired,
         from=fromS, to=to, units=input.unit
-      )
+      ),
+      error=function(cond) NULL
+    )
+    if (!is.null(wave)) {
       if (!is.null(repaired)) {
         .unwrittenWarning(file)
       }
-      return(.waveFinite(wave, file))
-    },
-    error=function(cond){
-
-    })
+      wave <- .waveFinite(wave, file)
+      .wavRateWarning(wave, file)
+      return(wave)
+    }
   }
 
   if (mime=="audio/mpeg") {
@@ -192,6 +238,10 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     if (channels > 2) {
       wave <- .avWaveMC(samples, channels, samp.rate, bit)
     }
+
+    # A wave file that readWave() could not read is read here instead, and its
+    # metadata disagrees with its header whichever of the two read it.
+    .wavRateWarning(wave, file)
 
     if (input.unit == "samples") {
       return(cutws(wave,from=fromS, to=min(to, length(wave))))
@@ -270,7 +320,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @keywords internal
 #' @noRd
 .unwrittenWarning <- function(file) {
-  warning(
+  .audioFileWarning(
+    "unwrittenAudioSize",
     "The size of the audio in '", file, "' was never written, so the ",
     "recording has been read to the end of the file."
   )
@@ -301,7 +352,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   }
   info <- tryCatch(.wavChunksFile(file), unsupportedWav=function(cond) cond)
   if (inherits(info, "badDs64")) {
-    warning(
+    .audioFileWarning(
+      "badDs64",
       "The ds64 chunk of '", file, "' cannot be believed, so its audio may ",
       "not be read in full. ", conditionMessage(info)
     )
@@ -335,7 +387,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @keywords internal
 #' @noRd
 .nonFiniteWarning <- function(n, file) {
-  warning(
+  .audioFileWarning(
+    "nonFiniteSamples",
     n, " sample", if (n == 1) "" else "s", " of '", file,
     "' ", if (n == 1) "is not a finite number" else "are not finite numbers",
     " and ", if (n == 1) "has" else "have", " been read as zero."
@@ -580,4 +633,166 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     return(.bitdepth(samples))
   }
   return(bit)
+}
+
+#' Sample rate written as text, however large it is
+#'
+#' as.character() gives a rate of a million or more in scientific notation,
+#' which is not how a sample rate is ever written.
+#'
+#' @param rates One or more sample rates
+#' @return The rates as text
+#' @keywords internal
+#' @noRd
+.wavRateText <- function(rates) {
+  return(format(rates, scientific=FALSE, trim=TRUE))
+}
+
+#' Read a metadata field as a sample rate
+#'
+#' A field a reader kept as text, because what was written in it is not a
+#' number it could hold, is no rate to compare anything against.
+#'
+#' @param value The field as its reader gave it
+#' @return The rate as a number, or NA where the field holds no number
+#' @keywords internal
+#' @noRd
+.wavRateValue <- function(value) {
+  if (length(value) != 1L) {
+    return(NA_real_)
+  }
+  number <- suppressWarnings(as.numeric(value))
+  if (length(number) != 1L || !is.finite(number)) {
+    return(NA_real_)
+  }
+  return(number)
+}
+
+#' Sample rates a bext coding history records
+#'
+#' The coding history of a Broadcast Wave file holds one line per generation
+#' the recording has been through, each a run of comma-separated fields of
+#' which `F=` is the sample rate. Every generation is read: a file that has
+#' been through an editor carries the rate it was recorded at as well as the
+#' rate it is stored at, and the one that meets the header is enough to say the
+#' file agrees with itself.
+#'
+#' @param history The coding history, as bext() gave it
+#' @return The rates it records, each once, in the order they appear
+#' @keywords internal
+#' @noRd
+.wavCodingRates <- function(history) {
+  if (length(history) != 1L || is.na(history) || !nzchar(history)) {
+    return(numeric(0))
+  }
+  # A field begins a line or follows a separator, so that the F of a field
+  # named something ending in F, or a word in a free-text field, is not read as
+  # the sample rate of the generation.
+  found <- regmatches(
+    history, gregexpr("(^|[,;[:space:]])F=[0-9]+", history)
+  )[[1]]
+  if (length(found) == 0L) {
+    return(numeric(0))
+  }
+  rates <- suppressWarnings(as.numeric(sub("^.*F=", "", found)))
+  return(unique(rates[is.finite(rates) & rates > 0]))
+}
+
+#' What the metadata of a wave file says its sample rate is
+#'
+#' Only the metadata chunks are read, not the recording, so asking costs no
+#' more than the metadata itself however long the recording is. A file carrying
+#' no metadata, or one that is not a wave file at all, says nothing and gives
+#' no claims.
+#'
+#' A time-expanded recording is stored at a lower rate than it was recorded at,
+#' which is a legitimate difference rather than a fault. GUANO records the
+#' factor in its `TE` field, so that factor is carried alongside the rates for
+#' the comparison to allow for.
+#'
+#' @param file Path to the file
+#' @return A list of claims, each a source named as it is to be reported, the
+#'   rates that source records, and the time expansion the file declares
+#' @keywords internal
+#' @noRd
+.wavRateClaims <- function(file) {
+  # Reading the metadata is a cross-check on the audio, not something the
+  # caller asked for, so a complaint about how a field is written is not raised
+  # from under a call to read the audio.
+  read <- suppressWarnings(tryCatch(
+    list(guano=guano(file), bext=bext(file)),
+    error=function(cond) NULL
+  ))
+  if (is.null(read)) {
+    return(list())
+  }
+  expansion <- .wavRateValue(read$guano[["TE"]])
+  # A file that records no expansion, or an expansion that is not a factor at
+  # all, is stored at the rate it was recorded at.
+  if (!is.finite(expansion) || expansion < 1) {
+    expansion <- 1
+  }
+  claims <- list()
+  declared <- .wavRateValue(read$guano[["Samplerate"]])
+  if (is.finite(declared) && declared > 0) {
+    claims[[length(claims) + 1L]] <- list(
+      source="its GUANO metadata", rates=declared, expansion=expansion
+    )
+  }
+  history <- .wavCodingRates(read$bext[["CodingHistory"]])
+  if (length(history) > 0L) {
+    claims[[length(claims) + 1L]] <- list(
+      source="the coding history of its bext chunk", rates=history,
+      expansion=expansion
+    )
+  }
+  return(claims)
+}
+
+#' Warn where the header of a file disagrees with its own metadata about the
+#' sample rate
+#'
+#' A recorder can write a sample rate into its metadata that disagrees with the
+#' one in the format chunk, and the format chunk can be the one that is wrong.
+#' Nothing in the file says which of them is right, so the disagreement is
+#' reported rather than corrected: a recording read at a tenth of the rate it
+#' was made at reads as ten times its length, and every frequency measured from
+#' it is wrong by the same factor, with nothing in the wave to show it.
+#'
+#' @param wave The wave that was read
+#' @param file The file it was read from
+#' @return NULL, called for the warning it raises
+#' @keywords internal
+#' @noRd
+.wavRateWarning <- function(wave, file) {
+  rate <- wave@samp.rate
+  if (length(rate) != 1L || !is.finite(rate) || rate <= 0) {
+    return(invisible(NULL))
+  }
+  disagree <- character(0)
+  for (claim in .wavRateClaims(file)) {
+    # A rate that meets the header, or that meets it once the time expansion
+    # the file declares is allowed for, is agreement. Of a coding history that
+    # holds several generations, any one of them meeting the header is enough:
+    # the others describe the recording as it was before it was last written.
+    if (any(claim$rates == rate | claim$rates == rate * claim$expansion)) {
+      next
+    }
+    disagree <- c(disagree, paste0(
+      claim$source, " records ",
+      paste(.wavRateText(claim$rates), collapse=" and "), " Hz"
+    ))
+  }
+  if (length(disagree) == 0L) {
+    return(invisible(NULL))
+  }
+  .audioFileWarning(
+    "sampleRateMismatch",
+    "The sample rate in the header of '", file, "' is ", .wavRateText(rate),
+    " Hz, but ", paste(disagree, collapse=", and "), ". Which of them is right ",
+    "cannot be known from the file, so the recording has been read at the rate ",
+    "its header gives: its duration and every frequency measured from it ",
+    "follow from that rate."
+  )
+  return(invisible(NULL))
 }

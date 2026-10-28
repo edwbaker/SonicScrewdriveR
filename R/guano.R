@@ -589,6 +589,10 @@ guano <- function(x) {
 #' file, the form a recording over 4 GiB is written in. The audio data and every
 #' other chunk are left as they were.
 #'
+#' The recording is copied across a buffer at a time rather than read into
+#' memory, so changing one field of the metadata of a file of several gigabytes
+#' takes no more memory than changing it in a short one.
+#'
 #' @param x A guano object, from [guano()] or [guanoCreate()]
 #' @param file Path to the WAV file to read
 #' @param output Path to write to. If NULL (the default) `file` is rewritten in
@@ -615,15 +619,26 @@ guanoWrite <- function(x, file, output=NULL) {
   }
   output <- if (is.null(output)) file else .oneValue(output, "output")
 
-  bytes <- readBin(file, "raw", n=file.size(file))
-  info <- .wavChunks(bytes)
+  # The recording is read as it is written, a buffer at a time, so that putting
+  # a few hundred bytes of metadata into a file does not take as much memory as
+  # the whole recording. Only the chunk headers and the metadata itself are
+  # ever held.
+  size <- file.size(file)
+  con <- file(file, "rb")
+  sourceOpen <- TRUE
+  closeSource <- function() {
+    if (sourceOpen) {
+      close(con)
+      sourceOpen <<- FALSE
+    }
+    invisible(NULL)
+  }
+  on.exit(closeSource())
+
+  read <- .wavConReader(con)
+  info <- .wavWalk(read, size, size)
   existing <- .wavFindChunk(info$chunks, "guan")
   chunk <- .guanoChunk(x)
-
-  # A recording cut short declares more audio than it holds. Metadata written
-  # after it would fall inside the audio the file claims to have, where no
-  # reader, this one included, would find it. The size is corrected to the
-  # audio that is actually there, which is the only size that was ever true.
   data <- .wavFindChunk(info$chunks, "data")
 
   # Where the metadata is held before the audio, replacing it with a chunk of a
@@ -643,7 +658,29 @@ guanoWrite <- function(x, file, output=NULL) {
     }
   }
 
-  # The data size is written only where it changes.
+  # What the output holds: the bytes up to the metadata, the new chunk, and the
+  # bytes after it. A file with no metadata yet keeps all of itself and the
+  # chunk goes on the end.
+  if (is.null(existing)) {
+    headEnd <- size
+    tailFrom <- size + 1
+  } else {
+    headEnd <- existing$start - 9
+    tailFrom <- existing$start + existing$size + (existing$size %% 2)
+  }
+  tailBytes <- max(0, size - tailFrom + 1)
+
+  # A RIFF chunk of an odd length is followed by a padding byte, so a recording
+  # holding an odd number of audio bytes needs one before anything is written
+  # after it. Without it the metadata would start a byte early and be read as a
+  # chunk of some other name.
+  pad <- if (headEnd %% 2 == 1) raw(1) else raw(0)
+
+  # A recording cut short declares more audio than it holds. Metadata written
+  # after it would fall inside the audio the file claims to have, where no
+  # reader, this one included, would find it. The size is corrected to the
+  # audio that is actually there, which is the only size that was ever true.
+  # Otherwise the data size is written only where it changes.
   dataSize <- NULL
   if (!is.null(data) && isTRUE(data$truncated)) {
     warning(
@@ -661,49 +698,30 @@ guanoWrite <- function(x, file, output=NULL) {
     }
   }
 
-  if (is.null(existing)) {
-    headLength <- length(bytes)
-    tailLength <- 0
-  } else {
-    headLength <- existing$start - 9
-    after <- existing$start + existing$size + (existing$size %% 2)
-    tailLength <- max(0, length(bytes) - after + 1)
-  }
-  # A RIFF chunk of an odd length is followed by a padding byte, so a recording
-  # holding an odd number of audio bytes needs one before anything is written
-  # after it. Without it the metadata would start a byte early and be read as a
-  # chunk of some other name.
-  pad <- headLength %% 2
-
-  # The sizes are written before the file is divided around the metadata, as
-  # the data chunk header comes after the metadata where the metadata is held
-  # before the audio. length() gives a whole number, and a recording of 2GB or
-  # more is longer than their sum can be counted in, so the size is added up in
-  # doubles.
-  riffSize <- as.numeric(headLength) + pad + length(chunk) + tailLength - 8
-  bytes <- .wavPatch(
-    bytes, .wavSizePatches(info$form, info$ds64, data$start, riffSize, dataSize)
+  # The sizes the file declares are the only bytes carried across that change,
+  # and all of them are known before anything is written, so the output is
+  # written once through rather than gone back over. Each is written where the
+  # form of the file keeps it: in the header of a RIFF file, and in the ds64
+  # chunk of an RF64 or BW64 one. They are added up in doubles, as a recording
+  # of 2GB or more is longer than a whole number can be counted in.
+  edits <- .wavSizePatches(
+    info$form, info$ds64, data$start,
+    as.numeric(headEnd) + length(pad) + length(chunk) + tailBytes - 8, dataSize
   )
-
-  if (is.null(existing)) {
-    head <- bytes
-    tail <- raw(0)
-  } else {
-    head <- bytes[seq_len(headLength)]
-    tail <- if (tailLength > 0) bytes[after:length(bytes)] else raw(0)
-  }
-  if (pad == 1) {
-    head <- c(head, raw(1))
-  }
 
   # Written beside the recording and put in its place once whole, so that a
   # write which fails part way through cannot lose a recording that was only
   # having one field of its metadata changed.
-  return(.writeAtomically(output, function(con) {
-    writeBin(head, con)
-    writeBin(chunk, con)
-    if (length(tail) > 0L) {
-      writeBin(tail, con)
+  return(.writeAtomically(output, function(out) {
+    .copyEdited(read, out, 1, headEnd, edits)
+    if (length(pad) > 0L) {
+      writeBin(pad, out)
     }
+    writeBin(chunk, out)
+    .copyEdited(read, out, tailFrom, size, edits)
+
+    # The recording is let go of before the written file takes its place, as a
+    # file still open for reading cannot be replaced on every system.
+    closeSource()
   }))
 }

@@ -1163,6 +1163,8 @@ test_that("A triggered recording whose ds64 chunk miscounts its frames says so",
   source <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
   f <- mdFile(rf64TWav(readBin(source, "raw", n=file.size(source)), frames=7), "T.WAV")
 
-  expect_warning(e <- audiomothExpand(f), "gives 7 sample frames")
+  expect_warning(
+    e <- audiomothExpand(f), "gives 7 sample frames", class="frameCountMismatch"
+  )
   expect_equal(e@left, audiomothExpand(source)@left)
 })
