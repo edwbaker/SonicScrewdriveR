@@ -183,8 +183,7 @@ importFrom(graphics,
   lines,
   plot,
   polygon,
-  rasterImage,
-  title
+  rasterImage
 )
 importFrom(hms,as_hms)
 importFrom(jsonlite,fromJSON)

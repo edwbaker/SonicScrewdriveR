@@ -6,7 +6,7 @@
 #' @param medium Propagation medium (e.g. "air"), or "all" to return a list of all available media.
 #' @param method Use a specific method to calculate the speed of sound (see Details).
 #' @param wl Wavelength
-#' @param f Frequency
+#' @param f Frequency, in Hz
 #' @param bulkModulus Bulk modulus
 #' @param density Density
 #' @param ... Additional parameters passed to the method.

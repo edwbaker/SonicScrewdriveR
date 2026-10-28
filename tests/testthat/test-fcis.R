@@ -171,3 +171,32 @@ test_that("a window longer than the recording is reported rather than drawn empt
     "No complete windows to analyse."
   )
 })
+
+test_that("fcis gives the frequencies of its bins in Hz", {
+  #seewave::spectro() gives them in kHz, which is how they were returned.
+  samp.rate <- 8000
+  times <- seq_len(samp.rate)/samp.rate
+  tone <- tuneR::Wave(round(10000*sin(2*pi*1000*times)), samp.rate=samp.rate, bit=16)
+  f <- fcis(tone, window.length=NULL, wl=128)
+
+  spec <- seewave::spectro(tone, f=samp.rate, wl=128, plot=FALSE, dB=NULL, norm=FALSE)
+  expect_equal(f$freq, spec$freq * 1000)
+  #The bin holding the most power is the one the tone is in.
+  expect_equal(f$freq[which.max(f$indices$power[, 1])], 1000)
+  expect_lt(max(f$freq), samp.rate/2)
+})
+
+test_that("fcis is plotted against frequencies in Hz", {
+  drawn <- NULL
+  local_mocked_bindings(
+    plot = function(x, ..., ylim, ylab) drawn <<- list(ylim=ylim, ylab=ylab),
+    rasterImage = function(...) NULL
+  )
+  w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
+  f <- fcis(w, window.length=NULL, wl=128)
+  #Called by name, as plot() is the stand-in here and would not dispatch.
+  sonicscrewdriver:::plot.fcis(f)
+  expect_equal(drawn$ylab, "Frequency (Hz)")
+  expect_equal(drawn$ylim, c(0, max(f$freq)))
+  expect_gt(max(f$freq), 1000)
+})

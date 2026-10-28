@@ -7,7 +7,7 @@
 \method{plot}{fcis}(
   x,
   xlab = NULL,
-  ylab = "Frequency (kHz)",
+  ylab = "Frequency (Hz)",
   main = "False-colour index spectrogram",
   ...
 )
@@ -17,7 +17,8 @@
 
 \item{xlab}{Label for the x axis}
 
-\item{ylab}{Label for the y axis}
+\item{ylab}{Label for the y axis, which is drawn in Hz, the unit of the
+frequencies fcis() returns}
 
 \item{main}{Title for the plot}
 

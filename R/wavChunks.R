@@ -43,6 +43,12 @@
 # chunk instead.
 .WAV_DEFERRED <- 4294967295
 
+# The identifiers a list of fields is written under. A RIFF identifier is four
+# characters and the specification gives this one as "LIST", but fifteen files
+# in a cached copy of the TSA corpus write "list", and the cue labels they hold
+# are read by nothing where only the one spelling is looked for.
+.WAV_LIST_IDS <- c("LIST", "list")
+
 # How much of a ds64 chunk is read. It holds three sizes and a table giving the
 # size of any other chunk too large for its own header, of which a file has few
 # if any, so this too is far more than is needed; it is here so that a table
@@ -115,7 +121,7 @@
   # behind any of those, and a triggered recording whose comment was missed is
   # read as the shortened thing on disk.
   for (chunk in info$chunks) {
-    if (chunk$id != "LIST" || chunk$size < 4) {
+    if (!chunk$id %in% .WAV_LIST_IDS || chunk$size < 4) {
       next
     }
     comment <- .infoComment(read(chunk$start, min(chunk$size, .WAV_INFO_READ)))

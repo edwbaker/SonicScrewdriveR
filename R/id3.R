@@ -15,6 +15,16 @@
 #' @noRd
 .ID3_HEADER <- 10L
 
+#' The identifiers a wave file writes an ID3 tag chunk under
+#'
+#' The RIFF registry gives "id3 ", and "ID3 " is as common. Ninety-six files in
+#' a cached copy of the TSA corpus write "ID32", holding a whole version 2 tag,
+#' and a reader that looked only for the first two spellings reported those
+#' files as carrying nothing but their filename.
+#' @keywords internal
+#' @noRd
+.WAV_ID3_IDS <- c("id3 ", "ID3 ", "ID32")
+
 #' Read the encoding a frame declares for its text
 #'
 #' @param code The encoding byte of the frame
@@ -435,7 +445,7 @@
   }
   # A wave file carries a whole version 2 tag inside a chunk of its own.
   if (.mdWaveContainer(container)) {
-    for (id in c("id3 ", "ID3 ")) {
+    for (id in .WAV_ID3_IDS) {
       body <- .mdWavChunk(file, id)
       if (!is.null(body)) {
         tag <- .id3Parse(body)
@@ -483,7 +493,7 @@
       return(tag)
     }
   }
-  for (id in c("id3 ", "ID3 ")) {
+  for (id in .WAV_ID3_IDS) {
     body <- .mdWavChunkBytes(bytes, id)
     if (!is.null(body)) {
       tag <- .id3Parse(body)

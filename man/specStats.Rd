@@ -7,7 +7,8 @@
 specStats(spectra, stats = "minMax", line.col = "black", ribbon.col = "grey70")
 }
 \arguments{
-\item{spectra}{A list of spectra}
+\item{spectra}{A list of spectra, with their frequencies in kHz as
+seewave::meanspec() returns them}
 
 \item{stats}{Either minMax or sd}
 
@@ -16,7 +17,8 @@ specStats(spectra, stats = "minMax", line.col = "black", ribbon.col = "grey70")
 \item{ribbon.col}{Colour for the ribbon}
 }
 \value{
-A ggplot2 object
+A ggplot2 object, with its frequency axis in kHz, the unit of the
+spectra it draws
 }
 \description{
 Given a list of outputs from meanspec generates a plot with the mean shown by

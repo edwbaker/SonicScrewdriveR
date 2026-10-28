@@ -209,8 +209,9 @@ fcisIndexNames <- function() {
 #' @export
 #' @return An object of class "fcis", being a list of the colours as a character
 #'   matrix of one entry per frequency bin and window, the matrix of values for each
-#'   index, the frequencies of the bins in kHz, the duration of a window in seconds,
-#'   and the names of the indices used.
+#'   index, the frequencies of the bins in Hz, the duration of a window in seconds,
+#'   and the names of the indices used. The frequencies were in kHz, as
+#'   seewave::spectro() gives them, in earlier releases.
 #' @examples
 #' \dontrun{
 #' f <- fcis(wave, window.length=44100)
@@ -257,7 +258,8 @@ fcis <- function(
   ret <- list(
     colours = colours,
     indices = values,
-    freq = columns[[1]]$freq,
+    #seewave::spectro() gives the frequencies of its bins in kHz.
+    freq = .convertLinear(columns[[1]]$freq, "kHz", "Hz", .frequencyMultipliers()),
     window.seconds = if (is.na(samp.rate) || is.null(window.length)) NA else window.length/samp.rate,
     channels = indices
   )
@@ -269,7 +271,8 @@ fcis <- function(
 #'
 #' @param x An object of class "fcis"
 #' @param xlab Label for the x axis
-#' @param ylab Label for the y axis
+#' @param ylab Label for the y axis, which is drawn in Hz, the unit of the
+#'   frequencies fcis() returns
 #' @param main Title for the plot
 #' @param ... Additional parameters passed to plot()
 #' @export
@@ -283,7 +286,7 @@ fcis <- function(
 plot.fcis <- function(
   x,
   xlab = NULL,
-  ylab = "Frequency (kHz)",
+  ylab = "Frequency (Hz)",
   main = "False-colour index spectrogram",
   ...
 ) {

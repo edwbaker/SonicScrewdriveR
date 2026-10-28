@@ -92,8 +92,12 @@ audiomothField <- function(x, pattern) {
 #'   \item{external_mic}{Whether an external microphone was used}
 #'   \item{filter}{"Low-pass", "Band-pass", "High-pass", or FALSE if no filter
 #'     was applied}
-#'   \item{filter.limit}{Filter frequency in kHz, two values separated by a
-#'     hyphen for a band-pass filter, or FALSE if no filter was applied}
+#'   \item{filter.limit}{Filter frequency as the recorder writes it in its
+#'     comment: text, in kHz, such as \code{"5.0"}, or two values separated by
+#'     a hyphen for a band-pass filter, such as \code{"1.0-5.0"}. It is not
+#'     converted to Hz, the unit of the frequencies the package measures,
+#'     as it is a reading of the recorder's own record. FALSE if no filter was
+#'     applied}
 #'   \item{cancelled}{Why the recording stopped early, or FALSE if it ran to
 #'     completion}
 #' }
