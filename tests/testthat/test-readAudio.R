@@ -613,6 +613,9 @@ test_that("A file with nothing to repair is left for the ordinary reader", {
   writeBin(c(charToRaw("RIFF"), .uintToRaw(8, 4L), body), noFmt)
   expect_null(.wavRepaired(noFmt))
 
+  # A wave file with no data chunk at all, so no audio to give a size to.
+  expect_null(.wavRepaired(mdFile(mdWav(mdFmt()))))
+
   # A file whose audio is as long as it says it is.
   ordinary <- tempfile(fileext=".wav")
   on.exit(unlink(ordinary), add=TRUE)
@@ -1014,6 +1017,230 @@ test_that(".wavRateWarning says nothing about a wave with no usable rate", {
   expect_equal(.wavRateClaims(junk), list())
 })
 
+# A recording cut short, as a flat battery, a full card or a copy that did not
+# finish leaves one: the header still declares the whole of the audio, and the
+# file holds only the first `held` bytes of it.
+cutWav <- function(wave, held, envir=parent.frame()) {
+  path <- withr::local_tempfile(fileext=".wav", .local_envir=envir)
+  tuneR::writeWave(wave, path)
+  bytes <- readBin(path, "raw", n=file.size(path))
+  writeBin(bytes[seq_len(.wavFormat(bytes)$dataStart - 1 + held)], path)
+  return(path)
+}
+
+cutStereo <- tuneR::Wave(
+  left=round(sin(seq(0, 50, length.out=4000)) * 9000),
+  right=round(cos(seq(0, 50, length.out=4000)) * 9000),
+  samp.rate=8000, bit=16, pcm=TRUE
+)
+
+test_that("A recording that was cut short is read as far as it goes, with a warning", {
+  # Fault C2 of the malformed wave files set: a stereo 16 bit file whose data
+  # chunk declares more audio than the file holds.
+  f <- cutWav(cutStereo, 2400 * 4)
+  before <- readBin(f, "raw", n=file.size(f))
+
+  read <- rateWarnings(readAudio(f))
+  expect_length(read$messages, 1)
+  expect_match(
+    read$messages,
+    "holds 2400 of the 4000 sample frames it declares \\(0\\.30 of 0\\.50 seconds\\)"
+  )
+  expect_true("truncatedAudio" %in% read$classes)
+  expect_true(read$value@stereo)
+  expect_equal(read$value@left, cutStereo@left[1:2400])
+  expect_equal(read$value@right, cutStereo@right[1:2400])
+
+  # The file is the same short file it was.
+  expect_identical(readBin(f, "raw", n=file.size(f) + 1), before)
+
+  # It is said whatever part of the recording is asked for, as the file is the
+  # same file whichever part of it is read.
+  part <- rateWarnings(readAudio(f, from=1, to=100, input.unit="samples"))
+  expect_true("truncatedAudio" %in% part$classes)
+  expect_equal(part$value@left, cutStereo@left[1:100])
+
+  # A part that runs past the audio the file holds stops where the audio does.
+  end <- suppressWarnings(readAudio(f, from=0.25, to=0.45))
+  expect_equal(end@left, cutStereo@left[2001:2400])
+  expect_equal(end@right, cutStereo@right[2001:2400])
+})
+
+test_that("Only the whole sample frames of a recording cut part-way through one are read", {
+  # The file ends one sample into a frame. Read as it is, tuneR::readWave()
+  # fills the rest of the frame in by recycling the samples before it, saying
+  # so only through a warning from matrix().
+  f <- cutWav(cutStereo, 2400 * 4 + 2)
+  before <- readBin(f, "raw", n=file.size(f))
+  read <- rateWarnings(readAudio(f))
+  expect_length(read$messages, 1)
+  expect_match(read$messages, "holds 2400 of the 4000 sample frames")
+  expect_equal(read$value@left, cutStereo@left[1:2400])
+  expect_equal(read$value@right, cutStereo@right[1:2400])
+  # The copy read in its place leaves the file as it was.
+  expect_identical(readBin(f, "raw", n=file.size(f) + 1), before)
+  # It is made only for a file found to be cut short.
+  expect_null(.wavRepaired(f))
+
+  # 24 bit audio does not divide into the 512 byte blocks a recorder commonly
+  # writes, so a recording cut at the end of one usually ends inside a frame.
+  deep <- tuneR::Wave(
+    left=round(sin(seq(0, 50, length.out=400)) * 2^22), samp.rate=8000,
+    bit=24, pcm=TRUE
+  )
+  read <- rateWarnings(readAudio(cutWav(deep, 512)))
+  expect_length(read$messages, 1)
+  expect_match(read$messages, "holds 170 of the 400 sample frames")
+  expect_equal(read$value@left, deep@left[1:170])
+
+  # A multichannel recording would have the channels the cut did not reach
+  # filled in.
+  mc <- .fourChannel(seconds=0.05)
+  read <- rateWarnings(readAudio(cutWav(mc, 250 * 8 + 4)))
+  expect_length(read$messages, 1)
+  expect_match(read$messages, "holds 250 of the 400 sample frames")
+  expect_equal(unname(read$value@.Data), unname(mc@.Data[1:250, ]))
+})
+
+test_that("A recording short of less than a sample frame has lost no audio", {
+  # The data chunk declares an odd byte that could not have made up a frame of
+  # 16 bit audio, and the file does not hold it.
+  samples <- as.integer(rep(c(400L, -400L), 100))
+  f <- malformedWav(samples, dataSize=2 * length(samples) + 1)
+  on.exit(unlink(f))
+
+  expect_no_warning(w <- readAudio(f))
+  expect_equal(w@left, as.numeric(samples))
+})
+
+test_that("A size its writer did not know is not taken for a recording cut short", {
+  # FFmpeg writing to a pipe cannot go back to fill the sizes in, and leaves
+  # 0xFFFFFFFF in their place, which declares more audio than any file holds.
+  samples <- as.integer(round(sin(seq(0, 100, length.out=1000)) * 10000))
+  f <- mdFile(c(
+    charToRaw("RIFF"), mdU32(4294967295), charToRaw("WAVE"), mdFmt(8000),
+    charToRaw("data"), mdU32(4294967295),
+    writeBin(samples, raw(), size=2L, endian="little")
+  ))
+  expect_null(.wavTruncation(f))
+  expect_no_warning(w <- readAudio(f))
+  expect_equal(as.numeric(w@left), as.numeric(samples))
+})
+
+test_that("A recording that holds none of the audio it declares is read as empty", {
+  f <- malformedWav(integer(0), dataSize=2)
+  on.exit(unlink(f))
+
+  expect_warning(
+    w <- readAudio(f),
+    "holds 0 of the 1 sample frame it declares \\(0\\.00 of 0\\.00 seconds\\)",
+    class="truncatedAudio"
+  )
+  expect_equal(length(w@left), 0)
+})
+
+test_that("A recording cut short is read through the av package with the same warning", {
+  skip_if_not_installed("av")
+  # tuneR does not read the RF64 form, so the av package reads it, by the sizes
+  # its ds64 chunk gives.
+  whole <- mdRf64Wav(rf64Samples, after=raw(0))
+  f <- mdFile(whole[seq_len(length(whole) - 2000)])
+  expect_warning(
+    w <- readAudio(f), "holds 3800 of the 4800 sample frames",
+    class="truncatedAudio"
+  )
+  expect_equal(w@left, as.numeric(rf64Samples[1:3800]))
+
+  # The av package refuses a file that ends part-way through a sample frame,
+  # so it is given a copy holding the frames that are whole.
+  g <- mdFile(whole[seq_len(length(whole) - 2001)])
+  expect_warning(
+    w <- readAudio(g), "holds 3799 of the 4800 sample frames",
+    class="truncatedAudio"
+  )
+  expect_equal(w@left, as.numeric(rf64Samples[1:3799]))
+
+  # The copy keeps the form, with sizes and a count of frames that agree with
+  # the audio it holds.
+  copy <- .wavRepaired(g, .wavTruncation(g))
+  on.exit(unlink(copy), add=TRUE)
+  bytes <- readBin(copy, "raw", n=file.size(copy))
+  info <- .wavChunks(bytes)
+  expect_identical(info$form, "RF64")
+  expect_equal(info$riffSize + 8, length(bytes))
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 2 * 3799)
+  expect_false(.wavFindChunk(info$chunks, "data")$truncated)
+  expect_equal(info$ds64$sampleCount, 3799)
+
+  # A compressed format packs its samples into blocks rather than frames, so
+  # what is missing is counted in bytes, and there is no frame to round to.
+  mulaw <- malformedWav(rep(c(16L, 240L), 75), bits=8, format=7, dataSize=250)
+  on.exit(unlink(mulaw), add=TRUE)
+  expect_null(.wavRepaired(mulaw, .wavTruncation(mulaw)))
+  expect_warning(
+    w <- readAudio(mulaw), "holds 150 of the 250 bytes of audio it declares",
+    class="truncatedAudio"
+  )
+  expect_equal(length(w@left), 150)
+})
+
+test_that(".truncatedWarning names what it can count", {
+  pcm <- list(format=1, channels=1, sampleRate=8000, bits=16, frameSize=2)
+  expect_warning(
+    .truncatedWarning(list(declared=16000, held=4000, fields=pcm), "test.wav"),
+    paste0(
+      "^The audio in 'test.wav' runs past the end of the file, which holds 2000 ",
+      "of the 8000 sample frames it declares \\(0\\.25 of 1\\.00 seconds\\)\\. ",
+      "The recording appears to have been cut short"
+    ),
+    class="truncatedAudio"
+  )
+
+  # A format that gives no rate gives no seconds to count in.
+  pcm$sampleRate <- 0
+  expect_warning(
+    .truncatedWarning(list(declared=16000, held=4000, fields=pcm), "test.wav"),
+    "holds 2000 of the 8000 sample frames it declares\\. ",
+    class="truncatedAudio"
+  )
+
+  # Nor does a compressed format or one that cannot be read give frames.
+  adpcm <- list(format=2, channels=1, sampleRate=8000, bits=4, frameSize=1)
+  expect_warning(
+    .truncatedWarning(list(declared=200, held=100, fields=adpcm), "test.wav"),
+    "holds 100 of the 200 bytes of audio it declares\\. "
+  )
+  expect_warning(
+    .truncatedWarning(list(declared=200, held=100, fields=NULL), "test.wav"),
+    "holds 100 of the 200 bytes of audio it declares\\. "
+  )
+})
+
+test_that(".wavTruncation says nothing of a file that is whole or not a wave file", {
+  whole <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(cutStereo, whole)
+  expect_null(.wavTruncation(whole))
+
+  expect_null(.wavTruncation(tempfile(fileext=".wav")))
+  expect_null(.wavTruncation(tempdir()))
+  expect_null(.wavTruncation("https://example.org/recording.wav"))
+  expect_null(.wavTruncation(mdFile(charToRaw("not a wave file at all"))))
+  # An RF64 file with no ds64 chunk to walk it by, and a wave file holding no
+  # audio at all.
+  expect_null(.wavTruncation(mdFile(
+    c(charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"), raw(40))
+  )))
+  expect_null(.wavTruncation(mdFile(mdWav(mdFmt()))))
+
+  # A file that says nothing of its format is still found to be short, in
+  # bytes.
+  f <- mdFile(c(
+    charToRaw("RIFF"), mdU32(112), charToRaw("WAVE"),
+    charToRaw("data"), mdU32(100), raw(10)
+  ))
+  expect_equal(.wavTruncation(f), list(declared=100, held=10, fields=NULL))
+})
+
 test_that("The warnings readAudio() raises each carry a class of their own", {
   mismatch <- rateWav(38400, mdGuanoChunk("Samplerate:384000"))
   expect_warning(readAudio(mismatch), class="sampleRateMismatch")
@@ -1025,6 +1252,11 @@ test_that("The warnings readAudio() raises each carry a class of their own", {
   on.exit(unlink(unwritten))
   expect_warning(readAudio(unwritten), class="unwrittenAudioSize")
   expect_warning(readAudio(unwritten), class="audioFileWarning")
+
+  truncated <- malformedWav(as.integer(rep(c(400L, -400L), 100)), dataSize=800)
+  on.exit(unlink(truncated), add=TRUE)
+  expect_warning(readAudio(truncated), class="truncatedAudio")
+  expect_warning(readAudio(truncated), class="audioFileWarning")
 
   nonFinite <- malformedWav(c(0.1, NaN, -0.2), bits=32, format=3)
   on.exit(unlink(nonFinite), add=TRUE)
