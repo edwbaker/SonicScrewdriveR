@@ -41,16 +41,25 @@
 #' it was left in are binary, and reading them as text gives a run of
 #' punctuation that says nothing. 65535 is the padding a writer uses to bring
 #' the chunk to an even length, and is not a field at all.
+#'
+#' The Song Meter Mini Bat writes two more, 34 and 35, which neither the
+#' reference implementation nor Wildlife Acoustics names. Each is 128 bytes,
+#' mostly numbers, and read as text they give runs of control characters, with
+#' the serial number of the device among those of 34. What can be recognised in
+#' 34, the serial number, the position and the sample rate, the same device
+#' writes as GUANO, where it is documented, so nothing is lost by passing them
+#' over.
 #' @keywords internal
 #' @noRd
-.WAMD_BINARY_IDS <- c(13L, 16L, 17L, 65535L)
+.WAMD_BINARY_IDS <- c(13L, 16L, 17L, 34L, 35L, 65535L)
 
 #' Read a wamd timestamp
 #'
 #' Written as a date and time, optionally with a fraction of a second, and
-#' optionally followed by the offset from UTC that the device was set to. A
-#' time with no offset is read in the timezone of the session, as there is
-#' nothing in the file to say which it was.
+#' optionally followed by the offset from UTC that the device was set to, as
+#' -04:00, -0400 or -4:00. A time with no offset is read in the timezone of the
+#' session, as there is nothing in the file to say which it was. A value that
+#' only begins with a date and a time is kept as text.
 #'
 #' @param text The field as it is written
 #' @return A POSIXct, or the text where it is not a time this understands
@@ -60,17 +69,36 @@
   if (!nzchar(text)) {
     return(text)
   }
+  wanted <- sub("^([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})[[:space:]]+", "\\1T", text)
+  # An offset hour of one digit, as +2:00, which the Song Meter Mini Bat writes
+  # in its GUANO, is given its second digit, so that the offset is read rather
+  # than taken for no offset at all.
+  wanted <- sub("([+-])([0-9]):([0-9]{2})$", "\\10\\2:\\3", wanted)
   # ISO 8601 puts a colon in a numeric UTC offset, which R will not read.
-  wanted <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", text)
-  wanted <- sub("^([0-9]{4}-[0-9]{2}-[0-9]{2})[[:space:]]", "\\1T", wanted)
-  formats <- c(
-    "%Y-%m-%dT%H:%M:%OS%z",
-    "%Y-%m-%dT%H:%M:%OSZ",
-    "%Y-%m-%dT%H:%M:%OS"
+  wanted <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", wanted)
+  # The shape of each form is checked before it is read, as as.POSIXct() is
+  # content with a value that merely begins with one: without this, a time
+  # followed by anything it did not recognise, an offset included, would be read
+  # as a wall clock and the rest quietly dropped. R reads a field of one digit
+  # as well as one of two, and an offset with spaces before it, so those are
+  # allowed.
+  clock <- paste0(
+    "^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}",
+    "T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}([.][0-9]+)?"
   )
-  for (format in formats) {
-    tz <- if (grepl("Z$|%z", format)) "UTC" else ""
-    parsed <- as.POSIXct(wanted, format=format, tz=tz)
+  forms <- list(
+    list(shape=paste0(clock, " *[+-][0-9]{4}$"),
+         format="%Y-%m-%dT%H:%M:%OS%z", tz="UTC"),
+    list(shape=paste0(clock, "Z$"),
+         format="%Y-%m-%dT%H:%M:%OSZ", tz="UTC"),
+    list(shape=paste0(clock, "$"),
+         format="%Y-%m-%dT%H:%M:%OS", tz="")
+  )
+  for (form in forms) {
+    if (!grepl(form$shape, wanted)) {
+      next
+    }
+    parsed <- as.POSIXct(wanted, format=form$format, tz=form$tz)
     if (!is.na(parsed)) {
       return(parsed)
     }
@@ -203,9 +231,10 @@
 #' number, as `wamd:21`.
 #'
 #' The embedded voice note, the program the device was running and the state it
-#' was left in are binary rather than text and are passed over. Their sizes are
-#' kept on the result as its "binary" attribute, so that a file carrying them
-#' can be told from one that does not.
+#' was left in are binary rather than text and are passed over, as are the two
+#' unnamed fields 34 and 35 that the Song Meter Mini Bat writes. Their sizes
+#' are kept on the result as its "binary" attribute, so that a file carrying
+#' them can be told from one that does not.
 #'
 #' @param x Path to a wave file, a Wave object with wamd metadata attached, a
 #'   raw vector holding a wave file, or a wamd object

@@ -47,6 +47,23 @@
   format, which is how most writers that mention the chunk leave it, gives
   nothing rather than an empty title, and one holding an image names the format
   so that a caller can tell the file carries something other than text.
+- wavCues() reads the cue points of a wave file together with the labels that
+  name them. The two halves of an annotation are written in different chunks:
+  a cue chunk holds positions and nothing else, and the text naming them is in
+  a list of kind `adtl`, each field beginning with the identifier of the point
+  it belongs to. wavInfo() reads that text and passes over the identifier,
+  which is right for a list of information about the recording as a whole but
+  leaves a label with nothing to attach it to — a file in a cached copy of
+  bio.acousti.ca says "Phrase 1" without saying that the phrase begins at the
+  start of the recording and runs for ten minutes. Both are now read and put
+  back together, one row per point, with the position in samples and in
+  seconds, the label, the note, the length and purpose of a labelled region,
+  and the chunk the position is into, since a cue into a wave list is an offset
+  into that part of the audio rather than into the recording. A label whose cue
+  point is missing is reported without a position rather than dropped, and a
+  point with no label is reported without text: nine files in that corpus
+  declare ninety-nine points and name none of them, which is a writer
+  reserving the room rather than marking anything.
 - wavChunks() lists the chunks a wave file holds: every one of them, in the
   order the file holds them, with where its body begins, how large it is,
   whether it was cut short, and, for a list, which kind of list it is. The
@@ -160,13 +177,13 @@
   metadata, `unwrittenAudioSize` for a recording whose size was never written,
   `nonFiniteSamples` for samples that are not finite numbers, `badDs64` and
   `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
-  believed or miscounts its sample frames, and `truncatedAudio` from
-  audiomothExpand(). A corpus known to hold truncated
-  recordings can now pass over that one warning and still hear about the others,
-  which matching the wording of a message could not do. All of them are also
-  classed `audioFileWarning`, for handling every warning about the file at once,
-  and `warning`, so `suppressWarnings()` and an ordinary warning handler treat
-  them as the warnings they are.
+  believed or miscounts its sample frames, and `truncatedAudio` for a recording
+  that was cut short, which audiomothExpand() raises as well. A corpus known to
+  hold truncated recordings can now pass over that one warning and still hear
+  about the others, which matching the wording of a message could not do. All
+  of them are also classed `audioFileWarning`, for handling every warning about
+  the file at once, and `warning`, so `suppressWarnings()` and an ordinary
+  warning handler treat them as the warnings they are.
 
 ## Deprecations
 - unit arguments are now named consistently across the package. A function takes
@@ -243,6 +260,29 @@
   is written back with that offset, as the specification recommends: one of
   +01:00 was written back moved to UTC, as Z, so changing any other field of the
   metadata lost the offset the recorder was set to.
+- wamd() and readMetadata() read a timestamp whose offset from UTC has an hour
+  of one digit, as 2025-09-15 21:31:57+2:00, as though it had no offset at all.
+  The time was taken as a wall clock in the zone of the machine reading it, so
+  the moment given was wrong by the difference between that zone and the
+  recorder's, with nothing to say so. readMetadata() did the same with any
+  offset after a date and a time separated by a space, as 2025-09-15
+  21:31:57+02:00, in an INFO list, an XMP packet, an ID3 tag or a Vorbis
+  comment. Both are now read with their offset. A value that only begins with a
+  date and a time was read as far as that and the rest dropped, so a time
+  followed by something neither reader knew, such as 2025-09-15 21:31:57 junk,
+  was read as a wall clock, and a date followed by a time readMetadata() could
+  not read was read as midnight. wamd() now keeps such a value as text, with a
+  warning, as it already did one it could not read at all, and readMetadata()
+  gives no time from it.
+- readMetadata() read a date and time that stops at the minute, as
+  2025-09-15T21:31, which an ID3v2.4 tag and an XMP packet both allow, as
+  midnight at the start of that date in the zone of the machine, with the time
+  and any offset from UTC after it dropped. It is now read to the minute, in the
+  forms a time to the second is read in: with a T or a space between the date
+  and the time, and with Z or an offset written as +02:00, +0200 or +2:00. wamd()
+  and guano() still keep such a timestamp as text, with a warning, as neither
+  format is known to write one, and readMetadata() reads its time from that
+  text.
 - readAudio() given a start point at or beyond the end of the recording failed
   in words that said nothing of what had been asked for, and in different words
   for different units and formats: "'from' cannot be superior to 'to'" in
@@ -279,13 +319,8 @@
   the audio fills, and with `complete.windows = FALSE` at a final, shorter
   window holding what is left of it, as for a Wave object of the same audio.
   The gaps that `bind.wave = TRUE` reads back in between windows end there
-  too. Any other file is measured from the duration the av package gives,
-  which it rounds to the microsecond, so a FLAC file of 3000 samples at
-  44.1 kHz was 2999.99 samples long and gave no window of 3000 and only two of
-  1000, while one of 12345 samples at 48 kHz was given a second window of
-  12345 when `complete.windows = FALSE`, starting beyond its end, which
-  failed. Its length is now rounded to the nearest sample. A file or Wave object holding no audio
-  at all failed in `seq_len()`, and now gives no windows.
+  too. A file or Wave object holding no audio at all failed in `seq_len()`,
+  and now gives no windows.
 - readAudio() cut a WAVE file a sample away from every other format where a
   start time fell half way between two samples, as `tuneR::readWave()` rounds
   such a time differently from `seewave::cutw()`: two parts asked for either
@@ -295,6 +330,30 @@
   `tuneR::readWave()` reads as PCM, is now held against the audio it holds in
   the same way, so a start past its end and an end before its start are
   refused as they are for any other file.
+- readAudio() given a start or end point that is no point of a recording gave
+  a different answer from each reader, and from a WAVE file gave audio that
+  was never recorded. A fraction of a sample, `from = 2.5, input.unit =
+  "samples"`, was read from part-way into a sample, so a file holding 1:4000
+  began 768 where 3 was written, while FLAC, MP3 and a triggered AudioMoth
+  recording failed with "In cutws both from and to must be integers"; a start
+  of sample -1 was read from the header. NA, NaN and an empty vector failed
+  with "missing value where TRUE/FALSE needed" and the like. Text was compared
+  as text, so sample "9" was past the end of a recording of 240000 samples,
+  and a factor or a `difftime` was read as the number R keeps it as, so a start
+  of one minute was a start of one second. Each of these is now an error of
+  class `invalidPoint` whatever the format and the unit, raised before the
+  file is read and saying what was asked for: "The start point asked for,
+  sample 2.5, is not a whole number of samples, so no part of 'f.wav' was
+  read." A negative point is refused in the same way in every unit, as a
+  negative time always was and a negative sample was not. A number of samples
+  worked out from a time that misses the whole number it stands for by the
+  last bits of a double, as `0.009 * 48000`, which is 431.99999999999994,
+  does, is read as that whole number: a WAVE file was read from the byte
+  before it, and every other format refused it.
+- windowing() of a file counted its samples from the duration the av package
+  reports, which is given to the microsecond, and read the gap after the last
+  window up to that count, which for most recordings is no whole number of
+  samples. It now counts whole samples.
 - guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
   nothing for a wave file in the RF64 or BW64 form, which is how a recording is
   written once it passes the 4 GiB a RIFF header can describe, so the metadata
@@ -309,6 +368,16 @@
   by the sizes in its ds64 chunk where it has one, and says what is wrong with
   it. A count of sample frames that disagrees with the audio is read past with a
   warning, and put right in a file written.
+- wamd() and readMetadata() gave the two fields 34 and 35 that a Song Meter
+  Mini Bat writes in its wamd chunk as text, under the names `wamd:34` and
+  `wamd:35`, though both are binary: what came back for 34 was the serial
+  number of the device among 46 control characters and stray bytes, beginning
+  `"\001\001\001\0012MU01960\002"`, and for 35 eight characters, all but one of
+  them control characters, `"\001\002\001\036\020\036(\003"`. Nothing Wildlife
+  Acoustics publishes names either field, and what can be recognised in them
+  the device also writes as GUANO, so both are now passed over as the other
+  binary fields are, with their sizes kept in the "binary" attribute of the
+  result.
 - readAudio() chose its reader by the extension of the file, so a file under
   the wrong one was read as the wrong format. A wave file called .mp3 was
   given to `tuneR::readMP3()`, which does not refuse it: it finds a frame
@@ -372,6 +441,18 @@
   audiomothExpand() warns on a triggered recording left the same way. A file
   that really does hold no audio, such as one an AudioMoth writes when its
   battery fails as it starts to record, is still read as empty.
+- readAudio() returned the audio of a wave file that had been cut short, by a
+  flat battery, a full card or a copy that did not finish, without saying so.
+  The C2 file of the malformed wave files reference set declares 5.67 seconds
+  of audio and holds 3.40, and came back as 3.40 seconds of recording with
+  nothing to tell it from one that was meant to be that long. It is now read
+  with a warning classed `truncatedAudio` naming the sample frames the file
+  declares and the frames it holds. A file cut short part-way through a sample
+  frame fared worse: read as WAVE, the rest of the frame was made up by
+  recycling the samples before it, which only a warning from `matrix()` hinted
+  at, so the wave ended in a sample that was never recorded; read through the
+  av package, as an RF64 file is, it was refused. Only the whole sample frames
+  such a file holds are now read.
 - readAudio() returned samples that were not finite numbers, which a
   floating-point file can hold, so that every measurement made from the wave
   came back as NaN. They are now read as zero, with a warning saying how many.
@@ -908,9 +989,14 @@
   Behaviour is unchanged except where noted under Fixes.
 - generateTimeShift() no longer takes an output argument. It accepted only the value
   "list" and never used it.
-- The tests that query the audioBlast API now skip when it cannot be reached, rather
-  than failing. The API answers R's default user agent with a 403, so R CMD check
-  failed on any machine behind that.
+- The tests that query the audioBlast API read it where they can, and where they
+  cannot, use responses saved from it, rather than failing. The API answers R's
+  default user agent with a 403 in some places, and a request to it that timed out
+  ended the whole of R CMD check on CI, not only the test that made it. Once one
+  request fails, the rest of the run uses the saved responses, so it does not wait
+  out a timeout for each. On CRAN the saved responses are used from the start, and
+  running the tests with AUDIOBLAST_RECORD=true saves what the live API answers in
+  their place.
 
 ## Documentation
 - convert2bytes() was described as converting time measurements into seconds, and its

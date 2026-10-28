@@ -157,7 +157,8 @@ windowing <- function(
 #' Anything else is counted from the duration the av package gives, which is
 #' rounded to the microsecond, and so is rounded to the nearest sample: a FLAC
 #' file of 3000 samples at 44.1 kHz would otherwise be 2999.99 samples long,
-#' too short for a window of 3000.
+#' too short for a window of 3000, and the gap after the last window is read up
+#' to this count, where readAudio() refuses a fraction of a sample.
 #'
 #' @param file Path to an audio file
 #' @return The number of sample frames the file holds

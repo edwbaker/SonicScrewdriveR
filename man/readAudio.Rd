@@ -21,11 +21,12 @@ bytes of the file rather than from its name. Supported types are
 "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
 package.}
 
-\item{from}{Start point in file to return, which must fall within the
-recording}
+\item{from}{Start point in file to return, a number that is not negative,
+and a whole number in samples, which must fall within the recording}
 
-\item{to}{End point in file to return, which must leave some audio after
-the start point, read as the end of the recording where it is beyond it}
+\item{to}{End point in file to return, a number that is not negative, and a
+whole number in samples, which must leave some audio after the start
+point, read as the end of the recording where it is beyond it}
 
 \item{input.unit}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
 
@@ -82,6 +83,16 @@ recording while still holding the audio it was recording at the time. The
 audio of such a file is read to the end of the file, with a warning, rather
 than returned as nothing. A file that really holds no audio is read as empty.
 
+A recording cut short, by a flat battery, a full card or a copy that did not
+finish, declares more audio than the file holds. The audio that is there is
+returned, with a warning naming the sample frames the file declares and the
+frames it holds, whatever part of the recording was asked for: the wave is
+otherwise no different from one of a recording that was meant to be that
+short. Only whole sample frames are read, so a frame the file holds only
+some of the bytes of is left out rather than made up, and a part of the
+recording that starts beyond the audio the file holds is refused as one
+beyond the end of any recording is.
+
 A recording too long for the 4 GiB a RIFF header can describe is written in
 the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
 \code{tuneR::readWave()} does not read these forms, so they are read through the
@@ -116,6 +127,17 @@ no audio, nor does a part so short that both of its points are nearest the
 same boundary. Every format is cut at those same samples, so a part of a
 recording is the same part however the file holds it, and two parts that
 meet at a time meet without a sample lost or repeated between them.
+
+A start or end point is a single number, and is never negative, in any
+unit; in samples it is a whole number too, as there is no part of a sample
+to start or end at. Any other point is an error of class \code{invalidPoint},
+raised before the file is read, whatever its format. A fraction of a sample
+was read from a WAVE file from part-way into a sample, as audio made of the
+bytes of two samples, and a point written as text, or held as a factor or a
+time difference, was read as something other than what it said. A number of
+samples worked out from a time that misses the whole number it stands for
+by the last bits of a double, as \code{0.009 * 48000}, which is
+431.99999999999994, does, is read as that whole number.
 }
 
 \subsection{A header that disagrees with the recorder's own metadata}{
@@ -142,13 +164,12 @@ as the others describe the recording as it was before it was last written.
 
 Each warning above carries a class of its own, so that one of them can be
 handled without silencing the rest: \code{sampleRateMismatch},
-\code{unwrittenAudioSize} and \code{nonFiniteSamples}; \code{badDs64} and
-\code{frameCountMismatch} for an RF64 or BW64 file whose ds64 chunk cannot be
-believed or miscounts its sample frames; and \code{truncatedAudio} from
-\code{\link[=audiomothExpand]{audiomothExpand()}}. All of them are also classed \code{audioFileWarning}, for
-handling every warning about the file at once, and \code{warning}, so
-\code{suppressWarnings()} and an ordinary warning handler treat them as the
-warnings they are.
+\code{unwrittenAudioSize}, \code{truncatedAudio} and \code{nonFiniteSamples}; and \code{badDs64}
+and \code{frameCountMismatch} for an RF64 or BW64 file whose ds64 chunk cannot be
+believed or miscounts its sample frames. All of them are also classed
+\code{audioFileWarning}, for handling every warning about the file at once, and
+\code{warning}, so \code{suppressWarnings()} and an ordinary warning handler treat them
+as the warnings they are.
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{withCallingHandlers(
   readAudio(file),

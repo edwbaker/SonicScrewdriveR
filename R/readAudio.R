@@ -46,6 +46,16 @@
 #' audio of such a file is read to the end of the file, with a warning, rather
 #' than returned as nothing. A file that really holds no audio is read as empty.
 #'
+#' A recording cut short, by a flat battery, a full card or a copy that did not
+#' finish, declares more audio than the file holds. The audio that is there is
+#' returned, with a warning naming the sample frames the file declares and the
+#' frames it holds, whatever part of the recording was asked for: the wave is
+#' otherwise no different from one of a recording that was meant to be that
+#' short. Only whole sample frames are read, so a frame the file holds only
+#' some of the bytes of is left out rather than made up, and a part of the
+#' recording that starts beyond the audio the file holds is refused as one
+#' beyond the end of any recording is.
+#'
 #' A recording too long for the 4 GiB a RIFF header can describe is written in
 #' the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
 #' `tuneR::readWave()` does not read these forms, so they are read through the
@@ -81,6 +91,17 @@
 #' recording is the same part however the file holds it, and two parts that
 #' meet at a time meet without a sample lost or repeated between them.
 #'
+#' A start or end point is a single number, and is never negative, in any
+#' unit; in samples it is a whole number too, as there is no part of a sample
+#' to start or end at. Any other point is an error of class `invalidPoint`,
+#' raised before the file is read, whatever its format. A fraction of a sample
+#' was read from a WAVE file from part-way into a sample, as audio made of the
+#' bytes of two samples, and a point written as text, or held as a factor or a
+#' time difference, was read as something other than what it said. A number of
+#' samples worked out from a time that misses the whole number it stands for
+#' by the last bits of a double, as `0.009 * 48000`, which is
+#' 431.99999999999994, does, is read as that whole number.
+#'
 #' ## A header that disagrees with the recorder's own metadata
 #' A recorder can write a sample rate into its metadata that disagrees with the
 #' one in the format chunk of the header, and the header can be the one that is
@@ -102,13 +123,12 @@
 #' ## Handling these warnings
 #' Each warning above carries a class of its own, so that one of them can be
 #' handled without silencing the rest: `sampleRateMismatch`,
-#' `unwrittenAudioSize` and `nonFiniteSamples`; `badDs64` and
-#' `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
-#' believed or miscounts its sample frames; and `truncatedAudio` from
-#' [audiomothExpand()]. All of them are also classed `audioFileWarning`, for
-#' handling every warning about the file at once, and `warning`, so
-#' `suppressWarnings()` and an ordinary warning handler treat them as the
-#' warnings they are.
+#' `unwrittenAudioSize`, `truncatedAudio` and `nonFiniteSamples`; and `badDs64`
+#' and `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
+#' believed or miscounts its sample frames. All of them are also classed
+#' `audioFileWarning`, for handling every warning about the file at once, and
+#' `warning`, so `suppressWarnings()` and an ordinary warning handler treat them
+#' as the warnings they are.
 #'
 #' ```r
 #' withCallingHandlers(
@@ -122,10 +142,11 @@
 #'   bytes of the file rather than from its name. Supported types are
 #'   "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
 #'   package.
-#' @param from Start point in file to return, which must fall within the
-#'   recording
-#' @param to End point in file to return, which must leave some audio after
-#'   the start point, read as the end of the recording where it is beyond it
+#' @param from Start point in file to return, a number that is not negative,
+#'   and a whole number in samples, which must fall within the recording
+#' @param to End point in file to return, a number that is not negative, and a
+#'   whole number in samples, which must leave some audio after the start
+#'   point, read as the end of the recording where it is beyond it
 #' @param input.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 #' @param units Deprecated, use input.unit instead.
 #' @return A Wave object, or a WaveMC object for a file with more than two
@@ -142,6 +163,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   if (!is.null(redone)) {
     return(redone[[1]])
   }
+  # Held up before anything is read, as nothing in the file can make a point
+  # that is no point at all into one. Every reader below is given the points
+  # these return, so a number of samples a double misses by its last bits is
+  # read as the whole number it stands for by all of them alike.
+  from <- .pointValid(file, from, "start", input.unit)
+  to <- .pointValid(file, to, "end", input.unit)
   if (mime == "auto") {
     mime <- .audioMime(file)
   }
@@ -172,12 +199,25 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     }
   }
 
+  # Asked of the bytes of the file whatever type it was given as, as the av
+  # package reads a wave file that was cut short as quietly as tuneR does. It
+  # is said before anything is read, as what is wrong with a ds64 chunk is, so
+  # that a part of the recording refused for starting beyond the audio the file
+  # holds is said to be refused for that reason as well.
+  truncation <- .wavTruncation(file)
+  if (!is.null(truncation)) {
+    .truncatedWarning(truncation, file)
+  }
   repaired <- NULL
   if (mime == "audio/x-wav") {
     # A file whose data chunk size was never written declares that it holds no
-    # audio, so the size is filled in on a copy before the file is read. The
-    # file itself is left as it is.
-    repaired <- .wavRepaired(file)
+    # audio, so the size is filled in on a copy before the file is read, and a
+    # file cut short part-way through a sample frame is given the size of the
+    # frames it holds whole. The file itself is left as it is. A copy of a file
+    # cut short is no more than its whole frames, and the cut has been said
+    # already, so only a size that was never written is said once the audio has
+    # been read.
+    repaired <- .wavRepaired(file, truncation)
     if (!is.null(repaired)) {
       on.exit(unlink(repaired), add=TRUE)
     }
@@ -216,7 +256,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       error=function(cond) NULL
     )
     if (!is.null(wave)) {
-      if (!is.null(repaired)) {
+      if (!is.null(repaired) && is.null(truncation)) {
         .unwrittenWarning(file)
       }
       wave <- .waveFinite(wave, file)
@@ -242,7 +282,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # with them is said before the audio is read. A copy whose audio size has
     # been filled in is read in place of a file that never had it written, as
     # the av package takes that size at its word and reads such a recording as
-    # empty.
+    # empty, and one holding only whole sample frames in place of a file cut
+    # short part-way through one, which the av package refuses.
     .wavDs64Warnings(file)
     source <- if (is.null(repaired)) file else repaired
 
@@ -254,7 +295,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     }
 
     samples <- av::read_audio_bin(source, channels=channels)
-    if (!is.null(repaired)) {
+    if (!is.null(repaired) && is.null(truncation)) {
       .unwrittenWarning(file)
     }
     samp.rate <- attr(samples, "sample_rate")
@@ -346,7 +387,17 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   return("application/octet-stream")
 }
 
-#' Copy a WAV file whose data size was never written, with the size filled in
+#' Copy a WAV file whose data size cannot be read as it is, with the size put
+#' right
+#'
+#' Two sizes are put right. A file whose data size was never written is given
+#' the size of the audio it holds. A file cut short part-way through a sample
+#' frame holds some of the bytes of that frame and not the rest, which
+#' `tuneR::readWave()` makes up by recycling the samples before them and the av
+#' package refuses, so it is given the size of the frames it holds whole. That
+#' can only be done for PCM and floating-point audio, where a frame takes a
+#' fixed number of bytes, and only for a file .wavTruncation() found to be cut
+#' short, so that what is read and what is said of it cannot disagree.
 #'
 #' Only the size of the audio and the RIFF size are changed, so that the audio is
 #' read by the same code as any other file. An RF64 or BW64 file keeps them, and
@@ -356,10 +407,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' repair gives NULL, and the file itself is never written to.
 #'
 #' @param file Path to a WAV file
+#' @param truncation What the file holds of the audio it declares, as
+#'   .wavTruncation() gives it, or NULL for a file that was not cut short
 #' @return Path to a temporary file holding the repaired copy, or NULL
 #' @keywords internal
 #' @noRd
-.wavRepaired <- function(file) {
+.wavRepaired <- function(file, truncation=NULL) {
   total <- file.size(file)
   if (is.na(total) || total < 12) {
     return(NULL)
@@ -369,24 +422,37 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     return(NULL)
   }
   data <- .wavFindChunk(info$chunks, "data")
-  # Asked before the format is read, so that the ordinary file, whose audio is
-  # as long as it says it is, costs nothing but the walk.
-  if (is.null(data) || data$size != 0) {
+  if (is.null(data)) {
     return(NULL)
   }
-  fmt <- tryCatch(.wavChunkFromFile(file, "fmt "), error=function(cond) NULL)
-  fields <- if (is.null(fmt)) NULL else .wavFmtFields(fmt, length(fmt))
-  if (is.null(fields)) {
-    return(NULL)
-  }
-  peek <- function(at, n) {
-    con <- file(file, "rb")
-    on.exit(close(con))
-    return(.wavConReader(con)(at, n))
-  }
-  size <- .wavUnfinalisedSize(data, info$riffSize, fields$frameSize, total, peek)
-  if (size == 0) {
-    return(NULL)
+  if (data$truncated) {
+    if (is.null(truncation) || !.wavFixedFrames(truncation$fields)) {
+      return(NULL)
+    }
+    size <- data$size - data$size %% truncation$fields$frameSize
+    if (size == data$size) {
+      return(NULL)
+    }
+  } else {
+    # Asked before the format is read, so that the ordinary file, whose audio
+    # is as long as it says it is, costs nothing but the walk.
+    if (data$size != 0) {
+      return(NULL)
+    }
+    fmt <- tryCatch(.wavChunkFromFile(file, "fmt "), error=function(cond) NULL)
+    fields <- if (is.null(fmt)) NULL else .wavFmtFields(fmt, length(fmt))
+    if (is.null(fields)) {
+      return(NULL)
+    }
+    peek <- function(at, n) {
+      con <- file(file, "rb")
+      on.exit(close(con))
+      return(.wavConReader(con)(at, n))
+    }
+    size <- .wavUnfinalisedSize(data, info$riffSize, fields$frameSize, total, peek)
+    if (size == 0) {
+      return(NULL)
+    }
   }
 
   out <- tempfile(fileext=".wav")
@@ -445,6 +511,115 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     "unwrittenAudioSize",
     "The size of the audio in '", file, "' was never written, so the ",
     "recording has been read to the end of the file."
+  )
+  invisible(NULL)
+}
+
+#' How much of the audio it declares a wave file that was cut short holds
+#'
+#' A recording cut short by a flat battery, a full card or a copy that did not
+#' finish declares more audio than the file holds. Both readers return the
+#' audio that is there without a word, and the wave is then no different from
+#' one of a recording that was meant to be that short, so what is missing is
+#' found here, from the chunks of the file.
+#'
+#' @param file Path to a file about to be read
+#' @return NULL where the file is not a wave file on disk or its audio does not
+#'   run past its end; otherwise a list giving the bytes of audio it declares,
+#'   the bytes it holds, and the fields of its format chunk, as .wavFmtFields()
+#'   reads them, or NULL where they cannot be read
+#' @keywords internal
+#' @noRd
+.wavTruncation <- function(file) {
+  # Only a file on disk is looked at, as for .wavDs64Warnings(): the av package
+  # says itself what is wrong with anything else it is given.
+  if (!isTRUE(file.info(file)$isdir == FALSE)) {
+    return(NULL)
+  }
+  if (!.mdWaveContainer(.mdContainer(.mdFileHead(file, 12L)))) {
+    return(NULL)
+  }
+  total <- file.size(file)
+  con <- file(file, "rb")
+  on.exit(close(con))
+  read <- .wavConReader(con)
+  info <- tryCatch(.wavWalk(read, total, total), unsupportedWav=function(cond) NULL)
+  if (is.null(info)) {
+    return(NULL)
+  }
+  data <- .wavFindChunk(info$chunks, "data")
+  if (is.null(data) || !data$truncated) {
+    return(NULL)
+  }
+  # The walk gives a chunk that runs past the end of the file the size it has,
+  # so the size it declares is read from where the file keeps it: the header of
+  # the chunk, or the ds64 chunk of an RF64 or BW64 file.
+  declared <- if (is.null(info$ds64)) {
+    .rawToUInt(read(data$start - 4L, 4L))
+  } else {
+    info$ds64$dataSize
+  }
+  # A writer that cannot go back over what it has written, as FFmpeg cannot
+  # when it writes to a pipe, leaves the most the four bytes of a RIFF header
+  # hold where the size would be. That says the length was not known, not that
+  # the file falls short of one.
+  if (is.null(info$ds64) && declared == .WAV_DEFERRED) {
+    return(NULL)
+  }
+  fmt <- .wavFindChunk(info$chunks, "fmt ")
+  fields <- if (is.null(fmt)) {
+    NULL
+  } else {
+    .wavFmtFields(read(fmt$start, min(fmt$size, 26)), fmt$size)
+  }
+  return(list(declared=declared, held=data$size, fields=fields))
+}
+
+#' Warn that a wave file was cut short
+#'
+#' The cut is given in sample frames, and in seconds where the format gives a
+#' rate, as those are what anything measured from the wave is counted in. A
+#' compressed format packs its samples into blocks, so its cut is given in the
+#' bytes of audio. A file short of fewer bytes than make up a sample frame has
+#' lost none of its audio, and nothing is said.
+#'
+#' @param truncation What the file holds of the audio it declares, as
+#'   .wavTruncation() gives it
+#' @param file The file the audio was read from
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.truncatedWarning <- function(truncation, file) {
+  fields <- truncation$fields
+  if (.wavFixedFrames(fields)) {
+    declared <- floor(truncation$declared / fields$frameSize)
+    held <- floor(truncation$held / fields$frameSize)
+    if (held == declared) {
+      return(invisible(NULL))
+    }
+    holds <- paste0(
+      .wavNumber(held), " of the ", .wavNumber(declared),
+      if (declared == 1) " sample frame" else " sample frames", " it declares"
+    )
+    if (fields$sampleRate > 0) {
+      seconds <- function(frames) {
+        format(round(frames / fields$sampleRate, 2), nsmall=2, scientific=FALSE)
+      }
+      holds <- paste0(
+        holds, " (", seconds(held), " of ", seconds(declared), " seconds)"
+      )
+    }
+  } else {
+    holds <- paste0(
+      .wavNumber(truncation$held), " of the ", .wavNumber(truncation$declared),
+      " bytes of audio it declares"
+    )
+  }
+  .audioFileWarning(
+    "truncatedAudio",
+    "The audio in '", file, "' runs past the end of the file, which holds ",
+    holds, ". The recording appears to have been cut short, and only the audio ",
+    "the file holds can be read."
   )
   invisible(NULL)
 }
@@ -685,6 +860,79 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     wave <- .mdSetStore(wave, metadata)
   }
   return(wave)
+}
+
+#' Refuse a start or end point that is no point of any recording
+#'
+#' A point is a single number, and cannot be negative, in any unit; in samples
+#' it is a whole number too, as there is no part of a sample to start or end
+#' at. Anything else was read differently by every reader, where it was read
+#' at all. `tuneR::readWave()` seeks to a fraction of a sample, or to a sample
+#' before the first, as readily as to a sample, and returned audio made of the
+#' bytes of two samples, or of the header, where `cutws()` refused a fraction
+#' with "In cutws both from and to must be integers". Text was compared as
+#' text, so that sample "9" was beyond the end of a recording of 240000
+#' samples, and a factor or a time difference was read as the number R keeps
+#' it as, so that a start of one minute was a start of one second. Each is
+#' refused here, saying what was asked for, before anything is read.
+#'
+#' A number of samples worked out from a time can miss the whole number it
+#' stands for by the last bits of a double: `0.009 * 48000` is
+#' 431.99999999999994, which `tuneR::readWave()` read from the byte before
+#' sample 432. A point within a millionth of a sample of a whole number is
+#' taken as that number, as nothing finer than that is a fraction anyone means
+#' to ask for.
+#'
+#' An end of `Inf` is the end of any recording. A start of `Inf` is left to be
+#' refused as past the end of it, as any other start past the end is.
+#'
+#' @param file The file being read, to name in the error
+#' @param point The start or end point as given to readAudio()
+#' @param which "start" or "end", to name in the error
+#' @param input.unit The unit the point is given in
+#' @return The point, as the whole number it stands for where it is given in
+#'   samples
+#' @keywords internal
+#' @noRd
+.pointValid <- function(file, point, which, input.unit) {
+  problem <- NULL
+  if (length(point) != 1L) {
+    shown <- .countText(length(point), "value")
+    problem <- "is not a single number"
+  } else if (!is.numeric(point) || is.na(point)) {
+    shown <- deparse(point, nlines=1L)
+    problem <- "is not a number"
+  } else {
+    # Enough digits to show the fraction of a sample that is refused, which the
+    # seven format() gives by default do not for a long recording.
+    text <- format(point, digits=15, scientific=FALSE, trim=TRUE)
+    shown <- if (input.unit == "samples") paste0("sample ", text) else paste(text, input.unit)
+    # The whole number is taken first, so that a start of zero worked out as
+    # (0.3 - 0.1 - 0.2) * 48000, which is a hair below it, is the start.
+    if (input.unit == "samples" && is.finite(point)) {
+      if (abs(point - round(point)) > 1e-6) {
+        problem <- "is not a whole number of samples"
+      } else {
+        point <- round(point)
+      }
+    }
+    if (is.null(problem) && point < 0) {
+      problem <- "cannot be negative"
+    }
+  }
+  if (is.null(problem)) {
+    return(point)
+  }
+  stop(structure(
+    class = c("invalidPoint", "error", "condition"),
+    list(
+      message = paste0(
+        "The ", which, " point asked for, ", shown, ", ", problem,
+        ", so no part of '", file, "' was read."
+      ),
+      call = NULL
+    )
+  ))
 }
 
 #' Refuse a start point at or beyond the end of the recording

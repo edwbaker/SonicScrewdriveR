@@ -29,9 +29,10 @@ specification; a field this package has no name for is reported under its
 number, as \code{wamd:21}.
 
 The embedded voice note, the program the device was running and the state it
-was left in are binary rather than text and are passed over. Their sizes are
-kept on the result as its "binary" attribute, so that a file carrying them
-can be told from one that does not.
+was left in are binary rather than text and are passed over, as are the two
+unnamed fields 34 and 35 that the Song Meter Mini Bat writes. Their sizes
+are kept on the result as its "binary" attribute, so that a file carrying
+them can be told from one that does not.
 }
 \examples{
 \dontrun{

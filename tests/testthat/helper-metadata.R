@@ -161,6 +161,44 @@ mdCueField <- function(id, cue, text, header=4L) {
   return(c(charToRaw(id), mdU32(size), body))
 }
 
+#' A cue chunk marking the given positions
+#'
+#' A point is identified by its number unless `ids` says otherwise, and its
+#' position is written both as the position in the play order and as the sample
+#' offset, which is how a writer of an ordinary recording writes it.
+mdCueChunk <- function(positions, ids=seq_along(positions), chunk="data",
+                       declared=length(positions)) {
+  points <- unlist(lapply(seq_along(positions), function(i) c(
+    mdU32(ids[i]), mdU32(positions[i]), charToRaw(chunk),
+    mdU32(0), mdU32(0), mdU32(positions[i])
+  )))
+  return(mdChunk("cue ", c(mdU32(declared), points)))
+}
+
+#' A labelled text field, which gives the length and purpose of a region
+#'
+#' Its header is the cue point it belongs to, the length of the region in
+#' samples, what the region is for, and the country, language, dialect and code
+#' page its text is written for.
+mdLtxtField <- function(cue, samples, purpose="rgn ", text="") {
+  # What a region is for is four characters, as a chunk identifier is, and the
+  # writers in the cached corpus pad "rgn" with a space to fill them.
+  purpose <- substr(paste0(purpose, "    "), 1L, 4L)
+  body <- c(
+    mdU32(cue), mdU32(samples), charToRaw(purpose),
+    mdU16(0), mdU16(0), mdU16(0), mdU16(0),
+    if (nzchar(text)) c(charToRaw(text), as.raw(0)) else raw(0)
+  )
+  size <- length(body)
+  if (size %% 2L == 1L) {
+    body <- c(body, as.raw(0))
+  }
+  return(c(charToRaw("ltxt"), mdU32(size), body))
+}
+
+#' An associated data list holding the given fields
+mdAdtl <- function(...) mdChunk("LIST", c(charToRaw("adtl"), ...))
+
 #' A bext chunk, with the description and originator given
 mdBextChunk <- function(description, originator="An Originator",
                         date="2011-05-23", time="14:22:03",

@@ -50,6 +50,28 @@ test_that("The binary fields are passed over, and their sizes recorded", {
   expect_identical(attr(w, "binary")[["runstate"]], 20)
 })
 
+# The Song Meter Mini Bat writes fields 34 and 35, which nothing published
+# names: 128 bytes each, beginning as these do, with the rest zeros. Read as
+# text, 34 gave its serial number among a run of control characters.
+test_that("The two unnamed binary fields of a Song Meter Mini Bat are passed over", {
+  field34 <- c(
+    as.raw(c(0, 0, 1, 1, 1, 1)), charToRaw("2MU01960"),
+    as.raw(c(0, 0, 0, 0, 2, 0, 0, 0, 0x9b, 0x5b, 0x44, 0, 0x6a, 0xdd, 0, 0))
+  )
+  field35 <- as.raw(c(0, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x1e, 0x10, 0x1e, 0x28))
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(0, mdU16(1)),
+    mdWamdField(34, c(field34, raw(128 - length(field34)))),
+    mdWamdField(35, c(field35, raw(128 - length(field35))))
+  )), mdData()))
+  w <- wamd(f)
+
+  expect_identical(names(w), "version")
+  expect_identical(w[["version"]], 1L)
+  expect_identical(attr(w, "binary")[["wamd:34"]], 128)
+  expect_identical(attr(w, "binary")[["wamd:35"]], 128)
+})
+
 test_that("A timestamp is read with the offset from UTC the device was set to", {
   withUtc <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
     mdWamdField(5, "2015-10-28 20:21:13-04:00")
@@ -77,6 +99,71 @@ test_that("A time this package cannot read is kept as the text it was", {
 
   expect_warning(w <- wamd(f), "Could not read the wamd timestamp")
   expect_identical(w[["timestamp"]], "sometime last Tuesday")
+})
+
+# An offset hour of one digit, as the Song Meter Mini Bat writes in its GUANO,
+# was read as no offset at all: the time was taken as a wall clock in the zone
+# of the session, which on a machine in London put it an hour out and one in
+# Sydney ten hours, with nothing to say so.
+for (tz in sessionTimezones) {
+  test_that(paste0("A timestamp whose offset hour has one digit keeps its offset in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15 21:31:57+2:00", "2025-09-15T19:31:57Z"),
+        c("2025-09-15 21:31:57-5:30", "2025-09-16T03:01:57Z"),
+        c("2025-09-15T21:31:57.25+9:30", "2025-09-15T12:01:57Z"),
+        c("2025-09-15 9:31:57+2:00", "2025-09-15T07:31:57Z")
+      )) {
+        f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+          mdWamdField(5, case[1])
+        )), mdData()))
+        expect_silent(t <- wamd(f)[["timestamp"]])
+
+        expect_s3_class(t, "POSIXct")
+        expect_identical(format(t, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2])
+      }
+    })
+  })
+}
+
+# as.POSIXct() reads a value that merely begins with a time, so whatever came
+# after the time, an offset it could not read included, was dropped and the
+# time read as a wall clock.
+test_that("A timestamp followed by anything else is kept as the text it was", {
+  for (text in c(
+    "2015-10-28 20:21:13 junk",
+    "2015-10-28 20:21:13-04:00 junk",
+    "2015-10-28 20:21:13-04"
+  )) {
+    f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+      mdWamdField(5, text)
+    )), mdData()))
+
+    expect_warning(w <- wamd(f), "Could not read the wamd timestamp")
+    expect_identical(w[["timestamp"]], text)
+  }
+})
+
+# The devices known to write wamd, and the wamd reader of the GUANO reference
+# converter, all give the seconds. A time that stops at the minute is not a form
+# wamd is known to take, so it is kept as text and the warning shows where one
+# has turned up. readMetadata() still reads its time.
+test_that("A timestamp that stops at the minute is kept as the text it was", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(5, "2025-09-15 21:31+2:00")
+  )), mdData()))
+
+  expect_warning(w <- wamd(f), "Could not read the wamd timestamp")
+  expect_identical(w[["timestamp"]], "2025-09-15 21:31+2:00")
+})
+
+test_that("Spaces around a timestamp and before its offset are read past", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(5, " 2015-10-28  20:21:13 -04:00 ")
+  )), mdData()))
+  t <- wamd(f)[["timestamp"]]
+
+  expect_identical(format(t, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2015-10-29T00:21:13Z")
 })
 
 test_that("A position is read as a latitude, a longitude and an altitude", {
