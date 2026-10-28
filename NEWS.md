@@ -34,6 +34,19 @@
   a FLAC or Ogg file. Each takes a path, a Wave object or the bytes of a file,
   reads only the metadata rather than the whole recording, and gives an empty
   result rather than an error for a file that carries none.
+- xmp() reads the XMP packet a wave file carries in its `_PMX` chunk, the
+  metadata format of Adobe's audio software, and disp() reads the DISP chunk,
+  the clipboard item holding the name a file is to be shown under. Both were
+  among the chunks readMetadata() could only name, and both carry real records
+  in a cached copy of bio.acousti.ca: 113 of those files hold a packet
+  describing the recording as an editor read it, and nineteen hold a display
+  name giving the place a recording was made. XMP allows a property to be
+  written as an attribute, as an element or as a list of alternatives, and all
+  three are read; a property this package has never heard of is read as readily
+  as one it knows. A DISP chunk holding nothing but the number of its clipboard
+  format, which is how most writers that mention the chunk leave it, gives
+  nothing rather than an empty title, and one holding an image names the format
+  so that a caller can tell the file carries something other than text.
 - A file is identified by its bytes rather than by its name, so an MP3 or an
   Ogg file under a .wav extension is read as what it is.
 - parseFilename() reads the filename convention of the TSA corpus and the
