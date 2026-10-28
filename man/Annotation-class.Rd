@@ -18,9 +18,9 @@ The \code{Annotation} class is used to store annotations on \code{Wave}-like obj
 
 \item{\code{end}}{End time of annotation.}
 
-\item{\code{low}}{Low frequency of annotation.}
+\item{\code{low}}{Low frequency of annotation (Hz).}
 
-\item{\code{high}}{High frequency of annotation.}
+\item{\code{high}}{High frequency of annotation (Hz).}
 
 \item{\code{source}}{Source of annotation.}
 

@@ -6,8 +6,8 @@
 #' @slot metadata A list for storing metadata.
 #' @slot start Start time of annotation.
 #' @slot end End time of annotation.
-#' @slot low Low frequency of annotation.
-#' @slot high High frequency of annotation.
+#' @slot low Low frequency of annotation (Hz).
+#' @slot high High frequency of annotation (Hz).
 #' @slot source Source of annotation.
 #' @slot type Type of annotation.
 #' @slot value Value of annotation.

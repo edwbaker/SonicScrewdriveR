@@ -222,6 +222,18 @@
   an error where it used to be accepted; the name in full, and any abbreviation
   of the new name, both work. The former unit and units are unaffected, as
   neither is a prefix of the argument that replaced it.
+- frequencyStats() takes output.unit, "Hz" or "kHz", the unit of the frequencies
+  and bandwidths it returns. They have always been in kHz, the unit of the
+  spectrum they are measured from, where every other frequency the package takes
+  or returns is in Hz. The default stays "kHz" for now and will become "Hz" in a
+  future release. A change in what a function returns cannot warn the code that
+  reads it, which goes on working and reads every frequency a thousand times too
+  low, so a call that leaves output.unit unset is warned of the change now, once
+  per session. A call that sets it, to either unit, gets the same results either
+  side of the change. Results in kHz are unchanged to the last bit, results in Hz
+  are exactly a thousand times larger, and Q and the spectral flatness are ratios,
+  the same in either unit. autoBandPass() asks for Hz rather than converting the
+  results itself, and filters exactly as it did.
 
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each
@@ -941,8 +953,29 @@
   as 1000 rather than 1, so a call that leaves it alone is unaffected. A call that
   gives it explicitly needs the value multiplied by a thousand, and applies a cut a
   thousand times lower than the one asked for until it is. The frequencies and
-  bandwidths frequencyStats() returns are in kHz as they were, and both help pages
-  now give the unit of every frequency they take or return.
+  bandwidths frequencyStats() returns can now be had in Hz as well, as described
+  under Deprecations, and both help pages give the unit of every frequency they
+  take or return.
+- fcis() returns the frequencies of its bins in Hz, where it returned them in kHz
+  as seewave::spectro() gives them, and its plot labels the frequency axis in Hz
+  to match. Unlike frequencyStats() it has no argument for the former unit, so
+  code that reads `$freq` gets values a thousand times larger than before, and
+  needs them divided by a thousand to keep the old ones. An fcis object saved by
+  an earlier release still holds kHz, which its plot now labels as Hz.
+- frequencyStats() checked that the frequencies it measured were below half the
+  sample rate by comparing them, in kHz, with a rate in Hz, so the check could
+  never fail. Both are now in kHz, so a spectrum given as wave_spec that reaches
+  beyond the recording it is said to belong to, as one taken from a recording at
+  a higher sample rate does, is an error rather than a set of frequencies no such
+  recording could hold.
+- frequencyStats(plot=TRUE) wrote its axis labels over the "x" and "y" that plot()
+  had already drawn. Its frequency axis is now drawn in output.unit and labelled
+  with it.
+- sheepFrequencyStats was made before the fixes to frequencyStats() above, which
+  read the lower edge of each region a bin too low, and held a -3dB bandwidth of
+  0.047kHz where the function measures 0.031kHz. It has been made again, and now
+  holds its frequencies in Hz, as `frequencyStats(sheep, output.unit="Hz")`
+  returns them.
 - autoBandPass() now refuses a lowcut that is not one frequency the recording
   holds: several frequencies, an NA, text, a negative frequency, or one at or above
   half the sample rate, where the high-pass leaves nothing to measure and seewave
@@ -1016,6 +1049,11 @@
 - convert2bytes() was described as converting time measurements into seconds, and its
   "bytes" input was undocumented.
 - audiomothConfig() gave its return value as a data frame of matching annotations.
+- the help pages of soundSpeed(), sweptsine() and the Annotation class give the
+  unit of the frequencies they take, Hz. specStats() and frequencyStats() say
+  that a spectrum they are given has its frequencies in kHz, as seewave gives
+  them, and audiomothWave() says that filter.limit is the recorder's own text, in
+  kHz, rather than a frequency the package has converted.
 - yearlyPositions() was described as generating label positions for a dielPlot().
 - corrected spellings of "processed", "metadata" and "rhythmicity" in the
   documentation of dielHistogram(), TaggedWaveMC and beatSpectrum().

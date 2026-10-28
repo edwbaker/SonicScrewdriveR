@@ -9,7 +9,8 @@ frequencyStats(
   wave_spec = NULL,
   warn = TRUE,
   lowcut = 1000,
-  plot = FALSE
+  plot = FALSE,
+  output.unit = "kHz"
 )
 }
 \arguments{
@@ -26,11 +27,23 @@ frequency the package takes is. This argument was in kHz in earlier
 releases: the default is the same frequency as before, but a value given
 explicitly needs multiplying by a thousand.}
 
-\item{plot}{IF TRUE displays values}
+\item{plot}{If TRUE plots the spectrum, with its frequency axis in
+output.unit, and marks the edges of the regions measured.}
+
+\item{output.unit}{Unit of the frequencies and bandwidths returned, "Hz" or
+"kHz". The default is "kHz", the unit they have always been returned in,
+and will become "Hz", the unit of every other frequency the package takes
+or returns, in a future release. A call that leaves it unset warns of this,
+once per session; one that sets it, to either unit, gets the same results
+before and after that change.}
 }
 \value{
-A list of frequency statistics, with an entry for each of the -3dB
-and -10dB thresholds. Frequencies and bandwidths are in kHz.
+A list with an entry for each of the -3dB and -10dB thresholds, and
+the spectral flatness of the spectrum. Each threshold holds the frequencies
+\code{min}, \code{max}, \code{longest_min}, \code{longest_max}, \code{peak}, \code{centre}, \verb{outer min}
+and \verb{outer max} and the bandwidths \code{bandwidth} and \verb{outer bandwidth}, all
+in output.unit, and the quality factor \code{Q}. Q and the spectral flatness are
+ratios, the same in either unit.
 }
 \description{
 Calculates the peak, centre, bandwidth and quality factor. The quality factor (Q) is calculated at both

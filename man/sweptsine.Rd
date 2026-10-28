@@ -16,9 +16,9 @@ sweptsine(
 )
 }
 \arguments{
-\item{f0}{Start frequency}
+\item{f0}{Start frequency, in Hz}
 
-\item{f1}{End frequency}
+\item{f1}{End frequency, in Hz}
 
 \item{mode}{One of "linear", "log"}
 

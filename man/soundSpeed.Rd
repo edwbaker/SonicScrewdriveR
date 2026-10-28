@@ -21,7 +21,7 @@ soundSpeed(
 
 \item{wl}{Wavelength}
 
-\item{f}{Frequency}
+\item{f}{Frequency, in Hz}
 
 \item{bulkModulus}{Bulk modulus}
 
