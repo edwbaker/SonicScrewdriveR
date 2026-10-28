@@ -222,6 +222,15 @@
   is written back with that offset, as the specification recommends: one of
   +01:00 was written back moved to UTC, as Z, so changing any other field of the
   metadata lost the offset the recorder was set to.
+- readMetadata() read a date and time that stops at the minute, as
+  2025-09-15T21:31, which an ID3v2.4 tag and an XMP packet both allow, as
+  midnight at the start of that date in the zone of the machine, with the time
+  and any offset from UTC after it dropped. It is now read to the minute, in the
+  forms a time to the second is read in: with a T or a space between the date
+  and the time, and with Z or an offset written as +02:00, +0200 or +2:00. wamd()
+  and guano() still keep such a timestamp as text, with a warning, as neither
+  format is known to write one, and readMetadata() reads its time from that
+  text.
 - readAudio() given a start point at or beyond the end of the recording failed
   in words that said nothing of what had been asked for, and in different words
   for different units and formats: "'from' cannot be superior to 'to'" in

@@ -122,6 +122,19 @@ test_that("A timestamp followed by anything else is kept as the text it was", {
   }
 })
 
+# The devices known to write wamd, and the wamd reader of the GUANO reference
+# converter, all give the seconds. A time that stops at the minute is not a form
+# wamd is known to take, so it is kept as text and the warning shows where one
+# has turned up. readMetadata() still reads its time.
+test_that("A timestamp that stops at the minute is kept as the text it was", {
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(5, "2025-09-15 21:31+2:00")
+  )), mdData()))
+
+  expect_warning(w <- wamd(f), "Could not read the wamd timestamp")
+  expect_identical(w[["timestamp"]], "2025-09-15 21:31+2:00")
+})
+
 test_that("Spaces around a timestamp and before its offset are read past", {
   f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
     mdWamdField(5, " 2015-10-28  20:21:13 -04:00 ")

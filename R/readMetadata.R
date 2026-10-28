@@ -64,9 +64,10 @@
 #'
 #' Only a full date gives a time. A field holding no more than a year is left
 #' where it was read rather than being given a month and a day it never had.
-#' The date and the time may be separated by a T or by a space, and an offset
-#' from UTC may be written as +02:00, +0200 or +2:00. A value that only begins
-#' with a date, or with a date and a time, is not read.
+#' The date and the time may be separated by a T or by a space, the time may
+#' stop at the minute, as ID3v2.4 and XMP allow, and an offset from UTC may be
+#' written as +02:00, +0200 or +2:00. A value that only begins with a date, or
+#' with a date and a time, is not read.
 #'
 #' @param text The field as it is written
 #' @return A POSIXct, or NULL where it is not a date this understands
@@ -98,7 +99,8 @@
   # as well as one of two, and an offset with spaces before it, so those are
   # allowed.
   day <- "^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"
-  clock <- paste0(day, "T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}([.][0-9]+)?")
+  minute <- paste0(day, "T[0-9]{1,2}:[0-9]{1,2}")
+  clock <- paste0(minute, ":[0-9]{1,2}([.][0-9]+)?")
   forms <- list(
     list(shape=paste0(clock, " *[+-][0-9]{4}$"),
          format="%Y-%m-%dT%H:%M:%OS%z", tz="UTC"),
@@ -106,6 +108,12 @@
          format="%Y-%m-%dT%H:%M:%OSZ", tz="UTC"),
     list(shape=paste0(clock, "$"),
          format="%Y-%m-%dT%H:%M:%OS", tz=""),
+    list(shape=paste0(minute, " *[+-][0-9]{4}$"),
+         format="%Y-%m-%dT%H:%M%z", tz="UTC"),
+    list(shape=paste0(minute, "Z$"),
+         format="%Y-%m-%dT%H:%MZ", tz="UTC"),
+    list(shape=paste0(minute, "$"),
+         format="%Y-%m-%dT%H:%M", tz=""),
     list(shape=paste0(day, "$"),
          format="%Y-%m-%d", tz="")
   )
