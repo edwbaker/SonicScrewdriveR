@@ -129,6 +129,22 @@ test_that("The chunk a position is into is reported, so it cannot be misread", {
   expect_identical(wavCues(f)$chunk, "slnt")
 })
 
+test_that("A list field that runs past the end of its list stops the reading", {
+  # A list cut short declares a field longer than what is left of it, and a
+  # field shorter than four bytes cannot even name the cue point it belongs
+  # to. Reading on from either would read whatever follows as a label.
+  kept <- mdCueField("labl", 1L, "Kept")
+  overrun <- c(charToRaw("labl"), mdU32(400), charToRaw("Lost"))
+  f <- mdFile(mdWav(mdFmt(), mdCueChunk(c(0, 4800)),
+                    mdAdtl(kept, overrun), mdData()))
+  expect_identical(wavCues(f)$label, c("Kept", NA))
+
+  tooShort <- c(charToRaw("labl"), mdU32(2), charToRaw("ab"))
+  g <- mdFile(mdWav(mdFmt(), mdCueChunk(c(0, 4800)),
+                    mdAdtl(kept, tooShort), mdData()))
+  expect_identical(wavCues(g)$label, c("Kept", NA))
+})
+
 test_that("A file that is not a wave file is refused, as listing its chunks is", {
   expect_error(wavCues(mdFile(charToRaw("not a wave file"))),
                class="unsupportedWav")
