@@ -117,8 +117,8 @@ package recognises</p></dd>
 <dt>sources</dt>
 <dd><p>The formats that were found, each as the object its own
 reader gives, named <code>guano</code>, <code>wamd</code>, <code>audiomoth</code>, <code>bext</code>, <code>ixml</code>,
-<code>wavInfo</code>, <code>xmp</code>, <code>disp</code>, <code>id3</code>, <code>vorbisComment</code> and <code>filename</code>. A
-format the file does not carry is left out.</p></dd>
+<code>xenoCanto</code>, <code>wavInfo</code>, <code>xmp</code>, <code>disp</code>, <code>id3</code>, <code>vorbisComment</code> and
+<code>filename</code>. A format the file does not carry is left out.</p></dd>
 
 <dt>unparsed</dt>
 <dd><p>The identifiers of any chunks the file holds that carry
@@ -139,11 +139,12 @@ is a latitude
 and a longitude in degrees, and <code>datetime</code> is a POSIXct wherever the file
 gave enough to make one.</p>
 <p>Where two formats say the same thing, the one that is believed is the first
-of GUANO, wamd, the AudioMoth comment, bext, iXML, the INFO list, ID3,
-Vorbis comments and the filename: a format written for bioacoustics is
-trusted over one written for broadcast, and anything written inside the file
-over anything read from its name. Nothing is thrown away by this, as
-<code>sources</code> still holds what every format said.</p>
+of GUANO, wamd, the AudioMoth comment, bext, iXML, the xeno-canto record,
+the INFO list, ID3, Vorbis comments and the filename: a format written for
+bioacoustics is trusted over one written for broadcast, a recorder's own
+writing over a collection's transcription of what it was told, and anything
+written inside the file over anything read from its name. Nothing is thrown
+away by this, as <code>sources</code> still holds what every format said.</p>
 <p>That order says which format to believe, not which copy a writer got right.
 A file can carry the same string in two places and have been written
 correctly in one and badly in the other, and the record then takes whichever
@@ -164,6 +165,31 @@ the format says every time in it is, rather than as a wall clock in the zone
 of the session, as one in an INFO list, an XMP packet or a Vorbis comment is
 read. It comes back in UTC, so it prints as the tag wrote it whatever the zone
 of the session, and it may stop at the hour, as the format allows.</p>
+</div>
+
+<div class="section">
+<h3 id="the-xeno-canto-record">The xeno-canto record<a class="anchor" aria-label="anchor" href="#the-xeno-canto-record"></a></h3>
+
+
+<p>A recording from the xeno-canto collection carries a comment the collection
+wrote, beginning with its catalogue number, as
+<code>XC428067 (c) A Recordist // Locality (1.4, 103.7), Singapore // 10m // 15:00h, 2019-02-03 // call // remarks</code>. It is read into a <code>xenoCanto</code>
+source holding the number, recordist, locality, latitude, longitude,
+country, elevation, time, date, kind of vocalisation, remarks, whether the
+bird was seen and whether playback was used, and the other species audible,
+and it gives the record a <code>datetime</code>, a <code>location</code> and an <code>elevation</code> that
+are otherwise nowhere in the file.</p>
+<p>The catalogue number at the head of the comment is what marks it as one of
+theirs, so a comment somebody else wrote is left alone. The number is the
+recording's rather than the file's: a recording downloaded from the
+collection and uploaded elsewhere keeps its comment and gains a new name,
+and is read the same wherever it has got to.</p>
+<p>What the collection was not told it writes as a placeholder rather than
+leaving out, so a time of <code>?h</code>, an elevation of <code>?m</code> or a date with a zero
+month or day is an absence and is read as one. A time nothing can read
+costs only the <code>datetime</code>; the date is still in the source. The species in
+<code>also:</code> are the others audible in the recording rather than the one it is
+of, so they are not reported as its species.</p>
 </div>
 
 <div class="section">

@@ -63,9 +63,9 @@ all of them:
 - sources:
 
   The formats that were found, each as the object its own reader gives,
-  named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`, `wavInfo`, `xmp`,
-  `disp`, `id3`, `vorbisComment` and `filename`. A format the file does
-  not carry is left out.
+  named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`, `xenoCanto`,
+  `wavInfo`, `xmp`, `disp`, `id3`, `vorbisComment` and `filename`. A
+  format the file does not carry is left out.
 
 - unparsed:
 
@@ -84,11 +84,13 @@ about. `location` is a latitude and a longitude in degrees, and
 `datetime` is a POSIXct wherever the file gave enough to make one.
 
 Where two formats say the same thing, the one that is believed is the
-first of GUANO, wamd, the AudioMoth comment, bext, iXML, the INFO list,
-ID3, Vorbis comments and the filename: a format written for bioacoustics
-is trusted over one written for broadcast, and anything written inside
-the file over anything read from its name. Nothing is thrown away by
-this, as `sources` still holds what every format said.
+first of GUANO, wamd, the AudioMoth comment, bext, iXML, the xeno-canto
+record, the INFO list, ID3, Vorbis comments and the filename: a format
+written for bioacoustics is trusted over one written for broadcast, a
+recorder's own writing over a collection's transcription of what it was
+told, and anything written inside the file over anything read from its
+name. Nothing is thrown away by this, as `sources` still holds what
+every format said.
 
 That order says which format to believe, not which copy a writer got
 right. A file can carry the same string in two places and have been
@@ -113,6 +115,31 @@ in the zone of the session, as one in an INFO list, an XMP packet or a
 Vorbis comment is read. It comes back in UTC, so it prints as the tag
 wrote it whatever the zone of the session, and it may stop at the hour,
 as the format allows.
+
+### The xeno-canto record
+
+A recording from the xeno-canto collection carries a comment the
+collection wrote, beginning with its catalogue number, as
+`XC428067 (c) A Recordist // Locality (1.4, 103.7), Singapore // 10m // 15:00h, 2019-02-03 // call // remarks`.
+It is read into a `xenoCanto` source holding the number, recordist,
+locality, latitude, longitude, country, elevation, time, date, kind of
+vocalisation, remarks, whether the bird was seen and whether playback
+was used, and the other species audible, and it gives the record a
+`datetime`, a `location` and an `elevation` that are otherwise nowhere
+in the file.
+
+The catalogue number at the head of the comment is what marks it as one
+of theirs, so a comment somebody else wrote is left alone. The number is
+the recording's rather than the file's: a recording downloaded from the
+collection and uploaded elsewhere keeps its comment and gains a new
+name, and is read the same wherever it has got to.
+
+What the collection was not told it writes as a placeholder rather than
+leaving out, so a time of `?h`, an elevation of `?m` or a date with a
+zero month or day is an absence and is read as one. A time nothing can
+read costs only the `datetime`; the date is still in the source. The
+species in `also:` are the others audible in the recording rather than
+the one it is of, so they are not reported as its species.
 
 ### Reading from a name
 
