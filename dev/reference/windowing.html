@@ -99,7 +99,8 @@ combined into a single object</p></dd>
 
 <dt id="arg-complete-windows">complete.windows<a class="anchor" aria-label="anchor" href="#arg-complete-windows"></a></dt>
 <dd><p>If TRUE (default) the final window will not be
-processed unless it has a length equal to window.length.</p></dd>
+processed unless it has a length equal to window.length. If FALSE it is
+processed holding what is left of the audio, which can be shorter.</p></dd>
 
 
 <dt id="arg-cluster">cluster<a class="anchor" aria-label="anchor" href="#arg-cluster"></a></dt>
@@ -113,6 +114,19 @@ processed unless it has a length equal to window.length.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list of the results of FUN for each window, or a single Wave object if bind.wave is TRUE.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A file is read a window at a time by <code><a href="readAudio.html">readAudio()</a></code>, so its windows are
+placed over the audio the file holds, which is what readAudio() reads. A
+recording cut short, by a flat battery, a full card or a copy that did not
+finish, declares more audio than it holds, and its windows stop where its
+audio does: with <code>complete.windows=TRUE</code> the last window is the last one its
+audio fills, and with <code>complete.windows=FALSE</code> a final, shorter window holds
+what is left of it, as for a Wave object holding the same audio. A wave
+file whose audio size was never written is windowed over the audio
+readAudio() recovers from it, and a file or Wave object holding no audio
+gives no windows.</p>
     </div>
 
     <div class="section level2">

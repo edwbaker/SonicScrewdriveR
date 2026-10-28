@@ -48,7 +48,8 @@ windowing(
 - complete.windows:
 
   If TRUE (default) the final window will not be processed unless it has
-  a length equal to window.length.
+  a length equal to window.length. If FALSE it is processed holding what
+  is left of the audio, which can be shorter.
 
 - cluster:
 
@@ -62,6 +63,20 @@ windowing(
 
 A list of the results of FUN for each window, or a single Wave object if
 bind.wave is TRUE.
+
+## Details
+
+A file is read a window at a time by
+[`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md),
+so its windows are placed over the audio the file holds, which is what
+readAudio() reads. A recording cut short, by a flat battery, a full card
+or a copy that did not finish, declares more audio than it holds, and
+its windows stop where its audio does: with `complete.windows=TRUE` the
+last window is the last one its audio fills, and with
+`complete.windows=FALSE` a final, shorter window holds what is left of
+it, as for a Wave object holding the same audio. A wave file whose audio
+size was never written is windowed over the audio readAudio() recovers
+from it, and a file or Wave object holding no audio gives no windows.
 
 ## Examples
 
