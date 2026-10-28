@@ -47,6 +47,27 @@
   format, which is how most writers that mention the chunk leave it, gives
   nothing rather than an empty title, and one holding an image names the format
   so that a caller can tell the file carries something other than text.
+- wavChunks() lists the chunks a wave file holds: every one of them, in the
+  order the file holds them, with where its body begins, how large it is,
+  whether it was cut short, and, for a list, which kind of list it is. The
+  readers here can each report what they know how to read; this reports what
+  the file holds, so a chunk nothing here reads is something a caller can go
+  and look at rather than only a name. Only the chunk headers are read, each
+  seeking past the body it describes, so listing the chunks of an hour-long
+  recording costs what listing a second of one does, and a file over 4 GiB in
+  the RF64 or BW64 form is walked by the sizes in its ds64 chunk.
+- readMetadata() walks a wave file once rather than once for every reader it
+  calls. Each reader looks for a chunk of its own and opened the file to find
+  it, so a file carrying GUANO, wamd, bext, iXML, a list, an XMP packet, a
+  display name and an ID3 tag was opened twelve times over to read eight
+  chunks of it; it is now opened once and the readers are given the one walk.
+  Over a network share, where opening a file is most of the cost of reading a
+  little of it, reading the metadata of a file in a cached copy of
+  bio.acousti.ca went from 1694 ms to 118 ms where it carries several of these
+  formats, and from 750 ms to 72 ms where it carries none but has to be
+  searched for each of them. What is read is unchanged: the record, the
+  per-format readings and the chunks named as unread are identical for every
+  one of 436 files checked either way.
 - A file is identified by its bytes rather than by its name, so an MP3 or an
   Ogg file under a .wav extension is read as what it is.
 - parseFilename() reads the filename convention of the TSA corpus and the

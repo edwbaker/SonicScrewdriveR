@@ -448,7 +448,7 @@
   if (!.id3v1Possible(container)) {
     return(.mdObject(list(), "id3"))
   }
-  size <- file.size(file)
+  size <- .mdFileSize(file)
   if (is.na(size) || size < 128) {
     return(.mdObject(list(), "id3"))
   }

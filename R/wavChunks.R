@@ -615,13 +615,18 @@
 
 #' Read the body of one chunk of a WAV file without reading the whole file
 #'
-#' @param file Path to a WAV file
+#' @param file Path to a WAV file, or a map of one already walked
 #' @param id The chunk identifier to look for
 #' @return A raw vector holding the body of the chunk, or NULL where the file
 #'   has no such chunk or it holds nothing
 #' @keywords internal
 #' @noRd
 .wavChunkFromFile <- function(file, id) {
+  # No cap: this reads a chunk whole, and a body the map left unread because it
+  # was too large to keep still comes back whole, from the file.
+  if (inherits(file, "wavChunkMap")) {
+    return(.mdMapChunk(file, id, Inf))
+  }
   con <- file(file, "rb")
   on.exit(close(con))
   size <- file.size(file)

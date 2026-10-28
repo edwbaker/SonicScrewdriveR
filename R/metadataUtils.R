@@ -428,6 +428,12 @@ print.audioMetadataFields <- function(x, ...) {
   if (is.raw(x)) {
     return(fromBytes(x))
   }
+  # A file already walked is handed to the reader in place of its path. The
+  # readers reach their bytes through .mdWavChunk() and its neighbours, which
+  # take a map as readily as a path, so none of them has to know the difference.
+  if (inherits(x, "wavChunkMap")) {
+    return(fromFile(x))
+  }
   .mdCheckFile(x)
   return(fromFile(x))
 }
@@ -456,13 +462,16 @@ print.audioMetadataFields <- function(x, ...) {
 
 #' Read a run of bytes from a file by position
 #'
-#' @param file Path to the file
+#' @param file Path to the file, or a map of a wave file already walked
 #' @param at The one-based position of the first byte wanted
 #' @param n The number of bytes to read
 #' @return A raw vector, holding however many of those bytes the file has
 #' @keywords internal
 #' @noRd
 .mdFileRange <- function(file, at, n) {
+  if (inherits(file, "wavChunkMap")) {
+    return(.mdFileRange(file$file, at, n))
+  }
   if (n <= 0) {
     return(raw(0))
   }
@@ -471,10 +480,30 @@ print.audioMetadataFields <- function(x, ...) {
   return(.wavConReader(con)(at, n))
 }
 
+#' The size of a file, whether given as a path or as a map of one
+#'
+#' @param file Path to the file, or a map of a wave file already walked
+#' @return The size in bytes, or NA where it cannot be told
+#' @keywords internal
+#' @noRd
+.mdFileSize <- function(file) {
+  if (inherits(file, "wavChunkMap")) {
+    return(file$size)
+  }
+  return(file.size(file))
+}
+
 #' Read the start of a file
+#'
+#' A map keeps the start of the file it walked, so the question is answered from
+#' it rather than by opening the file again.
+#'
 #' @keywords internal
 #' @noRd
 .mdFileHead <- function(file, n=.MD_HEAD_READ) {
+  if (inherits(file, "wavChunkMap") && length(file$head) >= n) {
+    return(file$head[seq_len(n)])
+  }
   return(.mdFileRange(file, 1L, n))
 }
 
