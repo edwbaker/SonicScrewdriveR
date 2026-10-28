@@ -287,8 +287,10 @@
     if (truncated) {
       break
     }
-    # RIFF chunk bodies are padded to an even number of bytes.
+    # RIFF chunk bodies are padded to an even number of bytes, and the pad byte
+    # belongs to the file.
     pos <- body + size + (size %% 2)
+    pos <- .wavUnpadded(read, pos, size, n, total)
   }
 
   if (is.null(ds64)) {
@@ -667,6 +669,53 @@
     }
   }
   return(NULL)
+}
+
+#' Where the next chunk begins when a writer left the pad byte out
+#'
+#' A chunk body of an odd number of bytes is followed by a pad byte, and that
+#' byte belongs to the file. A writer that leaves it out puts the next header
+#' one byte before where the padding says it is, so the eight bytes read there
+#' are the last byte of the body followed by seven of the header: the identifier
+#' comes out as rubbish and the size with it, and because that size runs past
+#' the end of the file the walk stops. Whatever the file holds behind such a
+#' chunk is then read by nothing. In a cached copy of the TSA corpus 62 files
+#' are written that way, hiding 35 ID3 tags, 35 lists and 27 wamd chunks, and
+#' their lists of chunks end in identifiers like `IST?` and `amd?` — "LIST" and
+#' "wamd" read one byte late.
+#'
+#' The one byte where the pad belongs says which it is, without reading ahead
+#' and judging what is there: the specification gives the pad byte as zero, and
+#' the first byte of an identifier must be a printable character, so a byte that
+#' is not zero there was never a pad. Across 471 files of the two corpora that
+#' is decisive: of 89 odd-sized bodies in the files written this way, every one
+#' has a byte other than zero where the pad belongs, and of the 31 in files that
+#' read correctly, every one has a zero.
+#'
+#' A writer is still allowed to pad with something other than zero, so the
+#' header a byte back must also look like a chunk before the walk steps back to
+#' it. Both must agree, which in this data they do for every one of those files.
+#'
+#' @param read A function of a one-based position and a number of bytes
+#' @param pos Where the padding says the next header is
+#' @param size The size of the body just read
+#' @param n Number of bytes that can be read
+#' @param total Size of the whole file
+#' @return Where the next header really is
+#' @keywords internal
+#' @noRd
+.wavUnpadded <- function(read, pos, size, n, total) {
+  if (size %% 2 == 0 || pos + 7L > n || pos < 2L) {
+    return(pos)
+  }
+  pad <- read(pos - 1L, 1L)
+  if (length(pad) < 1L || pad[1] == as.raw(0)) {
+    return(pos)
+  }
+  if (.wavIsChunkHeader(read(pos - 1L, 8L), total - pos + 2)) {
+    return(pos - 1L)
+  }
+  return(pos)
 }
 
 #' Could a run of bytes be the start of a RIFF chunk?

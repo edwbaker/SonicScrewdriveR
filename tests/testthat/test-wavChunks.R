@@ -582,3 +582,87 @@ test_that("Bytes are replaced as they are copied", {
     "ABwx"
   )
 })
+
+# A body of an odd number of bytes is followed by a pad byte, and that byte
+# belongs to the file. Some writers leave it out, which ended the walk at the
+# first such chunk and lost everything behind it.
+
+test_that("A chunk behind an unpadded body is still found", {
+  bytes <- mdWav(mdFmt(), mdChunkRagged("data", raw(15)), mdChunk("bext", raw(8)))
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "data", "bext"))
+  expect_identical(.wavFindChunk(.wavChunks(bytes)$chunks, "data")$size, 15)
+  expect_identical(ids, vapply(.wavChunksFile(mdFile(bytes))$chunks,
+                               function(c) c$id, character(1)))
+})
+
+test_that("A padded body is read as it always was", {
+  # The control for the test above: the same file written correctly, with a
+  # body of fifteen bytes, a size of fifteen and a nul pad byte. mdChunk()
+  # cannot build it, as it pads the body and then declares the padded length,
+  # so what it writes is an even-sized chunk.
+  bytes <- c(
+    charToRaw("RIFF"), mdU32(4 + 24 + 24 + 16), charToRaw("WAVE"),
+    mdFmt(),
+    charToRaw("data"), mdU32(15), raw(15), as.raw(0),
+    mdChunk("bext", raw(8))
+  )
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "data", "bext"))
+  expect_identical(.wavFindChunk(.wavChunks(bytes)$chunks, "data")$size, 15)
+})
+
+test_that("Padding that is not a nul is still padding where a chunk follows it", {
+  # The specification gives the pad byte as zero, and a byte that is not zero
+  # where the pad belongs is the reason to suspect it was never written. A
+  # writer may pad with something else, so the bytes a step back must look like
+  # a chunk before the walk goes there.
+  bytes <- c(
+    charToRaw("RIFF"), mdU32(4 + 24 + 24 + 16), charToRaw("WAVE"),
+    mdFmt(),
+    charToRaw("data"), mdU32(15), raw(15), as.raw(255),
+    mdChunk("bext", raw(8))
+  )
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "data", "bext"))
+})
+
+test_that("Several unpadded bodies in a row are all walked past", {
+  bytes <- mdWav(
+    mdFmt(),
+    mdChunkRagged("guan", charToRaw("GUANO|Version:1.0\nMake:X\n")),
+    mdChunkRagged("wamd", mdWamdField(1L, "A Recorder")),
+    mdChunk("data", raw(16))
+  )
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "guan", "wamd", "data"))
+})
+
+test_that("An unpadded body at the end of the file ends the walk quietly", {
+  bytes <- mdWav(mdFmt(), mdChunk("data", raw(16)), mdChunkRagged("bext", raw(7)))
+
+  info <- .wavChunks(bytes)
+  ids <- vapply(info$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "data", "bext"))
+  expect_identical(.wavFindChunk(info$chunks, "bext")$size, 7)
+})
+
+test_that("Metadata written behind an unpadded chunk reaches the record", {
+  # What the fault costs: 27 files in a cached copy of the TSA corpus keep a
+  # wamd chunk behind an unpadded GUANO chunk, and it was read by nothing.
+  f <- mdFile(mdWav(
+    mdFmt(),
+    mdChunkRagged("guan", charToRaw("GUANO|Version:1.0\nMake:Open Acoustic Devices\n")),
+    mdChunk("wamd", mdWamdField(1L, "A Recorder")),
+    mdData()
+  ))
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_identical(names(m$sources), c("guano", "wamd"))
+  expect_identical(m$fields$model, "A Recorder")
+  expect_length(m$unparsed, 0)
+})

@@ -161,6 +161,15 @@ mdCueField <- function(id, cue, text, header=4L) {
   return(c(charToRaw(id), mdU32(size), body))
 }
 
+#' A chunk whose odd-sized body the writer did not pad
+#'
+#' RIFF pads a body to an even length and the pad byte belongs to the file.
+#' Some writers leave it out, which puts every later header one byte before
+#' where the padding says it is. `mdChunk()` pads; this does not.
+mdChunkRagged <- function(id, body) {
+  return(c(charToRaw(id), mdU32(length(body)), body))
+}
+
 #' A cue chunk marking the given positions
 #'
 #' A point is identified by its number unless `ids` says otherwise, and its
