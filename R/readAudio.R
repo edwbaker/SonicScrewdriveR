@@ -11,6 +11,13 @@
 #' out, and functions that take multichannel audio, such as `tdoa()`, take the
 #' result directly.
 #'
+#' Which reader a file is given to is decided by the first bytes of the file,
+#' not by its extension, as a name is only a convention and the two disagree
+#' often enough in a real collection to matter: a wave file called .mp3 read as
+#' an MP3 comes back as a shorter recording at the wrong sample rate, without
+#' complaint. The name is used only where the bytes identify nothing. Passing
+#' `mime` says what the file is and is taken as given, whatever it holds.
+#'
 #' WAVE files are read by `tuneR::readWave()` whatever their channel count, so a
 #' multichannel WAVE keeps the channel names the file itself records. Everything
 #' read through the av package is named by channel position instead (see
@@ -78,7 +85,10 @@
 #' ```
 #'
 #' @param file File to read
-#' @param mime MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)
+#' @param mime MIME type of file to read, or "auto" to read the type from the
+#'   bytes of the file rather than from its name. Supported types are
+#'   "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
+#'   package.
 #' @param from Start point in file to return
 #' @param to End point in file to return
 #' @param input.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
@@ -99,7 +109,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     return(redone[[1]])
   }
   if (mime == "auto") {
-    mime <- guess_type(file)
+    mime <- .audioMime(file)
   }
   if (input.unit=="samples" & from == 0) {
     fromS <- 1
@@ -234,6 +244,52 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     }
   }
   stop("File could not be processed")
+}
+
+#' Decide what a file is, from the bytes of it rather than its name
+#'
+#' A name is only a convention. The corpora this was written against hold wave
+#' files under a .mp3 extension and MP3 files under a .wav one, and a reader
+#' that goes by the name reads one as the other: `tuneR::readMP3()` does not
+#' refuse the PCM of a wave file, it finds a frame header somewhere in the
+#' audio and decodes from there, giving back a shorter recording at the wrong
+#' sample rate and raising nothing at all.
+#'
+#' The first bytes of a file say which container it is, so they are read first
+#' and the name is used only where they say nothing: a few bytes of raw samples
+#' or a format the package has no magic for, where the name is all there is to
+#' go on. Bytes that identify a container the av package reads, or one this
+#' package cannot read at all, give a type that matches neither of the two
+#' readers chosen by type, so the file is read as any other such file is.
+#'
+#' @param file Path to an audio file
+#' @return A MIME type
+#' @keywords internal
+#' @noRd
+.audioMime <- function(file) {
+  # Only the container is wanted, and .mdContainer() reads it from the first
+  # twelve bytes, so nothing more than that is read to find out what the file
+  # is. A file that cannot be opened is not reported here: the warning the
+  # connection raises on the way to its error is of no use to anyone who is
+  # about to be told by the reader that the file cannot be read.
+  container <- suppressWarnings(tryCatch(
+    .mdContainer(.mdFileHead(file, 12L)), error=function(cond) NA_character_
+  ))
+  # Bytes that identify nothing, or that could not be read at all, leave the
+  # name as the only thing to go on, as it was before any of them were read.
+  if (length(container) != 1L || is.na(container)) {
+    return(guess_type(file))
+  }
+  if (container == "WAVE") {
+    return("audio/x-wav")
+  }
+  if (container == "MP3") {
+    return("audio/mpeg")
+  }
+  # The bytes have already contradicted the name, so the name is not asked
+  # again: anything else identifiable is handed to the av package, which is
+  # given the file rather than a type to read it as.
+  return("application/octet-stream")
 }
 
 #' Copy a WAV file whose data size was never written, with the size filled in
