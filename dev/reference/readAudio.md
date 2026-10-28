@@ -111,6 +111,16 @@ The audio of such a file is read to the end of the file, with a warning,
 rather than returned as nothing. A file that really holds no audio is
 read as empty.
 
+A recording cut short, by a flat battery, a full card or a copy that did
+not finish, declares more audio than the file holds. The audio that is
+there is returned, with a warning naming the sample frames the file
+declares and the frames it holds, whatever part of the recording was
+asked for: the wave is otherwise no different from one of a recording
+that was meant to be that short. Only whole sample frames are read, so a
+frame the file holds only some of the bytes of is left out rather than
+made up, and a part of the recording that starts beyond the audio the
+file holds is refused as one beyond the end of any recording is.
+
 A recording too long for the 4 GiB a RIFF header can describe is written
 in the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
 [`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html) does
@@ -173,12 +183,11 @@ it was last written.
 
 Each warning above carries a class of its own, so that one of them can
 be handled without silencing the rest: `sampleRateMismatch`,
-`unwrittenAudioSize` and `nonFiniteSamples`; `badDs64` and
-`frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
-believed or miscounts its sample frames; and `truncatedAudio` from
-[`audiomothExpand()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.md).
-All of them are also classed `audioFileWarning`, for handling every
-warning about the file at once, and `warning`, so
+`unwrittenAudioSize`, `truncatedAudio` and `nonFiniteSamples`; and
+`badDs64` and `frameCountMismatch` for an RF64 or BW64 file whose ds64
+chunk cannot be believed or miscounts its sample frames. All of them are
+also classed `audioFileWarning`, for handling every warning about the
+file at once, and `warning`, so
 [`suppressWarnings()`](https://rdrr.io/r/base/warning.html) and an
 ordinary warning handler treat them as the warnings they are.
 
