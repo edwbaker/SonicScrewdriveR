@@ -88,7 +88,9 @@ returned, with a warning naming the sample frames the file declares and the
 frames it holds, whatever part of the recording was asked for: the wave is
 otherwise no different from one of a recording that was meant to be that
 short. Only whole sample frames are read, so a frame the file holds only
-some of the bytes of is left out rather than made up.
+some of the bytes of is left out rather than made up, and a part of the
+recording that starts beyond the audio the file holds is refused as one
+beyond the end of any recording is.
 
 A recording too long for the 4 GiB a RIFF header can describe is written in
 the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.

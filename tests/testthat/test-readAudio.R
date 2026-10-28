@@ -1064,6 +1064,16 @@ test_that("A recording that was cut short is read as far as it goes, with a warn
   end <- suppressWarnings(readAudio(f, from=0.25, to=0.45))
   expect_equal(end@left, cutStereo@left[2001:2400])
   expect_equal(end@right, cutStereo@right[2001:2400])
+
+  # A part that starts beyond it is refused, as one beyond the end of any
+  # recording is, and the cut is said of it as well, as the reason the
+  # recording is shorter than the file says.
+  expect_warning(
+    expect_error(
+      readAudio(f, from=0.4), "which is 0.3 seconds long", class="startPastEnd"
+    ),
+    "holds 2400 of the 4000 sample frames", class="truncatedAudio"
+  )
 })
 
 test_that("Only the whole sample frames of a recording cut part-way through one are read", {
@@ -1182,6 +1192,16 @@ test_that("A recording cut short is read through the av package with the same wa
     class="truncatedAudio"
   )
   expect_equal(length(w@left), 150)
+
+  # Its audio cannot be counted until the av package has decoded it, so a start
+  # beyond it is refused only then, and the cut has been said before that.
+  expect_warning(
+    expect_error(
+      readAudio(mulaw, from=200, input.unit="samples"), "which holds 150 samples",
+      class="startPastEnd"
+    ),
+    class="truncatedAudio"
+  )
 })
 
 test_that(".truncatedWarning names what it can count", {
@@ -1417,12 +1437,24 @@ test_that("A start past the end of a file cut short is held against the audio it
   short <- withr::local_tempfile(fileext=".wav")
   writeBin(readBin(full, "raw", n=file.size(full))[1:(44 + 8000)], short)
 
-  expect_error(readAudio(short, from=0.6), "which is 0.5 seconds long", class="startPastEnd")
-  expect_error(
-    readAudio(short, from=4001, input.unit="samples"), "which holds 4000 samples",
-    class="startPastEnd"
+  # Each read says that the file was cut short, whatever comes of it.
+  expect_warning(
+    expect_error(
+      readAudio(short, from=0.6), "which is 0.5 seconds long", class="startPastEnd"
+    ),
+    class="truncatedAudio"
   )
-  expect_equal(length(readAudio(short, from=4000, input.unit="samples")), 1)
+  expect_warning(
+    expect_error(
+      readAudio(short, from=4001, input.unit="samples"),
+      "which holds 4000 samples", class="startPastEnd"
+    ),
+    class="truncatedAudio"
+  )
+  expect_warning(
+    w <- readAudio(short, from=4000, input.unit="samples"), class="truncatedAudio"
+  )
+  expect_equal(length(w), 1)
 })
 
 test_that("A start past the end of an RF64 recording is refused", {

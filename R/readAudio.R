@@ -52,7 +52,9 @@
 #' frames it holds, whatever part of the recording was asked for: the wave is
 #' otherwise no different from one of a recording that was meant to be that
 #' short. Only whole sample frames are read, so a frame the file holds only
-#' some of the bytes of is left out rather than made up.
+#' some of the bytes of is left out rather than made up, and a part of the
+#' recording that starts beyond the audio the file holds is refused as one
+#' beyond the end of any recording is.
 #'
 #' A recording too long for the 4 GiB a RIFF header can describe is written in
 #' the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
@@ -169,14 +171,23 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   }
 
   # Asked of the bytes of the file whatever type it was given as, as the av
-  # package reads a wave file that was cut short as quietly as tuneR does.
+  # package reads a wave file that was cut short as quietly as tuneR does. It
+  # is said before anything is read, as what is wrong with a ds64 chunk is, so
+  # that a part of the recording refused for starting beyond the audio the file
+  # holds is said to be refused for that reason as well.
   truncation <- .wavTruncation(file)
+  if (!is.null(truncation)) {
+    .truncatedWarning(truncation, file)
+  }
   repaired <- NULL
   if (mime == "audio/x-wav") {
     # A file whose data chunk size was never written declares that it holds no
     # audio, so the size is filled in on a copy before the file is read, and a
     # file cut short part-way through a sample frame is given the size of the
-    # frames it holds whole. The file itself is left as it is.
+    # frames it holds whole. The file itself is left as it is. A copy of a file
+    # cut short is no more than its whole frames, and the cut has been said
+    # already, so only a size that was never written is said once the audio has
+    # been read.
     repaired <- .wavRepaired(file, truncation)
     if (!is.null(repaired)) {
       on.exit(unlink(repaired), add=TRUE)
@@ -206,7 +217,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       error=function(cond) NULL
     )
     if (!is.null(wave)) {
-      .wavSizeWarnings(file, repaired, truncation)
+      if (!is.null(repaired) && is.null(truncation)) {
+        .unwrittenWarning(file)
+      }
       wave <- .waveFinite(wave, file)
       .wavRateWarning(wave, file)
       return(wave)
@@ -243,7 +256,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     }
 
     samples <- av::read_audio_bin(source, channels=channels)
-    .wavSizeWarnings(file, repaired, truncation)
+    if (!is.null(repaired) && is.null(truncation)) {
+      .unwrittenWarning(file)
+    }
     samp.rate <- attr(samples, "sample_rate")
     if (is.null(samp.rate)) {
       samp.rate <- info[['sample_rate']]
@@ -436,7 +451,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   }
   fmt <- tryCatch(.wavChunkFromFile(file, "fmt "), error=function(cond) NULL)
   fields <- if (is.null(fmt)) NULL else .wavFmtFields(fmt, length(fmt))
-  if (is.null(fields) || !fields$format %in% c(1, 3) || fields$frameSize <= 0) {
+  if (!.wavFixedFrames(fields)) {
     return(NULL)
   }
   return(list(frames=data$size %/% fields$frameSize, rate=fields$sampleRate))
@@ -561,32 +576,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     "truncatedAudio",
     "The audio in '", file, "' runs past the end of the file, which holds ",
     holds, ". The recording appears to have been cut short, and only the audio ",
-    "the file holds has been read."
+    "the file holds can be read."
   )
-  invisible(NULL)
-}
-
-#' Say what was wrong with the size of the audio in a file that was read
-#'
-#' A file whose data size was never written is read from a copy with the size
-#' filled in. A file that was cut short is read from a copy only where it ends
-#' part-way through a sample frame, which the copy leaves out, and what is said
-#' of it is that it was cut short.
-#'
-#' @param file The file the audio was read from
-#' @param repaired Path to the copy read in its place, as .wavRepaired() gives
-#'   it, or NULL
-#' @param truncation What the file holds of the audio it declares, as
-#'   .wavTruncation() gives it, or NULL
-#' @return NULL
-#' @keywords internal
-#' @noRd
-.wavSizeWarnings <- function(file, repaired, truncation) {
-  if (!is.null(truncation)) {
-    .truncatedWarning(truncation, file)
-  } else if (!is.null(repaired)) {
-    .unwrittenWarning(file)
-  }
   invisible(NULL)
 }
 
