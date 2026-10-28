@@ -11,7 +11,7 @@
 #' of it than metadata could reasonably be. A file damaged in the right place
 #' can declare a chunk larger than any machine could hold.
 #'
-#' @param file Path to a wave file
+#' @param file Path to a wave file, or a map of one already walked
 #' @param id The chunk identifier to look for
 #' @param cap Most bytes to read
 #' @return A raw vector, or NULL where the file has no such chunk, holds
@@ -19,6 +19,9 @@
 #' @keywords internal
 #' @noRd
 .mdWavChunk <- function(file, id, cap=.MD_BLOCK_MAX) {
+  if (inherits(file, "wavChunkMap")) {
+    return(.mdMapChunk(file, id, cap))
+  }
   found <- tryCatch({
     con <- file(file, "rb")
     on.exit(close(con))
@@ -64,13 +67,16 @@
 #' information, in either order. Taking the first and looking no further would
 #' miss whatever is behind it.
 #'
-#' @param file Path to a wave file
+#' @param file Path to a wave file, or a map of one already walked
 #' @param id The chunk identifier to look for
 #' @param cap Most bytes to read from each chunk
 #' @return A list of raw vectors, empty where the file has no such chunk
 #' @keywords internal
 #' @noRd
 .mdWavChunks <- function(file, id, cap=.MD_BLOCK_MAX) {
+  if (inherits(file, "wavChunkMap")) {
+    return(.mdMapChunks(file, id, cap))
+  }
   found <- tryCatch({
     con <- file(file, "rb")
     on.exit(close(con))
@@ -110,12 +116,16 @@
 
 #' The identifiers of the chunks a wave file holds
 #'
-#' @param x Path to a wave file, or a raw vector holding one
+#' @param x Path to a wave file, a raw vector holding one, or a map of one
+#'   already walked
 #' @return A character vector of chunk identifiers, in the order the file holds
 #'   them, empty where it is not a wave file
 #' @keywords internal
 #' @noRd
 .mdWavChunkIds <- function(x) {
+  if (inherits(x, "wavChunkMap")) {
+    return(vapply(x$chunks, function(chunk) chunk$id, character(1)))
+  }
   info <- tryCatch(
     if (is.raw(x)) .wavChunks(x) else .wavChunksFile(x),
     unsupportedWav=function(cond) NULL,

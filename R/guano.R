@@ -533,6 +533,10 @@ guano <- function(x) {
   if (is.raw(x)) {
     return(.guanoFromBytes(x))
   }
+  # A file readMetadata() has already walked, handed over in place of its path.
+  if (inherits(x, "wavChunkMap")) {
+    return(.guanoFromFile(x))
+  }
   if (!is.character(x) || length(x) != 1L) {
     stop("x must be a file path, a Wave object, or a raw vector.")
   }
