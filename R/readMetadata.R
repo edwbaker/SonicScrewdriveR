@@ -64,6 +64,9 @@
 #'
 #' Only a full date gives a time. A field holding no more than a year is left
 #' where it was read rather than being given a month and a day it never had.
+#' The date and the time may be separated by a T or by a space, and an offset
+#' from UTC may be written as +02:00, +0200 or +2:00. A value that only begins
+#' with a date, or with a date and a time, is not read.
 #'
 #' @param text The field as it is written
 #' @return A POSIXct, or NULL where it is not a date this understands
@@ -80,18 +83,37 @@
   if (is.na(text) || !nzchar(text)) {
     return(NULL)
   }
+  wanted <- sub("^([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})[[:space:]]+", "\\1T", text)
+  # An offset hour of one digit, as +2:00, which the Song Meter Mini Bat writes
+  # in its GUANO, is given its second digit, so that the offset is read rather
+  # than taken for no offset at all.
+  wanted <- sub("([+-])([0-9]):([0-9]{2})$", "\\10\\2:\\3", wanted)
   # R does not accept the colon that ISO 8601 puts in a numeric UTC offset.
-  wanted <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", text)
-  formats <- c(
-    "%Y-%m-%dT%H:%M:%OS%z",
-    "%Y-%m-%dT%H:%M:%OSZ",
-    "%Y-%m-%dT%H:%M:%OS",
-    "%Y-%m-%d %H:%M:%OS",
-    "%Y-%m-%d"
+  wanted <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", wanted)
+  # The shape of each form is checked before it is read, as as.POSIXct() is
+  # content with a value that merely begins with one: without this, a time
+  # followed by anything it did not recognise, an offset included, would be read
+  # as a wall clock and the rest quietly dropped, and a date followed by a time
+  # it could not read would be read as midnight. R reads a field of one digit
+  # as well as one of two, and an offset with spaces before it, so those are
+  # allowed.
+  day <- "^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"
+  clock <- paste0(day, "T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}([.][0-9]+)?")
+  forms <- list(
+    list(shape=paste0(clock, " *[+-][0-9]{4}$"),
+         format="%Y-%m-%dT%H:%M:%OS%z", tz="UTC"),
+    list(shape=paste0(clock, "Z$"),
+         format="%Y-%m-%dT%H:%M:%OSZ", tz="UTC"),
+    list(shape=paste0(clock, "$"),
+         format="%Y-%m-%dT%H:%M:%OS", tz=""),
+    list(shape=paste0(day, "$"),
+         format="%Y-%m-%d", tz="")
   )
-  for (format in formats) {
-    tz <- if (grepl("Z$|%z", format)) "UTC" else ""
-    parsed <- suppressWarnings(as.POSIXct(wanted, format=format, tz=tz))
+  for (form in forms) {
+    if (!grepl(form$shape, wanted)) {
+      next
+    }
+    parsed <- suppressWarnings(as.POSIXct(wanted, format=form$format, tz=form$tz))
     if (!is.na(parsed)) {
       return(parsed)
     }
