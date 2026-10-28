@@ -94,6 +94,32 @@ test_that("Every list in the file is read, whichever comes first", {
   expect_identical(i[["INAM"]], "A Name")
 })
 
+test_that("A list written in lower case is still a list", {
+  # The specification gives "LIST". Fifteen files in a cached copy of the TSA
+  # corpus write "list", and the labels they hold were read by nothing.
+  f <- mdFile(mdWav(
+    mdFmt(),
+    mdChunk("list", c(charToRaw("adtl"), mdCueField("labl", 1L, "Ende: a taxon"))),
+    mdData()
+  ))
+
+  expect_identical(wavInfo(f)[["adtl/labl"]], "Ende: a taxon")
+  expect_identical(wavCues(f)$label, "Ende: a taxon")
+})
+
+test_that("Lists of either spelling are read in the order the file holds them", {
+  f <- mdFile(mdWav(
+    mdFmt(),
+    mdChunk("list", c(charToRaw("INFO"), mdInfoField("INAM", "First"))),
+    mdChunk("LIST", c(charToRaw("INFO"), mdInfoField("INAM", "Second"))),
+    mdData()
+  ))
+  i <- wavInfo(f)
+
+  expect_identical(i[["INAM"]], "First")
+  expect_identical(i[["INAM.2"]], "Second")
+})
+
 test_that("A file with no list gives an empty result", {
   f <- mdFile(mdWav(mdFmt(), mdData()))
 

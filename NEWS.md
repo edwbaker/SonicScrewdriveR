@@ -247,6 +247,18 @@
   the recording is.
 
 ## Fixes
+- Three chunk identifiers a wave file writes metadata under were not looked
+  for, found by auditing a cached copy of the TSA corpus. An ID3 tag chunk is
+  read whether it is named `id3 `, `ID3 ` or `ID32`, the last of which 96 files
+  there use; a list of fields is read whether it is named `LIST` or `list`, the
+  lower-case spelling being how 15 of them write the cue labels they hold; and
+  `FLLR`, which 277 of them hold, is treated as the padding it is, as `PAD ` and
+  `JUNK` already were, rather than reported as metadata nothing can read. In
+  those 388 files readMetadata() now reports what the file holds. What it
+  recovers is modest and worth stating plainly: the 96 ID3 tags hold one frame
+  each, a `TXXX` naming the version of the software that wrote them and nothing
+  about the recording, while the lower-case lists give 17 cue labels of which
+  two name a taxon.
 - guano() and guanoParse() kept as text, with a warning, the timestamp a
   Wildlife Acoustics Song Meter Mini Bat writes, 2025-09-15 21:31:57+2:00, so
   it never became a time a caller could compute with. It departs from the

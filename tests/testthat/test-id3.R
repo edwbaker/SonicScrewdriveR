@@ -279,6 +279,19 @@ test_that("A tag held in a chunk of a wave file is read", {
   expect_identical(id3(f)[["TIT2"]], "Pacific Swallow (Hirundo tahitica)")
 })
 
+test_that("A tag is read whichever of the three chunk identifiers holds it", {
+  # The registry gives "id3 " and "ID3 " is as common. Ninety-six files in a
+  # cached copy of the TSA corpus write "ID32", and a reader looking only for
+  # the first two reported them as carrying nothing.
+  for (id in c("id3 ", "ID3 ", "ID32")) {
+    f <- mdFile(mdWav(mdFmt(), mdData(), mdChunk(id, mdXenoCantoTag())))
+    expect_identical(id3(f)[["TIT2"]], "Pacific Swallow (Hirundo tahitica)",
+                     info=id)
+    expect_identical(id3(readBin(f, "raw", n=file.size(f)))[["TIT2"]],
+                     "Pacific Swallow (Hirundo tahitica)", info=id)
+  }
+})
+
 test_that("A tag held in a chunk of an RF64 file is read", {
   bytes <- mdRf64(
     mdFmt(), mdDeferred("data", raw(16)), mdChunk("id3 ", mdXenoCantoTag()),

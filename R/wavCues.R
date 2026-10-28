@@ -93,7 +93,7 @@ wavCues <- function(x) {
   points <- .wavCuePoints(body("cue "))
   labels <- list()
   for (chunk in walked$chunks) {
-    if (chunk$id != "LIST" || chunk$size < 4L) {
+    if (!chunk$id %in% .WAV_LIST_IDS || chunk$size < 4L) {
       next
     }
     one <- read(chunk$start, min(chunk$size, .MD_BLOCK_MAX))
