@@ -54,7 +54,7 @@ corWaveMC <- function(wave, times, window, cluster=NULL, ...) {
   return(outtimes)
 }
 
-#' @importFrom seewave corenv
+#' @importFrom seewave corenv cutw
 corWaveMCchannel <- function (channel2, wave, from, to, reference=NULL, ...){
   if (is.null(reference)) {
     reference <- cutw(wave[,1], from=from, to=to, output="Wave")
