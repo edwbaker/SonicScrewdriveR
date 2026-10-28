@@ -220,14 +220,39 @@ test_that("A reader given a directory says that is what it was given", {
 })
 
 test_that("A container this package reads no metadata from is still named", {
-  rf64 <- c(
-    charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"), mdFmt(), mdData()
-  )
   aiff <- c(charToRaw("FORM"), mdU32(100), charToRaw("AIFF"), raw(50))
+  m <- readMetadata(mdFile(aiff, ".aiff"), filename=FALSE)
 
-  expect_identical(readMetadata(mdFile(rf64), filename=FALSE)$container, "RF64")
-  expect_identical(readMetadata(mdFile(aiff, ".aiff"), filename=FALSE)$container, "AIFF")
-  expect_length(readMetadata(mdFile(rf64), filename=FALSE)$sources, 0)
+  expect_identical(m$container, "AIFF")
+  expect_length(m$sources, 0)
+})
+
+test_that("A wave file over 4 GiB is read whichever form it was written in", {
+  list <- mdChunk("LIST", c(charToRaw("INFO"), mdInfoField("INAM", "A long recording")))
+  for (form in c("RF64", "BW64")) {
+    bytes <- mdRf64(
+      mdFmt(), list, mdDeferred("data", raw(16)), dataSize=16, frames=8, form=form
+    )
+    for (m in list(
+      readMetadata(mdFile(bytes), filename=FALSE), readMetadata(bytes)
+    )) {
+      expect_identical(m$container, form)
+      expect_identical(m$sources$wavInfo[["INAM"]], "A long recording")
+      # The ds64 chunk holds sizes, not metadata, and is not named as metadata
+      # left unread.
+      expect_length(m$unparsed, 0)
+    }
+  }
+
+  # Without the ds64 chunk that form keeps its sizes in, no size in the file can
+  # be believed, and nothing is read from it.
+  rf64 <- c(
+    charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"),
+    mdFmt(), list, mdData()
+  )
+  m <- readMetadata(mdFile(rf64), filename=FALSE)
+  expect_identical(m$container, "RF64")
+  expect_length(m$sources, 0)
 })
 
 test_that("An empty file is read as carrying nothing, not as an error", {

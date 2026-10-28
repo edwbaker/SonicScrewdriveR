@@ -21,10 +21,16 @@
 #   truncatedAudio      The audio runs past the end of the file, which is
 #                       shorter than it declares.
 #   nonFiniteSamples    Samples that are not finite numbers were read as zero.
+#   badDs64             The ds64 chunk of an RF64 or BW64 file cannot be
+#                       believed, so its audio may not have been read in full.
+#   frameCountMismatch  The ds64 chunk of an RF64 or BW64 file gives a number
+#                       of sample frames that its audio does not hold.
 #
-# The one error with a class of its own, `unsupportedWav`, is raised by
-# `.unsupportedWav()` in wavChunks.R, where the chunk reading that detects it
-# lives.
+# The errors with classes of their own are raised in wavChunks.R, where the
+# chunk reading that detects them lives: `unsupportedWav` by
+# `.unsupportedWav()`, and `badDs64`, a kind of `unsupportedWav`, by
+# `.badDs64()`. A file refused there for its ds64 chunk is warned about with
+# that same class where its audio is read all the same.
 
 #' Raise a warning about the file audio was read from
 #'

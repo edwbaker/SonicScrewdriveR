@@ -643,6 +643,100 @@ test_that(".zeroNonFinite replaces samples that are not finite numbers", {
   expect_identical(.zeroNonFinite(clean, "test.wav"), clean)
 })
 
+# A recording too long for a RIFF header is written in the RF64 form, which
+# tuneR does not read, so its audio is read through the av package, which goes
+# by the sizes its ds64 chunk gives.
+
+rf64Samples <- as.integer(round(sin(seq(0, 100, length.out=4800)) * 10000))
+
+test_that("An RF64 recording is read through the av package, saying nothing", {
+  skip_if_not_installed("av")
+  f <- mdFile(mdRf64Wav(rf64Samples))
+
+  expect_no_warning(w <- readAudio(f))
+  expect_equal(w@left, as.numeric(rf64Samples))
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@bit, 16)
+})
+
+test_that("An RF64 recording whose sizes were never written is recovered", {
+  skip_if_not_installed("av")
+  # The recorder stopped before writing any size, leaving the zeros it wrote at
+  # the start, which the av package takes at their word: read as it is, the
+  # recording is empty.
+  f <- mdFile(mdRf64Wav(rf64Samples, dataSize=0, frames=0, riffSize=0, after=raw(0)))
+
+  expect_warning(w <- readAudio(f), "was never written", class="unwrittenAudioSize")
+  expect_equal(w@left, as.numeric(rf64Samples))
+  expect_equal(.wavChunksFile(f)$riffSize, 0)
+
+  # The copy that is read keeps the form, with its sizes and its count of
+  # frames filled in.
+  copy <- .wavRepaired(f)
+  on.exit(unlink(copy), add=TRUE)
+  bytes <- readBin(copy, "raw", n=file.size(copy))
+  info <- .wavChunks(bytes)
+  expect_identical(info$form, "RF64")
+  expect_equal(info$riffSize + 8, length(bytes))
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 2 * length(rf64Samples))
+  expect_equal(info$ds64$sampleCount, length(rf64Samples))
+  expect_equal(bytes[5:8], mdU32(4294967295))
+})
+
+test_that("An RF64 recording whose ds64 chunk cannot be believed is read, with a warning", {
+  skip_if_not_installed("av")
+  good <- mdRf64Wav(rf64Samples)
+  f <- mdFile(mdRf64Wav(rf64Samples, riffSize=length(good)))
+
+  expect_warning(
+    w <- readAudio(f), "cannot be believed.*8 more than the file holds",
+    class="badDs64"
+  )
+  expect_equal(w@left, as.numeric(rf64Samples))
+})
+
+test_that("An RF64 recording that miscounts its frames is read, with a warning", {
+  skip_if_not_installed("av")
+  f <- mdFile(mdRf64Wav(rf64Samples, frames=1))
+
+  expect_warning(
+    w <- readAudio(f), "gives 1 sample frame, where its data holds 4800",
+    class="frameCountMismatch"
+  )
+  expect_equal(w@left, as.numeric(rf64Samples))
+})
+
+test_that("Only the ds64 chunk of a wave file is spoken of", {
+  # A file of no form this package knows, and an RF64 file holding something
+  # other than a wave: there is no ds64 chunk to say anything about.
+  expect_silent(.wavDs64Warnings(mdFile(charToRaw("not a wave file at all"))))
+  expect_silent(.wavDs64Warnings(mdFile(
+    c(charToRaw("RF64"), mdU32(4294967295), charToRaw("AVI "), raw(40))
+  )))
+
+  # Nor is anything that is not a file on disk opened to find out: the av
+  # package says what is wrong with what it cannot read.
+  expect_silent(.wavDs64Warnings(tempfile(fileext=".wav")))
+  expect_silent(.wavDs64Warnings(tempdir()))
+  expect_silent(.wavDs64Warnings("https://example.org/recording.wav"))
+})
+
+test_that("An RF64 or BW64 file is read as a wave file whatever it is called", {
+  # Its bytes say it is a wave file, though not one tuneR::readWave() reads.
+  expect_equal(.audioMime(mdFile(mdRf64Wav(), "")), "audio/x-wav")
+  expect_equal(.audioMime(mdFile(mdRf64Wav(form="BW64"), ".mp3")), "audio/x-wav")
+
+  # So one whose sizes were never written is repaired before the av package
+  # reads it, under any name, rather than being handed over as it is and read
+  # as empty.
+  skip_if_not_installed("av")
+  f <- mdFile(
+    mdRf64Wav(rf64Samples, dataSize=0, frames=0, riffSize=0, after=raw(0)), ".bin"
+  )
+  expect_warning(w <- readAudio(f), class="unwrittenAudioSize")
+  expect_equal(w@left, as.numeric(rf64Samples))
+})
+
 test_that(".audioMime names the container from the bytes of the file", {
   wav <- system.file("extdata/STEREO.WAV", package="sonicscrewdriver")
   mp3 <- system.file("extdata/STEREO.mp3", package="sonicscrewdriver")

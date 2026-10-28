@@ -80,6 +80,14 @@ recording while still holding the audio it was recording at the time. The
 audio of such a file is read to the end of the file, with a warning, rather
 than returned as nothing. A file that really holds no audio is read as empty.
 
+A recording too long for the 4 GiB a RIFF header can describe is written in
+the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
+\code{tuneR::readWave()} does not read these forms, so they are read through the
+av package, by those sizes. One whose sizes were never written is recovered
+as above. One whose ds64 chunk disagrees with the rest of the file, or
+miscounts its sample frames, is still read, with a warning saying what is
+wrong with it.
+
 Samples that are not finite numbers, which a floating-point file can hold,
 are read as zero with a warning, as they would otherwise spread through every
 measurement made from the wave.
@@ -107,7 +115,9 @@ as the others describe the recording as it was before it was last written.
 
 Each warning above carries a class of its own, so that one of them can be
 handled without silencing the rest: \code{sampleRateMismatch},
-\code{unwrittenAudioSize} and \code{nonFiniteSamples}, and \code{truncatedAudio} from
+\code{unwrittenAudioSize} and \code{nonFiniteSamples}; \code{badDs64} and
+\code{frameCountMismatch} for an RF64 or BW64 file whose ds64 chunk cannot be
+believed or miscounts its sample frames; and \code{truncatedAudio} from
 \code{\link[=audiomothExpand]{audiomothExpand()}}. All of them are also classed \code{audioFileWarning}, for
 handling every warning about the file at once, and \code{warning}, so
 \code{suppressWarnings()} and an ordinary warning handler treat them as the

@@ -40,9 +40,12 @@ object necessarily holds the whole expanded recording in memory.
 
 A recording cut short by a recorder that lost power is reported with a
 warning classed \code{truncatedAudio}, or \code{unwrittenAudioSize} where the size of
-the audio was never written, and the audio that is there is expanded. Both
-are also classed \code{audioFileWarning}; see \code{\link[=readAudio]{readAudio()}} for the warnings that
-share those classes and for handling one of them without silencing the rest.
+the audio was never written, and the audio that is there is expanded. A
+recording in the RF64 or BW64 form whose ds64 chunk miscounts its sample
+frames is reported with a warning classed \code{frameCountMismatch}, and the count
+is put right in the file written. All of them are also classed
+\code{audioFileWarning}; see \code{\link[=readAudio]{readAudio()}} for the warnings that share those
+classes and for handling one of them without silencing the rest.
 }
 \examples{
 \dontrun{

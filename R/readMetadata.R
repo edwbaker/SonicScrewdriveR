@@ -516,7 +516,9 @@
 #' Broadcast Wave bext, iXML and the INFO list from a wave file, the AudioMoth
 #' comment, ID3 from an MP3 file or from a wave file that holds a tag in a
 #' chunk, and Vorbis comments from a FLAC or Ogg file. A file holding none of
-#' them gives an empty result rather than an error.
+#' them gives an empty result rather than an error. A wave file over 4 GiB,
+#' written in the RF64 or BW64 form, is read as any other, and named by that
+#' form.
 #'
 #' @details
 #' A recording commonly carries more than one of these formats, written by the
@@ -629,7 +631,7 @@ readMetadata <- function(x, filename=TRUE) {
   sources <- list()
   unparsed <- character(0)
 
-  if (identical(container, "WAVE")) {
+  if (.mdWaveContainer(container)) {
     sources$guano <- guano(file)
     sources$wamd <- wamd(file)
     sources$bext <- bext(file)
@@ -640,7 +642,7 @@ readMetadata <- function(x, filename=TRUE) {
     sources$audiomoth <- .mdAudiomothSource(file, sources$wavInfo)
     unparsed <- .mdUnparsed(.mdWavChunkIds(file))
   }
-  if (identical(container, "WAVE") || identical(container, "MP3")) {
+  if (.mdWaveContainer(container) || identical(container, "MP3")) {
     sources$id3 <- id3(file)
   }
   if (identical(container, "FLAC") || identical(container, "Ogg")) {
@@ -665,7 +667,7 @@ readMetadata <- function(x, filename=TRUE) {
   sources <- list()
   unparsed <- character(0)
 
-  if (identical(container, "WAVE")) {
+  if (.mdWaveContainer(container)) {
     sources$guano <- guano(bytes)
     sources$wamd <- wamd(bytes)
     sources$bext <- bext(bytes)
@@ -675,7 +677,7 @@ readMetadata <- function(x, filename=TRUE) {
     sources$disp <- disp(bytes)
     unparsed <- .mdUnparsed(.mdWavChunkIds(bytes))
   }
-  if (identical(container, "WAVE") || identical(container, "MP3")) {
+  if (.mdWaveContainer(container) || identical(container, "MP3")) {
     sources$id3 <- id3(bytes)
   }
   if (identical(container, "FLAC") || identical(container, "Ogg")) {

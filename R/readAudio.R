@@ -46,6 +46,14 @@
 #' audio of such a file is read to the end of the file, with a warning, rather
 #' than returned as nothing. A file that really holds no audio is read as empty.
 #'
+#' A recording too long for the 4 GiB a RIFF header can describe is written in
+#' the RF64 or BW64 form, which keeps its sizes in a ds64 chunk.
+#' `tuneR::readWave()` does not read these forms, so they are read through the
+#' av package, by those sizes. One whose sizes were never written is recovered
+#' as above. One whose ds64 chunk disagrees with the rest of the file, or
+#' miscounts its sample frames, is still read, with a warning saying what is
+#' wrong with it.
+#'
 #' Samples that are not finite numbers, which a floating-point file can hold,
 #' are read as zero with a warning, as they would otherwise spread through every
 #' measurement made from the wave.
@@ -71,7 +79,9 @@
 #' ## Handling these warnings
 #' Each warning above carries a class of its own, so that one of them can be
 #' handled without silencing the rest: `sampleRateMismatch`,
-#' `unwrittenAudioSize` and `nonFiniteSamples`, and `truncatedAudio` from
+#' `unwrittenAudioSize` and `nonFiniteSamples`; `badDs64` and
+#' `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
+#' believed or miscounts its sample frames; and `truncatedAudio` from
 #' [audiomothExpand()]. All of them are also classed `audioFileWarning`, for
 #' handling every warning about the file at once, and `warning`, so
 #' `suppressWarnings()` and an ordinary warning handler treat them as the
@@ -138,6 +148,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     }
   }
 
+  repaired <- NULL
   if (mime == "audio/x-wav") {
     # A file whose data chunk size was never written declares that it holds no
     # audio, so the size is filled in on a copy before the file is read. The
@@ -161,11 +172,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     )
     if (!is.null(wave)) {
       if (!is.null(repaired)) {
-        .audioFileWarning(
-          "unwrittenAudioSize",
-          "The size of the audio in '", file, "' was never written, so the ",
-          "recording has been read to the end of the file."
-        )
+        .unwrittenWarning(file)
       }
       wave <- .waveFinite(wave, file)
       .wavRateWarning(wave, file)
@@ -191,14 +198,26 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 
   #Check if av package available
   if (package.installed("av", askInstall=TRUE)) {
+    # tuneR reads only the RIFF form of a wave file, so a file in the RF64 or
+    # BW64 form is read here, by the sizes its ds64 chunk gives. What is wrong
+    # with them is said before the audio is read. A copy whose audio size has
+    # been filled in is read in place of a file that never had it written, as
+    # the av package takes that size at its word and reads such a recording as
+    # empty.
+    .wavDs64Warnings(file)
+    source <- if (is.null(repaired)) file else repaired
+
     #Using av package
-    info <- av::av_media_info(file)$audio
+    info <- av::av_media_info(source)$audio
     channels <- info[['channels']]
     if (is.null(channels)) {
       stop("Could not determine number of channels.")
     }
 
-    samples <- av::read_audio_bin(file, channels=channels)
+    samples <- av::read_audio_bin(source, channels=channels)
+    if (!is.null(repaired)) {
+      .unwrittenWarning(file)
+    }
     samp.rate <- attr(samples, "sample_rate")
     if (is.null(samp.rate)) {
       samp.rate <- info[['sample_rate']]
@@ -258,9 +277,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' The first bytes of a file say which container it is, so they are read first
 #' and the name is used only where they say nothing: a few bytes of raw samples
 #' or a format the package has no magic for, where the name is all there is to
-#' go on. Bytes that identify a container the av package reads, or one this
-#' package cannot read at all, give a type that matches neither of the two
-#' readers chosen by type, so the file is read as any other such file is.
+#' go on. Bytes that identify any other container, one the av package reads or
+#' one this package cannot read at all, give a type that matches neither of the
+#' two readers chosen by type, so the file is read as any other such file is.
 #'
 #' @param file Path to an audio file
 #' @return A MIME type
@@ -280,7 +299,10 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   if (length(container) != 1L || is.na(container)) {
     return(guess_type(file))
   }
-  if (container == "WAVE") {
+  # A wave file in the RF64 or BW64 form is one tuneR::readWave() cannot read,
+  # but it goes the way of any other wave file all the same, so that one whose
+  # sizes were never written is repaired before the av package is given it.
+  if (.mdWaveContainer(container)) {
     return("audio/x-wav")
   }
   if (container == "MP3") {
@@ -294,11 +316,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 
 #' Copy a WAV file whose data size was never written, with the size filled in
 #'
-#' Only the size of the audio and the size in the RIFF header are changed, so
-#' that the audio is read by the same code as any other file. The chunks are
-#' walked over a connection, so a long recording is not read into memory to find
-#' out whether there is anything to repair. A file with nothing to repair gives
-#' NULL, and the file itself is never written to.
+#' Only the size of the audio and the RIFF size are changed, so that the audio is
+#' read by the same code as any other file. An RF64 or BW64 file keeps them, and
+#' the number of sample frames, in its ds64 chunk, and its copy keeps that form.
+#' The chunks are walked over a connection, so a long recording is not read into
+#' memory to find out whether there is anything to repair. A file with nothing to
+#' repair gives NULL, and the file itself is never written to.
 #'
 #' @param file Path to a WAV file
 #' @return Path to a temporary file holding the repaired copy, or NULL
@@ -320,7 +343,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     return(NULL)
   }
   fmt <- tryCatch(.wavChunkFromFile(file, "fmt "), error=function(cond) NULL)
-  if (is.null(fmt) || length(fmt) < 16L) {
+  fields <- if (is.null(fmt)) NULL else .wavFmtFields(fmt, length(fmt))
+  if (is.null(fields)) {
     return(NULL)
   }
   peek <- function(at, n) {
@@ -328,8 +352,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     on.exit(close(con))
     return(.wavConReader(con)(at, n))
   }
-  blockAlign <- .rawToUInt(fmt[3:4]) * ceiling(.rawToUInt(fmt[15:16]) / 8)
-  size <- .wavUnfinalisedSize(data, info$riffSize, blockAlign, total, peek)
+  size <- .wavUnfinalisedSize(data, info$riffSize, fields$frameSize, total, peek)
   if (size == 0) {
     return(NULL)
   }
@@ -342,12 +365,61 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   on.exit(close(con))
   # A connection open for both reading and writing keeps a position for each, so
   # the write position is the one to set.
-  seek(con, 4L, rw="write")
-  writeBin(.uintToRaw(total - 8, 4L), con)
-  # The size of a chunk is held in the four bytes before its body.
-  seek(con, data$start - 5L, rw="write")
-  writeBin(.uintToRaw(size, 4L), con)
+  for (patch in .wavSizePatches(info$form, info$ds64, data$start, total - 8, size)) {
+    seek(con, patch$at - 1, rw="write")
+    writeBin(patch$bytes, con)
+  }
   return(out)
+}
+
+#' Warn that the size of the audio in a file was never written
+#'
+#' @param file The file the audio was read from
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.unwrittenWarning <- function(file) {
+  .audioFileWarning(
+    "unwrittenAudioSize",
+    "The size of the audio in '", file, "' was never written, so the ",
+    "recording has been read to the end of the file."
+  )
+  invisible(NULL)
+}
+
+#' Say what is wrong with the ds64 chunk of a file whose audio is read anyway
+#'
+#' The av package reads an RF64 or BW64 file by the sizes in its ds64 chunk,
+#' whatever the rest of the file says, so a file whose ds64 chunk this package
+#' will not believe still gives audio. That audio is the best reading of the
+#' file there is, and is returned, but not without saying why it may not be the
+#' whole of the recording.
+#'
+#' @param file Path to a file about to be read through the av package
+#' @return NULL
+#' @keywords internal
+#' @noRd
+.wavDs64Warnings <- function(file) {
+  # Only a file on disk is looked at. The av package reads a URL as readily as
+  # a path, and says itself what is wrong with something it cannot open, which
+  # opening it here first would say instead, and less clearly.
+  if (!isTRUE(file.info(file)$isdir == FALSE)) {
+    return(invisible(NULL))
+  }
+  if (!.mdContainer(.mdFileHead(file, 12L)) %in% c("RF64", "BW64")) {
+    return(invisible(NULL))
+  }
+  info <- tryCatch(.wavChunksFile(file), unsupportedWav=function(cond) cond)
+  if (inherits(info, "badDs64")) {
+    .audioFileWarning(
+      "badDs64",
+      "The ds64 chunk of '", file, "' cannot be believed, so its audio may ",
+      "not be read in full. ", conditionMessage(info)
+    )
+  } else if (!inherits(info, "unsupportedWav") && !info$ds64$countAgrees) {
+    .wavCountWarning(info$ds64, file)
+  }
+  invisible(NULL)
 }
 
 #' Read any sample of a vector that is not a finite number as zero

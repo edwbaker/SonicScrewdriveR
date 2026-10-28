@@ -506,7 +506,8 @@ print.guano <- function(x, ...) {
 #' Reads the GUANO metadata of a WAV file, or of a Wave object that carries it.
 #' GUANO is the metadata format used by many bioacoustic recorders, including
 #' AudioMoth devices running current firmware. A file holding no GUANO metadata
-#' gives an empty result rather than an error.
+#' gives an empty result rather than an error. A WAV file over 4 GiB, written in
+#' the RF64 or BW64 form, is read as any other.
 #'
 #' @param x Path to a WAV file, a Wave object with GUANO metadata attached, or a
 #'   raw vector holding a whole WAV file
@@ -583,8 +584,10 @@ guano <- function(x) {
 #' Write GUANO metadata to a WAV file
 #'
 #' Replaces the GUANO metadata of a WAV file, adding a guan chunk if the file
-#' has none. Only the metadata chunk and the sizes in the file header are
-#' changed, so the audio data and every other chunk are left as they were.
+#' has none. Only the metadata chunk and the sizes the file records are
+#' changed: those in the file header, or in the ds64 chunk of an RF64 or BW64
+#' file, the form a recording over 4 GiB is written in. The audio data and every
+#' other chunk are left as they were.
 #'
 #' The recording is copied across a buffer at a time rather than read into
 #' memory, so changing one field of the metadata of a file of several gigabytes
@@ -673,28 +676,38 @@ guanoWrite <- function(x, file, output=NULL) {
   # chunk of some other name.
   pad <- if (headEnd %% 2 == 1) raw(1) else raw(0)
 
-  # The sizes the file declares are the only bytes carried across that change,
-  # and all of them are known before anything is written, so the output is
-  # written once through rather than gone back over. They are added up in
-  # doubles, as a recording of 2GB or more is longer than a whole number can be
-  # counted in.
-  edits <- list(list(at=5, bytes=.uintToRaw(
-    as.numeric(headEnd) + length(pad) + length(chunk) + tailBytes - 8, 4L
-  )))
-
   # A recording cut short declares more audio than it holds. Metadata written
   # after it would fall inside the audio the file claims to have, where no
   # reader, this one included, would find it. The size is corrected to the
   # audio that is actually there, which is the only size that was ever true.
+  # Otherwise the data size is written only where it changes.
+  dataSize <- NULL
   if (!is.null(data) && isTRUE(data$truncated)) {
     warning(
       "DATA chunk runs past the end of the file, which may be truncated. ",
       "Its size has been corrected to the audio the file holds."
     )
-    edits[[length(edits) + 1L]] <- list(
-      at = data$start - 4, bytes = .uintToRaw(data$size, 4L)
-    )
+    dataSize <- data$size
   }
+  # A ds64 chunk that miscounts the sample frames is given the data size it
+  # already has, which puts the count right with it.
+  if (!is.null(info$ds64) && !info$ds64$countAgrees) {
+    .wavCountWarning(info$ds64, file, corrected=TRUE)
+    if (is.null(dataSize)) {
+      dataSize <- info$ds64$dataSize
+    }
+  }
+
+  # The sizes the file declares are the only bytes carried across that change,
+  # and all of them are known before anything is written, so the output is
+  # written once through rather than gone back over. Each is written where the
+  # form of the file keeps it: in the header of a RIFF file, and in the ds64
+  # chunk of an RF64 or BW64 one. They are added up in doubles, as a recording
+  # of 2GB or more is longer than a whole number can be counted in.
+  edits <- .wavSizePatches(
+    info$form, info$ds64, data$start,
+    as.numeric(headEnd) + length(pad) + length(chunk) + tailBytes - 8, dataSize
+  )
 
   # Written beside the recording and put in its place once whole, so that a
   # write which fails part way through cannot lose a recording that was only

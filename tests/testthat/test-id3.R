@@ -279,6 +279,16 @@ test_that("A tag held in a chunk of a wave file is read", {
   expect_identical(id3(f)[["TIT2"]], "Pacific Swallow (Hirundo tahitica)")
 })
 
+test_that("A tag held in a chunk of an RF64 file is read", {
+  bytes <- mdRf64(
+    mdFmt(), mdDeferred("data", raw(16)), mdChunk("id3 ", mdXenoCantoTag()),
+    dataSize=16, frames=8
+  )
+
+  expect_identical(id3(mdFile(bytes))[["TIT2"]], "Pacific Swallow (Hirundo tahitica)")
+  expect_identical(id3(bytes)[["TIT2"]], "Pacific Swallow (Hirundo tahitica)")
+})
+
 # The three letters that mark a version 1 tag can be spelled by the audio of a
 # wave file, which would invent a record the file does not carry.
 test_that("The end of a wave file is not searched for a version 1 tag", {

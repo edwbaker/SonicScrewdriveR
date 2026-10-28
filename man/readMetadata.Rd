@@ -28,7 +28,9 @@ is in and whatever container the file is: GUANO, Wildlife Acoustics wamd,
 Broadcast Wave bext, iXML and the INFO list from a wave file, the AudioMoth
 comment, ID3 from an MP3 file or from a wave file that holds a tag in a
 chunk, and Vorbis comments from a FLAC or Ogg file. A file holding none of
-them gives an empty result rather than an error.
+them gives an empty result rather than an error. A wave file over 4 GiB,
+written in the RF64 or BW64 form, is read as any other, and named by that
+form.
 }
 \details{
 A recording commonly carries more than one of these formats, written by the

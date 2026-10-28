@@ -137,8 +137,10 @@
   their own, so that one of them can be handled without silencing the rest:
   `sampleRateMismatch` for a header that disagrees with the recorder's own
   metadata, `unwrittenAudioSize` for a recording whose size was never written,
-  `nonFiniteSamples` for samples that are not finite numbers, and
-  `truncatedAudio` from audiomothExpand(). A corpus known to hold truncated
+  `nonFiniteSamples` for samples that are not finite numbers, `badDs64` and
+  `frameCountMismatch` for an RF64 or BW64 file whose ds64 chunk cannot be
+  believed or miscounts its sample frames, and `truncatedAudio` from
+  audiomothExpand(). A corpus known to hold truncated
   recordings can now pass over that one warning and still hear about the others,
   which matching the wording of a message could not do. All of them are also
   classed `audioFileWarning`, for handling every warning about the file at once,
@@ -207,6 +209,20 @@
   the recording is.
 
 ## Fixes
+- guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
+  nothing for a wave file in the RF64 or BW64 form, which is how a recording is
+  written once it passes the 4 GiB a RIFF header can describe, so the metadata
+  of a long recording was reported absent. guanoWrite() refused such a file, and
+  readAudio() read one whose sizes were never written as empty, as the av
+  package, which reads these forms, takes those sizes at their word. The forms
+  keep their sizes in a ds64 chunk, which is now read, and the sizes a write
+  changes are written there, so a file stays in the form it was in. A ds64 chunk
+  that is missing, comes later than first, or disagrees with the file, as the E2
+  file of the malformed wave files reference set does, is refused rather than
+  guessed at. readAudio() reads the audio of such a file as the av package does,
+  by the sizes in its ds64 chunk where it has one, and says what is wrong with
+  it. A count of sample frames that disagrees with the audio is read past with a
+  warning, and put right in a file written.
 - readAudio() chose its reader by the extension of the file, so a file under
   the wrong one was read as the wrong format. A wave file called .mp3 was
   given to `tuneR::readMP3()`, which does not refuse it: it finds a frame

@@ -17,7 +17,8 @@ A guano object, which is a named list of fields
 Reads the GUANO metadata of a WAV file, or of a Wave object that carries it.
 GUANO is the metadata format used by many bioacoustic recorders, including
 AudioMoth devices running current firmware. A file holding no GUANO metadata
-gives an empty result rather than an error.
+gives an empty result rather than an error. A WAV file over 4 GiB, written in
+the RF64 or BW64 form, is read as any other.
 }
 \examples{
 \dontrun{

@@ -267,6 +267,248 @@ test_that("The size of an unfinalised chunk is judged without the bytes after it
   expect_equal(info$dataSize, 2000)
 })
 
+# A recording too long for the four bytes a RIFF header gives a size is written
+# in the RF64 or BW64 form, which keeps its sizes in a ds64 chunk and leaves
+# 0xFFFFFFFF where a RIFF file would give them. Walking such a file by the
+# headers alone would take its audio to run to the end of the file, and miss
+# every chunk written after it.
+
+chunkIds <- function(info) vapply(info$chunks, function(chunk) chunk$id, character(1))
+
+test_that("An RF64 file is walked by the sizes its ds64 chunk gives", {
+  bytes <- mdRf64Wav()
+  f <- mdFile(bytes)
+
+  info <- .wavChunksFile(f)
+  expect_identical(info, .wavChunks(bytes))
+  expect_identical(info$form, "RF64")
+  expect_identical(chunkIds(info), c("ds64", "fmt ", "data", "guan"))
+  expect_equal(info$riffSize + 8, length(bytes))
+
+  data <- .wavFindChunk(info$chunks, "data")
+  expect_equal(data$size, 200)
+  expect_false(data$truncated)
+  expect_equal(info$ds64$dataSize, 200)
+  expect_equal(info$ds64$sampleCount, 100)
+  expect_equal(info$ds64$frameSize, 2)
+  expect_true(info$ds64$countAgrees)
+})
+
+test_that("A BW64 file is walked as an RF64 file is", {
+  info <- .wavChunks(mdRf64Wav(form="BW64"))
+  expect_identical(info$form, "BW64")
+  expect_identical(chunkIds(info), c("ds64", "fmt ", "data", "guan"))
+})
+
+test_that("A RIFF file has no ds64 chunk to go by", {
+  info <- .wavChunks(mdWav(mdFmt(), mdData()))
+  expect_identical(info$form, "RIFF")
+  expect_null(info$ds64)
+})
+
+test_that("A ds64 chunk too short to hold a table is read as having none", {
+  # FFmpeg reads a ds64 chunk of the three sizes alone, without the count of
+  # table entries that would follow them.
+  body <- c(mdFmt(), mdDeferred("data", raw(200)))
+  ds64 <- c(
+    charToRaw("ds64"), mdU32(24),
+    mdU64(4 + 32 + length(body)), mdU64(200), mdU64(100)
+  )
+  bytes <- c(charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"), ds64, body)
+
+  info <- .wavChunks(bytes)
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 200)
+  expect_length(info$ds64$table, 0)
+})
+
+test_that("A chunk too large for its own header is walked past by the table", {
+  guan <- mdChunk("guan", charToRaw("GUANO|Version:1.0\n"))
+  bytes <- mdRf64Wav(after=c(mdDeferred("JUNK", raw(10)), guan), table=list(JUNK=10))
+
+  info <- .wavChunks(bytes)
+  expect_equal(info$ds64$table, c(JUNK=10))
+  expect_equal(.wavFindChunk(info$chunks, "JUNK")$size, 10)
+  expect_identical(chunkIds(info), c("ds64", "fmt ", "data", "JUNK", "guan"))
+})
+
+test_that("A table too long to read whole is read as far as it goes", {
+  # 6000 entries is more than is read of the chunk, so the later ones are not
+  # looked at, and a chunk that would need one is taken at its own word.
+  table <- as.list(rep(10, 6000))
+  names(table) <- sprintf("%04d", seq_len(6000))
+  info <- .wavChunks(mdRf64Wav(table=table))
+  expect_lt(length(info$ds64$table), 6000)
+  expect_equal(length(info$ds64$table), (65536 - 28) %/% 12)
+  expect_identical(names(info$ds64$table)[1:2], c("0001", "0002"))
+})
+
+test_that("A ds64 chunk that cannot be believed is refused", {
+  refused <- function(bytes, message) {
+    expect_error(.wavChunks(bytes), message, class="badDs64")
+    # As every other refusal is, so that what passes over a file it cannot read
+    # passes over this one too.
+    expect_error(.wavChunks(bytes), class="unsupportedWav")
+  }
+  header <- c(charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"))
+  sizes <- c(mdU64(1000), mdU64(200), mdU64(100), mdU32(0))
+  audio <- mdDeferred("data", raw(200))
+
+  # The ds64 chunk is missing, comes later than it must, or is too short to be
+  # one, and an RF64 file too short to hold one at all.
+  refused(c(header, mdFmt(), mdChunk("data", raw(200))), "first chunk is not ds64")
+  refused(c(header, mdFmt(), mdChunk("ds64", sizes), audio), "first chunk is not ds64")
+  refused(c(header, mdChunk("ds64", raw(16)), mdFmt(), audio), "too short")
+  refused(c(header, raw(4)), "first chunk is not ds64")
+
+  # The chunk runs past the end of the file, or gives a table it has no room
+  # for.
+  refused(c(header, charToRaw("ds64"), mdU32(28), raw(10)), "runs past the end")
+  refused(
+    c(header, mdChunk("ds64", c(mdU64(1000), mdU64(200), mdU64(100), mdU32(1))), audio),
+    "no room"
+  )
+
+  # A RIFF size more than the file holds when nothing in it is cut short, as the
+  # E2 file of the reference set gives one, and a RIFF size less than the file
+  # holds when the audio size was written.
+  good <- mdRf64Wav()
+  refused(mdRf64Wav(riffSize=length(good)), "8 more than the file holds")
+  refused(c(good, raw(16)), "16 bytes at the end of the file")
+
+  # A data size running past the end of a file the RIFF size says is whole.
+  refused(mdRf64Wav(dataSize=1000), "says is whole")
+
+  # A data chunk giving a size of its own that the ds64 chunk does not.
+  refused(mdRf64(mdFmt(), mdChunk("data", raw(200)), dataSize=100), "data chunk gives")
+})
+
+test_that("A chunk that leaves its size to a table without it is refused", {
+  # Nothing in the file says how long the chunk is, so it runs past the end of a
+  # file the RIFF size says is whole.
+  bytes <- mdRf64Wav(after=mdDeferred("JUNK", raw(10)))
+  expect_error(.wavChunks(bytes), "says is whole", class="badDs64")
+})
+
+test_that("An RF64 recording cut short or never finished is walked as a RIFF one is", {
+  # Cut short by a flat battery or a full card, with the sizes still saying what
+  # the writer meant: the audio runs past the end of the file.
+  good <- mdRf64Wav(after=raw(0))
+  info <- .wavChunks(good[seq_len(length(good) - 100)])
+  data <- .wavFindChunk(info$chunks, "data")
+  expect_true(data$truncated)
+  expect_equal(data$size, 100)
+
+  # Never finished: the recorder stopped before writing any size, which leaves
+  # the zeros it wrote at the start. The audio after the empty data chunk reads
+  # as a chunk running past the end, as it does in a RIFF file.
+  unfinished <- mdRf64Wav(dataSize=0, frames=0, riffSize=0, after=raw(0))
+  info <- .wavChunks(unfinished)
+  expect_equal(info$riffSize, 0)
+  expect_equal(.wavFindChunk(info$chunks, "data")$size, 0)
+  expect_true(info$chunks[[length(info$chunks)]]$truncated)
+
+  # Audio there can read as a chunk leaving its size to a table without it.
+  # That is no reason to refuse a recording that was never finished.
+  unfinished <- mdRf64(
+    mdFmt(), mdDeferred("data", c(charToRaw("abcd"), mdU32(4294967295), raw(40))),
+    dataSize=0, riffSize=0
+  )
+  info <- .wavChunks(unfinished)
+  expect_true(.wavFindChunk(info$chunks, "abcd")$truncated)
+})
+
+test_that("A ds64 chunk that miscounts the sample frames is read, and says so", {
+  expect_false(.wavChunks(mdRf64Wav(frames=99))$ds64$countAgrees)
+  # A count of zero gives none, and so cannot be wrong.
+  expect_true(.wavChunks(mdRf64Wav(frames=0))$ds64$countAgrees)
+
+  # A format that is not PCM or floating point takes no fixed number of bytes
+  # to a frame, so its count cannot be weighed.
+  adpcm <- mdChunk("fmt ", c(
+    mdU16(2), mdU16(1), mdU32(48000), mdU32(24000), mdU16(256), mdU16(4)
+  ))
+  info <- .wavChunks(mdRf64(adpcm, mdDeferred("data", raw(200)), dataSize=200, frames=7))
+  expect_true(info$ds64$countAgrees)
+  expect_true(is.na(info$ds64$frameSize))
+
+  # WAVE_FORMAT_EXTENSIBLE is weighed as the format it extends.
+  extensible <- mdChunk("fmt ", c(
+    mdU16(65534), mdU16(1), mdU32(48000), mdU32(96000), mdU16(2), mdU16(16),
+    mdU16(22), mdU16(16), mdU32(4), mdU16(1), raw(14)
+  ))
+  info <- .wavChunks(mdRf64(extensible, mdDeferred("data", raw(200)), dataSize=200, frames=99))
+  expect_equal(info$ds64$frameSize, 2)
+  expect_false(info$ds64$countAgrees)
+
+  # Nothing can be counted in a file with no data chunk.
+  expect_true(.wavChunks(mdRf64(mdFmt(), dataSize=0, frames=5))$ds64$countAgrees)
+
+  # Nor weighed where the format chunk lies beyond the bytes in hand, here
+  # because it comes after the audio and only the start of the file is read.
+  bytes <- mdRf64(mdDeferred("data", raw(200)), mdFmt(), dataSize=200, frames=99)
+  info <- .wavChunks(bytes[1:268], total=length(bytes))
+  expect_identical(chunkIds(info), c("ds64", "data", "fmt "))
+  expect_true(info$ds64$countAgrees)
+  expect_false(.wavChunks(bytes)$ds64$countAgrees)
+})
+
+test_that("Walking an RF64 file reads its chunk headers and not its audio", {
+  bytes <- mdRf64Wav(samples=rep(500L, 100000))
+  bytesRead <- 0
+  counting <- function(at, n) {
+    bytesRead <<- bytesRead + n
+    return(bytes[at:(at + n - 1L)])
+  }
+
+  info <- .wavWalk(counting, length(bytes), length(bytes))
+  expect_false(is.null(.wavFindChunk(info$chunks, "guan")))
+  # The RIFF header, the ds64 chunk, eight bytes for each chunk header and the
+  # first sixteen of the format chunk.
+  expect_lt(bytesRead, 200)
+})
+
+test_that("Sizes are written where each form of file keeps them", {
+  riff <- .wavPatch(raw(48), .wavSizePatches("RIFF", NULL, 45, 1000, 900))
+  expect_equal(riff[5:8], mdU32(1000))
+  expect_equal(riff[41:44], mdU32(900))
+  # Without a data size, only the RIFF size is written.
+  expect_length(.wavSizePatches("RIFF", NULL, 45, 1000), 1)
+
+  bytes <- mdRf64Wav()
+  info <- .wavChunks(bytes)
+  start <- .wavFindChunk(info$chunks, "data")$start
+  patched <- .wavPatch(bytes, .wavSizePatches(info$form, info$ds64, start, 5000, 150))
+  # The headers say the sizes are in the ds64 chunk, which holds them and the
+  # number of frames the data now holds.
+  expect_equal(patched[5:8], mdU32(4294967295))
+  expect_equal(patched[(start - 4):(start - 1)], mdU32(4294967295))
+  expect_equal(patched[21:44], c(mdU64(5000), mdU64(150), mdU64(75)))
+  expect_length(.wavSizePatches(info$form, info$ds64, start, 5000), 2)
+
+  # Where the format does not say how many bytes a frame takes, the count is
+  # given as none rather than left saying what is no longer true.
+  info$ds64$frameSize <- NA
+  patched <- .wavPatch(bytes, .wavSizePatches(info$form, info$ds64, start, 5000, 150))
+  expect_equal(patched[37:44], mdU64(0))
+})
+
+test_that("The fields of a format chunk are read only as far as they are held", {
+  pcm <- c(mdU16(1), mdU16(2), mdU32(44100), mdU32(176400), mdU16(4), mdU16(16))
+  fields <- .wavFmtFields(pcm, 16)
+  expect_equal(fields$channels, 2)
+  expect_equal(fields$sampleRate, 44100)
+  expect_equal(fields$frameSize, 4)
+  expect_null(.wavFmtFields(pcm[1:15], 16))
+
+  # WAVE_FORMAT_EXTENSIBLE needs its sub-format to say what it extends.
+  extensible <- c(
+    mdU16(65534), mdU16(1), mdU32(8000), mdU32(16000), mdU16(2), mdU16(16),
+    mdU16(22), mdU16(16), mdU32(4), mdU16(3), raw(14)
+  )
+  expect_equal(.wavFmtFields(extensible, 40)$format, 3)
+  expect_null(.wavFmtFields(extensible[1:16], 40))
+})
+
 test_that("Bytes are copied in bounded buffers", {
   source <- tempfile(fileext=".bin")
   out <- tempfile(fileext=".bin")

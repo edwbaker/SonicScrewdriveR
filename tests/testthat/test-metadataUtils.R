@@ -136,6 +136,24 @@ test_that("A file is named by its bytes, not by its extension", {
   expect_true(is.na(.mdContainer(raw(4))))
 })
 
+test_that("A wave file over 4 GiB is named by the form it was written in", {
+  rf64 <- c(charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"))
+  bw64 <- c(charToRaw("BW64"), mdU32(4294967295), charToRaw("WAVE"))
+  expect_identical(.mdContainer(rf64), "RF64")
+  expect_identical(.mdContainer(bw64), "BW64")
+
+  # Each holds its metadata in wave chunks, which nothing else here does.
+  expect_true(.mdWaveContainer("WAVE"))
+  expect_true(.mdWaveContainer("RF64"))
+  expect_true(.mdWaveContainer("BW64"))
+  expect_false(.mdWaveContainer("MP3"))
+  expect_false(.mdWaveContainer(NA_character_))
+
+  # Named, a BW64 file is no longer taken for a file of no known form, whose
+  # last 128 bytes could be read as a version 1 ID3 tag.
+  expect_false(.id3v1Possible(.mdContainer(bw64)))
+})
+
 test_that("Bytes are read from a file by position, and past its end", {
   f <- mdFile(charToRaw("0123456789"))
 
