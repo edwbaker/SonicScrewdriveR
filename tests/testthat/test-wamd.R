@@ -144,17 +144,70 @@ test_that("A timestamp followed by anything else is kept as the text it was", {
   }
 })
 
-# The devices known to write wamd, and the wamd reader of the GUANO reference
-# converter, all give the seconds. A time that stops at the minute is not a form
-# wamd is known to take, so it is kept as text and the warning shows where one
-# has turned up. readMetadata() still reads its time.
-test_that("A timestamp that stops at the minute is kept as the text it was", {
+# No device is known to write a timestamp that stops at the minute, but one can
+# mean nothing else, so it is read as readMetadata() reads it rather than kept
+# as text with a warning that it could not be read.
+wamdTimestampOf <- function(text) {
   f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
-    mdWamdField(5, "2025-09-15 21:31+2:00")
+    mdWamdField(5, text)
   )), mdData()))
+  wamd(f)[["timestamp"]]
+}
 
-  expect_warning(w <- wamd(f), "Could not read the wamd timestamp")
-  expect_identical(w[["timestamp"]], "2025-09-15 21:31+2:00")
+for (tz in sessionTimezones) {
+  test_that(paste0("A timestamp that stops at the minute is read in session timezone ", tz), {
+    withSessionTimezone(tz, {
+      for (case in list(
+        c("2025-09-15 21:31+2:00", "2025-09-15T19:31:00Z"),
+        c("2025-09-15T21:31-05:30", "2025-09-16T03:01:00Z"),
+        c("2025-09-15 21:31-0530", "2025-09-16T03:01:00Z"),
+        c("2025-09-15 21:31 +02:00", "2025-09-15T19:31:00Z"),
+        c("2025-09-15T21:31Z", "2025-09-15T21:31:00Z"),
+        c("2025-9-5 9:31+2:00", "2025-09-05T07:31:00Z")
+      )) {
+        expect_silent(t <- wamdTimestampOf(case[1]))
+
+        expect_s3_class(t, "POSIXct")
+        expect_identical(format(t, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), case[2])
+      }
+
+      # With no offset it is a wall clock, as a time to the second is.
+      expect_silent(minute <- wamdTimestampOf("2025-09-15 21:31"))
+      expect_equal(
+        as.numeric(minute), as.numeric(wamdTimestampOf("2025-09-15 21:31:00")), tolerance=0
+      )
+      expect_identical(format(minute, "%Y-%m-%d %H:%M:%S"), "2025-09-15 21:31:00")
+    })
+  })
+}
+
+test_that("A timestamp to the minute followed by anything else, or out of range, is kept as text", {
+  for (text in c(
+    "2025-09-15 21:31 junk",
+    "2025-09-15 21:31+02",
+    "2025-09-15 21:31:",
+    "2025-09-15 21",
+    "2025-09-15 25:00",
+    "2025-09-15 21:60"
+  )) {
+    expect_warning(t <- wamdTimestampOf(text), "Could not read the wamd timestamp")
+    expect_identical(t, text)
+  }
+})
+
+# R warns of such an offset itself, which said the same thing a second time.
+test_that("An offset beyond any zone gives only the warning that the time could not be read", {
+  for (text in c("2025-09-15 21:31+2400", "2015-10-28 20:21:13+2400")) {
+    warnings <- character(0)
+    t <- withCallingHandlers(wamdTimestampOf(text), warning=function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+
+    expect_identical(t, text)
+    expect_length(warnings, 1)
+    expect_match(warnings, "Could not read the wamd timestamp")
+  }
 })
 
 test_that("Spaces around a timestamp and before its offset are read past", {

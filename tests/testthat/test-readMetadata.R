@@ -316,8 +316,8 @@ for (tz in sessionTimezones) {
   })
 
   # The two formats that allow it, and the three others whose dates reach the
-  # same reader. GUANO and wamd do not allow it, so their own readers keep it as
-  # text, with a warning, and readMetadata() reads that text.
+  # same reader. GUANO does not allow it, so guano() keeps it as text, with a
+  # warning, and readMetadata() reads that text. wamd() reads it itself.
   test_that(paste0("A time to the minute is read from every format in session timezone ", tz), {
     withSessionTimezone(tz, {
       xmpPacket <- paste0(
@@ -357,7 +357,8 @@ for (tz in sessionTimezones) {
       f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
         mdWamdField(5, "2025-09-15 21:31+2:00")
       )), mdData()))
-      expect_warning(m <- readMetadata(f, filename=FALSE), "Could not read the wamd timestamp")
+      expect_silent(m <- readMetadata(f, filename=FALSE))
+      expect_s3_class(m$sources$wamd[["timestamp"]], "POSIXct")
       expect_identical(
         format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:00Z"
       )
