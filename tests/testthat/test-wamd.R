@@ -50,6 +50,28 @@ test_that("The binary fields are passed over, and their sizes recorded", {
   expect_identical(attr(w, "binary")[["runstate"]], 20)
 })
 
+# The Song Meter Mini Bat writes fields 34 and 35, which nothing published
+# names: 128 bytes each, beginning as these do, with the rest zeros. Read as
+# text, 34 gave its serial number among a run of control characters.
+test_that("The two unnamed binary fields of a Song Meter Mini Bat are passed over", {
+  field34 <- c(
+    as.raw(c(0, 0, 1, 1, 1, 1)), charToRaw("2MU01960"),
+    as.raw(c(0, 0, 0, 0, 2, 0, 0, 0, 0x9b, 0x5b, 0x44, 0, 0x6a, 0xdd, 0, 0))
+  )
+  field35 <- as.raw(c(0, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x1e, 0x10, 0x1e, 0x28))
+  f <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
+    mdWamdField(0, mdU16(1)),
+    mdWamdField(34, c(field34, raw(128 - length(field34)))),
+    mdWamdField(35, c(field35, raw(128 - length(field35))))
+  )), mdData()))
+  w <- wamd(f)
+
+  expect_identical(names(w), "version")
+  expect_identical(w[["version"]], 1L)
+  expect_identical(attr(w, "binary")[["wamd:34"]], 128)
+  expect_identical(attr(w, "binary")[["wamd:35"]], 128)
+})
+
 test_that("A timestamp is read with the offset from UTC the device was set to", {
   withUtc <- mdFile(mdWav(mdFmt(), mdChunk("wamd", c(
     mdWamdField(5, "2015-10-28 20:21:13-04:00")

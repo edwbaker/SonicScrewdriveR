@@ -41,9 +41,17 @@
 #' it was left in are binary, and reading them as text gives a run of
 #' punctuation that says nothing. 65535 is the padding a writer uses to bring
 #' the chunk to an even length, and is not a field at all.
+#'
+#' The Song Meter Mini Bat writes two more, 34 and 35, which neither the
+#' reference implementation nor Wildlife Acoustics names. Each is 128 bytes,
+#' mostly numbers, and read as text they give runs of control characters, with
+#' the serial number of the device among those of 34. What can be recognised in
+#' 34, the serial number, the position and the sample rate, the same device
+#' writes as GUANO, where it is documented, so nothing is lost by passing them
+#' over.
 #' @keywords internal
 #' @noRd
-.WAMD_BINARY_IDS <- c(13L, 16L, 17L, 65535L)
+.WAMD_BINARY_IDS <- c(13L, 16L, 17L, 34L, 35L, 65535L)
 
 #' Read a wamd timestamp
 #'
@@ -223,9 +231,10 @@
 #' number, as `wamd:21`.
 #'
 #' The embedded voice note, the program the device was running and the state it
-#' was left in are binary rather than text and are passed over. Their sizes are
-#' kept on the result as its "binary" attribute, so that a file carrying them
-#' can be told from one that does not.
+#' was left in are binary rather than text and are passed over, as are the two
+#' unnamed fields 34 and 35 that the Song Meter Mini Bat writes. Their sizes
+#' are kept on the result as its "binary" attribute, so that a file carrying
+#' them can be told from one that does not.
 #'
 #' @param x Path to a wave file, a Wave object with wamd metadata attached, a
 #'   raw vector holding a wave file, or a wamd object
