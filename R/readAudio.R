@@ -69,6 +69,18 @@
 #' saying so. A start of zero is the start of any recording, so a file that
 #' holds no audio is read from there as empty.
 #'
+#' An end point that leaves no audio after the start point is an error of
+#' class `endBeforeStart`, for the same reason and in every format and unit
+#' alike: a start and an end swapped, or computed from different things, ask
+#' for nothing that can be measured. In samples the end point is the last
+#' sample returned, so an end at the start returns that one sample, and an end
+#' of zero is before the first. In a unit of time the two points are placed at
+#' the boundaries between samples nearest to them, so an end at the start holds
+#' no audio, nor does a part so short that both of its points are nearest the
+#' same boundary. Every format is cut at those same samples, so a part of a
+#' recording is the same part however the file holds it, and two parts that
+#' meet at a time meet without a sample lost or repeated between them.
+#'
 #' ## A header that disagrees with the recorder's own metadata
 #' A recorder can write a sample rate into its metadata that disagrees with the
 #' one in the format chunk of the header, and the header can be the one that is
@@ -112,15 +124,14 @@
 #'   package.
 #' @param from Start point in file to return, which must fall within the
 #'   recording
-#' @param to End point in file to return, read as the end of the recording
-#'   where it is beyond it
+#' @param to End point in file to return, which must leave some audio after
+#'   the start point, read as the end of the recording where it is beyond it
 #' @param input.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 #' @param units Deprecated, use input.unit instead.
 #' @return A Wave object, or a WaveMC object for a file with more than two
 #'   channels.
 #' @export
 #' @importFrom tuneR readMP3 readWave stereo Wave
-#' @importFrom seewave cutw
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
 readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
@@ -157,7 +168,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     )
     if (!is.null(wave)) {
       .wavRateWarning(wave, file)
-      return(.cutAudio(wave, from, to, input.unit, fromS, file))
+      return(.cutAudio(wave, from, to, input.unit, file))
     }
   }
 
@@ -171,14 +182,24 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       on.exit(unlink(repaired), add=TRUE)
     }
     # readWave() cuts the file as it reads it, and returns an empty wave for a
-    # start at the end of the audio where it refuses one beyond it, so the
-    # start is held against the audio the file holds before it is asked. A file
-    # whose audio cannot be counted from its chunks is left to the av package
-    # below, which holds the start against the audio it reads.
-    if (from != 0) {
+    # start at the end of the audio, or an end just before the start, where it
+    # refuses others like them, so the part asked for is held against the
+    # audio the file holds before it is asked. It is then asked in samples, at
+    # the samples every other reader cuts at, as it places a time half way
+    # between two samples a sample away from where they do. A file whose audio
+    # cannot be counted from its chunks is asked as it always was.
+    start <- fromS
+    end <- to
+    unit <- input.unit
+    if (from != 0 || to != Inf) {
       held <- .wavFramesHeld(if (is.null(repaired)) file else repaired)
       if (!is.null(held)) {
         .startWithin(file, from, input.unit, held$frames, held$rate)
+        .endAfterStart(file, from, to, input.unit, held$rate)
+        part <- .samplesAsked(from, to, input.unit, held$rate)
+        start <- part[1]
+        end <- part[2]
+        unit <- "samples"
       }
     }
     # Only the reading is guarded: a file readWave() cannot make sense of is
@@ -190,7 +211,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     wave <- tryCatch(
       readWave(
         if (is.null(repaired)) file else repaired,
-        from=fromS, to=to, units=input.unit
+        from=start, to=end, units=unit
       ),
       error=function(cond) NULL
     )
@@ -210,7 +231,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # wrong with the part of it asked for is said of the audio that was read.
     wave <- tryCatch(readMP3(file), error=function(cond) NULL)
     if (!is.null(wave)) {
-      return(.cutAudio(wave, from, to, input.unit, fromS, file))
+      return(.cutAudio(wave, from, to, input.unit, file))
     }
   }
 
@@ -271,7 +292,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # metadata disagrees with its header whichever of the two read it.
     .wavRateWarning(wave, file)
 
-    return(.cutAudio(wave, from, to, input.unit, fromS, file))
+    return(.cutAudio(wave, from, to, input.unit, file))
   }
   stop("File could not be processed")
 }
@@ -389,7 +410,11 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' cut short holds less audio than its data chunk declares, and readWave()
 #' reads only the audio it holds. Only PCM and floating-point audio give every
 #' sample frame the same number of bytes, so a file holding any other format,
-#' and one whose chunks cannot be walked, gives NULL.
+#' and one whose chunks cannot be walked, gives NULL. The formats counted are
+#' the ones readWave() reads, which takes an unknown format (0), and an
+#' extensible one whose format chunk is too short to name what it extends, as
+#' PCM: a file it reads but this does not count would be cut without the part
+#' asked for being held against it.
 #'
 #' @param file Path to a WAV file
 #' @return A list of the number of sample frames and the sample rate, or NULL
@@ -403,7 +428,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   }
   fmt <- tryCatch(.wavChunkFromFile(file, "fmt "), error=function(cond) NULL)
   fields <- if (is.null(fmt)) NULL else .wavFmtFields(fmt, length(fmt))
-  if (is.null(fields) || !fields$format %in% c(1, 3) || fields$frameSize <= 0) {
+  if (is.null(fields) || !fields$format %in% c(0, 1, 3, 65534) || fields$frameSize <= 0) {
     return(NULL)
   }
   return(list(frames=data$size %/% fields$frameSize, rate=fields$sampleRate))
@@ -529,66 +554,45 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   return(wave)
 }
 
-#' Cut a wave for readAudio(), in time units
+#' The first and last sample of the part of a recording asked for
 #'
-#' Shared by the MP3 and av paths of readAudio() so that both cut at the same
-#' point and both keep every channel. `seewave::cutw()` returns one channel per
-#' call, so a stereo wave is cut a channel at a time and recombined, which a
-#' single call would silently reduce to mono.
+#' Every reader cuts the recording at the samples given here, so that a part
+#' of a recording is the same part whatever the format of the file holding it.
+#' A time is placed at the boundary between two samples nearest to it, the
+#' start at the sample after that boundary and the end at the sample before it,
+#' which is where `seewave::cutw()` places them. The end of one part and the
+#' start of the next, asked for at the same time, then meet without a sample
+#' lost or repeated between them. `tuneR::readWave()` places a start at
+#' `round(t * rate + 1)` instead, which differs where a time falls half way
+#' between two samples, as R rounds a half to the even number, so it is given
+#' these samples rather than the time.
 #'
-#' @param wave The Wave object to cut.
-#' @param from Start point as given to readAudio().
-#' @param to End point as given to readAudio().
-#' @param input.unit The unit `from` and `to` are given in.
-#' @return A Wave object holding the section asked for, with as many channels as
-#'   it was given.
+#' A start of zero is the first sample, and an end of `Inf` the last, in any
+#' unit. Neither is converted, so that reading a whole file asks nothing of the
+#' unit it was given in.
+#'
+#' @param from Start point as given to readAudio()
+#' @param to End point as given to readAudio()
+#' @param input.unit The unit `from` and `to` are given in
+#' @param samp.rate The sample rate of the recording
+#' @return The first and last sample asked for, the last of them `Inf` for an
+#'   end of `Inf`
 #' @keywords internal
 #' @noRd
-.cutSeconds <- function(wave, from, to, input.unit) {
-  from <- convert2seconds(from, input.unit=input.unit)
-  to <- .cutEnd(to, input.unit, wave)
-  if (inherits(wave, "WaveMC")) {
-    #cutw() takes a Wave and returns one channel, so there is nothing it can do
-    #with a WaveMC. The time bounds are turned into the sample positions cutw()
-    #would have cut at, and the cut made by row, which keeps every channel. The
-    #end is held within the wave against the rounding of a time .cutEnd() has
-    #already put at its last sample.
-    return(cutws(
-      wave,
-      from=round(from * wave@samp.rate) + 1,
-      to=min(length(wave), round(to * wave@samp.rate))
-    ))
+.samplesAsked <- function(from, to, input.unit, samp.rate) {
+  start <- if (from == 0) 1 else from
+  end <- to
+  if (input.unit != "samples") {
+    if (from != 0) {
+      start <- round(convert2seconds(from, input.unit=input.unit) * samp.rate) + 1
+    }
+    #is.infinite() alone would also take -Inf, which convert2seconds() rejects as
+    #a negative time and which must keep being rejected.
+    if (!(is.infinite(to) && to > 0)) {
+      end <- round(convert2seconds(to, input.unit=input.unit) * samp.rate)
+    }
   }
-  if (wave@stereo) {
-    left <- cutw(wave, channel=1, from=from, to=to, output="Wave")
-    right <- cutw(wave, channel=2, from=from, to=to, output="Wave")
-    return(stereo(left, right))
-  }
-  return(cutw(wave, from=from, to=to, output="Wave"))
-}
-
-#' End point of a cut, in seconds, within the audio in hand
-#'
-#' readAudio()'s `to` defaults to Inf, and `seewave::cutw()` rejects an end
-#' point past the end of the recording, so reading from a non-zero start with no
-#' end has to be cut to the end of the wave rather than at the Inf it was given.
-#' An end point beyond the recording is treated the same way, giving the audio
-#' that is there instead of an error.
-#'
-#' @param to End point as given to readAudio().
-#' @param input.unit The unit `to` is given in.
-#' @param wave The Wave object being cut.
-#' @return The end point in seconds, no later than the end of the wave.
-#' @keywords internal
-#' @noRd
-.cutEnd <- function(to, input.unit, wave) {
-  end <- length(wave) / wave@samp.rate
-  #is.infinite() alone would also take -Inf, which convert2seconds() rejects as
-  #a negative time and which must keep being rejected.
-  if (is.infinite(to) && to > 0) {
-    return(end)
-  }
-  return(min(convert2seconds(to, input.unit), end))
+  return(c(start, end))
 }
 
 #' Build a WaveMC from the samples the av package decoded
@@ -653,37 +657,34 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' has the whole recording in hand before it is cut: an AudioMoth triggered
 #' recording because it is expanded first, and MP3 and everything the av
 #' package reads because they are decoded whole. All of them are cut here, so
-#' that they stop where each other stops and refuse the same start points, and
+#' that they stop where each other stops and refuse the same parts, and
 #' whatever metadata was read from the file is carried onto the section.
 #'
 #' @param wave A Wave or WaveMC object
 #' @param from Start point to return
 #' @param to End point to return
 #' @param input.unit One of "samples", "seconds", "minutes", "hours"
-#' @param fromS Start point adjusted for sample numbering
 #' @param file The file the wave was read from
 #' @return A Wave or WaveMC object
 #' @keywords internal
 #' @noRd
-.cutAudio <- function(wave, from, to, input.unit, fromS, file) {
+.cutAudio <- function(wave, from, to, input.unit, file) {
   .startWithin(file, from, input.unit, length(wave), wave@samp.rate)
+  .endAfterStart(file, from, to, input.unit, wave@samp.rate)
+  part <- .samplesAsked(from, to, input.unit, wave@samp.rate)
   # Everything the file said about itself is carried over, not just its GUANO
   # metadata: a section of a recording came from the same recording.
   metadata <- .mdStore(wave)
-  if (input.unit == "samples") {
-    # cutws() indexes the samples directly, so an end past the last of them
-    # would pad the result with NA rather than stop at the end of the
-    # recording.
-    cut <- cutws(wave, from=fromS, to=min(to, length(wave)))
-  } else if (from == 0 && to == Inf) {
-    cut <- wave
-  } else {
-    cut <- .cutSeconds(wave, from, to, input.unit)
+  # The whole of a recording is returned as it was read, so an empty one is
+  # read as empty rather than cut. An end past the last sample stops at it.
+  # cutws() keeps every channel, as a wave cut by the samples in it.
+  if (part[1] > 1 || part[2] < length(wave)) {
+    wave <- cutws(wave, from=part[1], to=min(part[2], length(wave)))
   }
   if (!is.null(metadata)) {
-    cut <- .mdSetStore(cut, metadata)
+    wave <- .mdSetStore(wave, metadata)
   }
-  return(cut)
+  return(wave)
 }
 
 #' Refuse a start point at or beyond the end of the recording
@@ -698,10 +699,11 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' Those objected in their own words, and differently for samples and for
 #' time.
 #'
-#' A time is placed at the sample the readers start it at, the nearest one, so
-#' a start is refused only where they would find nothing after it. A start of
-#' zero, or of the first sample, is the start of any recording however short,
-#' so an empty recording read from there is read as empty.
+#' A time is placed at the sample the readers start it at, as
+#' `.samplesAsked()` places it, so a start is refused only where they would
+#' find nothing after it. A start of zero, or of the first sample, is the start
+#' of any recording however short, so an empty recording read from there is
+#' read as empty.
 #'
 #' @param file The file being read, to name in the error
 #' @param from Start point as given to readAudio()
@@ -717,13 +719,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   if (from == 0) {
     return(invisible(NULL))
   }
-  if (input.unit == "samples") {
-    start <- from
-  } else {
-    seconds <- convert2seconds(from, input.unit=input.unit)
-    start <- round(seconds * samp.rate) + 1
-  }
-  if (start <= max(1, samples)) {
+  if (.samplesAsked(from, Inf, input.unit, samp.rate)[1] <= max(1, samples)) {
     return(invisible(NULL))
   }
   if (input.unit == "samples") {
@@ -731,7 +727,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     held <- paste0("which holds ", .countText(samples, "sample"))
     where <- "beyond"
   } else {
-    asked <- .countText(seconds, "second")
+    asked <- .countText(convert2seconds(from, input.unit=input.unit), "second")
     held <- paste0("which is ", .countText(samples / samp.rate, "second"), " long")
     where <- "at or beyond"
   }
@@ -744,6 +740,69 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       ),
       call = NULL
     )
+  ))
+}
+
+#' Refuse an end point that leaves no audio after the start point
+#'
+#' An end before the start asks for no audio at all, and so, in a unit of
+#' time, does an end at the start, or one so close after it that the two are
+#' nearest the same boundary between samples. Each was refused by whichever
+#' function cut the wave first, in its own words and differently for samples
+#' and for time, or read as an empty wave by `tuneR::readWave()` where the
+#' other readers gave samples or refused it. Like a start past the end, a part
+#' holding nothing is most often a mistake, a start and end swapped or taken
+#' from different things, and an empty wave would carry it into whatever is
+#' measured from it without saying so. It is refused, saying what was asked
+#' for.
+#'
+#' In samples the end point is the last sample returned, so an end at the
+#' start gives that one sample, and an end of zero is before the first, which
+#' a start of zero stands for.
+#'
+#' @param file The file being read, to name in the error
+#' @param from Start point as given to readAudio()
+#' @param to End point as given to readAudio()
+#' @param input.unit The unit `from` and `to` are given in
+#' @param samp.rate The sample rate of the recording
+#' @return NULL, called for the error it raises
+#' @keywords internal
+#' @noRd
+.endAfterStart <- function(file, from, to, input.unit, samp.rate) {
+  part <- .samplesAsked(from, to, input.unit, samp.rate)
+  if (part[2] >= part[1]) {
+    return(invisible(NULL))
+  }
+  if (input.unit == "samples") {
+    start <- if (part[1] == 1) {
+      "the first sample"
+    } else {
+      paste0("the start point, sample ", format(from, scientific=FALSE, trim=TRUE))
+    }
+    message <- paste0(
+      "The end point asked for, sample ", format(to, scientific=FALSE, trim=TRUE),
+      ", is before ", start, ", so no audio of '", file, "' was asked for."
+    )
+  } else {
+    start <- convert2seconds(from, input.unit=input.unit)
+    end <- convert2seconds(to, input.unit=input.unit)
+    if (end < start) {
+      message <- paste0(
+        "The end point asked for, ", .countText(end, "second"),
+        ", is before the start point, ", .countText(start, "second"),
+        ", so no audio of '", file, "' was asked for."
+      )
+    } else {
+      message <- paste0(
+        "The part asked for, from ", format(start, scientific=FALSE, trim=TRUE),
+        " to ", .countText(end, "second"), ", holds no samples of '", file,
+        "', which is sampled at ", .wavRateText(samp.rate), " Hz."
+      )
+    }
+  }
+  stop(structure(
+    class = c("endBeforeStart", "error", "condition"),
+    list(message = message, call = NULL)
   ))
 }
 
@@ -891,12 +950,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @noRd
 .wavRateClaims <- function(file) {
   # Reading the metadata is a cross-check on the audio, not something the
-  # caller asked for, so a complaint about how a field is written is not raised
-  # from under a call to read the audio.
-  read <- suppressWarnings(tryCatch(
+  # caller asked for, so neither a complaint about how a field is written nor a
+  # note that it departs from its specification is raised from under a call to
+  # read the audio.
+  read <- suppressMessages(suppressWarnings(tryCatch(
     list(guano=guano(file), bext=bext(file)),
     error=function(cond) NULL
-  ))
+  )))
   if (is.null(read)) {
     return(list())
   }

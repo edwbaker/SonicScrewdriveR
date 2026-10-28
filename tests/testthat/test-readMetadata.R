@@ -65,6 +65,20 @@ test_that("Where two formats disagree, the more specific one is believed", {
   expect_identical(m$sources$bext[["OriginationDate"]], "2011-05-23")
 })
 
+test_that("A GUANO timestamp written as a Song Meter writes it gives its moment", {
+  # Left as text, it was read as a date and time with whatever followed them
+  # dropped, offset and all, in the zone of the machine reading it.
+  f <- mdFile(mdWav(
+    mdFmt(),
+    mdChunk("guan", charToRaw("GUANO|Version:1.0\nTimestamp:2025-09-15 21:31:57+2:00")),
+    mdData()
+  ))
+  expect_message(m <- readMetadata(f, filename=FALSE), "departs from the specification")
+  expect_identical(
+    format(m$fields$datetime, "%Y-%m-%dT%H:%M:%SZ", tz="UTC"), "2025-09-15T19:31:57Z"
+  )
+})
+
 test_that("The record of an MP3 recording is read from its tag", {
   comment <- c(
     as.raw(0), charToRaw("eng"), as.raw(0),

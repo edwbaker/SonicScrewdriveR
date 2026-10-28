@@ -33,7 +33,11 @@
 # that same class where its audio is read all the same. `startPastEnd` is
 # raised by `.startWithin()` in readAudio.R, for a start point at or beyond the
 # end of the recording, so that a caller reading the same part of many
-# recordings can pass over the ones too short to hold it.
+# recordings can pass over the ones too short to hold it. `endBeforeStart` is
+# raised by `.endAfterStart()` beside it, for an end point that leaves no audio
+# after the start point. It has a class of its own rather than sharing that
+# one, as it is no fault of the recording: a caller passing over recordings
+# too short for a part should still hear that the part itself holds nothing.
 
 #' Raise a warning about the file audio was read from
 #'
