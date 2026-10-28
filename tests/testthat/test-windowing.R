@@ -199,6 +199,24 @@ test_that("bind.wave gives the same result from a Wave object and a filename", {
   expect_equal(from.wave@left, from.file@left)
 })
 
+test_that("bind.wave fills the last gap of a file whose length is no whole number of microseconds", {
+  skip_if_not_installed("av")
+  # The av package gives the duration of 44101 samples at 44100 Hz as
+  # 1.000023 seconds, or 44101.0143 samples, and the gap after the last window
+  # is read up to that count, which readAudio() refuses as a fraction of a
+  # sample.
+  w <- tuneR::Wave(
+    left=as.integer(round(sin(seq_len(44101) / 7) * 1000)), samp.rate=44100, bit=16
+  )
+  idfun <- function(wave, start, window.length) wave
+  for (ext in c(".wav", ".flac")) {
+    f <- withr::local_tempfile(fileext=ext)
+    writeAudio(w, f)
+    ws <- windowing(f, window.length=10000, window.overlap=-10000, FUN=idfun, bind.wave=TRUE)
+    expect_equal(ws@left, w@left, info=ext)
+  }
+})
+
 test_that("a wave of exactly one window length is analysed once", {
   w <- noise("white", duration=2000, samp.rate=48000)
   idfun <- function(wave, start, window.length) wave

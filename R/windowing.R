@@ -58,7 +58,11 @@ windowing <- function(
       return(FUN(wave, start, window.length, ...))
     }
     info <- av::av_media_info(wave)
-    n.samples <- info$duration * info$audio[,"sample_rate"]
+    # The av package gives the duration to the microsecond, which makes no
+    # whole number of samples of most recordings. The gap after the last
+    # window is read up to this count, and readAudio() refuses a fraction of a
+    # sample.
+    n.samples <- round(info$duration * info$audio[,"sample_rate"])
   } else {
     validateIsWave(wave)
     n.samples <- length(wave)

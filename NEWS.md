@@ -298,6 +298,30 @@
   `tuneR::readWave()` reads as PCM, is now held against the audio it holds in
   the same way, so a start past its end and an end before its start are
   refused as they are for any other file.
+- readAudio() given a start or end point that is no point of a recording gave
+  a different answer from each reader, and from a WAVE file gave audio that
+  was never recorded. A fraction of a sample, `from = 2.5, input.unit =
+  "samples"`, was read from part-way into a sample, so a file holding 1:4000
+  began 768 where 3 was written, while FLAC, MP3 and a triggered AudioMoth
+  recording failed with "In cutws both from and to must be integers"; a start
+  of sample -1 was read from the header. NA, NaN and an empty vector failed
+  with "missing value where TRUE/FALSE needed" and the like. Text was compared
+  as text, so sample "9" was past the end of a recording of 240000 samples,
+  and a factor or a `difftime` was read as the number R keeps it as, so a start
+  of one minute was a start of one second. Each of these is now an error of
+  class `invalidPoint` whatever the format and the unit, raised before the
+  file is read and saying what was asked for: "The start point asked for,
+  sample 2.5, is not a whole number of samples, so no part of 'f.wav' was
+  read." A negative point is refused in the same way in every unit, as a
+  negative time always was and a negative sample was not. A number of samples
+  worked out from a time that misses the whole number it stands for by the
+  last bits of a double, as `0.009 * 48000`, which is 431.99999999999994,
+  does, is read as that whole number: a WAVE file was read from the byte
+  before it, and every other format refused it.
+- windowing() of a file counted its samples from the duration the av package
+  reports, which is given to the microsecond, and read the gap after the last
+  window up to that count, which for most recordings is no whole number of
+  samples. It now counts whole samples.
 - guano(), wavInfo(), bext(), ixml(), wamd(), id3() and readMetadata() gave
   nothing for a wave file in the RF64 or BW64 form, which is how a recording is
   written once it passes the 4 GiB a RIFF header can describe, so the metadata
