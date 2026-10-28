@@ -57,9 +57,11 @@
 #'
 #' Written as a date and time, optionally with a fraction of a second, and
 #' optionally followed by the offset from UTC that the device was set to, as
-#' -04:00, -0400 or -4:00. A time with no offset is read in the timezone of the
-#' session, as there is nothing in the file to say which it was. A value that
-#' only begins with a date and a time is kept as text.
+#' -04:00, -0400 or -4:00. A time that stops at the minute is read too, though
+#' no device is known to write one, as it can mean nothing else. A time with no
+#' offset is read in the timezone of the session, as there is nothing in the
+#' file to say which it was. A value that only begins with a date and a time is
+#' kept as text.
 #'
 #' @param text The field as it is written
 #' @return A POSIXct, or the text where it is not a time this understands
@@ -82,23 +84,29 @@
   # as a wall clock and the rest quietly dropped. R reads a field of one digit
   # as well as one of two, and an offset with spaces before it, so those are
   # allowed.
-  clock <- paste0(
-    "^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}",
-    "T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}([.][0-9]+)?"
-  )
+  minute <- "^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}"
+  clock <- paste0(minute, ":[0-9]{1,2}([.][0-9]+)?")
   forms <- list(
     list(shape=paste0(clock, " *[+-][0-9]{4}$"),
          format="%Y-%m-%dT%H:%M:%OS%z", tz="UTC"),
     list(shape=paste0(clock, "Z$"),
          format="%Y-%m-%dT%H:%M:%OSZ", tz="UTC"),
     list(shape=paste0(clock, "$"),
-         format="%Y-%m-%dT%H:%M:%OS", tz="")
+         format="%Y-%m-%dT%H:%M:%OS", tz=""),
+    list(shape=paste0(minute, " *[+-][0-9]{4}$"),
+         format="%Y-%m-%dT%H:%M%z", tz="UTC"),
+    list(shape=paste0(minute, "Z$"),
+         format="%Y-%m-%dT%H:%MZ", tz="UTC"),
+    list(shape=paste0(minute, "$"),
+         format="%Y-%m-%dT%H:%M", tz="")
   )
   for (form in forms) {
     if (!grepl(form$shape, wanted)) {
       next
     }
-    parsed <- as.POSIXct(wanted, format=form$format, tz=form$tz)
+    # R warns of an offset beyond any zone, as +2400, before giving NA, and the
+    # warning below already says the value could not be read.
+    parsed <- suppressWarnings(as.POSIXct(wanted, format=form$format, tz=form$tz))
     if (!is.na(parsed)) {
       return(parsed)
     }
