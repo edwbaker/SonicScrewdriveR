@@ -25,8 +25,8 @@
 #' @keywords internal
 #' @noRd
 .MD_SOURCE_ORDER <- c(
-  "guano", "wamd", "audiomoth", "bext", "ixml", "wavInfo", "id3",
-  "vorbisComment", "filename"
+  "guano", "wamd", "audiomoth", "bext", "ixml", "wavInfo", "xmp", "disp",
+  "id3", "vorbisComment", "filename"
 )
 
 #' Pick the first of several fields that holds something
@@ -246,6 +246,34 @@
   ))
 }
 
+#' The normalised fields an XMP packet gives
+#'
+#' The audio properties the packet holds describe the recording as the editor
+#' read it rather than as the file declares it, so they are left in the packet
+#' and not reported as the record of the file. What the editor was told about
+#' the recording is reported.
+#' @keywords internal
+#' @noRd
+.mdNormaliseXmp <- function(x) {
+  return(list(
+    datetime = .mdDate(.mdPick(x, "xmp:CreateDate")),
+    title = .mdPick(x, "dc:title", "xmpDM:trackName"),
+    recordist = .mdPick(x, "xmpDM:artist", "dc:creator"),
+    comment = .mdPick(x, "dc:description", "xmpDM:logComment"),
+    licence = .mdPick(x, "dc:rights"),
+    collection = .mdPick(x, "xmpDM:album")
+  ))
+}
+
+#' The normalised fields a display name gives
+#' @keywords internal
+#' @noRd
+.mdNormaliseDisp <- function(d) {
+  return(list(
+    title = .mdPick(d, "text")
+  ))
+}
+
 #' The normalised fields an ID3 tag gives
 #' @keywords internal
 #' @noRd
@@ -348,6 +376,8 @@
     bext = .mdNormaliseBext(source),
     ixml = .mdNormaliseIxml(source),
     wavInfo = .mdNormaliseInfo(source),
+    xmp = .mdNormaliseXmp(source),
+    disp = .mdNormaliseDisp(source),
     id3 = .mdNormaliseId3(source),
     vorbisComment = .mdNormaliseVorbis(source),
     filename = .mdNormaliseFilename(source),
@@ -437,9 +467,10 @@
 #' Name the chunks a file holds that carry metadata this package cannot read
 #'
 #' Reported so that a file is not taken to carry nothing just because nothing
-#' here can read what it carries. An XMP packet, a display name and the
-#' proprietary blocks that editing software leaves behind are all metadata, and
-#' knowing they are there is worth more than passing over them in silence.
+#' here can read what it carries. The proprietary blocks that editing software
+#' leaves behind and the loop and sample descriptions a sampler writes are all
+#' metadata, and knowing they are there is worth more than passing over them in
+#' silence.
 #'
 #' @param ids The chunk identifiers the file holds
 #' @return A character vector of identifiers
@@ -450,7 +481,8 @@
   # itself, the sizes that describe it, the padding a writer leaves to make
   # room for metadata it may add later, and the cue points.
   known <- c("fmt ", "data", "fact", "ds64", "guan", "wamd", "bext", "iXML",
-             "LIST", "id3 ", "ID3 ", "PAD ", "JUNK", "junk", "cue ")
+             "LIST", "_PMX", "DISP", "id3 ", "ID3 ", "PAD ", "JUNK", "junk",
+             "cue ")
   return(unique(ids[!ids %in% known]))
 }
 
@@ -502,11 +534,12 @@
 #'   \item{fields}{The normalised record (see below)}
 #'   \item{sources}{The formats that were found, each as the object its own
 #'     reader gives, named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`,
-#'     `wavInfo`, `id3`, `vorbisComment` and `filename`. A format the file does
-#'     not carry is left out.}
+#'     `wavInfo`, `xmp`, `disp`, `id3`, `vorbisComment` and `filename`. A
+#'     format the file does not carry is left out.}
 #'   \item{unparsed}{The identifiers of any chunks the file holds that carry
-#'     metadata this package cannot read, such as an XMP packet. Knowing they
-#'     are there is worth more than passing over them in silence.}
+#'     metadata this package cannot read, such as the proprietary block an
+#'     editor leaves behind. Knowing they are there is worth more than passing
+#'     over them in silence.}
 #' }
 #'
 #' ## The normalised record
@@ -604,6 +637,8 @@ readMetadata <- function(x, filename=TRUE) {
     sources$bext <- bext(file)
     sources$ixml <- ixml(file)
     sources$wavInfo <- wavInfo(file)
+    sources$xmp <- xmp(file)
+    sources$disp <- disp(file)
     sources$audiomoth <- .mdAudiomothSource(file, sources$wavInfo)
     unparsed <- .mdUnparsed(.mdWavChunkIds(file))
   }
@@ -638,6 +673,8 @@ readMetadata <- function(x, filename=TRUE) {
     sources$bext <- bext(bytes)
     sources$ixml <- ixml(bytes)
     sources$wavInfo <- wavInfo(bytes)
+    sources$xmp <- xmp(bytes)
+    sources$disp <- disp(bytes)
     unparsed <- .mdUnparsed(.mdWavChunkIds(bytes))
   }
   if (.mdWaveContainer(container) || identical(container, "MP3")) {

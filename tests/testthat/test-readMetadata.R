@@ -125,14 +125,43 @@ test_that("Chunks that carry metadata this package cannot read are named", {
   f <- mdFile(mdWav(
     mdFmt(),
     mdChunk("LIST", c(charToRaw("INFO"), mdInfoField("INAM", "A Name"))),
-    mdChunk("_PMX", charToRaw("<x:xmpmeta/>")),
-    mdChunk("DISP", raw(8)),
+    mdChunk("SMED", raw(8)),
+    mdChunk("smpl", raw(8)),
     mdChunk("JUNK", raw(8)),
     mdData()
   ))
   m <- readMetadata(f, filename=FALSE)
 
-  expect_identical(m$unparsed, c("_PMX", "DISP"))
+  expect_identical(m$unparsed, c("SMED", "smpl"))
+})
+
+# The two that were named here before now have readers of their own, so a file
+# carrying them is not a file carrying metadata nothing can read.
+test_that("A chunk that now has a reader is not named as one without", {
+  f <- mdFile(mdWav(
+    mdFmt(),
+    mdChunk("_PMX", charToRaw("<x:xmpmeta x:xmptk=\"1.0\"/>")),
+    mdChunk("DISP", c(mdU32(1), charToRaw("A Display Name"))),
+    mdData()
+  ))
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_length(m$unparsed, 0)
+  expect_identical(m$fields$title, "A Display Name")
+})
+
+test_that("The XMP packet and display name of an RF64 file are read", {
+  # Written after the audio, as a recorder writes its metadata, where only the
+  # sizes in the ds64 chunk say where the audio ends.
+  bytes <- mdRf64Wav(after=c(
+    mdChunk("_PMX", charToRaw("<x:xmpmeta x:xmptk=\"1.0\"/>")),
+    mdChunk("DISP", c(mdU32(1), charToRaw("A Display Name")))
+  ))
+  for (m in list(readMetadata(mdFile(bytes), filename=FALSE), readMetadata(bytes))) {
+    expect_identical(m$container, "RF64")
+    expect_length(m$unparsed, 0)
+    expect_identical(m$fields$title, "A Display Name")
+  }
 })
 
 test_that("Species are taken from a format that names them, and not from a title", {

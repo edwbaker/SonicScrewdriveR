@@ -16,7 +16,10 @@ readAudio(
 \arguments{
 \item{file}{File to read}
 
-\item{mime}{MIME type of file to read, or "auto". Supported types are "audio/x-wav" and "audio/mpeg" (MP3)}
+\item{mime}{MIME type of file to read, or "auto" to read the type from the
+bytes of the file rather than from its name. Supported types are
+"audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
+package.}
 
 \item{from}{Start point in file to return}
 
@@ -41,6 +44,13 @@ more than two channels as a \code{tuneR::WaveMC} object holding one column per
 channel, in the order the file holds them. \code{writeAudio()} writes either back
 out, and functions that take multichannel audio, such as \code{tdoa()}, take the
 result directly.
+
+Which reader a file is given to is decided by the first bytes of the file,
+not by its extension, as a name is only a convention and the two disagree
+often enough in a real collection to matter: a wave file called .mp3 read as
+an MP3 comes back as a shorter recording at the wrong sample rate, without
+complaint. The name is used only where the bytes identify nothing. Passing
+\code{mime} says what the file is and is taken as given, whatever it holds.
 
 WAVE files are read by \code{tuneR::readWave()} whatever their channel count, so a
 multichannel WAVE keeps the channel names the file itself records. Everything

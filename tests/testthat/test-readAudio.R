@@ -721,6 +721,112 @@ test_that("Only the ds64 chunk of a wave file is spoken of", {
   expect_silent(.wavDs64Warnings("https://example.org/recording.wav"))
 })
 
+test_that("An RF64 or BW64 file is read as a wave file whatever it is called", {
+  # Its bytes say it is a wave file, though not one tuneR::readWave() reads.
+  expect_equal(.audioMime(mdFile(mdRf64Wav(), "")), "audio/x-wav")
+  expect_equal(.audioMime(mdFile(mdRf64Wav(form="BW64"), ".mp3")), "audio/x-wav")
+
+  # So one whose sizes were never written is repaired before the av package
+  # reads it, under any name, rather than being handed over as it is and read
+  # as empty.
+  skip_if_not_installed("av")
+  f <- mdFile(
+    mdRf64Wav(rf64Samples, dataSize=0, frames=0, riffSize=0, after=raw(0)), ".bin"
+  )
+  expect_warning(w <- readAudio(f), class="unwrittenAudioSize")
+  expect_equal(w@left, as.numeric(rf64Samples))
+})
+
+test_that(".audioMime names the container from the bytes of the file", {
+  wav <- system.file("extdata/STEREO.WAV", package="sonicscrewdriver")
+  mp3 <- system.file("extdata/STEREO.mp3", package="sonicscrewdriver")
+  tagged <- system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver")
+  flac <- system.file("extdata/STEREO.flac", package="sonicscrewdriver")
+
+  expect_equal(.audioMime(wav), "audio/x-wav")
+  expect_equal(.audioMime(mp3), "audio/mpeg")
+  expect_equal(.audioMime(tagged), "audio/mpeg")
+  # A container the av package reads is not named by type, and the name is not
+  # asked again once the bytes have been read.
+  expect_equal(.audioMime(flac), "application/octet-stream")
+
+  # The extension does not come into it.
+  for (ext in c(".mp3", ".wav", ".flac", "")) {
+    renamed <- tempfile(fileext=ext)
+    on.exit(unlink(renamed), add=TRUE)
+    expect_true(file.copy(wav, renamed, overwrite=TRUE))
+    expect_equal(.audioMime(renamed), "audio/x-wav")
+    expect_true(file.copy(mp3, renamed, overwrite=TRUE))
+    expect_equal(.audioMime(renamed), "audio/mpeg")
+  }
+})
+
+test_that(".audioMime falls back to the name where the bytes say nothing", {
+  # Bytes that identify no container at all: the name is all there is to go on.
+  nothing <- tempfile(fileext=".wav")
+  on.exit(unlink(nothing), add=TRUE)
+  writeBin(raw(16), nothing)
+  expect_equal(.audioMime(nothing), "audio/x-wav")
+
+  # A file too short to hold a magic number is in the same position.
+  short <- tempfile(fileext=".mp3")
+  on.exit(unlink(short), add=TRUE)
+  writeBin(as.raw(c(1, 2, 3)), short)
+  expect_equal(.audioMime(short), "audio/mpeg")
+
+  # So is a file whose bytes cannot be read at all, which is left to fail in
+  # the reader rather than here, and without a warning on the way: the reader
+  # is about to say that the file cannot be read.
+  expect_no_warning(
+    missing <- .audioMime(file.path(tempdir(), "no-such-file.wav"))
+  )
+  expect_equal(missing, "audio/x-wav")
+  # A directory opens no more readily than a file that is not there, and has no
+  # extension to go on either.
+  expect_no_warning(directory <- .audioMime(tempdir()))
+  expect_equal(directory, "text/plain")
+})
+
+test_that("readAudio reads a file under the wrong extension as what it holds", {
+  wav <- system.file("extdata/STEREO.WAV", package="sonicscrewdriver")
+  mp3 <- system.file("extdata/STEREO.mp3", package="sonicscrewdriver")
+  flac <- system.file("extdata/STEREO.flac", package="sonicscrewdriver")
+
+  # A wave file called .mp3. tuneR::readMP3() does not refuse one: it finds a
+  # frame header somewhere in the PCM and decodes from there, giving back a
+  # shorter recording at the wrong sample rate and raising nothing, so reading
+  # by the name is not an error anyone would see.
+  asMp3 <- tempfile(fileext=".mp3")
+  on.exit(unlink(asMp3), add=TRUE)
+  expect_true(file.copy(wav, asMp3, overwrite=TRUE))
+  expect_equal(readAudio(asMp3), readAudio(wav))
+
+  # An MP3 called .wav, which went to the av package instead of to readMP3()
+  # and came back at a different bit depth and length.
+  asWav <- tempfile(fileext=".wav")
+  on.exit(unlink(asWav), add=TRUE)
+  expect_true(file.copy(mp3, asWav, overwrite=TRUE))
+  expect_equal(readAudio(asWav), readAudio(mp3))
+
+  # A FLAC called .wav is read by the av package either way, but now without
+  # being offered to tuneR::readWave() first.
+  flacAsWav <- tempfile(fileext=".wav")
+  on.exit(unlink(flacAsWav), add=TRUE)
+  expect_true(file.copy(flac, flacAsWav, overwrite=TRUE))
+  expect_equal(readAudio(flacAsWav), readAudio(flac))
+})
+
+test_that("A mime type given to readAudio is taken as given", {
+  wav <- system.file("extdata/STEREO.WAV", package="sonicscrewdriver")
+  local_mocked_bindings(.audioMime=function(file) stop("the bytes were read"))
+
+  expect_error(readAudio(wav), "the bytes were read")
+  w <- readAudio(wav, mime="audio/x-wav")
+  expect_equal(w@samp.rate, 48000)
+  expect_equal(w@bit, 16)
+  expect_true(w@stereo)
+})
+
 # A wave file holding silence, with the sample rate it declares in its header
 # and whatever metadata chunks it is given. The bytes are written by hand, as
 # the point of these tests is a file whose header and metadata disagree, which
