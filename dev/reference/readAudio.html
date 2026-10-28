@@ -131,7 +131,44 @@ audio of such a file is read to the end of the file, with a warning, rather
 than returned as nothing. A file that really holds no audio is read as empty.</p>
 <p>Samples that are not finite numbers, which a floating-point file can hold,
 are read as zero with a warning, as they would otherwise spread through every
-measurement made from the wave.</p>
+measurement made from the wave.</p><div class="section">
+<h3 id="a-header-that-disagrees-with-the-recorder-s-own-metadata">A header that disagrees with the recorder's own metadata<a class="anchor" aria-label="anchor" href="#a-header-that-disagrees-with-the-recorder-s-own-metadata"></a></h3>
+
+
+<p>A recorder can write a sample rate into its metadata that disagrees with the
+one in the format chunk of the header, and the header can be the one that is
+wrong. The wave is returned at the rate the header gives, as that is the rate
+the samples were read at, and the disagreement is reported with a warning
+naming both rates: nothing in the file says which of them is right, and a
+recording read at a tenth of the rate it was made at reads as ten times its
+length, with every frequency measured from it wrong by the same factor and
+nothing in the wave to show it.</p>
+<p>The rates compared against the header are the <code>Samplerate</code> of the GUANO
+metadata and the <code>F=</code> rate of each generation of a bext coding history. A
+time-expanded recording is stored at a lower rate than it was made at, which
+is no fault: GUANO records the factor in its <code>TE</code> field, so a rate that meets
+the header rate multiplied by that factor is agreement. Of a coding history
+holding several generations, any one of them meeting the header is enough,
+as the others describe the recording as it was before it was last written.</p>
+</div>
+
+<div class="section">
+<h3 id="handling-these-warnings">Handling these warnings<a class="anchor" aria-label="anchor" href="#handling-these-warnings"></a></h3>
+
+
+<p>Each warning above carries a class of its own, so that one of them can be
+handled without silencing the rest: <code>sampleRateMismatch</code>,
+<code>unwrittenAudioSize</code> and <code>nonFiniteSamples</code>, and <code>truncatedAudio</code> from
+<code><a href="audiomothExpand.html">audiomothExpand()</a></code>. All of them are also classed <code>audioFileWarning</code>, for
+handling every warning about the file at once, and <code>warning</code>, so
+<code><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings()</a></code> and an ordinary warning handler treat them as the
+warnings they are.</p>
+<p></p><div class="sourceCode r"><pre><code><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/readAudio.html">readAudio</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span>,</span>
+<span>  sampleRateMismatch <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">cond</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre><p></p></div>
+</div>
+
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

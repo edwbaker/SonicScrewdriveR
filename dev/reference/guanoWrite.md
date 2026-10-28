@@ -32,6 +32,12 @@ guanoWrite(x, file, output = NULL)
 
 The path to the written file (invisibly)
 
+## Details
+
+The recording is copied across a buffer at a time rather than read into
+memory, so changing one field of the metadata of a file of several
+gigabytes takes no more memory than changing it in a short one.
+
 ## References
 
 Riggs, D. GUANO: Grand Unified Acoustic Notation Ontology.

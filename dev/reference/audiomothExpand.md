@@ -50,6 +50,14 @@ that expands to more than memory can hold can still be expanded.
 Returning a Wave object necessarily holds the whole expanded recording
 in memory.
 
+A recording cut short by a recorder that lost power is reported with a
+warning classed `truncatedAudio`, or `unwrittenAudioSize` where the size
+of the audio was never written, and the audio that is there is expanded.
+Both are also classed `audioFileWarning`; see
+[`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
+for the warnings that share those classes and for handling one of them
+without silencing the rest.
+
 ## References
 
 Open Acoustic Devices (2021) AudioMoth Triggered T.WAV File Format.
