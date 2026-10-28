@@ -455,6 +455,8 @@ London.
   : Read Wildlife Acoustics metadata
 - [`wavChunks()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavChunks.md)
   : List the RIFF chunks a wave file holds
+- [`wavCues()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavCues.md)
+  : Read the cue points and labels of a wave file
 - [`wavInfo()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavInfo.md)
   : Read the INFO metadata of a wave file
 - [`wavelength()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavelength.md)
