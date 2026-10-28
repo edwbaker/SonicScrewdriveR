@@ -19,7 +19,7 @@
 #' xeno-canto records under iNaturalist numbers.
 #' @keywords internal
 #' @noRd
-.XC_MARK <- "^XC[0-9]+[[:space:]]+©[[:space:]]"
+.XC_MARK <- "^XC[0-9]+[[:space:]]+\u00a9[[:space:]]"
 
 #' Read the record a xeno-canto comment holds
 #'
@@ -53,7 +53,7 @@
   # 1: the catalogue number and, after the copyright sign, the recordist.
   f$id <- as.integer(sub("^XC([0-9]+).*$", "\\1", parts[1]))
   f$recordist <- .mdXcNonEmpty(sub(
-    paste0("^XC[0-9]+[[:space:]]*©[[:space:]]*"), "", parts[1]
+    paste0("^XC[0-9]+[[:space:]]*\u00a9[[:space:]]*"), "", parts[1]
   ))
 
   # 2: the place, with the position in brackets where the recordist gave one
@@ -116,7 +116,7 @@
   if (!length(x) || is.na(x) || !nzchar(x)) {
     return(NULL)
   }
-  if (grepl("^[?x.¿ -]+$", x, ignore.case=TRUE)) {
+  if (grepl("^[?x.\u00bf -]+$", x, ignore.case=TRUE)) {
     return(NULL)
   }
   return(x)

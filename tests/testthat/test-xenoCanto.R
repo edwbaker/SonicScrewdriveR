@@ -10,7 +10,7 @@ xcComment <- function(
   rest = character(0)
 ) {
   paste(c(
-    paste0("XC", id, " © ", recordist), place, elevation, when, type, rest
+    paste0("XC", id, " \u00a9 ", recordist), place, elevation, when, type, rest
   ), collapse = " // ")
 }
 
@@ -101,7 +101,7 @@ test_that("An elevation that is a range or a placeholder gives no number", {
 
 test_that("A comment ending in a separator does not keep it", {
   d <- sonicscrewdriver:::.mdXenoCanto(
-    "XC784722 © Tero Linjama // Ao Phang-nga (8.4063, 98.5112), Thailand // 10m // 08:00h, 2023-01-29 //"
+    "XC784722 \u00a9 Tero Linjama // Ao Phang-nga (8.4063, 98.5112), Thailand // 10m // 08:00h, 2023-01-29 //"
   )
   expect_equal(d$date, "2023-01-29")
   expect_equal(format(sonicscrewdriver:::.mdNormaliseXenoCanto(d)$datetime),
@@ -176,4 +176,44 @@ test_that("A catalogue number alone is not a record", {
   expect_null(sonicscrewdriver:::.mdXenoCanto("XC428067 Pacific Swallow \u00a9"))
   expect_null(sonicscrewdriver:::.mdXenoCanto("XC428067"))
   expect_null(sonicscrewdriver:::.mdXenoCanto("XC428067 Pacific Swallow"))
+})
+
+test_that("A place of one word gives a locality and no country", {
+  # Nothing to split on, so the whole field is the place.
+  d <- xc(place = "Antarctica")
+  expect_equal(d$locality, "Antarctica")
+  expect_null(d$country)
+  expect_null(d$latitude)
+})
+
+test_that("A flag the collection could not answer is not a yes or a no", {
+  d <- xc(rest = "bird-seen:unknown /  / playback-used:unknown")
+  expect_null(d$bird_seen)
+  expect_null(d$playback_used)
+})
+
+test_that("A clock outside the hours of a day is not a time", {
+  n <- function(when) sonicscrewdriver:::.mdNormaliseXenoCanto(xc(when = when))$datetime
+  # Minutes and seconds past their limits, and an hour past the end of the day.
+  expect_null(n("10:75h, 2006-05-05"))
+  expect_null(n("10:30:75h, 2006-05-05"))
+  expect_null(n("25:00h, 2006-05-05"))
+  expect_null(sonicscrewdriver:::.mdXcClock("10:75"))
+  expect_null(sonicscrewdriver:::.mdXcClock("25:00"))
+  expect_null(sonicscrewdriver:::.mdXcClock(NULL))
+  expect_null(sonicscrewdriver:::.mdXcClock(NA_character_))
+})
+
+test_that("An empty list of other species is no list at all", {
+  expect_null(xc(rest = "also:")$also)
+  expect_null(xc(rest = "also:  , ,")$also)
+  expect_null(sonicscrewdriver:::.mdXcList(""))
+  expect_null(sonicscrewdriver:::.mdXcList(" , , "))
+})
+
+test_that("Remarks without either flag give remarks and nothing else", {
+  d <- xc(rest = "Recorded from a boat, some wind noise")
+  expect_equal(d$remarks, "Recorded from a boat, some wind noise")
+  expect_null(d$bird_seen)
+  expect_null(d$playback_used)
 })
