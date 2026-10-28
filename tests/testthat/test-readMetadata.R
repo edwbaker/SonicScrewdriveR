@@ -164,6 +164,34 @@ test_that("A chunk that now has a reader is not named as one without", {
   expect_identical(m$fields$title, "A Display Name")
 })
 
+test_that("Padding is not named as metadata nothing can read", {
+  # FLLR is a third spelling of what PAD and JUNK are: room a writer left for
+  # metadata it may add later. 277 files in a cached copy of the TSA corpus
+  # hold one, and naming it told the reader to look for something that is not
+  # there. MD5 is not padding and is still named.
+  f <- mdFile(mdWav(
+    mdFmt(), mdChunk("FLLR", raw(16)), mdChunk("MD5 ", raw(16)), mdData()
+  ))
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_identical(m$unparsed, "MD5 ")
+})
+
+test_that("An ID3 tag in a chunk of any of its three names reaches the record", {
+  # "ID32" is the spelling 96 files in a cached copy of the TSA corpus use.
+  tag <- mdId3Tag(c(
+    mdTextFrame("TPE1", "A Recordist"),
+    mdTextFrame("TIT2", "A Title")
+  ))
+  for (id in c("id3 ", "ID3 ", "ID32")) {
+    f <- mdFile(mdWav(mdFmt(), mdChunk(id, tag), mdData()))
+    m <- readMetadata(f, filename=FALSE)
+
+    expect_length(m$unparsed, 0)
+    expect_identical(m$fields$recordist, "A Recordist", info=id)
+  }
+})
+
 test_that("The XMP packet and display name of an RF64 file are read", {
   # Written after the audio, as a recorder writes its metadata, where only the
   # sizes in the ds64 chunk say where the audio ends.

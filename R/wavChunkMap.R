@@ -75,7 +75,7 @@ wavChunks <- function(x) {
 .wavChunkFrame <- function(walked, read, file) {
   chunks <- walked$chunks
   form <- vapply(chunks, function(chunk) {
-    if (chunk$id != "LIST" || chunk$size < 4L) {
+    if (!chunk$id %in% .WAV_LIST_IDS || chunk$size < 4L) {
       return(NA_character_)
     }
     return(.rawToId(read(chunk$start, 4L)))
@@ -185,7 +185,7 @@ print.wavChunks <- function(x, ...) {
   bodies <- list()
   for (i in seq_along(map$chunks)) {
     chunk <- map$chunks[[i]]
-    if (chunk$id != id || chunk$size < 1) {
+    if (!chunk$id %in% id || chunk$size < 1) {
       next
     }
     body <- .mdMapBody(map, i, cap)

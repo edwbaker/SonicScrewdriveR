@@ -68,7 +68,8 @@
 #' miss whatever is behind it.
 #'
 #' @param file Path to a wave file, or a map of one already walked
-#' @param id The chunk identifier to look for
+#' @param id The chunk identifiers to look for, in the order the file holds
+#'   them rather than the order given here
 #' @param cap Most bytes to read from each chunk
 #' @return A list of raw vectors, empty where the file has no such chunk
 #' @keywords internal
@@ -84,7 +85,7 @@
     read <- .wavConReader(con)
     bodies <- list()
     for (chunk in .wavWalk(read, size, size)$chunks) {
-      if (chunk$id == id && chunk$size >= 1) {
+      if (chunk$id %in% id && chunk$size >= 1) {
         bodies[[length(bodies) + 1L]] <- read(chunk$start, min(chunk$size, cap))
       }
     }
@@ -103,7 +104,7 @@
   }
   bodies <- list()
   for (chunk in info$chunks) {
-    if (chunk$id != id || chunk$size < 1) {
+    if (!chunk$id %in% id || chunk$size < 1) {
       next
     }
     n <- min(chunk$size, cap, length(bytes) - chunk$start + 1)
@@ -225,7 +226,8 @@
 #' the labels of cue points rather than anything about the recording as a
 #' whole; the fields of those are named by their list as well, as in
 #' `adtl/labl`. A label read here is the text alone: [wavCues()] reads the same
-#' labels with the positions in the recording they name.
+#' labels with the positions in the recording they name. A list written as
+#' `list` rather than `LIST`, as some writers do, is read as any other.
 #'
 #' @param x Path to a wave file, a Wave object with INFO metadata attached, a
 #'   raw vector holding a wave file, or a wavInfo object
@@ -241,8 +243,8 @@
 wavInfo <- function(x) {
   return(.mdDispatch(
     x, "wavInfo",
-    fromFile=function(file) .mdInfoObject(.mdWavChunks(file, "LIST")),
-    fromBytes=function(bytes) .mdInfoObject(.mdWavChunksBytes(bytes, "LIST"))
+    fromFile=function(file) .mdInfoObject(.mdWavChunks(file, .WAV_LIST_IDS)),
+    fromBytes=function(bytes) .mdInfoObject(.mdWavChunksBytes(bytes, .WAV_LIST_IDS))
   ))
 }
 
