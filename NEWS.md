@@ -306,6 +306,16 @@
   by the sizes in its ds64 chunk where it has one, and says what is wrong with
   it. A count of sample frames that disagrees with the audio is read past with a
   warning, and put right in a file written.
+- wamd() and readMetadata() gave the two fields 34 and 35 that a Song Meter
+  Mini Bat writes in its wamd chunk as text, under the names `wamd:34` and
+  `wamd:35`, though both are binary: what came back for 34 was the serial
+  number of the device among 46 control characters and stray bytes, beginning
+  `"\001\001\001\0012MU01960\002"`, and for 35 eight characters, all but one of
+  them control characters, `"\001\002\001\036\020\036(\003"`. Nothing Wildlife
+  Acoustics publishes names either field, and what can be recognised in them
+  the device also writes as GUANO, so both are now passed over as the other
+  binary fields are, with their sizes kept in the "binary" attribute of the
+  result.
 - readAudio() chose its reader by the extension of the file, so a file under
   the wrong one was read as the wrong format. A wave file called .mp3 was
   given to `tuneR::readMP3()`, which does not refuse it: it finds a frame
