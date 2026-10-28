@@ -259,6 +259,20 @@
   the recording is.
 
 ## Fixes
+- A chunk whose body is an odd number of bytes is followed by a pad byte, and
+  that byte belongs to the file. A writer that leaves it out put every later
+  header one byte before where the padding said it was, so the identifier read
+  there came out as rubbish and the size with it, and because that size ran past
+  the end of the file the walk stopped: whatever the file held behind such a
+  chunk was read by nothing. In a cached copy of the TSA corpus 62 files are
+  written that way, their chunk lists ending in identifiers like `IST?` and
+  `amd?`, which are "LIST" and "wamd" read one byte late. Between them those
+  files gave 27 GUANO readings and now give 35 ID3 tags, 35 INFO lists, 27
+  GUANO and 27 wamd. The one byte where the pad belongs is what settles it,
+  rather than reading ahead and judging what is there: the specification gives
+  that byte as zero and the first byte of an identifier must be printable, so a
+  byte that is not zero was never a pad. Of 407 files from the two corpora that
+  read correctly, none reads differently.
 - Three chunk identifiers a wave file writes metadata under were not looked
   for, found by auditing a cached copy of the TSA corpus. An ID3 tag chunk is
   read whether it is named `id3 `, `ID3 ` or `ID32`, the last of which 96 files
