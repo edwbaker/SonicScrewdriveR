@@ -3,6 +3,9 @@
 #' Adding noise to a Wave like object allows for testing of the robustness of
 #' automated identification algorithms to noise.
 #'
+#' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+#' `processing` slot of the result, as described in [tagApply()].
+#'
 #' @param wave Object to add noise to (`Wave`, `WaveMC`, or Tagged versions), or
 #'   a list of such objects.
 #' @param noise Vector of noise to add (unif, gaussian, white, pink, power, red)
@@ -33,6 +36,17 @@ generateNoise <- function(
       stop("wave must be a Wave like object, or a list of such objects.")
     }
   }
+  return(.tagApplyOne(
+    wave, .generateNoise, "generateNoise", NULL, FALSE,
+    noise=noise, noise.add=noise.add, noise.ratio=noise.ratio,
+    noise.ref=noise.ref, output=output
+  ))
+}
+
+#' Add noise to a wave without recording it
+#' @keywords internal
+#' @noRd
+.generateNoise <- function(wave, noise, noise.add, noise.ratio, noise.ref, output) {
   duration <- length(wave)
   #tuneR::noise() always returns a floating point wave, which may only be 32 or
   #64 bit, so it is built at 32 rather than at the resolution of the wave the
@@ -96,18 +110,6 @@ generateNoise <- function(
     for (i in 1:ncol(wave@.Data)) {
       wave@.Data[,i] <- (wave@.Data[,i] - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
     }
-  }
-  if (.isTagged(wave)) {
-    wave <- addProcess(
-      wave,
-      "generateNoise",
-      list(
-        "noise" = noise,
-        "noise.add" = noise.add,
-        "noise.ratio" = noise.ratio,
-        "noise.ref" = noise.ref
-      )
-    )
   }
   return(wave)
 }

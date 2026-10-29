@@ -37,3 +37,9 @@ Wave objects caused by sudden jumps in amplitude by applying \code{tuneR::prepCo
 appropriately with default value of zero (this is only effective for the left
 channel or stereo or multi-channel recordings).
 }
+\details{
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The waves that
+were concatenated on are held in the arguments of the record, each with its
+own tags and a digest of its samples.
+}

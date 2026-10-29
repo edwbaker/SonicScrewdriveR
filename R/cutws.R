@@ -4,6 +4,11 @@
 #' function will automatically detect if a Wave object is stereo, and returns
 #' the same class of object it was given.
 #'
+#' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+#' `processing` slot of the result, as described in [tagApply()]. The samples
+#' that were cut to are recorded, rather than the ones that were asked for,
+#' which may have run beyond the end of the wave.
+#'
 #' @param wave A Wave or WaveMC object
 #' @param from First sample to return
 #' @param to Last sample to return. A value beyond the end of the wave is cut
@@ -31,6 +36,16 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   if (from > to){
     stop("In cutws to must be greater than from")
   }
+  return(.tagApplyOne(wave, .cutws, "cutws", NULL, TRUE, from=from, to=to, plot=plot))
+}
+
+#' Cut a wave by samples without recording it
+#'
+#' An untagged wave is cut, as `plot=TRUE` draws with seewave, which rejects the
+#' tagged classes.
+#' @keywords internal
+#' @noRd
+.cutws <- function(wave, from, to, plot) {
   if (inherits(wave, "WaveMC")) {
     cutwave <- tuneR::WaveMC(wave@.Data[from:to, , drop=FALSE], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
   } else if (wave@stereo) {

@@ -21,3 +21,8 @@ Normalised Wave or WaveMC object
 Similar to normalize() from the tuneR package but automatically identifies the
 unit parameter.
 }
+\details{
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The unit that
+was used is recorded, rather than the \code{NULL} that may have been asked for.
+}

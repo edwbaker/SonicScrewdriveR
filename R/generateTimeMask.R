@@ -2,6 +2,9 @@
 #'
 #' Given a `Wave`-like object (or a list of `Wave`-like objects), generate
 #' new `Wave`-like objects with time masking.
+#'
+#' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+#' `processing` slot of the result, as described in [tagApply()].
 #' @param wave A `Wave`-like object (or a list of `Wave`-like objects).
 #' @param method The method to use for time masking (one of "squarewave", "random).
 #' @param dutyCycle The duty cycle of the output. A value of 0.95 means that 5%
@@ -22,7 +25,21 @@ generateTimeMask <- function(wave, method="squarewave", dutyCycle=0.95, n.period
     ))
   }
   .validateChoice(method, c("squarewave", "random"), "method parameter", "generateTimeMask")
+  #Anything else matched neither class the mask is applied to, so it came back
+  #unmasked, as though nothing had been asked for.
+  if (!inherits(wave, c("Wave", "WaveMC"))) {
+    stop("wave must be a Wave-like object, or a list of such objects.")
+  }
+  return(.tagApplyOne(
+    wave, .generateTimeMask, "generateTimeMask", NULL, FALSE,
+    method=method, dutyCycle=dutyCycle, n.periods=n.periods
+  ))
+}
 
+#' Apply a time mask to a wave without recording it
+#' @keywords internal
+#' @noRd
+.generateTimeMask <- function(wave, method, dutyCycle, n.periods) {
   wl <- length(wave)
 
   if (method == "squarewave") {
