@@ -200,3 +200,35 @@ test_that("fcis is plotted against frequencies in Hz", {
   expect_equal(drawn$ylim, c(0, max(f$freq)))
   expect_gt(max(f$freq), 1000)
 })
+test_that("scale transforms each channel before the colours are calculated", {
+  w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
+
+  default <- fcis(w, window.length=w@samp.rate, wl=128)
+  identity.scale <- fcis(w, window.length=w@samp.rate, wl=128, scale=function(x) x)
+  expect_equal(default$colours, identity.scale$colours)
+
+  clipped <- fcis(w, window.length=w@samp.rate, wl=128,
+                  scale=list(fcisClip(log=TRUE), fcisClip(), fcisClip()))
+  expect_equal(dim(clipped$colours), dim(default$colours))
+  expect_false(identical(clipped$colours, default$colours))
+
+  expect_error(fcis(w, window.length=w@samp.rate, wl=128, scale=list(log)),
+               "three functions")
+  expect_error(fcis(w, window.length=w@samp.rate, wl=128, scale=function(x) x[1]),
+               "one value for each")
+})
+
+test_that("fcisClip limits values to the requested percentiles", {
+  x <- matrix(c(-100, 1:98, 1000), nrow=10)
+
+  clipped <- fcisClip(probs=c(0.1, 0.9))(x)
+  expect_equal(dim(clipped), dim(x))
+  expect_equal(min(clipped), unname(stats::quantile(x, 0.1)))
+  expect_equal(max(clipped), unname(stats::quantile(x, 0.9)))
+
+  # Values with no logarithm are treated as the lower limit, not dropped.
+  logged <- fcisClip(log=TRUE)(matrix(c(0, 1, 10, 100), nrow=2))
+  expect_false(anyNA(logged))
+
+  expect_error(fcisClip(probs=c(0.9, 0.1)), "increasing")
+})
