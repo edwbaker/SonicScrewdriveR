@@ -304,6 +304,20 @@ test_that("metadata keeps its class in a data frame", {
   expect_identical(d$when, as.Date(c("2024-06-30", NA, NA)))
 })
 
+test_that("a plain NA among values of one class keeps that class", {
+  d <- AnnotationList2DataFrame(list(
+    annotation(metadata=list(confidence=NA, when=NA)),
+    annotation(metadata=list(confidence=0.8, when=as.Date("2024-06-30")))
+  ))
+  expect_identical(d$confidence, c(NA, 0.8))
+  expect_identical(d$when, as.Date(c(NA, "2024-06-30")))
+  # A column of TRUE, FALSE and NA stays logical.
+  d <- AnnotationList2DataFrame(list(
+    annotation(metadata=list(flag=NA)), annotation(metadata=list(flag=TRUE))
+  ))
+  expect_identical(d$flag, c(NA, TRUE))
+})
+
 test_that("metadata of differing classes, or of more than one value, is kept", {
   d <- AnnotationList2DataFrame(list(
     annotation(metadata=list(id=1, tags=c("a", "b"))),

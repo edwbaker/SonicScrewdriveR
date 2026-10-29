@@ -312,7 +312,11 @@ AnnotationList2DataFrame <- function(x) {
 #' @keywords internal
 #' @noRd
 .metadataColumn <- function(values) {
-  missing <- vapply(values, is.null, logical(1))
+  #A plain NA is missing as NULL is, so that NA among numbers is not taken for
+  #a value of a second class and the column given as text.
+  missing <- vapply(values, function(v) {
+    is.null(v) || (is.logical(v) && length(v) == 1L && is.na(v))
+  }, logical(1))
   if (all(missing)) {
     return(rep(NA, length(values)))
   }
