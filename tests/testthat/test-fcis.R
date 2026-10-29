@@ -232,3 +232,16 @@ test_that("fcisClip limits values to the requested percentiles", {
 
   expect_error(fcisClip(probs=c(0.9, 0.1)), "increasing")
 })
+
+test_that("a channel with nothing to show is left as it is", {
+  # Where the percentiles meet there is no range to clip to, and clipping to a
+  # single value would turn a flat channel into one of a colour it did not
+  # earn. It is passed through for scaleRGB to recognise as having no
+  # differences to show.
+  flat <- matrix(5, nrow=4, ncol=3)
+  expect_identical(fcisClip()(flat), flat)
+
+  # The same where the middle of the data is flat but its tails are not
+  mostly.flat <- matrix(c(-50, rep(7, 10), 90), nrow=3)
+  expect_identical(fcisClip(probs=c(0.2, 0.8))(mostly.flat), mostly.flat)
+})
