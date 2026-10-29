@@ -126,13 +126,13 @@
 #' call rather than twice under both.
 #'
 #' The wave and the function are named `.w` and `.fun` so that the arguments
-#' meant for `.fun` reach it. R matches a named argument against the formals
-#' before `...` by prefix as well as in full, so a plain `w` and `fun` would
-#' swallow anything called `f`, `fu` or `w` — and `f` is what seewave calls a
-#' sampling frequency, which is exactly the sort of call this function is for.
-#' `label`, `untag` and `cl` come after `...` and so need their full names,
-#' which leaves only a function with an argument of one of those three names
-#' beyond reach.
+#' meant for `.fun` reach it. R matches a named argument against the arguments
+#' named before `...` by its first letters as well as in full, so a plain `w`
+#' and `fun` would swallow anything called `f`, `fu` or `w` - and `f` is what
+#' seewave calls a sampling frequency, which is exactly the sort of call this
+#' function is for. `label`, `untag` and `cl` come after `...` and so must be
+#' named in full, which leaves only a function with an argument of one of those
+#' three names beyond reach.
 #'
 #' @param .w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object, or a
 #'   list of such objects.

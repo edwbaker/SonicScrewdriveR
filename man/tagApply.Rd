@@ -57,13 +57,13 @@ is passed to \code{tagApply()} in turn, under the name and arguments of the oute
 call rather than twice under both.
 
 The wave and the function are named \code{.w} and \code{.fun} so that the arguments
-meant for \code{.fun} reach it. R matches a named argument against the formals
-before \code{...} by prefix as well as in full, so a plain \code{w} and \code{fun} would
-swallow anything called \code{f}, \code{fu} or \code{w} — and \code{f} is what seewave calls a
-sampling frequency, which is exactly the sort of call this function is for.
-\code{label}, \code{untag} and \code{cl} come after \code{...} and so need their full names,
-which leaves only a function with an argument of one of those three names
-beyond reach.
+meant for \code{.fun} reach it. R matches a named argument against the arguments
+named before \code{...} by its first letters as well as in full, so a plain \code{w}
+and \code{fun} would swallow anything called \code{f}, \code{fu} or \code{w} - and \code{f} is what
+seewave calls a sampling frequency, which is exactly the sort of call this
+function is for. \code{label}, \code{untag} and \code{cl} come after \code{...} and so must be
+named in full, which leaves only a function with an argument of one of those
+three names beyond reach.
 }
 \examples{
 tw <- tagWave(tuneR::sine(440, duration = 44100, samp.rate = 44100))
