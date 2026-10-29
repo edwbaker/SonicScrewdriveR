@@ -350,6 +350,12 @@ test_that("a merged annotation keeps the metadata of the last annotation merged 
   expect_identical(merged[[1]]@source, "b")
 })
 
+test_that("merging keeps the names a list of annotations gives them", {
+  a <- list(first=annotation(start=0, end=1), second=annotation(start=5, end=6, value="v"))
+  expect_identical(names(merge_annotations(a)), c("first", "second"))
+  expect_null(names(merge_annotations(unname(a))))
+})
+
 test_that("sorting in a domain the package does not know is refused", {
   # It returned the annotations unsorted, without saying so.
   a <- list(annotation(start=2), annotation(start=1))

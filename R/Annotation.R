@@ -144,7 +144,7 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
     paste(encodeString(slots, quote='"'), collapse=" ")
   }, character(1))
   groups <- split(annotations, factor(key, levels=unique(key)))
-  return(unname(do.call(c, lapply(groups, .merge_annotations, domain=domain))))
+  return(do.call(c, unname(lapply(groups, .merge_annotations, domain=domain))))
 }
 
 #' Combine annotations helper function
