@@ -21,6 +21,8 @@ Dolbear
 Dolbear's
 EBU
 Geissmann
+LD
+RDF
 Gryllotalpa
 HHMM
 HHMMSS
@@ -70,8 +72,11 @@ audioBLAST
 audioBlast
 audioMetadata
 audioRead
+aci
 audioblast
 audioblastDownload
+audioblastFilters
+audioblastRecord
 audiomoth
 audiomothCompress
 audiomothConfig
