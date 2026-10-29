@@ -22,6 +22,8 @@ readAudacityLabels <- function(file, output="annotations") {
                         quote="", na.strings=character(0))
   }
   colnames(labels)[1:3] <- c("from", "to", "label")
+  #A decimal comma is read as read.csv2() read it.
+  number <- function(x) as.numeric(sub(",", ".", x, fixed=TRUE))
 
   #Audacity puts the frequency limits of a label on a row of their own, following
   #the label and beginning with a backslash, rather than in further columns of the
@@ -31,15 +33,15 @@ readAudacityLabels <- function(file, output="annotations") {
   high <- rep(Inf, nrow(labels))
   if (any(continuation)) {
     carries <- which(continuation) - 1
-    low[carries] <- as.numeric(labels$to[continuation])
-    high[carries] <- as.numeric(labels$label[continuation])
+    low[carries] <- number(labels$to[continuation])
+    high[carries] <- number(labels$label[continuation])
     low <- low[!continuation]
     high <- high[!continuation]
     labels <- labels[!continuation, , drop=FALSE]
   }
 
-  labels$from <- as.numeric(labels$from)
-  labels$to <- as.numeric(labels$to)
+  labels$from <- number(labels$from)
+  labels$to <- number(labels$to)
   labels$low <- low
   labels$high <- high
 

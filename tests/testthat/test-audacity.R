@@ -102,6 +102,17 @@ test_that("a label is read as it was written", {
   expect_identical(readAudacityLabels(f, output="data.frame")$label, c("", ""))
 })
 
+test_that("times and frequencies written with a decimal comma are read", {
+  f <- tempfile(fileext=".txt")
+  writeLines(c("1,5\t2,5\tcomma", "\\\t100,5\t200", "3,25\t4\tagain"), f)
+  d <- readAudacityLabels(f, output="data.frame")
+  expect_identical(d$from, c(1.5, 3.25))
+  expect_identical(d$to, c(2.5, 4))
+  expect_identical(d$low, c(100.5, 0))
+  expect_identical(d$high, c(200, Inf))
+  expect_identical(d$label, c("comma", "again"))
+})
+
 test_that("no annotations are written as a label file, and read back as none", {
   # Writing none raised an error, as is.finite() was given an empty list.
   f <- tempfile(fileext=".txt")
