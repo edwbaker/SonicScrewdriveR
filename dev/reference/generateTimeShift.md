@@ -35,3 +35,10 @@ generateTimeShift(wave, type = "silent", amount = c(1, 2), where = "start")
 ## Value
 
 A Wave-like object or list of Wave-like objects.
+
+## Details
+
+Each shifted wave is a process of its own, so a `TaggedWave` or
+`TaggedWaveMC` gives back waves that each record the shift that made
+them, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).

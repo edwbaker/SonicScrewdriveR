@@ -84,6 +84,11 @@ to a Wave in a pipeline.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Supported filters include those from the seewave package.</p>
+<p>Applied to a <code>TaggedWave</code> or <code>TaggedWaveMC</code> the call is recorded in the
+<code>processing</code> slot of the result, as described in <code><a href="tagApply.html">tagApply()</a></code>. The settings
+of the filter are its arguments, so two runs of the same filter at different
+frequencies are told apart by their records. The description of the filter is
+the process the record is under, where it has one.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -34,3 +34,11 @@ list.
 ## Details
 
 Supported filters include those from the seewave package.
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+The settings of the filter are its arguments, so two runs of the same
+filter at different frequencies are told apart by their records. The
+description of the filter is the process the record is under, where it
+has one.

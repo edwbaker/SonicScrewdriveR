@@ -43,3 +43,11 @@ concat(object, ..., method = "bind")
 ## Value
 
 A concatenated Wave like object, with type of `object`.
+
+## Details
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+The waves that were concatenated on are held in the arguments of the
+record, each with its own tags and a digest of its samples.

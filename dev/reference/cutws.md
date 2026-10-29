@@ -33,6 +33,14 @@ cutws(wave, from = 1, to = Inf, plot = FALSE)
 
 A Wave or WaveMC object
 
+## Details
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+The samples that were cut to are recorded, rather than the ones that
+were asked for, which may have run beyond the end of the wave.
+
 ## Examples
 
 ``` r

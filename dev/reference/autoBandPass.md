@@ -37,6 +37,12 @@ autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 
 A band-pass filtered Wave object
 
+## Details
+
+Applied to a `TaggedWave` the call is recorded in the `processing` slot
+of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+
 ## Examples
 
 ``` r

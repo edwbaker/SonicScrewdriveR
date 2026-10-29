@@ -27,3 +27,11 @@ normalise(wave, unit = NULL, ...)
 ## Value
 
 Normalised Wave or WaveMC object
+
+## Details
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+The unit that was used is recorded, rather than the `NULL` that may have
+been asked for.

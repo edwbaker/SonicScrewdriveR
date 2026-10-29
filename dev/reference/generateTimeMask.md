@@ -31,3 +31,9 @@ generateTimeMask(wave, method = "squarewave", dutyCycle = 0.95, n.periods = 10)
 ## Value
 
 The Wave or WaveMC object with the time mask applied.
+
+## Details
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).

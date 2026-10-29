@@ -48,3 +48,9 @@ generateNoise(
 ## Value
 
 A list of Wave objects with the required noise added.
+
+## Details
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).

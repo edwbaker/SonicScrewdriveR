@@ -27,6 +27,12 @@ upsample(wave, upsample.rate, method = "basic")
 
 A resampled Wave object
 
+## Details
+
+Applied to a `TaggedWave` the call is recorded in the `processing` slot
+of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+
 ## Examples
 
 ``` r
