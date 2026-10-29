@@ -34,6 +34,7 @@
 .MD_FORMAT_NAMES <- list(
   id3 = "ID3",
   wamd = "wamd",
+  olym = "olym",
   bext = "bext",
   wavInfo = "INFO",
   ixml = "iXML",

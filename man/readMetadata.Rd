@@ -45,9 +45,9 @@ the file rather than from its name, or NA where it is not one this
 package recognises}
 \item{fields}{The normalised record (see below)}
 \item{sources}{The formats that were found, each as the object its own
-reader gives, named \code{guano}, \code{wamd}, \code{audiomoth}, \code{bext}, \code{ixml},
-\code{xenoCanto}, \code{wavInfo}, \code{xmp}, \code{disp}, \code{id3}, \code{vorbisComment} and
-\code{filename}. A format the file does not carry is left out.}
+reader gives, named \code{guano}, \code{wamd}, \code{audiomoth}, \code{olym}, \code{bext},
+\code{ixml}, \code{xenoCanto}, \code{wavInfo}, \code{xmp}, \code{disp}, \code{id3}, \code{vorbisComment}
+and \code{filename}. A format the file does not carry is left out.}
 \item{unparsed}{The identifiers of any chunks the file holds that carry
 metadata this package cannot read, such as the proprietary block an
 editor leaves behind. Knowing they are there is worth more than passing

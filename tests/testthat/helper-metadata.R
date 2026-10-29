@@ -288,3 +288,69 @@ mdFlac <- function(block) {
     as.raw(128 + 1), mdBE24(8), raw(8)              # padding, the last block
   ))
 }
+
+#' Text as a run of bytes of a fixed width, padded with spaces, as an olym
+#' chunk pads a field it has written
+mdSpacePad <- function(text, n) {
+  bytes <- charToRaw(text)
+  return(c(bytes, as.raw(rep(32L, max(0, n - length(bytes)))))[seq_len(n)])
+}
+
+#' An olym chunk, the fixed layout an Olympus recorder writes
+#'
+#' Every field is at a known offset and the rest of the chunk is padding, so
+#' the chunk is built by filling it and writing the fields into it. `form` is
+#' "dss", the older one, which holds its duration at 0x200 and its index marks
+#' at 0x20a, or "wav", the newer one, which holds its duration at 0x56. A field
+#' given as NULL is left as padding, which is how a recorder leaves a field it
+#' has nothing to put in.
+mdOlymChunk <- function(form=c("wav", "dss"), model="LS-100", fileNumber=204,
+                        start="120529092819", end="120529092953",
+                        recordingTime="000130", duration=90563,
+                        marks=numeric(0), text=NULL, text2=NULL,
+                        fill=255L, size=NULL) {
+  form <- match.arg(form)
+  if (is.null(size)) {
+    size <- if (form == "dss") 972L else 1484L
+  }
+  body <- as.raw(rep(fill, length.out=size))
+  put <- function(at, bytes) {
+    if (at + length(bytes) <= length(body)) {
+      body[at + seq_along(bytes)] <<- bytes
+    }
+  }
+  put(0, as.raw(if (form == "dss") 2L else 3L))
+  put(1, charToRaw(form))
+  put(4, as.raw(if (form == "dss") 1L else 2L))
+  if (!is.null(model)) {
+    put(0x0c, mdSpacePad(model, 16))
+  }
+  if (!is.null(fileNumber)) {
+    put(0x1c, mdU32(fileNumber))
+  }
+  if (!is.null(start)) {
+    put(0x26, charToRaw(start))
+  }
+  if (!is.null(end)) {
+    put(0x32, charToRaw(end))
+  }
+  if (!is.null(recordingTime)) {
+    put(0x3e, charToRaw(recordingTime))
+  }
+  if (!is.null(duration)) {
+    put(if (form == "dss") 0x200 else 0x56, mdU32(duration))
+  }
+  for (k in seq_along(marks)) {
+    put(0x20a + (k - 1L) * 10L, mdU32(marks[k]))
+  }
+  if (!is.null(text)) {
+    put(0x6a, mdSpacePad(text, 100))
+  }
+  if (!is.null(text2)) {
+    put(0xd4, mdSpacePad(text2, 100))
+  }
+  return(mdChunk("olym", body))
+}
+
+#' A wave file carrying the given olym chunks
+mdOlymWav <- function(...) mdWav(mdFmt(), ..., mdData())

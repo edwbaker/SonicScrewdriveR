@@ -16,6 +16,7 @@ CMD
 DataFrame
 Diel
 DISP
+DM
 Dolbear
 Dolbear's
 EBU
@@ -117,6 +118,7 @@ directionPlot
 doi
 dolbear
 ds
+dss
 dutyCycle
 ecoacoustic
 ecoacoustics
@@ -246,3 +248,4 @@ yearlyFraction
 yearlyPlot
 yearlyPositions
 zerocross
+olym
