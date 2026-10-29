@@ -379,3 +379,203 @@ test_that("A failed download leaves no file behind", {
   expect_false(file.exists(path))
   expect_false(file.exists(paste0(path, ".part")))
 })
+
+# ------------------------------------------------------- the linked data ---
+
+test_that("a search can give linked data, a page at a time", {
+  seen <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    seen <<- c(seen, req$url)
+    page <- as.integer(sub(".*[?&]page=([0-9]+).*", "\\1", req$url))
+    headers <- list("Content-Type"="text/turtle")
+    # A page of RDF names the next one in a Link header, and the last names none
+    if (page < 2) {
+      headers[["Link"]] <- paste0(
+        "<", sub("page=1", "page=2", req$url, fixed=TRUE), ">; rel=\"next\""
+      )
+    }
+    httr2::response(
+      status_code=200, headers=headers,
+      body=charToRaw(paste0("@prefix p", page, ": <http://example.org/> ."))
+    )
+  })
+  rdf <- audioblast("data", "recordings", check=FALSE, quiet=TRUE, output="Turtle")
+
+  expect_length(rdf, 2)
+  expect_match(rdf[1], "@prefix p1", fixed=TRUE)
+  expect_match(rdf[2], "@prefix p2", fixed=TRUE)
+  expect_true(all(grepl("output=Turtle", seen, fixed=TRUE)))
+})
+
+test_that("only as many pages of linked data as were asked for are fetched", {
+  seen <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    seen <<- c(seen, req$url)
+    httr2::response(
+      status_code=200,
+      headers=list(
+        "Content-Type"="text/turtle",
+        "Link"="<https://api.audioblast.org/x?page=9>; rel=\"next\""
+      ),
+      body=charToRaw("@prefix p: <http://example.org/> .")
+    )
+  })
+  rdf <- audioblast("data", "recordings", check=FALSE, quiet=TRUE,
+                    output="JSON-LD", max_pages=2)
+
+  expect_length(rdf, 2)
+  expect_length(seen, 2)
+})
+
+test_that("linked data is only offered for a search of a module", {
+  expect_error(
+    audioblast("standalone", "modules", check=FALSE, output="JSON-LD"),
+    "only available from searches"
+  )
+  expect_error(
+    audioblast("data", "annomate", endpoint="taxa", check=FALSE, output="Turtle"),
+    "only available from searches"
+  )
+})
+
+test_that("a standalone module that answers with nothing gives nothing", {
+  httr2::local_mocked_responses(function(req) {
+    httr2::response_json(body=list(data=list(), params=list()))
+  })
+  expect_null(
+    audioblast("standalone", "analysis", "fetch_analysis_counts", check=FALSE)
+  )
+})
+
+test_that("a record that is not there gives nothing", {
+  httr2::local_mocked_responses(function(req) httr2::response(status_code=404))
+  expect_null(audioblastRecord("recording", "bio.acousti.ca", 1))
+})
+
+test_that("a filter of more than a hundred values is sent in batches", {
+  seen <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    seen <<- c(seen, req$url)
+    httr2::response_json(body=list(
+      data=list(list(id=as.character(length(seen)))), last_page=1, params=list()
+    ))
+  })
+  d <- audioblast("data", "recordings", check=FALSE, quiet=TRUE,
+                  id=as.character(1:150))
+
+  # A hundred to a batch, so two requests, and the rows of both come back
+  expect_length(seen, 2)
+  expect_equal(nrow(d), 2)
+})
+
+# -------------------------------------------- what audioBlast says of it ---
+
+test_that("a refusal explained in JSON is read from the notes it holds", {
+  httr2::local_mocked_responses(function(req) {
+    httr2::response(
+      status_code=400,
+      headers=list("Content-Type"="application/json"),
+      body=charToRaw(jsonlite::toJSON(list(notes=list(
+        error="Parameter bogus is not recognised.",
+        input_params=list(bogus="1"),
+        total_execution_time="0.1"
+      )), auto_unbox=TRUE))
+    )
+  })
+  expect_error(
+    audioblast("data", "recordings", check=FALSE, bogus=1),
+    "Parameter bogus is not recognised"
+  )
+})
+
+test_that("a refusal that explains nothing is reported as the status it was", {
+  # Notes holding only what the API echoes of the request say nothing about
+  # what was wrong, so there is nothing to add to the status.
+  httr2::local_mocked_responses(function(req) {
+    httr2::response(
+      status_code=400,
+      headers=list("Content-Type"="application/json"),
+      body=charToRaw(jsonlite::toJSON(list(notes=list(
+        input_params=list(bogus="1"), query_execution_time="0.1"
+      )), auto_unbox=TRUE))
+    )
+  })
+  expect_error(audioblast("data", "recordings", check=FALSE), "400")
+
+  httr2::local_mocked_responses(function(req) httr2::response(status_code=500))
+  expect_error(audioblast("data", "recordings", check=FALSE), "500")
+})
+
+# --------------------------------------------------- the files themselves ---
+
+test_that("the files of a search can be named by a recording_url column", {
+  dir <- file.path(tempdir(), "ab_url_col")
+  unlink(dir, recursive=TRUE)
+  withr::defer(unlink(dir, recursive=TRUE))
+  local_mocked_bindings(.audioblast_download = function(url, path) {
+    writeBin(charToRaw("RIFF"), path)
+    invisible(path)
+  })
+  d <- data.frame(recording_url="https://example.org/one.wav")
+  paths <- audioblastDownload(d, dir=dir, metadata=FALSE, quiet=TRUE)
+
+  expect_equal(basename(paths), "one.wav")
+  expect_true(file.exists(paths))
+})
+
+test_that("what is being fetched and skipped is said unless silence is asked for", {
+  dir <- file.path(tempdir(), "ab_say")
+  unlink(dir, recursive=TRUE)
+  withr::defer(unlink(dir, recursive=TRUE))
+  local_mocked_bindings(.audioblast_download = function(url, path) {
+    writeBin(charToRaw("RIFF"), path)
+    invisible(path)
+  })
+  d <- data.frame(filename="https://example.org/two.wav")
+
+  expect_message(
+    audioblastDownload(d, dir=dir, metadata=FALSE, quiet=FALSE),
+    "Downloading https://example.org/two.wav"
+  )
+  # The second time the file is there already, so it is skipped and said so
+  expect_message(
+    audioblastDownload(d, dir=dir, metadata=FALSE, quiet=FALSE),
+    "Skipping 1 file"
+  )
+})
+
+test_that("a file is moved into place once it is complete", {
+  # A mocked response writes no file, so the part file is left where the
+  # download would have left it: what this tests is that it is moved into place
+  # and reported, rather than how it was fetched.
+  path <- file.path(tempdir(), "ab_move.wav")
+  part <- paste0(path, ".part")
+  unlink(c(path, part))
+  withr::defer(unlink(c(path, part)))
+  httr2::local_mocked_responses(function(req) {
+    httr2::response(status_code=200, body=charToRaw("RIFF"))
+  })
+  writeBin(charToRaw("RIFF"), part)
+
+  expect_equal(.audioblast_download("https://example.org/a.wav", path), path)
+  expect_true(file.exists(path))
+  expect_false(file.exists(part))
+})
+
+test_that("a file that cannot be moved into place says so", {
+  # A directory already in the way of the name the file is to be given.
+  dir <- file.path(tempdir(), "ab_in_the_way.wav")
+  dir.create(dir, showWarnings=FALSE)
+  withr::defer(unlink(dir, recursive=TRUE))
+  httr2::local_mocked_responses(function(req) {
+    httr2::response(status_code=200, body=charToRaw("RIFF"))
+  })
+  writeBin(charToRaw("RIFF"), paste0(dir, ".part"))
+
+  # R gives a warning of its own that the rename failed, which is the condition
+  # under test rather than something the suite should carry.
+  expect_error(
+    suppressWarnings(.audioblast_download("https://example.org/a.wav", dir)),
+    "Could not save"
+  )
+})

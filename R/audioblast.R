@@ -477,13 +477,12 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
 #' @param query Named list of query parameters. An element with several values
 #'   is sent as a list.
 #' @param allow_404 If TRUE a 404 is returned rather than raised as an error.
-#' @param headers Named list of request headers.
 #' @param slash If TRUE the path ends in a slash, as a module's path does. A
 #'   record's path does not, as the ID of a record can itself contain a slash.
 #' @return An httr2 response.
 #' @keywords internal
 #' @noRd
-.audioblast_perform <- function(path, query=list(), allow_404=FALSE, headers=list(), slash=TRUE) {
+.audioblast_perform <- function(path, query=list(), allow_404=FALSE, slash=TRUE) {
   url <- getOption("sonicscrewdriver.audioblast_url", "https://api.audioblast.org")
   req <- httr2::request(url)
   req <- httr2::req_url_path_append(req, path)
@@ -499,9 +498,6 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
       q <- stats::setNames(list(paste(v, collapse=",")), n)
     }
     req <- httr2::req_url_query(req, !!!q, .multi="explode")
-  }
-  if (length(headers) > 0) {
-    req <- httr2::req_headers(req, !!!headers)
   }
   req <- .audioblast_user_agent(req)
   req <- httr2::req_retry(req, max_tries=3, retry_on_failure=TRUE)
