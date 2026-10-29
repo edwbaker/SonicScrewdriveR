@@ -63,9 +63,9 @@ all of them:
 - sources:
 
   The formats that were found, each as the object its own reader gives,
-  named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`, `xenoCanto`,
-  `wavInfo`, `xmp`, `disp`, `id3`, `vorbisComment` and `filename`. A
-  format the file does not carry is left out.
+  named `guano`, `wamd`, `audiomoth`, `olym`, `bext`, `ixml`,
+  `xenoCanto`, `wavInfo`, `xmp`, `disp`, `id3`, `vorbisComment` and
+  `filename`. A format the file does not carry is left out.
 
 - unparsed:
 

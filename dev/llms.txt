@@ -355,6 +355,8 @@ London.
   : Normalise a Wave object
 - [`ntd()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/ntd.md)
   : Natural Time Domain
+- [`olym()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/olym.md)
+  : Read what an Olympus recorder wrote about a recording
 - [`parseFilename()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/parseFilename.md)
   : Parse a filename
 - [`pd_dietrich2004()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pd_dietrich2004.md)
