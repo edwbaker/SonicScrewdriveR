@@ -45,4 +45,10 @@ audioblastDownload(
 
 ## Value
 
-No return value, called for its side effect of downloading files.
+The paths of the files, invisibly.
+
+## Details
+
+Where audioBlast has measured a file, the SHA-256 hash of the file
+downloaded is checked against the hash audioBlast measured, and a file
+that does not match is reported through `on.issue`.

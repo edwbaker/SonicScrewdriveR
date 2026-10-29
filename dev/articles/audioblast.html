@@ -100,6 +100,80 @@ Acoustic Observatories</a> project.</p>
 possible to download many recordings through audioblast using
 <code><a href="../reference/audioblastDownload.html">audioblastDownload()</a></code>.</p>
 </div>
+<div class="section level2">
+<h2 id="searching">Searching<a class="anchor" aria-label="anchor" href="#searching"></a>
+</h2>
+<p>A search names the type of module (<code>"data"</code>,
+<code>"analysis"</code> or <code>"standalone"</code>) and the module,
+and filters it with named arguments. Each module has its own filters,
+and <code><a href="../reference/audioblastFilters.html">audioblastFilters()</a></code> lists them. audioBlast refuses a
+query with a filter the module does not have, and the error says which
+filters it does have.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># The filters of the recordings module</span></span>
+<span><span class="fu"><a href="../reference/audioblastFilters.html">audioblastFilters</a></span><span class="op">(</span><span class="st">"recordings"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Recordings of a species</span></span>
+<span><span class="va">recs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, taxon<span class="op">=</span><span class="st">"Gryllotalpa vineae"</span><span class="op">)</span></span></code></pre></div>
+<p>Results come fifty to a page, and all pages are fetched unless
+<code>max_pages</code> is set. A larger <code>page_size</code> fetches
+many results in fewer requests.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">recs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, page_size<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
+<p>A filter that takes several values can be given a vector, and matches
+a row holding any one of them. Filters on a range, such as
+<code>duration</code>, <code>lat</code> or <code>lon</code>, can be
+given a range made by <code><a href="../reference/ab_range.html">ab_range()</a></code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Two recordings at once</span></span>
+<span><span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, id<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10754</span>, <span class="fl">11096</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Recordings between 10 and 20 seconds long</span></span>
+<span><span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, duration<span class="op">=</span><span class="fu"><a href="../reference/ab_range.html">ab_range</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Recordings made north of 60 degrees</span></span>
+<span><span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, lat<span class="op">=</span><span class="fu"><a href="../reference/ab_range.html">ab_range</a></span><span class="op">(</span>min<span class="op">=</span><span class="fl">60</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Columns that audioBlast describes as numeric, such as
+<code>duration</code>, are returned as numbers.</p>
+</div>
+<div class="section level2">
+<h2 id="records-and-linked-data">Records and linked data<a class="anchor" aria-label="anchor" href="#records-and-linked-data"></a>
+</h2>
+<p>Each record in audioBlast has its own address, and
+<code><a href="../reference/audioblastRecord.html">audioblastRecord()</a></code> fetches one record from it. Records can
+also be fetched as linked data (RDF) in JSON-LD or Turtle, from
+<code><a href="../reference/audioblastRecord.html">audioblastRecord()</a></code> or from a search with
+<code><a href="../reference/audioblast.html">audioblast()</a></code>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/audioblastRecord.html">audioblastRecord</a></span><span class="op">(</span><span class="st">"recording"</span>, <span class="st">"bio.acousti.ca"</span>, <span class="fl">10754</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/audioblastRecord.html">audioblastRecord</a></span><span class="op">(</span><span class="st">"taxon"</span>, <span class="st">"bio.acousti.ca"</span>, <span class="fl">247</span>, output<span class="op">=</span><span class="st">"Turtle"</span><span class="op">)</span></span></code></pre></div>
+<p>Some modules have endpoints of their own. The classification of a
+taxon, from the root of its source’s taxonomy down to the taxon itself,
+is given by the <code>classification</code> endpoint of the
+<code>taxa</code> module.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"taxa"</span>, <span class="st">"classification"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, id<span class="op">=</span><span class="fl">247</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="annotations">Annotations<a class="anchor" aria-label="anchor" href="#annotations"></a>
+</h2>
+<p>Annotations of recordings can be returned as <code>Annotation</code>
+objects, which can be used with the other annotation functions of
+<code>SonicScrewdriveR</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"annomate"</span>, source<span class="op">=</span><span class="st">"bio.acousti.ca"</span>, source_id<span class="op">=</span><span class="fl">10754</span>, output<span class="op">=</span><span class="st">"Annotations"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="downloading-recordings">Downloading recordings<a class="anchor" aria-label="anchor" href="#downloading-recordings"></a>
+</h2>
+<p><code><a href="../reference/audioblastDownload.html">audioblastDownload()</a></code> downloads the files of recordings
+found by a search, and saves their metadata alongside them. Files
+already downloaded are skipped. Where audioBlast has measured a file,
+the file downloaded is checked against the hash audioBlast measured.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">recs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/audioblast.html">audioblast</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"recordings"</span>, source<span class="op">=</span><span class="st">"inaturalist"</span>, id<span class="op">=</span><span class="fl">134</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/audioblastDownload.html">audioblastDownload</a></span><span class="op">(</span><span class="va">recs</span>, dir<span class="op">=</span><span class="st">"recordings"</span><span class="op">)</span></span></code></pre></div>
+</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

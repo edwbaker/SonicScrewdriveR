@@ -23,6 +23,7 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/TimeRegion-class.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/WaveFilter-class.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/ab_diel_traits.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/ab_range.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/addProcess-methods.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/addSpectra.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/allChannels.html</loc></url>
@@ -31,6 +32,8 @@
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audio_filesize.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblast.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastFilters.html</loc></url>
+<url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastRecord.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothConfig.html</loc></url>
 <url><loc>https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.html</loc></url>

@@ -229,6 +229,7 @@ data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
 
 # Download the file to the mole_cricket directory
 audioblastDownload(data, dir="mole_cricket/")
+#> Downloading https://files.audioblast.org/bioacoustica/585_2_Gryllotalpa_vineae_820b.wav
 ```
 
 This has downloaded the audio file to the `mole_cricket` directory. It

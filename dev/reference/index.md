@@ -23,6 +23,8 @@
   : WaveFilter object for audio filters
 - [`ab_diel_traits()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/ab_diel_traits.md)
   : Convert text times of day in audioblast traits to numeric values
+- [`ab_range()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/ab_range.md)
+  : Make a range to filter audioBlast on
 - [`addProcess()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/addProcess-methods.md)
   : Add a process to a Tagged Wave or WaveMC object
 - [`addSpectra()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/addSpectra.md)
@@ -39,6 +41,10 @@
   : Get data or analyses from audioBlast
 - [`audioblastDownload()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastDownload.md)
   : Download audio files from audioBlast
+- [`audioblastFilters()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastFilters.md)
+  : List the filters of an audioBlast module
+- [`audioblastRecord()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastRecord.md)
+  : Get one record from audioBlast
 - [`audiomothCompress()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.md)
   : Write a Wave as an AudioMoth triggered (T.WAV) file
 - [`audiomothConfig()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothConfig.md)
