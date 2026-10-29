@@ -241,3 +241,8 @@ test_that("The annotations of bytes name no file, and of nothing are none", {
 test_that("An unknown output is refused", {
   expect_error(wavCues("marked.wav", output="table"), "Unknown output format.")
 })
+
+test_that("Annotations are asked for as birdNetAnalyse() asks for them", {
+  f <- mdFile(mdWav(mdFmt(), mdCueChunk(c(0)), mdData()))
+  expect_identical(wavCues(f, output="Annotation"), wavCues(f))
+})

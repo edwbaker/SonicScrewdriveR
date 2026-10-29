@@ -4,12 +4,12 @@
 \alias{wavCues}
 \title{Read the cue points and labels of a wave file}
 \usage{
-wavCues(x, output = "annotations")
+wavCues(x, output = "Annotation")
 }
 \arguments{
 \item{x}{Path to a wave file, or a raw vector holding one}
 
-\item{output}{One of "annotations" or "data.frame".}
+\item{output}{One of "Annotation" or "data.frame".}
 }
 \value{
 A list of Annotation objects, one per cue point, or with \code{output}

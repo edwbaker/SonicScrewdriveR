@@ -51,7 +51,7 @@
 #' known, or not known in seconds, starts and ends at `NA`.
 #'
 #' @param x Path to a wave file, or a raw vector holding one
-#' @param output One of "annotations" or "data.frame".
+#' @param output One of "Annotation" or "data.frame".
 #' @return A list of Annotation objects, one per cue point, or with `output`
 #'   "data.frame" a data frame of one row per cue point, with its identifier,
 #'   position, position in seconds, label, note, region length, purpose, region
@@ -68,8 +68,8 @@
 #' writeAudacityLabels(wavCues("marked.wav"), "marked.txt")
 #' }
 #'
-wavCues <- function(x, output="annotations") {
-  .validateChoice(output, c("annotations", "data.frame"), msg="Unknown output format.")
+wavCues <- function(x, output="Annotation") {
+  .validateChoice(output, c("Annotation", "data.frame"), msg="Unknown output format.")
   if (is.raw(x)) {
     return(.wavCueFrame(.wavChunks(x), function(at, n) x[at:(at + n - 1L)], output, ""))
   }
@@ -85,7 +85,7 @@ wavCues <- function(x, output="annotations") {
 #'
 #' @param walked What .wavWalk() returned
 #' @param read A function of a one-based position and a number of bytes
-#' @param output One of "annotations" or "data.frame"
+#' @param output One of "Annotation" or "data.frame"
 #' @param path The path of the file, or "" for bytes given directly
 #' @return A list of Annotation objects, or a data frame of one row per cue point
 #' @keywords internal
