@@ -4,16 +4,19 @@
 \alias{wavCues}
 \title{Read the cue points and labels of a wave file}
 \usage{
-wavCues(x)
+wavCues(x, output = "annotations")
 }
 \arguments{
 \item{x}{Path to a wave file, or a raw vector holding one}
+
+\item{output}{One of "annotations" or "data.frame".}
 }
 \value{
-A data frame of one row per cue point, with its identifier,
+A list of Annotation objects, one per cue point, or with \code{output}
+"data.frame" a data frame of one row per cue point, with its identifier,
 position, position in seconds, label, note, region length, purpose, region
 text and the chunk its position is into. A file holding no cue points and
-no labels gives a data frame of no rows.
+no labels gives an empty list, or a data frame of no rows.
 }
 \description{
 A wave file marks positions in a recording with cue points, and names them
@@ -41,15 +44,26 @@ point with no label is likewise reported with no text; nine files in a
 cached copy of bio.acousti.ca declare 99 such points, all of them at
 position zero, which is a writer reserving the room rather than marking
 anything.
+
+By default each cue point is given as an \link[=Annotation-class]{Annotation}
+object. A labelled region is an annotation of type \code{region} running from its
+position for its length, and any other point an annotation of type \code{cue}
+that starts and ends at its position. The value of the annotation is the
+label of the point, or failing that the text of its region; its source is
+\code{wavCues}, its file the path read, and its metadata the fields of its row
+in the data frame other than \code{seconds}. An annotation whose position is not
+known, or not known in seconds, starts and ends at \code{NA}.
 }
 \examples{
 \dontrun{
-cues <- wavCues("marked.wav")
+cues <- wavCues("marked.wav", output="data.frame")
 cues[!is.na(cues$label), c("seconds", "label")]
+writeAudacityLabels(wavCues("marked.wav"), "marked.txt")
 }
 
 }
 \seealso{
 \code{\link[=wavChunks]{wavChunks()}} lists the chunks a file holds, and \code{\link[=wavInfo]{wavInfo()}} reads
 the text of the same labels without the positions they belong to.
+\code{\link[=writeAudacityLabels]{writeAudacityLabels()}} writes the annotations as an Audacity label file.
 }
