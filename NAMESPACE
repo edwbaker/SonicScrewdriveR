@@ -198,6 +198,7 @@ importFrom(methods,
   callGeneric,
   is,
   new,
+  slot,
   validObject
 )
 importFrom(mime,guess_type)

@@ -16,3 +16,12 @@ A data.frame.
 Converts a list of Annotation objects to a data.frame, with one column for
 each metadata name in the list.
 }
+\details{
+A metadata column keeps the class of its values where they share one, so a
+confidence is a number; values of differing classes are given as text, and
+a column in which any value is longer than one is a list. An annotation
+without a value of that name has \code{NA}. A metadata name that is also the name
+of a slot, such as the \code{source} that \code{\link[=audioblast]{audioblast()}} keeps of the collection
+an annotation came from, is given a column of its own named with \code{metadata.}
+in front, rather than writing over the slot's.
+}

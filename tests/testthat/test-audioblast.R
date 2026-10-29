@@ -85,6 +85,22 @@ test_that("Annotation output is as expected", {
   expect_equal(as.numeric(d$time_start), a@start)
   expect_equal(as.numeric(d$time_end), a@end)
   expect_equal(d$source, a@metadata$source)
+  # These annotations give no frequency limits, so they span every frequency.
+  expect_identical(c(a@low, a@high), c(0, Inf))
+})
+
+test_that("the frequency limits of an annotation from audioBlast are kept", {
+  # They were left out, so every annotation spanned every frequency.
+  ret <- data.frame(
+    source="s", source_id="1", annotator="a", annotation_id="1",
+    annotation_date="", annotation_info_url="", lat=NA, lon=NA, contact="",
+    recording_url="r.wav", time_start=1, time_end=2,
+    freq_low=c(1000, NA), freq_high=c("8000.0", NA), type="Call", taxon="t",
+    stringsAsFactors=FALSE
+  )
+  anns <- .audioblast_annotations(ret)
+  expect_identical(c(anns[[1]]@low, anns[[1]]@high), c(1000, 8000))
+  expect_identical(c(anns[[2]]@low, anns[[2]]@high), c(0, Inf))
 })
 
 # ------------------------------------------------------------- the pages ---

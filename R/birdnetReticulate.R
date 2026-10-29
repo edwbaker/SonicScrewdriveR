@@ -16,9 +16,12 @@
 #' @export
 #' @examples
 #' \dontrun{
-#'   birdnetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")
+#'   birdNetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")
 #' }
 birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotation") {
+  #Checked before anything else, as a mistyped output set up a Python
+  #environment before it was refused.
+  .validateChoice(output, c("data.frame", "Annotation"), msg="Unknown output format.")
   if (!package.installed("reticulate")) {
     stop("The reticulate package is required to use BirdNET.")
   }
@@ -29,7 +32,6 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
 
   reticulate::use_virtualenv("sonicscrewdriver")
 
-  .validateChoice(output, c("data.frame", "Annotation"), msg="Unknown output format.")
   if (!is.null(lat)) {
     if (is.null(lon)) {
       stop("If lat is provided, lon must also be provided.")

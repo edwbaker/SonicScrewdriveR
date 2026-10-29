@@ -705,10 +705,29 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
       source = "audioblast",
       start = ret[i, "time_start"],
       end = ret[i, "time_end"],
+      low = .audioblast_frequency(ret[i, "freq_low"], 0),
+      high = .audioblast_frequency(ret[i, "freq_high"], Inf),
       type = ret[i, "type"],
       value = ret[i, "taxon"]
     )
   })
+}
+
+#' A frequency limit of an annotation from audioBlast
+#'
+#' An annotation that gives no limit has none, which an Annotation object holds
+#' as the limit of the recording: 0 for the lowest frequency and `Inf` for the
+#' highest.
+#' @param x The limit audioBlast gives, which may be NA
+#' @param none The limit to use where audioBlast gives none
+#' @keywords internal
+#' @noRd
+.audioblast_frequency <- function(x, none) {
+  x <- as.numeric(x)
+  if (is.na(x)) {
+    return(none)
+  }
+  return(x)
 }
 
 .audioblast_number <- function(x) {

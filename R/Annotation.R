@@ -256,51 +256,74 @@ sort_annotations <- function(annotations, domain="time", decreasing=FALSE) {
 #' Converts a list of Annotation objects to a data.frame, with one column for
 #' each metadata name in the list.
 #'
+#' A metadata column keeps the class of its values where they share one, so a
+#' confidence is a number; values of differing classes are given as text, and
+#' a column in which any value is longer than one is a list. An annotation
+#' without a value of that name has `NA`. A metadata name that is also the name
+#' of a slot, such as the `source` that [audioblast()] keeps of the collection
+#' an annotation came from, is given a column of its own named with `metadata.`
+#' in front, rather than writing over the slot's.
+#'
 #' @param x A list of Annotation objects.
 #' @return A data.frame.
+#' @importFrom methods slot
 #' @export
 AnnotationList2DataFrame <- function(x) {
   if (!all(sapply(x, inherits, "Annotation"))) {
     stop("All items in list must be Annotation objects.")
   }
 
-  # Get all possible names of values in the metadata slot
-  metadata_names <- unique(unlist(lapply(x, function(y) names(y@metadata))))
-
+  #Filled a column at a time: filling a data frame a cell at a time copied it
+  #on every assignment.
+  slot_column <- function(name, type) {
+    vapply(x, function(y) slot(y, name), type)
+  }
   ret <- data.frame(
-    file=character(length=length(x)),
-    start=numeric(length=length(x)),
-    end=numeric(length=length(x)),
-    low=numeric(length=length(x)),
-    high=numeric(length=length(x)),
-    source=character(length=length(x)),
-    type=character(length=length(x)),
-    value=character(length=length(x)),
+    file=slot_column("file", character(1)),
+    start=slot_column("start", numeric(1)),
+    end=slot_column("end", numeric(1)),
+    low=slot_column("low", numeric(1)),
+    high=slot_column("high", numeric(1)),
+    source=slot_column("source", character(1)),
+    type=slot_column("type", character(1)),
+    value=slot_column("value", character(1)),
     stringsAsFactors=FALSE
   )
 
-  names <- colnames(ret)
+  # Get all possible names of values in the metadata slot
+  metadata_names <- unique(unlist(lapply(x, function(y) names(y@metadata))))
+  metadata_names <- metadata_names[nzchar(metadata_names)]
+  columns <- ifelse(metadata_names %in% colnames(ret), paste0("metadata.", metadata_names), metadata_names)
+  columns <- make.unique(c(colnames(ret), columns))[-seq_len(ncol(ret))]
 
-  for (i in seq_along(metadata_names)) {
-    ret <- cbind(ret, character(length=length(x)))
-  }
-  colnames(ret) <- c(names, metadata_names)
-
-  for (i in seq_along(x)) {
-    ret[i, "file"] <- x[[i]]@file
-    ret[i, "start"] <- x[[i]]@start
-    ret[i, "end"] <- x[[i]]@end
-    ret[i, "low"] <- x[[i]]@low
-    ret[i, "high"] <- x[[i]]@high
-    ret[i, "source"] <- x[[i]]@source
-    ret[i, "type"] <- x[[i]]@type
-    ret[i, "value"] <- x[[i]]@value
-
-    for (j in seq_along(metadata_names)) {
-      if (metadata_names[j] %in% names(x[[i]]@metadata)) {
-        ret[i, metadata_names[j]] <- x[[i]]@metadata[[metadata_names[j]]]
-      }
-    }
+  for (j in seq_along(metadata_names)) {
+    ret[[columns[j]]] <- .metadataColumn(lapply(x, function(y) y@metadata[[metadata_names[j]]]))
   }
   return(ret)
+}
+
+#' One metadata column of AnnotationList2DataFrame()
+#'
+#' Every value was written into a column of text, so a confidence came back as
+#' "0.9".
+#' @param values A list of the values of one metadata name, with NULL for an
+#'   annotation that has none.
+#' @return A vector, or a list where any value is longer than one.
+#' @keywords internal
+#' @noRd
+.metadataColumn <- function(values) {
+  missing <- vapply(values, is.null, logical(1))
+  if (all(missing)) {
+    return(rep(NA, length(values)))
+  }
+  single <- vapply(values, function(v) is.atomic(v) && length(v) == 1L, logical(1))
+  if (!all(missing | single)) {
+    return(I(values))
+  }
+  if (length(unique(lapply(values[!missing], class))) > 1) {
+    values[!missing] <- lapply(values[!missing], as.character)
+  }
+  #An NA of the class of the values, so that combining them keeps the class
+  values[missing] <- list(values[!missing][[1]][NA_integer_])
+  return(do.call(c, unname(values)))
 }
