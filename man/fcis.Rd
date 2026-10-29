@@ -9,7 +9,8 @@ fcis(
   window.length = NULL,
   indices = c("power", "ACI", "entropy"),
   wl = 256,
-  cluster = NULL
+  cluster = NULL,
+  scale = NULL
 )
 }
 \arguments{
@@ -27,6 +28,10 @@ file gives a single column.}
 This is only worthwhile when x is a filename and the windows are long, as each
 worker then reads its own part of the file. Passing a Wave object sends a copy
 of it to every worker, which takes longer than the calculation itself.}
+
+\item{scale}{NULL, a function, or a list of three functions, one per channel,
+applied to an index across the whole spectrogram before it is mapped to a
+colour. \code{\link[=fcisClip]{fcisClip()}} makes one that clips to a range of percentiles.}
 }
 \value{
 An object of class "fcis", being a list of the colours as a character

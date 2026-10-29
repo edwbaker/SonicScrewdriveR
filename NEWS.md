@@ -102,6 +102,17 @@
   Nothing documents what either field of text is for, so they are reported
   under the names of the slots they were written in and neither is taken for
   the title of the recording. One file of the 397 writes in either of them.
+- fcis() takes a `scale` argument, and fcisClip() makes one. An index is mapped
+  to its colour channel between its smallest and largest value across the whole
+  spectrogram, which gives most of the colour range to a handful of extreme
+  windows and leaves the rest of the image in a narrow band. fcisClip() clips an
+  index to a range of percentiles first, by default between the second and the
+  ninety-eighth, and can
+  take logarithms before it does, which is what an index spanning orders of
+  magnitude such as power needs. A scale is given either as one function for
+  every channel or as three, one for each, and is applied across the whole
+  spectrogram rather than per window, so that a colour still means the same
+  thing from one end of the image to the other.
 - audioblast() asks the audioBlast API through an HTTP client rather than by
   reading a URL, which is what the rest of this entry rests on. A query is sent
   with a user agent naming this package, and retried where the connection
