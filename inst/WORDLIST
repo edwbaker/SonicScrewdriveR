@@ -244,6 +244,7 @@ wamd
 wavChunks
 wavCues
 wavInfo
+writeAnnotationWave
 writeAudacityLabels
 writeAudio
 writeAudioFlac

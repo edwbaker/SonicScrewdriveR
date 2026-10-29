@@ -4,16 +4,28 @@
 \alias{writeAnnotationWave}
 \title{Save a time region defined by an Annotation object as a Wave file}
 \usage{
-writeAnnotationWave(annotation, wave = NULL)
+writeAnnotationWave(annotation, wave = NULL, dir = ".")
 }
 \arguments{
-\item{annotation}{An Annotation object.}
+\item{annotation}{An Annotation object, or a list of them.}
 
 \item{wave}{(Optional) A Wave object, if not given will load the wave file from Annotation filename.}
+
+\item{dir}{The directory to write the files to.}
 }
 \value{
-No return value, called for its side effect of writing a Wave file.
+Invisibly, the path of each file written, or \code{NA} for an annotation
+whose region holds none of the wave.
 }
 \description{
-Save a time region defined by an Annotation object as a Wave file
+The region is cut from the wave by \code{\link[=cutws]{cutws()}}, so a stereo or multichannel
+wave keeps all of its channels and its bit depth.
+}
+\details{
+Each region is written to \code{dir}, in a file named from the annotated file, the
+start and end of the annotation and, where it has one, its value, as
+\verb{AUDIOMOTH_0-3_Turdus_merula.wav}. Characters of the value other than
+letters, digits, dots, dashes and underscores are written as underscores.
+Two annotations of the same region, such as two species found in the same
+window by \code{\link[=birdNetAnalyse]{birdNetAnalyse()}}, are written to two files.
 }

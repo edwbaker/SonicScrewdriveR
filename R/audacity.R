@@ -9,7 +9,18 @@
 #' @export
 readAudacityLabels <- function(file, output="annotations") {
   .validateChoice(output, c("annotations", "data.frame"), msg="Unknown output format.")
-  labels <- read.csv2(file, header=FALSE, sep='\t')
+  #Every field is read as text and without quoting, so that a label is kept as
+  #it was written. Read otherwise, a label of NA was a missing value, double
+  #quotes were taken out of a label, and labels left empty were each NA.
+  lines <- readLines(file, warn=FALSE)
+  lines <- lines[nzchar(lines)]
+  if (length(lines) == 0) {
+    #A file with no labels in it, as writeAudacityLabels() writes of none.
+    labels <- data.frame(from=character(0), to=character(0), label=character(0))
+  } else {
+    labels <- read.csv2(text=lines, header=FALSE, sep='\t', colClasses="character",
+                        quote="", na.strings=character(0))
+  }
   colnames(labels)[1:3] <- c("from", "to", "label")
 
   #Audacity puts the frequency limits of a label on a row of their own, following
@@ -74,11 +85,13 @@ writeAudacityLabels <- function(annotations, file) {
     stop("Input must be a list of Annotation objects.")
   }
 
-  from=sapply(annotations, function(x) x@start)
-  to=sapply(annotations, function(x) x@end)
-  label=sapply(annotations, function(x) x@value)
-  low <- sapply(annotations, function(x) x@low)
-  high <- sapply(annotations, function(x) x@high)
+  #vapply() rather than sapply(), which gives a list of no annotations, and
+  #is.finite() refused that.
+  from <- vapply(annotations, function(x) x@start, numeric(1))
+  to <- vapply(annotations, function(x) x@end, numeric(1))
+  label <- vapply(annotations, function(x) x@value, character(1))
+  low <- vapply(annotations, function(x) x@low, numeric(1))
+  high <- vapply(annotations, function(x) x@high, numeric(1))
 
   #Frequency limits are worth writing when any of them says something. The test
   #used to hold the other way round, so they were written only when they did not.
