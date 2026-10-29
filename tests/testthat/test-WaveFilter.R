@@ -36,8 +36,13 @@ test_that("output is the same when filter is nothing (TaggedWave)", {
 
   # Check description is added
   expect_equal(typeof(filtered[[1]]@processing[[1]]), "list")
-  expect_equal(length(filtered[[1]]@processing[[1]]), 2)
   expect_equal(filtered[[1]]@processing[[1]]$process, "Do absolutely nowt")
+  # A record is no longer a process and an output alone: what was done, with
+  # what, when and to which audio.
+  expect_named(
+    filtered[[1]]@processing[[1]],
+    c("process", "output", "func", "params", "time", "duration", "input_hash", "output_hash")
+  )
 })
 
 test_that("output is the same when filter is nothing (Wave)", {
@@ -95,8 +100,13 @@ test_that("filterWave() works with cluster", {
 
   # Check description is added
   expect_equal(typeof(filtered[[1]]@processing[[1]]), "list")
-  expect_equal(length(filtered[[1]]@processing[[1]]), 2)
   expect_equal(filtered[[1]]@processing[[1]]$process, "Do absolutely nowt")
+  # A record is no longer a process and an output alone: what was done, with
+  # what, when and to which audio.
+  expect_named(
+    filtered[[1]]@processing[[1]],
+    c("process", "output", "func", "params", "time", "duration", "input_hash", "output_hash")
+  )
 
   parallel::stopCluster(cl)
 })

@@ -1,46 +1,40 @@
 .concat <- function(object, ..., method) {
   .validateChoice(method, c("bind", "noClick"), msg="Unknown concatenation method.")
-  objectTagged <- .isTagged(object)
-  if (all(sapply(list(object, ...), inherits, "Wave"))) {
-    allobjects <- untagWave(c(list(object), ...))
+  #The waves that were concatenated on reach the record as the arguments of the
+  #call, which keeps the tags of each of them as well as a digest. The process
+  #keeps the name it has always had, so a history written before this reads the
+  #same as one written after it.
+  return(.tagApplyOne(
+    object, .concatWaves, "concat", paste("concat", method, sep="-"), TRUE,
+    ..., method=method
+  ))
+}
+
+#' Concatenate waves without recording it
+#'
+#' The first wave is named with a dot for the same reason `.tagApplyOne()`'s
+#' arguments are: the waves to concatenate on arrive in `...`, and R would match
+#' a short name against the formals before it.
+#' @keywords internal
+#' @noRd
+.concatWaves <- function(.object, ..., method) {
+  if (all(sapply(list(.object, ...), inherits, "Wave"))) {
+    allobjects <- untagWave(c(list(.object), ...))
     if (method=="noClick") {
       allobjects <- .noClick(allobjects)
     }
-    object2 <- do.call(tuneR::bind, allobjects)
-    if (objectTagged) {
-      object@left <- object2@left
-      object@right <- object2@right
-      rm(object2)
-    } else {
-      return(object2)
-    }
+    return(do.call(tuneR::bind, allobjects))
   }
-  if (all(sapply(list(object, ...), inherits, "WaveMC"))) {
-    allobjects <- untagWave(c(list(object), list(...)))
+  if (all(sapply(list(.object, ...), inherits, "WaveMC"))) {
+    allobjects <- untagWave(c(list(.object), list(...)))
     if (method=="noClick") {
       allobjects <- .noClick(allobjects)
     }
-    object2 <- do.call(tuneR::bind, allobjects)
-    if (objectTagged) {
-      object@`.Data` <- object2@`.Data`
-      rm(object2)
-    } else {
-      return(object2)
-    }
+    return(do.call(tuneR::bind, allobjects))
   }
-
-  #Mixed classes matched neither branch above, so nothing was concatenated and
-  #the first object came back unchanged.
-  if (!exists("object2", inherits=FALSE) && !objectTagged) {
-    stop("All objects must be Wave-like objects of the same type.")
-  }
-
-  # If tagged then get slots of objects concatenated
-  if (objectTagged) {
-    object <- addProcess(object, paste("concat", method, sep="-"), .getTags(list(...)))
-  }
-
-  return(object)
+  #Mixed classes match neither branch above. A tagged first wave was returned
+  #unchanged, with a record of a concatenation that had not happened.
+  stop("All objects must be Wave-like objects of the same type.")
 }
 
 .noClick <- function(objects) {
@@ -67,6 +61,11 @@
 #' Wave objects caused by sudden jumps in amplitude by applying `tuneR::prepComb()`
 #' appropriately with default value of zero (this is only effective for the left
 #' channel or stereo or multi-channel recordings).
+#'
+#' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+#' `processing` slot of the result, as described in [tagApply()]. The waves that
+#' were concatenated on are held in the arguments of the record, each with its
+#' own tags and a digest of its samples.
 #'
 #' @param object A Wave like object.
 #' @param ... Wave like objects to concatenate to object.

@@ -5,6 +5,10 @@
 #' adding a constant amount of time to the start or end of the object. This is achieved
 #' by either inserting silence and truncating the object to the original length, or by
 #' rotating the audio within the object.
+#'
+#' Each shifted wave is a process of its own, so a `TaggedWave` or
+#' `TaggedWaveMC` gives back waves that each record the shift that made them,
+#' as described in [tagApply()].
 #' @param wave A Wave or WaveMC object, or a list of such objects.
 #' @param type The type of time-shift to apply. Either "silent" or "rotate".
 #' @param where Where to insert silence if `type` is "silent". One of "start",
@@ -30,39 +34,48 @@ generateTimeShift <- function(
   if (!inherits(wave, c("Wave", "WaveMC"))) {
     stop("All elements of wave must be Wave-like objects.")
   }
+  #Silence inserted at both ends gives two waves per amount, each recorded under
+  #the end it was inserted at. A rotation is the same wherever it is applied, so
+  #it gives one wave per amount whatever `where` asked for.
+  wheres <- if (type == "silent" && where == "both") c("start", "end") else where
   ret <- list()
-  original.length <- length(wave)
-  if (type == "silent") {
-    for (i in seq_along(amount)) {
-      insert <- .silence(wave, round(amount[i] * wave@samp.rate))
-      if (where %in% c("start", "both")) {
-        #Insertion at the start pushes the end of the wave off the end
-        ret[[length(ret)+1]] <- cutws(concat(insert, wave), to=original.length)
-      }
-      if (where %in% c("end", "both")) {
-        #Insertion at the end pushes the start of the wave off the start
-        ret[[length(ret)+1]] <- cutws(concat(wave, insert), from=length(insert)+1)
-      }
-    }
-  }
-  if (type == "rotate") {
-    for (i in seq_along(amount)) {
-      #A rotation repeats itself every whole wave, so a shift of more than the
-      #length of the wave is the same as its remainder. Taken literally it asked
-      #cutws() for a section running backwards, which failed on any recording
-      #shorter than the largest shift.
-      offset <- round(amount[i] * wave@samp.rate) %% original.length
-      if (offset == 0) {
-        ret[[length(ret)+1]] <- wave
-        next
-      }
-      ret[[length(ret)+1]] <- concat(
-        cutws(wave, from=original.length-offset+1),
-        cutws(wave, to=original.length-offset)
+  for (i in seq_along(amount)) {
+    for (w in wheres) {
+      ret[[length(ret)+1]] <- .tagApplyOne(
+        wave, .timeShift, "generateTimeShift", NULL, FALSE,
+        type=type, amount=amount[i], where=w
       )
     }
   }
   return(ret)
+}
+
+#' Shift a wave by one amount in one direction without recording it
+#' @keywords internal
+#' @noRd
+.timeShift <- function(wave, type, amount, where) {
+  original.length <- length(wave)
+  if (type == "silent") {
+    insert <- .silence(wave, round(amount * wave@samp.rate))
+    if (where == "start") {
+      #Insertion at the start pushes the end of the wave off the end
+      return(cutws(concat(insert, wave), to=original.length))
+    }
+    #Insertion at the end pushes the start of the wave off the start
+    return(cutws(concat(wave, insert), from=length(insert)+1))
+  }
+  #A rotation repeats itself every whole wave, so a shift of more than the
+  #length of the wave is the same as its remainder. Taken literally it asked
+  #cutws() for a section running backwards, which failed on any recording
+  #shorter than the largest shift.
+  offset <- round(amount * wave@samp.rate) %% original.length
+  if (offset == 0) {
+    return(wave)
+  }
+  return(concat(
+    cutws(wave, from=original.length-offset+1),
+    cutws(wave, to=original.length-offset)
+  ))
 }
 
 #' Silence of the same class, sample rate and channels as a wave

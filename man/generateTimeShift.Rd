@@ -26,3 +26,8 @@ adding a constant amount of time to the start or end of the object. This is achi
 by either inserting silence and truncating the object to the original length, or by
 rotating the audio within the object.
 }
+\details{
+Each shifted wave is a process of its own, so a \code{TaggedWave} or
+\code{TaggedWaveMC} gives back waves that each record the shift that made them,
+as described in \code{\link[=tagApply]{tagApply()}}.
+}

@@ -26,6 +26,10 @@ Creates an automatic bandpass filter based on the strongest frequency. The
 allowed bandwidth can be an integer multiple of the bandwidth at either -3dB
 or -10dB.
 }
+\details{
+Applied to a \code{TaggedWave} the call is recorded in the \code{processing} slot of
+the result, as described in \code{\link[=tagApply]{tagApply()}}.
+}
 \examples{
 \dontrun{
 autoBandPass(sheep)

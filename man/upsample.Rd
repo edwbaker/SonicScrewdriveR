@@ -20,6 +20,10 @@ A resampled Wave object
 Used to upsample a Wave object. The upsampled sample rate must be an natural multiple
 of the current sample rate.
 }
+\details{
+Applied to a \code{TaggedWave} the call is recorded in the \code{processing} slot of
+the result, as described in \code{\link[=tagApply]{tagApply()}}.
+}
 \examples{
 wave <- tuneR::sine(4000, samp.rate=44100)
 wave2 <- upsample(wave, 88200)

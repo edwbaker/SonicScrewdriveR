@@ -36,3 +36,7 @@ A list of Wave objects with the required noise added.
 Adding noise to a Wave like object allows for testing of the robustness of
 automated identification algorithms to noise.
 }
+\details{
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}.
+}

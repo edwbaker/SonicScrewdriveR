@@ -23,3 +23,7 @@ The Wave or WaveMC object with the time mask applied.
 Given a \code{Wave}-like object (or a list of \code{Wave}-like objects), generate
 new \code{Wave}-like objects with time masking.
 }
+\details{
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}.
+}

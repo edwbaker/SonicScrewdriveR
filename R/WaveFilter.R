@@ -33,37 +33,32 @@ setClass(
 #'
 #' Supported filters include those from the seewave package.
 #'
+#' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+#' `processing` slot of the result, as described in [tagApply()]. The settings
+#' of the filter are its arguments, so two runs of the same filter at different
+#' frequencies are told apart by their records. The description of the filter is
+#' the process the record is under, where it has one.
+#'
 #' @param w A Wave object.
 #' @param filt Wave object with the selected filter applied.
 #' @param cl Optional. If a cluster is specified, the filter will be applied in parallel.
 #' @return A filtered Wave or WaveMC object, or a list of such objects if given a list.
 #' @export
-#' @importFrom methods slot
 filterWave <- function(w, filt, cl=NULL) {
-  if (inherits(w, c("TaggedWave", "TaggedWaveMC"))) {
-    #The filters dispatch on the class of the wave and know nothing of a
-    #TaggedWave, so the plain wave is filtered and the tags carried over to the
-    #result. Passing the tagged wave straight to a filter gave an error from
-    #seewave, and the plain wave a filter returned had no addProcess method.
-    plain <- untagWave(w)
-    if (.useAllChannels(plain)) {
-      fw <- tagWave(.filterAllChannels(plain, filt))
-    } else {
-      fw <- tagWave(do.call(match.fun(filt@func), c(list(plain), filt@params)))
-    }
-    #Every tag slot is carried across, so that adding one to the class does not
-    #quietly start losing it here.
-    for (tag in names(.tagSlots())) {
-      methods::slot(fw, tag) <- methods::slot(w, tag)
-    }
-    fw <- addProcess(fw, filt@description)
-    return(fw)
-  }
   if (inherits(w, c("Wave", "WaveMC"))) {
-    if (.useAllChannels(w)) {
-      return(.filterAllChannels(w, filt))
-    }
-    return(do.call(match.fun(filt@func), c(list(w), filt@params)))
+    #The filters dispatch on the class of the wave and know nothing of a
+    #TaggedWave, so .tagApplyOne() is asked for an untagged one and puts the
+    #tags back on what the filter returns. Passing the tagged wave straight to a
+    #filter gave an error from seewave.
+    #
+    #The parameters of the filter are passed on rather than read from the filter
+    #inside, so that they reach the record as the arguments of the call. Only
+    #the name of the filter was recorded, which left two cut-offs of one filter
+    #indistinguishable.
+    return(do.call(
+      .tagApplyOne,
+      c(list(w, .applyFilter(filt), "filterWave", .filterLabel(filt), TRUE), filt@params)
+    ))
   }
   if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
     if (is.null(cl)) {
@@ -73,6 +68,38 @@ filterWave <- function(w, filt, cl=NULL) {
     }
   }
   stop("Can only filter a Wave or WaveMC object.")
+}
+
+#' A function that applies one filter to a wave
+#'
+#' The wave is named with a dot for the same reason `.tagApplyOne()`'s arguments
+#' are: the settings of the filter arrive in `...`, and R would match a short
+#' name against the formals before it. seewave calls a sampling frequency `f`.
+#' @param filt A WaveFilter object.
+#' @return A function of a wave and the filter's settings.
+#' @noRd
+.applyFilter <- function(filt) {
+  function(.wave, ...) {
+    if (.useAllChannels(.wave)) {
+      return(.filterAllChannels(.wave, filt))
+    }
+    return(do.call(match.fun(filt@func), c(list(.wave), list(...))))
+  }
+}
+
+#' The process a filter is recorded under
+#'
+#' A filter needs no description, and the prototype of the class has none, so a
+#' record was left with a process of `NA`. The name of the function is used
+#' instead, as it is for any other call.
+#' @param filt A WaveFilter object.
+#' @return The description of the filter, or `NULL` where it has none.
+#' @noRd
+.filterLabel <- function(filt) {
+  if (length(filt@description) != 1 || is.na(filt@description)) {
+    return(NULL)
+  }
+  return(filt@description)
 }
 
 #' Simple bandpass filter

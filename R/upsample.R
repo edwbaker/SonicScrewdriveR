@@ -3,6 +3,9 @@
 #' Used to upsample a Wave object. The upsampled sample rate must be an natural multiple
 #' of the current sample rate.
 #'
+#' Applied to a `TaggedWave` the call is recorded in the `processing` slot of
+#' the result, as described in [tagApply()].
+#'
 #' @param wave Wave object to upsample.
 #' @param upsample.rate The sample rate to upsample to.
 #' @param method "basic" for linear, or a function to interpolate NAs in a vector
@@ -19,22 +22,27 @@ upsample <- function(wave, upsample.rate, method="basic") {
   if (sf != round(sf)) {
     stop("Scale factor is not an integer.")
   }
+  return(.tagApplyOne(
+    wave, .upsample, "upsample", NULL, FALSE,
+    upsample.rate=upsample.rate, method=method
+  ))
+}
 
+#' Upsample a wave without recording it
+#' @keywords internal
+#' @noRd
+.upsample <- function(wave, upsample.rate, method) {
+  sf <- upsample.rate / wave@samp.rate
   newleft <- .upsampleChannel(wave@left, sf, method)
 
   if (wave@stereo) {
     newright <- .upsampleChannel(wave@right, sf, method)
-  }
-
-  if (wave@stereo) {
-    new_wave <- stereo(
+    return(stereo(
       Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm),
-      Wave(newright, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm))
-  } else {
-    new_wave <- Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm)
+      Wave(newright, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm)))
   }
 
-  return(new_wave)
+  return(Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm))
 }
 
 .upsampleChannel <- function(channel, sf, method) {

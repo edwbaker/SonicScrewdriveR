@@ -4,6 +4,9 @@
 #' allowed bandwidth can be an integer multiple of the bandwidth at either -3dB
 #' or -10dB.
 #'
+#' Applied to a `TaggedWave` the call is recorded in the `processing` slot of
+#' the result, as described in [tagApply()].
+#'
 #' @param wave A Wave object
 #' @param bw Either -3dB or -10dB. This is calculated by \code{frequencyStats}
 #' @param n.bw The number of bandwidths either side of the centre of the centre to keep
@@ -50,6 +53,19 @@ autoBandPass <- function(
   if (lowcut >= wave@samp.rate/2) {
     stop("lowcut must be below half the sample rate, which is where the recording ends.")
   }
+  return(.tagApplyOne(
+    wave, .autoBandPass, "autoBandPass", NULL, TRUE,
+    bw=bw, n.bw=n.bw, lowcut=lowcut
+  ))
+}
+
+#' Build and apply an automatic band pass filter without recording it
+#'
+#' An untagged wave is filtered, as the band is measured and kept with seewave,
+#' which rejects the tagged classes.
+#' @keywords internal
+#' @noRd
+.autoBandPass <- function(wave, bw, n.bw, lowcut) {
   wave2 <- seewave::ffilter(wave, from=lowcut, output="Wave")
   wave_spec <- seewave::meanspec(wave2, norm=FALSE, plot=FALSE)
   #The low cut was not passed on at all, which left the default of
@@ -68,9 +84,12 @@ autoBandPass <- function(
   #has its frequencies in kHz, as seewave gives them.
   if (bandwidth == 0) {
     bandwidth <- .convertLinear(wave_spec[2, 1] - wave_spec[1, 1], "kHz", "Hz", .frequencyMultipliers())
+    #The call is left off, as the band is measured here rather than where the
+    #caller can see, and naming the inner call says less than nothing.
     warning(
       bw, ": the signal has no measurable bandwidth, as it falls in a single ",
-      "bin of the spectrum. A band one bin wide is kept around the centre."
+      "bin of the spectrum. A band one bin wide is kept around the centre.",
+      call.=FALSE
     )
   }
   #The band is kept as far as the recording goes rather than beyond it. A wide

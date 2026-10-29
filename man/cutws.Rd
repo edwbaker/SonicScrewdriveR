@@ -24,6 +24,12 @@ Extract a section of a Wave or WaveMC object based on sample positions. This
 function will automatically detect if a Wave object is stereo, and returns
 the same class of object it was given.
 }
+\details{
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The samples
+that were cut to are recorded, rather than the ones that were asked for,
+which may have run beyond the end of the wave.
+}
 \examples{
 \dontrun{
 cutws(sheep, 1, 20)

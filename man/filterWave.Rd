@@ -24,4 +24,10 @@ to a Wave in a pipeline.
 }
 \details{
 Supported filters include those from the seewave package.
+
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The settings
+of the filter are its arguments, so two runs of the same filter at different
+frequencies are told apart by their records. The description of the filter is
+the process the record is under, where it has one.
 }
