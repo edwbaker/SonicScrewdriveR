@@ -193,6 +193,17 @@ test_that("A chunk too short to hold a field is read as far as it goes", {
   expect_false("marks" %in% names(o))
 })
 
+# A chunk of 64 bytes still reaches both times, which end at 62, so this is
+# the length that stops short of them.
+test_that("A chunk that stops before the times gives what came before them", {
+  o <- olym(mdFile(mdOlymWav(mdOlymChunk(size=0x30))))
+
+  expect_identical(o[["model"]], "LS-100")
+  expect_identical(o[["fileNumber"]], 204)
+  expect_false("timestamp" %in% names(o))
+  expect_false("timestampEnd" %in% names(o))
+})
+
 test_that("A chunk holding nothing but padding gives nothing", {
   o <- olym(mdFile(mdOlymWav(mdOlymChunk(
     model=NULL, fileNumber=NULL, start=NULL, end=NULL, recordingTime=NULL,
