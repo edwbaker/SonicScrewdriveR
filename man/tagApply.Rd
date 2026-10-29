@@ -4,21 +4,21 @@
 \alias{tagApply}
 \title{Apply a function to a tagged wave and record the process}
 \usage{
-tagApply(w, fun, ..., label = NULL, untag = NA, cl = NULL)
+tagApply(.w, .fun, ..., label = NULL, untag = NA, cl = NULL)
 }
 \arguments{
-\item{w}{A \code{Wave}, \code{WaveMC}, \code{TaggedWave} or \code{TaggedWaveMC} object, or a list
-of such objects.}
+\item{.w}{A \code{Wave}, \code{WaveMC}, \code{TaggedWave} or \code{TaggedWaveMC} object, or a
+list of such objects.}
 
-\item{fun}{A function, or the name of one, taking the wave as its first
+\item{.fun}{A function, or the name of one, taking the wave as its first
 argument.}
 
-\item{...}{Further arguments passed to \code{fun}.}
+\item{...}{Further arguments passed to \code{.fun}.}
 
 \item{label}{Optional. A description of the process. Defaults to the name of
 the function.}
 
-\item{untag}{Whether to pass \code{fun} an untagged wave (see Details). The
+\item{untag}{Whether to pass \code{.fun} an untagged wave (see Details). The
 default, \code{NA}, does so for functions from other packages.}
 
 \item{cl}{Optional. A cluster, as made by \code{\link[parallel:makeCluster]{parallel::makeCluster()}}, used to
@@ -26,7 +26,7 @@ process a list of waves in parallel. The workers need \code{sonicscrewdriver}
 to be available.}
 }
 \value{
-The result of \code{fun}, with the process recorded if \code{w} is tagged.
+The result of \code{.fun}, with the process recorded if \code{.w} is tagged.
 }
 \description{
 Runs \code{fun(w, ...)} and, if \code{w} is a \code{TaggedWave} or \code{TaggedWaveMC}, appends a
@@ -55,6 +55,15 @@ Only the outermost call makes a record. A function that calls \code{tagApply()}
 itself, as a function of this package may come to, is recorded once when it
 is passed to \code{tagApply()} in turn, under the name and arguments of the outer
 call rather than twice under both.
+
+The wave and the function are named \code{.w} and \code{.fun} so that the arguments
+meant for \code{.fun} reach it. R matches a named argument against the formals
+before \code{...} by prefix as well as in full, so a plain \code{w} and \code{fun} would
+swallow anything called \code{f}, \code{fu} or \code{w} — and \code{f} is what seewave calls a
+sampling frequency, which is exactly the sort of call this function is for.
+\code{label}, \code{untag} and \code{cl} come after \code{...} and so need their full names,
+which leaves only a function with an argument of one of those three names
+beyond reach.
 }
 \examples{
 tw <- tagWave(tuneR::sine(440, duration = 44100, samp.rate = 44100))

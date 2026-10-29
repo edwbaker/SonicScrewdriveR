@@ -125,19 +125,28 @@
 #' is passed to `tagApply()` in turn, under the name and arguments of the outer
 #' call rather than twice under both.
 #'
-#' @param w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object, or a list
-#'   of such objects.
-#' @param fun A function, or the name of one, taking the wave as its first
+#' The wave and the function are named `.w` and `.fun` so that the arguments
+#' meant for `.fun` reach it. R matches a named argument against the formals
+#' before `...` by prefix as well as in full, so a plain `w` and `fun` would
+#' swallow anything called `f`, `fu` or `w` — and `f` is what seewave calls a
+#' sampling frequency, which is exactly the sort of call this function is for.
+#' `label`, `untag` and `cl` come after `...` and so need their full names,
+#' which leaves only a function with an argument of one of those three names
+#' beyond reach.
+#'
+#' @param .w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object, or a
+#'   list of such objects.
+#' @param .fun A function, or the name of one, taking the wave as its first
 #'   argument.
-#' @param ... Further arguments passed to `fun`.
+#' @param ... Further arguments passed to `.fun`.
 #' @param label Optional. A description of the process. Defaults to the name of
 #'   the function.
-#' @param untag Whether to pass `fun` an untagged wave (see Details). The
+#' @param untag Whether to pass `.fun` an untagged wave (see Details). The
 #'   default, `NA`, does so for functions from other packages.
 #' @param cl Optional. A cluster, as made by [parallel::makeCluster()], used to
 #'   process a list of waves in parallel. The workers need `sonicscrewdriver`
 #'   to be available.
-#' @return The result of `fun`, with the process recorded if `w` is tagged.
+#' @return The result of `.fun`, with the process recorded if `.w` is tagged.
 #' @export
 #' @examples
 #' tw <- tagWave(tuneR::sine(440, duration = 44100, samp.rate = 44100))
@@ -148,49 +157,52 @@
 #' \dontrun{
 #' tw <- tagApply(tw, seewave::ffilter, from = 1000, to = 2000, output = "Wave")
 #' }
-tagApply <- function(w, fun, ..., label = NULL, untag = NA, cl = NULL) {
-  func_name <- .funcName(fun, substitute(fun))
-  fun <- match.fun(fun)
+tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
+  func_name <- .funcName(.fun, substitute(.fun))
+  .fun <- match.fun(.fun)
 
-  if (inherits(w, c("Wave", "WaveMC"))) {
-    return(.tagApplyOne(w, fun, func_name, label, untag, ...))
+  if (inherits(.w, c("Wave", "WaveMC"))) {
+    return(.tagApplyOne(.w, .fun, func_name, label, untag, ...))
   }
-  if (is.list(w) && all(vapply(w, inherits, logical(1), what = c("Wave", "WaveMC")))) {
+  if (is.list(.w) && all(vapply(.w, inherits, logical(1), what = c("Wave", "WaveMC")))) {
     if (is.null(cl)) {
-      return(lapply(w, .tagApplyOne, fun, func_name, label, untag, ...))
+      return(lapply(.w, .tagApplyOne, .fun, func_name, label, untag, ...))
     }
-    return(parallel::parLapply(cl, w, .tagApplyOne, fun, func_name, label, untag, ...))
+    return(parallel::parLapply(cl, .w, .tagApplyOne, .fun, func_name, label, untag, ...))
   }
   stop("Can only record a process on a Wave or WaveMC object, or a list of them.")
 }
 
 #' Apply a function to one wave and record the process if it is tagged
-#' @param label The label given by the user, or `NULL` to use `func_name`.
-#' @param untag `TRUE` or `FALSE`, or `NA` to decide with `.needsUntag()`.
+#' @param .label The label given by the user, or `NULL` to use `.func`.
+#' @param .untag `TRUE` or `FALSE`, or `NA` to decide with `.needsUntag()`.
 #' @details While a process is being recorded further calls are not recorded,
 #'   so that only the outermost call makes a record.
 #' @keywords internal
 #' @noRd
-.tagApplyOne <- function(w, fun, func_name, label, untag, ...) {
-  if (!inherits(w, c("Wave", "WaveMC"))) {
-    return(fun(w, ...))
+.tagApplyOne <- function(.w, .fun, .func, .label, .untag, ...) {
+  # Every formal is named with a dot for the same reason tagApply()'s are: the
+  # arguments meant for .fun arrive in `...`, and R would match a short name
+  # against the formals before it.
+  #
+  # tagApply() refuses anything that is not a wave, or a list of them, before
+  # this is reached, so a caller of its own has to do the same.
+  if (is.na(.untag)) {
+    .untag <- .needsUntag(.fun)
   }
-  if (is.na(untag)) {
-    untag <- .needsUntag(fun)
-  }
-  if (!.isTagged(w) || isTRUE(.recState$active)) {
-    return(fun(if (untag) untagWave(w) else w, ...))
+  if (!.isTagged(.w) || isTRUE(.recState$active)) {
+    return(.fun(if (.untag) untagWave(.w) else .w, ...))
   }
   .recState$active <- TRUE
   on.exit(.recState$active <- FALSE)
   t0 <- Sys.time()
-  input_hash <- .waveHash(w)
-  res <- fun(if (untag) untagWave(w) else w, ...)
+  input_hash <- .waveHash(.w)
+  res <- .fun(if (.untag) untagWave(.w) else .w, ...)
   duration <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
   record <- .processRecord(
-    if (is.null(label)) func_name else label,
+    if (is.null(.label)) .func else .label,
     duration = duration,
-    func = func_name,
+    func = .func,
     params = .summariseParams(list(...)),
     time = t0,
     input_hash = input_hash
@@ -200,14 +212,14 @@ tagApply <- function(w, fun, ..., label = NULL, untag = NA, cl = NULL) {
     if (is.null(res)) {
       return(res)
     }
-    attr(res, "processing") <- c(w@processing, list(record))
+    attr(res, "processing") <- c(.w@processing, list(record))
     return(res)
   }
 
   if (!.isTagged(res)) {
-    res <- tagWave(res, origin = w@origin)
-    res@metadata <- w@metadata
-    res@processing <- w@processing
+    res <- tagWave(res, origin = .w@origin)
+    res@metadata <- .w@metadata
+    res@processing <- .w@processing
   }
   record$output_hash <- .waveHash(res)
 

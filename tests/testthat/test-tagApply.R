@@ -57,6 +57,40 @@ test_that("tagApply summarises waves in params and handles non-wave results", {
   expect_error(tagApply(1, identity), "Can only record")
 })
 
+test_that("an argument for the function is not swallowed by tagApply's own", {
+  # R matches a named argument against the formals before `...` by prefix as
+  # well as in full. With formals named w and fun, `f = 44100` became the
+  # function to apply and the function itself was passed as an argument to it.
+  # seewave calls a sampling frequency `f`, so this is not a corner case.
+  tw <- tagWave(tuneR::sine(440, duration = 4410, samp.rate = 44100))
+  seen <- list()
+  res <- tagApply(tw, function(x, f, w, fu) {
+    seen <<- list(f = f, w = w, fu = fu)
+    x
+  }, f = 44100, w = "wave", fu = "zz")
+
+  expect_equal(seen$f, 44100)
+  expect_equal(seen$w, "wave")
+  expect_equal(seen$fu, "zz")
+  expect_equal(res@processing[[1]]$params$f, 44100)
+})
+
+test_that("bulky and unprintable arguments are summarised in a record", {
+  tw <- tagWave(tuneR::sine(440, duration = 4410, samp.rate = 44100))
+
+  # A function given as an argument is named rather than written into the
+  # record, where it would drag its whole environment along with it.
+  res <- tagApply(tw, function(x, g) g(x), g = identity)
+  expect_equal(res@processing[[1]]$params$g, "<function>")
+
+  # And anything bulky is left out, so that the history of a recording stays
+  # small beside the recording.
+  big <- runif(20000)
+  expect_gt(as.numeric(utils::object.size(big)), 1e5)
+  res <- tagApply(tw, function(x, lookup) x, lookup = big)
+  expect_equal(res@processing[[1]]$params$lookup, "<large object>")
+})
+
 test_that(".waveHash depends on samples and rate only", {
   w <- tuneR::sine(440, duration = 4410, samp.rate = 44100)
   expect_equal(.waveHash(w), .waveHash(tagWave(w, origin = "x")))
