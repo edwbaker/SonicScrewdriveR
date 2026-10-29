@@ -76,6 +76,32 @@
   format, which is how most writers that mention the chunk leave it, gives
   nothing rather than an empty title, and one holding an image names the format
   so that a caller can tell the file carries something other than text.
+- olym() reads the `olym` chunk an Olympus recorder writes, holding the model
+  of the recorder, the number the recording was given on it, the times it was
+  started and stopped, how long it runs, any marks that were put in it while it
+  was being made, and two fields of text. The chunk is commonly the whole of
+  what such a file carries: a wave file out of an LS or DM recorder has no INFO
+  list, no broadcast metadata and no tag, and one file in a cached copy of
+  iNaturalist whose only chunks are `fmt `, `olym` and `data` gave nothing at
+  all before this and now gives a time, a model and the subject of the
+  recording. 397 files across cached copies of the TSA and iNaturalist corpora
+  carry the chunk, from the LS-3, LS-5, LS-10, LS-11, LS-12, LS-100, DM-550,
+  DM-620 and DM-720.
+  The chunk comes in two forms, told apart by three bytes that read "dss" or
+  "wav", and they hold the duration in different places: 217 of those files
+  write it at 0x200, where it is documented, and the other 180 leave that as
+  padding and write it at 0x56 instead, which is documented nowhere. Both are
+  read. What the recorder wrote is not the length of the audio the file now
+  holds, and is not presented as though it were: in 307 of the 397 the two
+  agree to within half a second, and of the 90 that do not, 89 say the
+  recording was longer than the audio there is, which is what a file cut after
+  it came off the recorder looks like. Nor is the time the recorder stopped the
+  time the audio ends, as it includes however long the recorder was paused: in
+  152 of the 397 it is further from the start than the recording is long, by as
+  much as thirteen hours.
+  Nothing documents what either field of text is for, so they are reported
+  under the names of the slots they were written in and neither is taken for
+  the title of the recording. One file of the 397 writes in either of them.
 - wavCues() reads the cue points of a wave file together with the labels that
   name them. The two halves of an annotation are written in different chunks:
   a cue chunk holds positions and nothing else, and the text naming them is in

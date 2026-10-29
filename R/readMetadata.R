@@ -36,8 +36,8 @@
 #' @keywords internal
 #' @noRd
 .MD_SOURCE_ORDER <- c(
-  "guano", "wamd", "audiomoth", "bext", "ixml", "xenoCanto", "wavInfo", "xmp",
-  "disp", "id3", "vorbisComment", "filename"
+  "guano", "wamd", "audiomoth", "olym", "bext", "ixml", "xenoCanto", "wavInfo",
+  "xmp", "disp", "id3", "vorbisComment", "filename"
 )
 
 #' Pick the first of several fields that holds something
@@ -253,6 +253,31 @@
   ))
 }
 
+#' The normalised fields an Olympus recorder's chunk gives
+#'
+#' The chunk is Olympus's own format, so a file carrying one was written by one
+#' of their recorders whether or not it says so, which is the argument wamd is
+#' read by as well. One file of the 397 in the corpora holds something other
+#' than a model of theirs in the model field, reading "BERN", and the make is
+#' reported for it all the same: the chunk it is written in is the only thing
+#' either field rests on.
+#'
+#' Neither the number the recording was given on the recorder nor the two
+#' fields of text the chunk can hold is normalised. The number is a count of
+#' files on a device rather than a take of a recording, which is what `take`
+#' means elsewhere in this record, and nothing documents what either text field
+#' is for, so calling one of them the title would be a guess. Both are reported
+#' by [olym()] itself.
+#' @keywords internal
+#' @noRd
+.mdNormaliseOlym <- function(o) {
+  return(list(
+    datetime = .mdPick(o, "timestamp"),
+    make = "Olympus",
+    model = .mdPick(o, "model")
+  ))
+}
+
 #' The normalised fields Broadcast Wave metadata gives
 #' @keywords internal
 #' @noRd
@@ -444,6 +469,7 @@
     guano = .mdNormaliseGuano(source),
     wamd = .mdNormaliseWamd(source),
     audiomoth = .mdNormaliseAudiomoth(source),
+    olym = .mdNormaliseOlym(source),
     bext = .mdNormaliseBext(source),
     ixml = .mdNormaliseIxml(source),
     xenoCanto = .mdNormaliseXenoCanto(source),
@@ -566,9 +592,9 @@
   # back together with the labels that name them; they are positions in a
   # recording rather than facts about it, so they are not among the fields of
   # the record.
-  known <- c("fmt ", "data", "fact", "ds64", "guan", "wamd", "bext", "iXML",
-             .WAV_LIST_IDS, "_PMX", "DISP", .WAV_ID3_IDS, "PAD ", "JUNK",
-             "junk", "FLLR", "cue ")
+  known <- c("fmt ", "data", "fact", "ds64", "guan", "wamd", "olym", "bext",
+             "iXML", .WAV_LIST_IDS, "_PMX", "DISP", .WAV_ID3_IDS, "PAD ",
+             "JUNK", "junk", "FLLR", "cue ")
   return(unique(ids[!ids %in% known]))
 }
 
@@ -619,9 +645,9 @@
 #'     package recognises}
 #'   \item{fields}{The normalised record (see below)}
 #'   \item{sources}{The formats that were found, each as the object its own
-#'     reader gives, named `guano`, `wamd`, `audiomoth`, `bext`, `ixml`,
-#'     `xenoCanto`, `wavInfo`, `xmp`, `disp`, `id3`, `vorbisComment` and
-#'     `filename`. A format the file does not carry is left out.}
+#'     reader gives, named `guano`, `wamd`, `audiomoth`, `olym`, `bext`,
+#'     `ixml`, `xenoCanto`, `wavInfo`, `xmp`, `disp`, `id3`, `vorbisComment`
+#'     and `filename`. A format the file does not carry is left out.}
 #'   \item{unparsed}{The identifiers of any chunks the file holds that carry
 #'     metadata this package cannot read, such as the proprietary block an
 #'     editor leaves behind. Knowing they are there is worth more than passing
@@ -782,6 +808,7 @@ readMetadata <- function(x, filename=TRUE) {
   if (.mdWaveContainer(container)) {
     sources$guano <- guano(from)
     sources$wamd <- wamd(from)
+    sources$olym <- olym(from)
     sources$bext <- bext(from)
     sources$ixml <- ixml(from)
     sources$wavInfo <- wavInfo(from)
@@ -828,6 +855,7 @@ readMetadata <- function(x, filename=TRUE) {
   if (.mdWaveContainer(container)) {
     sources$guano <- guano(bytes)
     sources$wamd <- wamd(bytes)
+    sources$olym <- olym(bytes)
     sources$bext <- bext(bytes)
     sources$ixml <- ixml(bytes)
     sources$wavInfo <- wavInfo(bytes)
