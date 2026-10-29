@@ -14,7 +14,8 @@
 \item{domain}{Domain of the annotations, either "time", "frequency", or "both".}
 }
 \value{
-TRUE if the annotations overlap, FALSE otherwise.
+TRUE if the annotations overlap, FALSE otherwise. An annotation whose
+limits in the domain are not known, being \code{NA}, overlaps nothing.
 }
 \description{
 Check if two annotations overlap or are continuous

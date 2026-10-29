@@ -280,6 +280,82 @@ test_that("overlapping annotations are merged in the frequency domain", {
   expect_equal(merged[[2]]@low, 900)
 })
 
+test_that("annotations whose value is NA are merged with each other and nothing else", {
+  # Compared with ==, NA gave NA, which took both annotations out of every
+  # group and left NULL in their place, so merging failed on a slot of NULL.
+  x <- annotation(start=0, end=1, value="x")
+  a <- annotation(start=0, end=1, value=NA)
+  b <- annotation(start=0.5, end=2, value=NA)
+  text <- annotation(start=1.5, end=3, value="NA")
+  merged <- merge_annotations(list(x, a, b, text))
+  expect_length(merged, 3)
+  expect_identical(merged[[1]]@value, "x")
+  expect_identical(merged[[2]]@value, NA_character_)
+  expect_equal(c(merged[[2]]@start, merged[[2]]@end), c(0, 2))
+  expect_identical(merged[[3]]@value, "NA")
+
+  # The same holds of the file, the type and the source.
+  merged <- merge_annotations(list(
+    annotation(start=0, end=1, file=NA, type=NA, source=NA),
+    annotation(start=0.5, end=2, file=NA, type=NA, source=NA)
+  ))
+  expect_length(merged, 1)
+  expect_equal(merged[[1]]@end, 2)
+})
+
+test_that("an annotation whose limits are not known overlaps nothing", {
+  unknown <- annotation(start=NA, end=NA, low=NA, high=NA)
+  known <- annotation(start=0, end=1, low=0, high=100)
+  for (domain in c("time", "frequency", "both")) {
+    expect_false(.annotation_check_overlap(unknown, known, domain=domain))
+    expect_false(.annotation_check_overlap(known, unknown, domain=domain))
+  }
+  merged <- merge_annotations(list(unknown, known, annotation(start=0.5, end=2)))
+  expect_length(merged, 2)
+  expect_equal(c(merged[[1]]@start, merged[[1]]@end), c(0, 2))
+  expect_identical(merged[[2]]@start, NA_real_)
+  merged <- merge_annotations(list(unknown, known, annotation(low=50, high=200)), domain="frequency")
+  expect_length(merged, 2)
+})
+
+test_that("an overlap in a domain the package does not know is refused", {
+  a <- annotation(start=0, end=10)
+  expect_error(.annotation_check_overlap(a, a, domain="amplitude"), "Unknown domain: amplitude")
+})
+
+test_that("a merged annotation spans those merged into it in both domains", {
+  # Merging in time took the frequency limits of the later annotation alone.
+  wide <- annotation(start=0, end=2, low=1000, high=5000)
+  narrow <- annotation(start=1, end=3, low=2000, high=3000)
+  merged <- merge_annotations(list(wide, narrow))
+  expect_length(merged, 1)
+  expect_equal(c(merged[[1]]@start, merged[[1]]@end, merged[[1]]@low, merged[[1]]@high),
+               c(0, 3, 1000, 5000))
+
+  # Merging in frequency took the times of the later annotation alone.
+  early <- annotation(start=0, end=1, low=100, high=300)
+  late <- annotation(start=10, end=11, low=200, high=500)
+  merged <- merge_annotations(list(late, early), domain="frequency")
+  expect_length(merged, 1)
+  expect_equal(c(merged[[1]]@start, merged[[1]]@end, merged[[1]]@low, merged[[1]]@high),
+               c(0, 11, 100, 500))
+})
+
+test_that("a merged annotation keeps the metadata of the last annotation merged into it", {
+  first <- annotation(start=27, end=30, source="a", metadata=list(confidence=0.9))
+  second <- annotation(start=30, end=33, source="b", metadata=list(confidence=0.8))
+  merged <- merge_annotations(list(second, first), same.source=FALSE)
+  expect_length(merged, 1)
+  expect_identical(merged[[1]]@metadata, list(confidence=0.8))
+  expect_identical(merged[[1]]@source, "b")
+})
+
+test_that("sorting in a domain the package does not know is refused", {
+  # It returned the annotations unsorted, without saying so.
+  a <- list(annotation(start=2), annotation(start=1))
+  expect_error(sort_annotations(a, domain="freq"), "Unknown domain for sort_annotations: freq")
+})
+
 test_that("a list holding something other than an annotation is refused", {
   a <- annotation(start=0, end=10)
   expect_error(
