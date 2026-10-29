@@ -6,6 +6,7 @@ S3method(as.character,guano)
 S3method(format,audioMetadataFields)
 S3method(format,guano)
 S3method(plot,fcis)
+S3method(print,ab_range)
 S3method(print,audioMetadata)
 S3method(print,audioMetadataFields)
 S3method(print,guano)
@@ -14,6 +15,7 @@ export("audioMetadata<-")
 export("guano<-")
 export(AnnotationList2DataFrame)
 export(ab_diel_traits)
+export(ab_range)
 export(addProcess)
 export(addSpectra)
 export(allChannels)
@@ -21,6 +23,8 @@ export(annotation)
 export(audio_filesize)
 export(audioblast)
 export(audioblastDownload)
+export(audioblastFilters)
+export(audioblastRecord)
 export(audiomothCompress)
 export(audiomothConfig)
 export(audiomothExpand)
@@ -188,7 +192,6 @@ importFrom(graphics,
   rasterImage
 )
 importFrom(hms,as_hms)
-importFrom(jsonlite,fromJSON)
 importFrom(methods,
   as,
   callGeneric,
@@ -246,10 +249,8 @@ importFrom(tuneR,
   writeWave
 )
 importFrom(utils,
-  URLencode,
   askYesNo,
   data,
-  download.file,
   install.packages,
   installed.packages,
   read.csv,

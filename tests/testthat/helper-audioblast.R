@@ -8,6 +8,13 @@
 # The saved responses are in fixtures/audioblast, each under a name made from
 # the URL it answers. Running these tests with AUDIOBLAST_RECORD=true, where the
 # API can be reached, saves what it answers in their place.
+#
+# The requests are made with httr2, so this stands in at the point httr2
+# performs one. A mock that returns NULL lets the request happen for real, and
+# a request can be performed for real from inside a mock by setting the mock
+# aside, which is how a live read is tried before a saved one is used. A mocked
+# response does not write a file, so a download of a recording is stood in for
+# separately, at the function that performs it.
 .audioblastState <- new.env(parent=emptyenv())
 
 #' Whether the network is still to be tried
@@ -51,70 +58,89 @@
   }
 }
 
-#' Read a request from audioBlast, or from its saved response
-.audioblastRead <- function(url, fromJSON, ...) {
-  path <- .audioblastFixture(url)
+#' Perform a request for real, with the mock set aside
+#'
+#' Called from inside the mock, so the mock has to be cleared for the length of
+#' the call or it would answer its own request.
+.audioblastPerformReal <- function(req) {
+  httr2::with_mocked_responses(NULL, httr2::req_perform(req))
+}
+
+#' A response holding a saved body, as though the API had sent it
+.audioblastSaved <- function(path) {
+  httr2::response(
+    status_code=200,
+    headers=list("Content-Type"="application/json"),
+    body=readBin(path, "raw", file.size(path))
+  )
+}
+
+#' Answer one request from audioBlast, or from its saved response
+.audioblastRespond <- function(req) {
+  path <- .audioblastFixture(req$url)
   if (.audioblastLive()) {
     old <- options(timeout=15)
     on.exit(options(old), add=TRUE)
     if (identical(Sys.getenv("AUDIOBLAST_RECORD"), "true")) {
+      resp <- .audioblastPerformReal(req)
       dir.create(dirname(path), recursive=TRUE, showWarnings=FALSE)
-      utils::download.file(url, path, quiet=TRUE, mode="wb")
-      return(fromJSON(path, ...))
+      writeBin(httr2::resp_body_raw(resp), path)
+      return(resp)
     }
     res <- tryCatch({
-      res <- fromJSON(url, ...)
+      resp <- .audioblastPerformReal(req)
       # A Cloudflare challenge can come back as a response that holds nothing
-      # the API would have sent. The API echoes the parameters it was given in
-      # every answer, even one with no data, such as for a module that does not
-      # exist.
-      if (!("params" %in% names(res))) {
-        stop("the response is not one the API sends")
+      # the API would have sent, and it is a page of HTML where every answer the
+      # API gives is JSON or RDF. Looking for the parameters it echoes would
+      # reject the answers that carry none, such as a single record or Turtle.
+      if (grepl("^\\s*<", httr2::resp_body_string(resp))) {
+        stop("the response is a page rather than one the API sends")
       }
-      res
+      resp
     }, error=function(e) e, warning=function(w) w)
     if (!inherits(res, "condition")) {
       return(res)
     }
-    .audioblastOffline(url, res)
+    .audioblastOffline(req$url, res)
   }
   if (!file.exists(path)) {
     stop(
-      "There is no saved audioBlast response for ", url, ". Run the tests with ",
+      "There is no saved audioBlast response for ", req$url, ". Run the tests with ",
       "AUDIOBLAST_RECORD=true where the API can be reached to save one.",
       call.=FALSE
     )
   }
-  return(fromJSON(path, ...))
+  return(.audioblastSaved(path))
+}
+
+#' Write a stand-in for a recording, or download it where that is possible
+#'
+#' The file is a recording from the site audioBlast indexes, which the tests
+#' only need to see written where it was asked for. A mocked response does not
+#' write a file, so this stands in for the download itself rather than for the
+#' response to it.
+.audioblastDownload <- function(url, path) {
+  if (.audioblastLive()) {
+    done <- tryCatch({
+      .audioblastPerformReal(
+        httr2::req_retry(httr2::request(url), max_tries=2, retry_on_failure=TRUE)
+      )
+    }, error=function(e) e, warning=function(w) w)
+    if (!inherits(done, "condition")) {
+      writeBin(httr2::resp_body_raw(done), path)
+      return(invisible(path))
+    }
+    .audioblastOffline(url, done)
+  }
+  writeBin(charToRaw("RIFF"), path)
+  return(invisible(path))
 }
 
 #' Answer the audioBlast requests of a test live where possible, or from saved responses
 local_audioblast <- function(env=parent.frame()) {
-  fromJSON <- jsonlite::fromJSON
+  httr2::local_mocked_responses(.audioblastRespond, env=env)
   testthat::local_mocked_bindings(
-    fromJSON = function(txt, ...) .audioblastRead(txt, fromJSON, ...),
-    .package = "jsonlite",
+    .audioblast_download = .audioblastDownload,
     .env = env
   )
-}
-
-#' Download a file where possible, or write a stand-in for it
-#'
-#' The file is a recording from the site audioBlast indexes, which the tests
-#' only need to see written where it was asked for.
-.audioblastDownload <- function(url, destfile, quiet=FALSE, ...) {
-  if (.audioblastLive()) {
-    old <- options(timeout=15)
-    on.exit(options(old), add=TRUE)
-    done <- tryCatch({
-      utils::download.file(url, destfile, quiet=quiet, mode="wb", ...)
-      TRUE
-    }, error=function(e) e, warning=function(w) w)
-    if (isTRUE(done)) {
-      return(invisible(0L))
-    }
-    .audioblastOffline(url, done)
-  }
-  writeBin(charToRaw("RIFF"), destfile)
-  return(invisible(0L))
 }

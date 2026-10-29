@@ -102,6 +102,36 @@
   Nothing documents what either field of text is for, so they are reported
   under the names of the slots they were written in and neither is taken for
   the title of the recording. One file of the 397 writes in either of them.
+- audioblast() asks the audioBlast API through an HTTP client rather than by
+  reading a URL, which is what the rest of this entry rests on. A query is sent
+  with a user agent naming this package, and retried where the connection
+  rather than the answer failed; audioBlast answers R's default user agent with
+  a 403 in some places, which is one of the reasons its tests needed saved
+  responses to fall back on. Where audioBlast refuses a query it says why, and
+  that is now raised as the error rather than a bare status: a filter a module
+  does not have gives the message naming the filters it does have.
+  `page_size` chooses how many results a page holds, so that a large search can
+  be made in fewer requests, and a filter given more than a hundred values is
+  sent in batches of a hundred rather than in one query the API would refuse.
+  A filter on a range, such as `duration` or `lat`, takes a range made by
+  ab_range(), and a column audioBlast describes as numeric comes back as
+  numbers rather than as the strings the API sends.
+  audioblastFilters() lists the filters a module takes, which until now could
+  only be found by asking for one that does not exist and reading the error.
+  audioblastRecord() reads one record from its own address. Both that and a
+  search can give linked data instead of a data frame, as JSON-LD or Turtle,
+  which a record's own address carries more of: the records linked to it.
+  audioblastDownload() checks what it has downloaded. Where audioBlast has
+  measured a file, the copy that arrives is compared with that measurement and
+  a mismatch is reported. A download is written to a temporary name and moved
+  into place when it finishes, so that a failed one no longer leaves a partial
+  file behind that the next run would skip as already downloaded. A file whose
+  URL does not end in a name, as xeno-canto's downloads do not, is named from
+  its source and ID and the type audioBlast gives it rather than every file of
+  that source sharing one name.
+  **A query naming an endpoint of a module is no longer fetched page by page.**
+  Asked for `data/annomate/taxa/` the API gives neither a data field nor a last
+  page, where a search of a module gives both, so an endpoint is asked once.
 - tagApply() applies a function to a wave and records what it did. A
   `TaggedWave` has a `processing` slot for the history of what has been done to
   a recording, but filling it was left to whoever wrote the code: a function

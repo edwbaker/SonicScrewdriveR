@@ -28,8 +28,13 @@ audioblastDownload(
 a standard R error. Setting to \code{warning} will instead a warning.}
 }
 \value{
-No return value, called for its side effect of downloading files.
+The paths of the files, invisibly.
 }
 \description{
 Downloads audio files associated with a search using the audioBlast() function.
+}
+\details{
+Where audioBlast has measured a file, the SHA-256 hash of the file
+downloaded is checked against the hash audioBlast measured, and a file that
+does not match is reported through \code{on.issue}.
 }

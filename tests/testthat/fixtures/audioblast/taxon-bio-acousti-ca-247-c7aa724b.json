@@ -1,0 +1,607 @@
+@prefix abv: <https://vocab.audioblast.org/> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ac: <http://rs.tdwg.org/ac/terms/> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dwc: <http://rs.tdwg.org/dwc/terms/> .
+@prefix dwciri: <http://rs.tdwg.org/dwc/iri/> .
+@prefix ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> .
+@prefix exif: <http://ns.adobe.com/exif/1.0/> .
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xmp: <http://ns.adobe.com/xap/1.0/> .
+@prefix xmpRights: <http://ns.adobe.com/xap/1.0/rights/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37003> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/34161> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20605> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/description/bio.acousti.ca/15181> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/recording/bio.acousti.ca/10754> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/32566> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33883> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/32563> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37000> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33881> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37182> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37006> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/recording/bio.acousti.ca/11096> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33879> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37005> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/32567> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20598> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20600> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37183> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37185> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20603> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33882> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/reference/bio.acousti.ca/12689> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37008> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37001> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37009> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/36996> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/35584> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37007> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/description/bio.acousti.ca/47387> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/36998> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/32564> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37004> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33877> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33878> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/33880> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/36999> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/35038> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37184> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20601> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/recording/bio.acousti.ca/51319> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37010> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20604> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/36997> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/32565> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/image/bio.acousti.ca/20599> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/recording/bio.acousti.ca/10756> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/reference/bio.acousti.ca/53142> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37002> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/reference/bio.acousti.ca/15180> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/recording/bio.acousti.ca/10753> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/reference/bio.acousti.ca/15179> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/trait/bio.acousti.ca/37186> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/recording/bio.acousti.ca/10755> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/reference/bio.acousti.ca/47868> <http://purl.obolibrary.org/obo/IAO_0000136> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/specimen/bio.acousti.ca/12592> dwciri:toTaxon <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/specimen/bio.acousti.ca/12702> dwciri:toTaxon <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/specimen/bio.acousti.ca/12691> dwciri:toTaxon <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/vernacular-name/bio.acousti.ca/1886> <http://purl.obolibrary.org/obo/IAO_0000219> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/vernacular-name/bio.acousti.ca/33407> <http://purl.obolibrary.org/obo/IAO_0000219> <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/247> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllotalpa vineae" ;
+    dwc:taxonRank "Species" ;
+    dwc:genus "Gryllotalpa" ;
+    dwc:subfamily "Gryllotalpinae" ;
+    dwc:family "Gryllotalpidae" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/178> ;
+    dwc:higherClassification "Animalia|Insecta|Orthoptera|Ensifera|Gryllidea|Gryllotalpoidea|Gryllotalpidae|Gryllotalpinae|Gryllotalpini|Gryllotalpa" ;
+    skos:exactMatch <https://api.audioblast.org/taxon/CoL/3HGFW>, <https://api.audioblast.org/taxon/xeno-canto/Gryllotalpa%20vineae>, <https://api.audioblast.org/taxon/TSA/Gryllotalpa%20vineae>, <https://api.audioblast.org/taxon/iNaturalist/503713> ;
+    dwc:vernacularName "la Courtiliêre des vignes"@fr, "Vineyard Mole-cricket"@en .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/6782> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Animalia" ;
+    dwc:taxonRank "Kingdom" ;
+    dwc:kingdom "Animalia" .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/590> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Insecta" ;
+    dwc:taxonRank "Class" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/6782> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/56> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Orthoptera" ;
+    dwc:taxonRank "Order" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/590> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/1249> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Ensifera" ;
+    dwc:taxonRank "Suborder" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/56> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/1250> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllidea" ;
+    dwc:taxonRank "Infraorder" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/1249> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/1160> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllotalpoidea" ;
+    dwc:taxonRank "Superfamily" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/1250> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/577> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllotalpidae" ;
+    dwc:taxonRank "Family" ;
+    dwc:family "Gryllotalpidae" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/1160> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/565> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllotalpinae" ;
+    dwc:taxonRank "Subfamily" ;
+    dwc:subfamily "Gryllotalpinae" ;
+    dwc:family "Gryllotalpidae" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/577> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/3290> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllotalpini" ;
+    dwc:taxonRank "Tribe" ;
+    dwc:subfamily "Gryllotalpinae" ;
+    dwc:family "Gryllotalpidae" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/565> .
+
+<https://api.audioblast.org/taxon/bio.acousti.ca/178> a <http://rs.tdwg.org/dwc/terms/Taxon> ;
+    dwc:scientificName "Gryllotalpa" ;
+    dwc:taxonRank "Genus" ;
+    dwc:genus "Gryllotalpa" ;
+    dwc:subfamily "Gryllotalpinae" ;
+    dwc:family "Gryllotalpidae" ;
+    dwc:order "Orthoptera" ;
+    dwc:class "Insecta" ;
+    dwc:kingdom "Animalia" ;
+    skos:broader <https://api.audioblast.org/taxon/bio.acousti.ca/3290> .
+
+<https://api.audioblast.org/link/CoL/ace37778f092294669bd484d05b866a56c644ffb> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "CoL" ;
+    dwc:relationshipRemarks "Gryllotalpa vineae; COL26.9" ;
+    rdf:predicate <http://www.w3.org/2004/02/skos/core#exactMatch> ;
+    rdf:subject <https://api.audioblast.org/taxon/bio.acousti.ca/247> ;
+    rdf:object <https://api.audioblast.org/taxon/CoL/3HGFW> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/040f18f653326899819361dc7b5e2b9a18ba5d92> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37003> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/08a895298afc21291beade37c3b7d91dbba58263> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/34161> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/0c5a2a76e6418a3b39bd6f4a3a23343c658f33b1> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20605> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/11d0d458ba9fd6c5ca91a54a0703da41303f6e36> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/description/bio.acousti.ca/15181> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/1db1048345c746b434da63a739c566fe8b7e6085> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/recording/bio.acousti.ca/10754> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/2780713dbac86e0a003e0e70a4146e99be27a141> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/32566> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/2c5fff8f3599b5e17acd3e07795dcb7199cf4269> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33883> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/31f04e0b2f0debcd576a2e6fc015fddc6812c474> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/32563> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/35a03f098db98392293dc46c0b8341c6921200a3> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37000> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/38b6957d302803ab1df804e64c96757914174313> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33881> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/390267ec584e711e027d550dc38b801ad08a0bc6> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37182> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/46dfaed08568831a881f03521b96b39681dd73f4> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37006> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/4c1852fbd1461c905ebbbc6c787bdea1d0b49d4f> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/recording/bio.acousti.ca/11096> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/4ea8a51abddb3a7ae7114c034c965682ab3944c3> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33879> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/512451429d2aa945ab2c773763c9b9bf8cac3e55> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37005> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/51ddefcb5c53e8ded41210c394ae103118d2bebc> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/32567> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/54f307f4b4f7dbf9db6f2313093e97311126a375> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20598> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/553f54136af9531a04f3d225ee08cdd218e225a5> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20600> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/5572c41b42334e6dec306e0ff206a6057ffb02db> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37183> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/5ba0ded77add4f7efb6b21772061b9affaf09457> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37185> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/6195cadf110c5a22238ac64949dd67ae7980091e> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20603> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/683441bbe5e9cd34fa9e47f4c1282612e9e68b69> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33882> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/6c853c3a5b47e6018703409ece0a5777959bf88b> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://rs.tdwg.org/dwc/iri/toTaxon> ;
+    rdf:subject <https://api.audioblast.org/specimen/bio.acousti.ca/12592> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/6cf68855ca23898517bd24e1f067669522431337> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    dcterms:type <https://vocab.audioblast.org/cv/referenceContent#AcousticBehaviour> ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/reference/bio.acousti.ca/12689> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/71bfae9d8c058a31c7f83b7b9099b78339277490> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37008> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/724463023a1a5030ae827ce975ac5f6fd5fdedf3> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37001> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/74c7a488855563cc3c62eacc2284d3070ab0b1f1> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000219> ;
+    rdf:subject <https://api.audioblast.org/vernacular-name/bio.acousti.ca/1886> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/7b5b8caeac03db8f3900e2b94c4240089a437c1b> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37009> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/84dbf480541e53c659238ce8d1f59ac5169692fe> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/36996> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/89d8a1e1e7201ba17bf1fa3cb28682ace3da3360> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/35584> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/8eb85c20d6cbe488ebdfddacd969829552727290> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37007> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/8ecb0b6d7f13586c094093e79aa882bb9e0c1f52> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/description/bio.acousti.ca/47387> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/912204126d44f6f79a612a1ebb919f31042b3172> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000219> ;
+    rdf:subject <https://api.audioblast.org/vernacular-name/bio.acousti.ca/33407> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/9292f46d4f7fbd14a19aeb3150563eff32899698> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/36998> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/92a9378c12db16bcfe401dff17ec9d2ecaf5ac7f> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/32564> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/92b9c80bee617110b302d74e31ec567f45c3d4ee> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37004> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/9c4282ee79d0e95660532af359c3186e4c6162f9> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33877> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/9c81534ad6f358f483fc0ccdefeae8a04c30fbd1> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33878> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/a3ab732141aba2a1eaee8550f20eb45384937246> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/33880> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/a8b0e780c333ffb9a42699847f86c9482159bf05> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/36999> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/b34c1c9d8f936a358a6a4faecc5582f3eae37f0e> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/35038> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/b36a5a5b8af6d70c2756b3ccfde27193f4788042> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37184> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/b8c1fd36f71ed35acdbb36b88c25cafdf638727a> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20601> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/ba7edab0eb8cc7b5432da132385e1ca4c830d16c> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/recording/bio.acousti.ca/51319> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/be3fa6a9b541246b39d731e32b9996ce2b50f949> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37010> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/c628f78192a5c327ed492e93aee3ca90c38220d3> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://rs.tdwg.org/dwc/iri/toTaxon> ;
+    rdf:subject <https://api.audioblast.org/specimen/bio.acousti.ca/12702> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/c8497aea120de4a42f2d402f189e95934bf77ea5> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20604> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/c90c6a1044932edeba61ec561bfc0e690d7f9cc5> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://rs.tdwg.org/dwc/iri/toTaxon> ;
+    rdf:subject <https://api.audioblast.org/specimen/bio.acousti.ca/12691> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/d27aa83358c35b49ac502d636dd97fd02d408dc4> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/36997> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/da64dbce5f967c4151889c41f74201dcb86b77f9> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/32565> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/df92185c69311182667d85796eb2dddcbfb3f113> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/image/bio.acousti.ca/20599> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/e55a6a965e43b958a97db46e0183ec55a2e7cd3f> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/recording/bio.acousti.ca/10756> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/ea6c85a826684f731c6874ed9262065fa1102366> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    dcterms:type <https://vocab.audioblast.org/cv/referenceContent#AcousticBehaviour> ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/reference/bio.acousti.ca/53142> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/ece3bd65ac506918293b7f2a95e71cb5bd43aa25> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37002> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/ed5aa7a16022b78bcf0ea4171aef060b58dc475a> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    dcterms:type <https://vocab.audioblast.org/cv/referenceContent#AcousticBehaviour> ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/reference/bio.acousti.ca/15180> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/efaeb2b03e8a33dc895f356a6a69e9ca5e36ba1e> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/recording/bio.acousti.ca/10753> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/f1a1d484607e84121cbf1d81f778c8b88040e40c> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    dcterms:type <https://vocab.audioblast.org/cv/referenceContent#AcousticBehaviour> ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/reference/bio.acousti.ca/15179> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/f1b13758b7ef499ff6634ef2774503c4fcbb1091> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/trait/bio.acousti.ca/37186> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/f920d9d3dee261438d5e904e9c1ff463c62f5c97> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/recording/bio.acousti.ca/10755> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
+
+<https://api.audioblast.org/link/bio.acousti.ca/fae8f6fdf4488e25d2ce1da43f09c8ee39f039d6> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> ;
+    dwc:relationshipAccordingTo "bio.acousti.ca" ;
+    dcterms:type <https://vocab.audioblast.org/cv/referenceContent#AcousticBehaviour> ;
+    rdf:predicate <http://purl.obolibrary.org/obo/IAO_0000136> ;
+    rdf:subject <https://api.audioblast.org/reference/bio.acousti.ca/47868> ;
+    rdf:object <https://api.audioblast.org/taxon/bio.acousti.ca/247> .
