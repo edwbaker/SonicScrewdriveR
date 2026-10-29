@@ -287,6 +287,8 @@
   : Generate a sine sweep
 - [`tSamples()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tSamples.md)
   : Samples per time period
+- [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md)
+  : Apply a function to a tagged wave and record the process
 - [`tagWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagWave.md)
   : Tag a Wave or WaveMC object
 - [`tdoa()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tdoa.md)
