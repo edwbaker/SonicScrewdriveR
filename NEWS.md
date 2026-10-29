@@ -295,6 +295,24 @@
   the recording is.
 
 ## Fixes
+- readAudio() could not read a recording over 4 GiB at all, however little of
+  it was asked for. A wave file in the RF64 or BW64 form is read through the av
+  package, as tuneR reads only the RIFF form, and the av package was asked for
+  the whole recording whatever `from` and `to` said, the rest being thrown away
+  afterwards. For the 3.8 GB recording in a cached copy of the TSA corpus that
+  is 6,663 seconds of audio at 96 kHz in two channels, some ten gigabytes once
+  decoded, and `av_realloc` refused it: one second of that file could not be
+  read. The av package is now asked to stop where the part wanted ends, and
+  both RF64 files in that corpus read in under two seconds. Every partial read
+  through that path is bounded the same way, so a second of an hour-long MP3 no
+  longer costs an hour of decoding.
+  The start is still cut from the decoded audio rather than asked for, because
+  the av package does not begin where it is asked to: a FLAC file asked to
+  start at sample 48,000 gives audio beginning at 49,152, and an MP3 gives
+  samples matching no part of a whole read. Asking only for the end gives
+  exactly the first part of the whole, measured sample for sample against a
+  whole read for WAV, MP3 and FLAC, and the audio returned for every example
+  file in the package is identical to what it was.
 - A chunk whose body is an odd number of bytes is followed by a pad byte, and
   that byte belongs to the file. A writer that leaves it out put every later
   header one byte before where the padding said it was, so the identifier read
