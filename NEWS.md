@@ -102,6 +102,29 @@
   Nothing documents what either field of text is for, so they are reported
   under the names of the slots they were written in and neither is taken for
   the title of the recording. One file of the 397 writes in either of them.
+- tagApply() applies a function to a wave and records what it did. A
+  `TaggedWave` has a `processing` slot for the history of what has been done to
+  a recording, but filling it was left to whoever wrote the code: a function
+  that forgot left no trace. tagApply() runs `fun(w, ...)` and appends a record
+  holding the name of the function, the arguments it was given, when it ran,
+  how long it took, and SHA-256 digests of the samples going in and coming out.
+  The digests are of the samples and the sampling parameters rather than of the
+  R object, so the same recording gives the same digest whatever wrote it, and
+  a history can be checked against the audio it describes.
+  An untagged wave is processed with no record made, so the same code can take
+  either. A function that returns a wave without tags has the origin, the
+  metadata and the history of the wave it was given carried over to it; one
+  that returns something else, a number or a spectrum, gets the history as a
+  `processing` attribute. Functions from other packages are handed an untagged
+  wave, because seewave and others test the class of a wave with
+  `class(w)[1] == "Wave"` and so refuse a tagged one; the tags go back on
+  whatever comes out. A list of waves can be processed at once, and in parallel
+  given a cluster. Only the outermost call records, so a function that uses
+  tagApply() itself and is then passed to tagApply() is recorded once rather
+  than twice.
+  The `duration` an `addProcess()` call gives is now kept as well. The argument
+  has always been there and was being dropped; a record made without one still
+  has the shape it always had.
 - wavCues() reads the cue points of a wave file together with the labels that
   name them. The two halves of an annotation are written in different chunks:
   a cue chunk holds positions and nothing else, and the text naming them is in

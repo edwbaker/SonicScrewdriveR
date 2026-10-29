@@ -26,11 +26,42 @@ setClass(
   slots=.tagSlots()
 )
 
+#' Build a process record
+#'
+#' Optional fields are only included when they are supplied, so a record made
+#' with nothing but `process` and `output` keeps the two-field form every record
+#' had before there was anything else to put in one.
+#' @param process A description of the process.
+#' @param output The output of the process.
+#' @param duration How long it took, in seconds.
+#' @param func The name of the function that was applied.
+#' @param params The arguments it was given.
+#' @param time When it was applied.
+#' @param input_hash A digest of the wave it was applied to.
+#' @param output_hash A digest of the wave it gave back.
+#' @return A named list holding the record.
+#' @keywords internal
+#' @noRd
+.processRecord <- function(process, output=NULL, duration=NULL, func=NULL,
+                           params=NULL, time=NULL, input_hash=NULL,
+                           output_hash=NULL) {
+  entry <- list("process" = process, "output" = output)
+  optional <- list(
+    func = func, params = params, time = time, duration = duration,
+    input_hash = input_hash, output_hash = output_hash
+  )
+  return(c(entry, optional[!vapply(optional, is.null, logical(1))]))
+}
+
 .addProcess <- function(object, process, output, duration) {
   #Appended, so that the history stays a flat list of processes in the order they
   #were applied. Wrapping the existing list alongside the new entry nested it one
   #deeper on every call, so the shape of the slot changed with its length.
-  object@processing <- c(object@processing, list(list("process" = process, "output" = output)))
+  #The duration was accepted and then dropped; it is kept now, and a caller that
+  #gives none still gets a record of the shape it always had.
+  object@processing <- c(
+    object@processing, list(.processRecord(process, output, duration))
+  )
   return(object)
 }
 

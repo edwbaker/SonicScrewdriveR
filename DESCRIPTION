@@ -14,6 +14,7 @@ Description: Provides tools for manipulating sound files for bioacoustic
 Depends: R (>= 3.4.0)
 Imports:
   methods,
+  digest,
   ggplot2,
   hms,
   jsonlite,
