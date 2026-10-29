@@ -14,7 +14,8 @@ fcis(
   window.length = NULL,
   indices = c("power", "ACI", "entropy"),
   wl = 256,
-  cluster = NULL
+  cluster = NULL,
+  scale = NULL
 )
 ```
 
@@ -45,6 +46,14 @@ fcis(
   each worker then reads its own part of the file. Passing a Wave object
   sends a copy of it to every worker, which takes longer than the
   calculation itself.
+
+- scale:
+
+  NULL, a function, or a list of three functions, one per channel,
+  applied to an index across the whole spectrogram before it is mapped
+  to a colour.
+  [`fcisClip()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcisClip.md)
+  makes one that clips to a range of percentiles.
 
 ## Value
 

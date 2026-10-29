@@ -285,6 +285,8 @@ London.
   : Various measurements of frequency values for a Wave object
 - [`fcis()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcis.md)
   : False-colour index spectrogram
+- [`fcisClip()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcisClip.md)
+  : Percentile clipping for false-colour index spectrograms
 - [`fcisIndexNames()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcisIndexNames.md)
   : Per-frequency-bin acoustic indices
 - [`fileSizeUnits()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fileSizeUnits.md)

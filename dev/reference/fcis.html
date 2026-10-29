@@ -63,7 +63,8 @@ with different sounds appearing as different colours.</p>
 <span>  window.length <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"power"</span>, <span class="st">"ACI"</span>, <span class="st">"entropy"</span><span class="op">)</span>,</span>
 <span>  wl <span class="op">=</span> <span class="fl">256</span>,</span>
-<span>  cluster <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  cluster <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -94,6 +95,12 @@ file gives a single column.</p></dd>
 This is only worthwhile when x is a filename and the windows are long, as each
 worker then reads its own part of the file. Passing a Wave object sends a copy
 of it to every worker, which takes longer than the calculation itself.</p></dd>
+
+
+<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
+<dd><p>NULL, a function, or a list of three functions, one per channel,
+applied to an index across the whole spectrogram before it is mapped to a
+colour. <code><a href="fcisClip.html">fcisClip()</a></code> makes one that clips to a range of percentiles.</p></dd>
 
 </dl></div>
     <div class="section level2">
