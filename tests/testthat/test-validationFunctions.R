@@ -33,6 +33,18 @@ test_that("Speed is numeric", {
   expect_equal(validateSpeed(1), 1)
 })
 
+test_that("Speed of sound is greater than zero", {
+  # A negative speed reversed every path-length difference bearing() fits a
+  # direction to, so it reported the exact opposite direction with no warning,
+  # and a speed of zero gave NaN.
+  expect_error(validateSpeed(-343), "Speed of sound must be greater than zero.")
+  expect_error(validateSpeed(0), "Speed of sound must be greater than zero.")
+  expect_error(validateSpeed(c(343, -1)), "Speed of sound must be greater than zero.")
+  expect_equal(validateSpeed(343), 343)
+  expect_equal(validateSpeed(c(343, 1430)), c(343, 1430))
+  expect_equal(validateSpeed(1e-6), 1e-6)
+})
+
 test_that("Inputs to validateFreqIsPossible are valid", {
   expect_error(validateFreqIsPossible("string", samp.rate="string"), "Frequency must be numeric.")
   expect_error(validateFreqIsPossible(12), "Frequency requires Wave object or samp.rate")
