@@ -164,29 +164,38 @@ setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
 
 #' PseudoWave scalar manipulation
 #'
+#' A PseudoWave is applied as (samples * scale) + offset, so multiplying the
+#' whole of it by e2 multiplies the offset as well as the scale:
+#' ((g * a) + b) * e2 is (g * a*e2) + b*e2. Scaling only the scale left an
+#' offset already set to be added after the multiplication rather than taken
+#' into it, so the order the operators were written in was discarded.
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
 #' @importFrom methods callGeneric validObject
-#' @return A PseudoWave object with its scale multiplied by e2.
+#' @return A PseudoWave object with its scale and its offset multiplied by e2.
 setMethod("*", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
     e1@scale <- e1@scale*e2
+    e1@offset <- e1@offset*e2
     return(e1)
   }
 )
 
 #' PseudoWave scalar division
 #'
+#' Dividing the whole of a PseudoWave by e2 divides the offset as well as the
+#' scale, for the reason given for multiplication above.
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
-#' @return A PseudoWave object with its scale divided by e2.
+#' @return A PseudoWave object with its scale and its offset divided by e2.
 setMethod("/", signature(e1 = "PseudoWave", e2 = "numeric"),
   function(e1, e2){
     validObject(e1)
     e1@scale <- e1@scale/e2
+    e1@offset <- e1@offset/e2
     return(e1)
   }
 )
@@ -224,11 +233,12 @@ setMethod("-", signature(e1 = "PseudoWave", e2 = "numeric"),
 #' @docType methods
 #' @param e1 Input 1
 #' @param e2 Input 2
-#' @return A PseudoWave object with its scale multiplied by e1.
+#' @return A PseudoWave object with its scale and its offset multiplied by e1.
 setMethod("*", signature(e1 = "numeric", e2 = "PseudoWave"),
   function(e1, e2){
     validObject(e2)
     e2@scale <- e2@scale*e1
+    e2@offset <- e2@offset*e1
     return(e2)
   }
 )

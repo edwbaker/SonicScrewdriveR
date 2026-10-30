@@ -278,3 +278,50 @@ test_that("dividing a number by a PseudoWave is refused with a reason", {
   pw <- pseudoWave("sine", params=list(f0=440))
   expect_error(5 / pw, "Cannot divide a number by a PseudoWave")
 })
+
+test_that("a scale applied after an offset takes the offset into it", {
+  # depseudoWave() always applies scale then offset, but the operators used to
+  # accumulate into the two slots independently, so an offset written BEFORE a
+  # scale was applied AFTER it and the order the caller wrote was discarded.
+  base <- tuneR::silence(duration=1000)
+  pw <- pseudoWave("sine", params=list(f0=1))
+
+  # The sine starts at zero, so sample 1 shows the offset alone.
+  expect_equal((base + (pw + 5) * 2)@left[1], 10)
+  expect_equal((base + 2 * (pw + 5))@left[1], 10)
+  expect_equal((base + (pw - 1) * 3)@left[1], -3)
+  expect_equal((base + (pw + 1) / 2)@left[1], 0.5)
+
+  # A scale written first was always right, and still is.
+  expect_equal((base + (pw * 2) + 5)@left[1], 5)
+})
+
+test_that("lazy PseudoWave arithmetic agrees with eager arithmetic", {
+  # The class documents itself as "converted to a Wave object when operated
+  # on", so operating lazily must give what operating on the Wave would.
+  base <- tuneR::silence(duration=1000)
+  pw <- pseudoWave("sine", params=list(f0=1))
+
+  plain <- (base + pw)@left
+
+  expect_equal((base + (pw + 5) * 2)@left, (plain + 5) * 2)
+  expect_equal((base + 2 * (pw + 5))@left, 2 * (plain + 5))
+  expect_equal((base + (pw - 1) * 3)@left, (plain - 1) * 3)
+  expect_equal((base + (pw + 1) / 2)@left, (plain + 1) / 2)
+  expect_equal((base + (pw * 2) + 5)@left, (plain * 2) + 5)
+
+  # Composing three operators in a row, which no single slot can reorder.
+  expect_equal((base + ((pw + 1) * 2 - 3) * 4)@left, ((plain + 1) * 2 - 3) * 4)
+})
+
+test_that("unipolar noise at half scale is bounded as written", {
+  # The case named in the report: (noise + 1) * 0.5 is the obvious way to write
+  # unipolar noise at half scale, and instead gave bipolar noise at half scale
+  # with a full-size DC offset.
+  base <- tuneR::silence(duration=2000)
+  pw <- (pseudoWave("noise", "white", seed=42) + 1) * 0.5
+
+  s <- (base + pw)@left
+  expect_gte(min(s), 0)
+  expect_lte(max(s), 1)
+})
