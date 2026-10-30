@@ -21,9 +21,12 @@ wavelength <- function(frequency, speed=soundSpeed(medium="air"), output.unit="m
   if (!is.null(redone)) {
     return(redone[[1]])
   }
+  #The message was built by pasting output.unit into it, which repeated the
+  #whole message once per element when more than one unit was given. The shared
+  #wording names the argument and the function, as every other converter does.
   .convertLinear(
     speed/frequency, "m", output.unit, .wavelengthMultipliers(),
-    msg=paste0("Invalid unit selection: ", output.unit)
+    what="output.unit", fn="wavelength"
   )
 }
 
