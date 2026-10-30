@@ -7,7 +7,7 @@ Area reviewed: `R/audioblast.R`, `R/audioblastProcessors.R`, `R/xenoCanto.R`, `R
 `R/radar.R`, `R/radialPolygon.R`, `R/dielPlot.R`, `R/dielHistogram.R`, `R/directionPlot.R`,
 `R/yearlyPlot.R`.
 
-Correctness only. 29 findings, most severe first.
+Correctness only. 30 findings, most severe first.
 
 ## How this was verified
 
@@ -33,11 +33,13 @@ or that the R-side half was reproduced but the remote/Python side could not be.
 
 Worth recording, because these were the brief's main suspicions:
 
-- **audioBlast pagination is sound.** Driven with 0, 1, 10 (exactly one full page), 11 and 25
-  records at a page size of 10: every page is fetched exactly once, no page is dropped or
-  duplicated, 25 of 25 ids arrive with no gaps and no duplicates, `max_pages` truncates
-  correctly, a non-default start page works, and a start page past the end returns `NULL`.
-  `last_page` is read from the response, not assumed.
+- **audioBlast pagination is sound *when the response carries a numeric `last_page`*.** Driven
+  with 0, 1, 10 (exactly one full page), 11 and 25 records at a page size of 10: every page is
+  fetched exactly once, no page is dropped or duplicated, 25 of 25 ids arrive with no gaps and no
+  duplicates, `max_pages` truncates correctly, a non-default start page works, and a start page
+  past the end returns `NULL`. `last_page` is read from the response, not assumed. Every response
+  in audioBlast's own saved fixtures carries it as a number — but the loop's termination rests
+  entirely on that, which is findings 9 and 9a.
 - **`dielHistogram` bin edges are exact.** `seq(0, 2*pi, by = 2*pi/(1440/minutes))` lands on
   `2*pi` to the bit for `hour`, `30minute` and `15minute`; 24/48/96 bins, no spurious 24th or
   25th bin, and midnight falls in bin 1. (But see finding 11 for the other edge.)
@@ -216,18 +218,60 @@ Reproduced.
 
 **CONFIRMED.**
 
-### 9. `R/audioblast.R:595` — a response without `last_page` requests pages forever
+### 9. `R/audioblast.R:595` — a response without `last_page` has no terminating condition, and the query fails even when something stops it
 
-`min(NULL, Inf)` is `Inf`, so `last` becomes `Inf` and `while (query$page < last)` never ends.
-Nothing in the loop stops on an empty page either.
+`min(NULL, Inf)` is `Inf`, so `last` becomes `Inf` and `while (query$page < last)` has no
+termination of its own. The empty-result guard above it tests `data` only, not `last_page`, so a
+response carrying rows but no page count reaches line 595. A JSON `null` behaves identically,
+because `jsonlite` gives `NULL` for both an absent key and a null scalar.
 
-**Failure scenario.** Any 200 response whose body lacks `last_page` — an API change, a
-different module shape, or an interposed proxy page — with `max_pages` left at its `NULL`
-default. In my run the loop had issued **1668 requests in 6 seconds** when I cut it off, and it
-was still going. Giving `max_pages` bounds it (`min(NULL, 2)` is `2`), so only the documented
-default is exposed.
+**Failure scenario.** Any 200 response whose body lacks `last_page` — an API change, a different
+module shape, or an interposed proxy page — with `max_pages` left at its `NULL` default. Driven
+with capped mocks:
 
-**CONFIRMED.**
+| fake API | requests issued | outcome |
+|---|---|---|
+| 10 pages, then refuses | 11 | **errors**, all 10 pages of rows discarded |
+| 40 pages, then refuses | 41 | **errors**, all 40 pages discarded |
+| 999 pages | aborted at the 60-request budget | **did not terminate** |
+| `last_page: null`, 999 pages | aborted at the 60-request budget | **did not terminate** |
+| no `last_page`, `max_pages = 3` | 3 | returns 3 pages |
+
+So nothing inside the loop stops it: it ends only when the API refuses the page past the last,
+and because that refusal is raised as an error, **every row already fetched is thrown away**. The
+sharpest case is the smallest: a **one-page** result with rows and no `last_page` issues 2
+requests and returns an *error* instead of the single row it had already received. Giving
+`max_pages` bounds it (`min(NULL, 3)` is `3`), so only the documented default is exposed.
+
+**CONFIRMED.** (Re-verified at a peer session's request with a hard request budget in the mock;
+an earlier uncapped run had reached 1668 requests in 6 seconds before I cut it off.)
+
+### 9a. `R/audioblast.R:595` — `last_page` as a JSON string loses most of the result set silently
+
+If `last_page` arrives as a string, `min()` coerces to character and `query$page < last` becomes
+a **character** comparison, which stops as soon as the page number sorts above the page count as
+text. No error is raised and nothing is logged.
+
+**Failure scenario.** With a 200-page result set:
+
+| `last_page` | pages fetched | with a numeric `last_page` |
+|---|---|---|
+| `"10"` | **2** | 10 |
+| `"20"` | **3** | 20 |
+| `"100"` | **2** | 100 |
+| `"9"` | 9 | 9 (correct by luck) |
+| `"3"` | 3 | 3 (correct by luck) |
+
+`"2" < "10"` is `FALSE`, so a 10-page search returns **2 pages — 20% of the records — and reports
+success**. This is the silent record loss the review was looking for: a caller has no way to tell
+a truncated result from a complete one. All nine audioBlast fixtures in
+`tests/testthat/fixtures/audioblast` carry `last_page` as a JSON number, so the API does not do
+this today; the defect is that the code depends on that without checking, and a single
+serialisation change on the server would silently truncate every multi-page query. One
+`as.numeric()` on line 595 would remove both this and the type dependence.
+
+**CONFIRMED** (the parsing and loop behaviour); **PLAUSIBLE** as a live fault, since it needs
+audioBlast to serialise the field as a string.
 
 ### 10. `R/yearlyPlot.R:83,102` — `yearlyFraction()` takes the year from its `year` argument, not from `t`
 
