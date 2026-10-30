@@ -402,6 +402,15 @@
   the label field even where the label is empty, leaving a trailing tab, so
   such a file is not one of its label files and is now refused by name, with
   the count of columns it has.
+- readMetadata() did not read the AudioMoth comment of a FLAC or Ogg recording,
+  so the same recording gave its recording time, make, model and serial in one
+  container and none of the four in another. A recording transcoded out of a
+  wave keeps the recorder's comment in whatever its new container holds one in,
+  which is why the comment is looked for in an MP3's tag as well as in a wave's
+  list; FLAC and Ogg write it as a Vorbis comment, under `COMMENT` or
+  `DESCRIPTION` and sometimes under both, and that is where it was going
+  unread. The bundled AUDIOMOTH.flac and AUDIOMOTH.mp3 are the same recording
+  and now give the same datetime, make, model and serial.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for
