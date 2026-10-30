@@ -13,7 +13,7 @@ AnnotationList2DataFrame(x)
 
 - x:
 
-  A list of Annotation objects.
+  A list of Annotation objects, or a single one.
 
 ## Value
 

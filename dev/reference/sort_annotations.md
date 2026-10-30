@@ -12,7 +12,7 @@ sort_annotations(annotations, domain = "time", decreasing = FALSE)
 
 - annotations:
 
-  A list of Annotation objects.
+  A list of Annotation objects, or a single one.
 
 - domain:
 

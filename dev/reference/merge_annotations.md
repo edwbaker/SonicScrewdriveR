@@ -15,7 +15,7 @@ merge_annotations(annotations, domain = "time", same.source = TRUE)
 
 - annotations:
 
-  A list of Annotation objects.
+  A list of Annotation objects, or a single one.
 
 - domain:
 

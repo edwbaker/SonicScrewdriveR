@@ -15,7 +15,7 @@ writeAudacityLabels(annotations, file)
 
 - annotations:
 
-  A list of `Annotation` objects.
+  A list of `Annotation` objects, or a single one.
 
 - file:
 

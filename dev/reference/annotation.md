@@ -1,6 +1,8 @@
 # Create a new Annotation object
 
-Create a new Annotation object
+Every argument but `metadata` is a single value. An annotation whose
+start is after its end, or whose low frequency is above its high, is
+refused; `NA` stands for a limit that is not known.
 
 ## Usage
 
