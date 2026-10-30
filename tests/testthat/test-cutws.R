@@ -90,3 +90,29 @@ test_that("cutws past the end returns the audio that is there, not NA", {
 
   expect_error(cutws(w, from=110, to=120), "In cutws to must be greater than from")
 })
+
+test_that("from is clamped to the first sample as to is clamped to the last", {
+  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=32, pcm=FALSE)
+
+  # A zero subscript is dropped by R rather than refused, so from=0 used to give
+  # a section one sample short and shifted by one, with no error at all.
+  expect_equal(cutws(w, from=0, to=3)@left, as.numeric(1:3))
+  expect_equal(cutws(w, from=-5, to=3)@left, as.numeric(1:3))
+
+  # Clamping below matches the documented clamping of to above the end.
+  expect_equal(cutws(w, from=0, to=Inf)@left, as.numeric(1:10))
+  expect_equal(cutws(w, from=1, to=3)@left, as.numeric(1:3))
+})
+
+test_that("a from or to that is not one whole number is refused by name", {
+  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=32, pcm=FALSE)
+
+  # as.integer() is NA past the largest integer, so these aborted with R's
+  # "missing value where TRUE/FALSE needed" rather than naming from and to.
+  # 3e9 is a whole number, so it is not refused for that: it is past the end of
+  # the wave, and now says so.
+  expect_error(cutws(w, from=3e9, to=10), "In cutws to must be greater than from")
+  expect_error(cutws(w, from=NA, to=10), "In cutws both from and to must be integers")
+  expect_error(cutws(w, from=1, to=NA), "In cutws both from and to must be integers")
+  expect_error(cutws(w, from=c(1, 2), to=10), "In cutws both from and to must be integers")
+})
