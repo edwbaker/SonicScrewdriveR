@@ -150,6 +150,26 @@ test_that("plotting with plotrix says so when plotrix is missing", {
   )
 })
 
+test_that("emptyDiel says so when plotrix is missing", {
+  #emptyYearly() checked and emptyDiel() did not, so the error came from inside
+  #radial.plot() and named neither the package nor the reason.
+  local_mocked_bindings(package.installed = function(name, ...) FALSE)
+  expect_error(emptyDiel(), "Plotrix must be installed to plot using Plotrix.")
+})
+
+test_that("dielPlot refuses an unknown method rather than drawing nothing", {
+  #The body sits inside if (method=="plotrix") with no else, so any other value
+  #read the sun's position for the day and then returned NULL silently.
+  expect_error(
+    dielPlot("2024-06-21", lat=54, lon=0, method="ggplot2"),
+    "Unknown method for dielPlot: ggplot2"
+  )
+  expect_error(
+    dielPlot("2024-06-21", lat=54, lon=0, method="horse"),
+    "Unknown method for dielPlot: horse"
+  )
+})
+
 test_that("a day on which the sun never rises is drawn as twilight all round", {
   #At 70 degrees north in late December the sun does not rise, so there is no
   #sunrise to end the civil twilight band at and it covers the whole dial.
