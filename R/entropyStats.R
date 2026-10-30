@@ -20,7 +20,10 @@ entropyStats <- function(wave) {
   }
   validateIsWave(wave)
 
-  spec <- meanspec(wave)
+  #meanspec() plots by default, so asking for four numbers opened a device and
+  #drew a spectrum as a side effect. frequencyStats() already passes plot=FALSE
+  #on the same call.
+  spec <- meanspec(wave, plot=FALSE)
 
   data = list(
     "spectral" = list(
