@@ -910,6 +910,16 @@
   annotation into another that contained it discarded the longer one's end. The
   merged annotation now spans both. The same applied to frequency limits. An empty
   list no longer raises an error, and an unknown domain now gives one.
+- merge_annotations() raised an error when an annotation's `file`, `type`,
+  `value` or `source` was `NA`, as comparing them with `==` gave `NA` and left
+  the annotation out of every group. `NA` is now grouped with `NA`, and apart
+  from the text "NA". An annotation whose start or end is `NA` overlaps nothing,
+  where it raised an error. Merging in time kept the frequency limits of the
+  later annotation alone, and merging in frequency its times, so the merged
+  annotation could be narrower than one of those merged into it; it now spans
+  them all in both domains.
+- sort_annotations() returned the annotations unsorted when given a domain it
+  does not know, without saying so. It now gives an error.
 - AnnotationList2DataFrame() raised an error when no annotation had any metadata.
 - labelReduction() raised a subscript error, and duplicated any label wholly inside
   another, as two of its three merge cases read the regions accumulated so far using

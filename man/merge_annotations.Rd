@@ -19,5 +19,11 @@ A list of Annotation objects.
 \description{
 Checks a list of annotations for those that are overlapping in the time or
 frequency domain, and returns a list where overlapping annotations are merged.
-Annotation objects must have the same \code{file}, \code{type} and \code{value} to be merged.
+Annotation objects must have the same \code{file}, \code{type} and \code{value} to be merged,
+where \code{NA} is the same as \code{NA} and nothing else.
+}
+\details{
+The merged annotation spans all of those merged into it, in both domains. It
+keeps the \code{source} and \code{metadata} of the last of them in the order
+\code{\link[=sort_annotations]{sort_annotations()}} puts them in.
 }

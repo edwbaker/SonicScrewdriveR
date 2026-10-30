@@ -108,77 +108,43 @@ writeAnnotationWave <- function(annotation, wave=NULL) {
 #' @param annotation1 An Annotation object.
 #' @param annotation2 An Annotation object.
 #' @param domain Domain of the annotations, either "time", "frequency", or "both".
-#' @return TRUE if the annotations overlap, FALSE otherwise.
+#' @return TRUE if the annotations overlap, FALSE otherwise. An annotation whose
+#'   limits in the domain are not known, being `NA`, overlaps nothing.
 .annotation_check_overlap <- function(annotation1, annotation2, domain="time") {
-  if (domain == "time") {
-    if (annotation1@start <= annotation2@end && annotation1@end >= annotation2@start) {
-      return(TRUE)
-    }
-    return(FALSE)
-  }
-  if (domain == "frequency") {
-    if (annotation1@low <= annotation2@high && annotation1@high >= annotation2@low) {
-      return(TRUE)
-    }
-    return(FALSE)
-  }
-  if (domain == "both") {
-    if (
-      annotation1@start <= annotation2@end && annotation1@end >= annotation2@start &&
-      annotation1@low <= annotation2@high && annotation1@high >= annotation2@low
-    ) {
-      return(TRUE)
-    }
-    return(FALSE)
-  }
+  .validateChoice(domain, c("time", "frequency", "both"), msg=paste("Unknown domain:", domain))
+  time <- annotation1@start <= annotation2@end && annotation1@end >= annotation2@start
+  frequency <- annotation1@low <= annotation2@high && annotation1@high >= annotation2@low
+  #A comparison with NA is NA, which if() cannot take.
+  return(isTRUE(switch(domain, time=time, frequency=frequency, both=time && frequency)))
 }
 
 #' Combine annotations
 #'
 #' Checks a list of annotations for those that are overlapping in the time or
 #' frequency domain, and returns a list where overlapping annotations are merged.
-#' Annotation objects must have the same `file`, `type` and `value` to be merged.
+#' Annotation objects must have the same `file`, `type` and `value` to be merged,
+#' where `NA` is the same as `NA` and nothing else.
+#'
+#' The merged annotation spans all of those merged into it, in both domains. It
+#' keeps the `source` and `metadata` of the last of them in the order
+#' [sort_annotations()] puts them in.
 #' @param annotations A list of Annotation objects.
 #' @param domain Domain of the annotations, either "time" or "frequency".
 #' @param same.source If TRUE, annotations must have the same source to be merged.
 #' @return A list of Annotation objects.
 #' @export
 merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
-  ret <- list()
   if (length(annotations) == 0) {
-    return(ret)
+    return(list())
   }
-
-  if (same.source) {
-    rel_columns <- sapply(annotations, function(x) list(file=x@file, type=x@type, value=x@value, source=x@source))
-    uniq_cols <- unique(as.data.frame(t(rel_columns)))
-
-    for (i in seq_len(nrow(uniq_cols))) {
-      file <- uniq_cols[i, "file"]
-      type <- uniq_cols[i, "type"]
-      value <- uniq_cols[i, "value"]
-      source <- uniq_cols[i, "source"]
-      filtered <- sapply(annotations, function(x) {
-        x@file == file & x@type == type & x@value == value & x@source == source
-      })
-      ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain))
-    }
-  } else {
-    rel_columns <- sapply(annotations, function(x) list(file=x@file, type=x@type, value=x@value))
-    uniq_cols <- unique(as.data.frame(t(rel_columns)))
-
-    for (i in seq_len(nrow(uniq_cols))) {
-      file <- uniq_cols[i, "file"]
-      type <- uniq_cols[i, "type"]
-      value <- uniq_cols[i, "value"]
-      filtered <- sapply(annotations, function(x) {
-        x@file == file & x@type == type & x@value == value
-      })
-      ret <- c(ret, .merge_annotations(annotations[filtered], domain=domain))
-    }
-  }
-
-  return(ret)
+  #Comparing the slots with == gave NA for a slot holding NA, which took the
+  #annotation out of every group. Quoted, NA is apart from the text "NA".
+  key <- vapply(annotations, function(x) {
+    slots <- c(x@file, x@type, x@value, if (same.source) x@source)
+    paste(encodeString(slots, quote='"'), collapse=" ")
+  }, character(1))
+  groups <- split(annotations, factor(key, levels=unique(key)))
+  return(do.call(c, unname(lapply(groups, .merge_annotations, domain=domain))))
 }
 
 #' Combine annotations helper function
@@ -191,42 +157,39 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
 #' @param domain Domain of the annotations, either "time" or "frequency".
 #' @return A list of Annotation objects.
 .merge_annotations <- function(annotations, domain="time") {
-  if (domain == "time") {
-    annotations <- sort_annotations(annotations)
-    if (length(annotations) < 2) {
-      return(annotations)
-    }
-    remove = vector(mode="logical", length=length(annotations))
-    for (i in 1:(length(annotations)-1)) {
-      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
-        #The merged annotation spans both, so it keeps the earlier start and
-        #whichever end is later. Taking only the start discarded the coverage of
-        #an annotation that wholly contained the next one.
-        annotations[[i+1]]@start <- annotations[[i]]@start
-        annotations[[i+1]]@end <- max(annotations[[i]]@end, annotations[[i+1]]@end)
-        remove[i] <- TRUE
-      }
-    }
-    annotations <- annotations[!remove]
+  .validateChoice(domain, c("time", "frequency"), msg=paste("Unknown domain for merge_annotations:", domain))
+  annotations <- sort_annotations(annotations, domain=domain)
+  if (length(annotations) < 2) {
     return(annotations)
   }
-  if (domain == "frequency") {
-    annotations <- sort_annotations(annotations, domain="frequency")
-    if (length(annotations) < 2) {
-      return(annotations)
+  remove = vector(mode="logical", length=length(annotations))
+  for (i in 1:(length(annotations)-1)) {
+    if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
+      annotations[[i+1]] <- .annotation_span(annotations[[i]], annotations[[i+1]])
+      remove[i] <- TRUE
     }
-    remove = vector(mode="logical", length=length(annotations))
-    for (i in 1:(length(annotations)-1)) {
-      if (.annotation_check_overlap(annotations[[i]], annotations[[i+1]], domain=domain)) {
-        annotations[[i+1]]@low <- annotations[[i]]@low
-        annotations[[i+1]]@high <- max(annotations[[i]]@high, annotations[[i+1]]@high)
-        remove[i] <- TRUE
-      }
-    }
-    annotations <- annotations[!remove]
-    return(annotations)
   }
-  stop(paste("Unknown domain for merge_annotations:", domain))
+  annotations <- annotations[!remove]
+  return(annotations)
+}
+
+#' The smallest annotation holding two others
+#'
+#' The merged annotation spans both in time and in frequency. Taking only the
+#' start of the earlier one discarded the coverage of an annotation that wholly
+#' contained the next, and taking the limits of the other domain from the later
+#' one alone discarded those of the earlier.
+#' @param earlier An Annotation object.
+#' @param later An Annotation object, whose other slots are kept.
+#' @return An Annotation object.
+#' @keywords internal
+#' @noRd
+.annotation_span <- function(earlier, later) {
+  later@start <- min(earlier@start, later@start)
+  later@end <- max(earlier@end, later@end)
+  later@low <- min(earlier@low, later@low)
+  later@high <- max(earlier@high, later@high)
+  return(later)
 }
 
 #' Sort annotations
@@ -238,6 +201,7 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
 #' @return A list of Annotation objects.
 #' @export
 sort_annotations <- function(annotations, domain="time", decreasing=FALSE) {
+  .validateChoice(domain, c("time", "frequency", "both"), msg=paste("Unknown domain for sort_annotations:", domain))
   if (domain == "frequency" | domain == "both") {
     annotations <- annotations[order(sapply(annotations, function(x) x@low))]
   }
