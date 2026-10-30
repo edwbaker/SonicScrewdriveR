@@ -247,3 +247,34 @@ test_that("a PseudoWave takes a single seed", {
   expect_error(pseudoWave("noise", "white", seed=c(1, 2)), "single seed")
   expect_error(pseudoWave("noise", "white", seed=numeric(0)), "single seed")
 })
+
+test_that("a number minus a PseudoWave inverts the wave about that number", {
+  # 1 - noise is the obvious way to write an inverted source, and had no method.
+  base <- tuneR::silence(duration=1000)
+  pw <- pseudoWave("sine", params=list(f0=440))
+
+  up <- base + pw
+  down <- base + (1 - pw)
+
+  # Inverting about 1 means every sample becomes 1 minus itself.
+  expect_equal(down@left, 1 - up@left)
+  expect_equal(max(down@left), 1 - min(up@left))
+  expect_equal(min(down@left), 1 - max(up@left))
+})
+
+test_that("a number minus a PseudoWave accounts for a scale and an offset already set", {
+  # The subtraction has to compose with whatever the PseudoWave already holds,
+  # not just with a fresh one: 5 - ((g * 2) + 3) is (g * -2) + 2.
+  base <- tuneR::silence(duration=1000)
+  pw <- pseudoWave("sine", scale=2, offset=3, params=list(f0=440))
+
+  plain <- (base + pw)@left
+  flipped <- (base + (5 - pw))@left
+
+  expect_equal(flipped, 5 - plain)
+})
+
+test_that("dividing a number by a PseudoWave is refused with a reason", {
+  pw <- pseudoWave("sine", params=list(f0=440))
+  expect_error(5 / pw, "Cannot divide a number by a PseudoWave")
+})
