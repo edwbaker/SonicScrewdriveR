@@ -234,6 +234,33 @@ test_that("A user-defined frame with no description keeps its value's order", {
   expect_identical(id3(f)[["TXXX"]], "A Recordist")
 })
 
+test_that("A user-defined link is named by its description", {
+  body <- c(
+    as.raw(0), charToRaw("Recording"), as.raw(0),
+    charToRaw("https://www.xeno-canto.org/428067")
+  )
+  f <- mdFile(mdId3Tag(mdFrame24("WXXX", body)), ".mp3")
+
+  expect_identical(
+    id3(f)[["WXXX|Recording"]], "https://www.xeno-canto.org/428067"
+  )
+})
+
+test_that("A user-defined link's address is read as Latin-1 whatever its description declares", {
+  # The address of a link frame is written in ISO-8859-1 however the frame
+  # declared its description, so the description's mark settles its own
+  # encoding and nothing else.
+  body <- c(
+    as.raw(1), as.raw(c(255, 254)), mdUtf16("Recording"), as.raw(c(0, 0)),
+    charToRaw("https://www.xeno-canto.org/428067")
+  )
+  f <- mdFile(mdId3Tag(mdFrame24("WXXX", body)), ".mp3")
+
+  expect_identical(
+    id3(f)[["WXXX|Recording"]], "https://www.xeno-canto.org/428067"
+  )
+})
+
 test_that("A description and a value in opposite orders are both read", {
   # Nothing requires the two strings of a frame to agree, and each says which
   # order it is in.
