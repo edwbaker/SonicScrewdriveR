@@ -31,8 +31,9 @@
 #' @param quiet If true will not print progress. Silence is a virtue.
 #' @param on.issue Function to call on error or warning. By default `stop` to raise
 #'   a standard R error. Setting to `warning` will instead a warning.
-#' @param output By default a `data.frame`. "Annotations" will return a list of
-#'   `Annotation` objects. "JSON-LD" and "Turtle" return the RDF that audioBlast
+#' @param output By default a `data.frame`. "Annotation" will return a list of
+#'   `Annotation` objects; "Annotations", as it was spelt before, still works and
+#'   is deprecated. "JSON-LD" and "Turtle" return the RDF that audioBlast
 #'   gives for modules that describe their records as linked data, as a
 #'   character vector with one element for each page.
 #' @param ... Fields and values to filter on. Any field defined by audioBlast.
@@ -70,8 +71,15 @@ audioblast <- function(
     output="data.frame",
     ...
 ) {
+  #Annotations are asked for as "Annotation" across the package, as
+  #birdNetAnalyse() always asked for them.
+  if (identical(output, "Annotations")) {
+    warning('output="Annotations" is deprecated and will be removed in a future ',
+            'release, use output="Annotation" instead.', call.=FALSE)
+    output <- "Annotation"
+  }
   .validateChoice(
-    output, c("data.frame", "Annotations", "JSON-LD", "Turtle"),
+    output, c("data.frame", "Annotation", "JSON-LD", "Turtle"),
     msg=paste(output, "is not a valid output type.")
   )
   if (!is.numeric(page_size) || length(page_size) != 1 || page_size < 1) {
@@ -80,7 +88,7 @@ audioblast <- function(
   if (!is.null(max_pages) && (!is.numeric(max_pages) || max_pages < 1)) {
     stop("max_pages must be NULL or a number of at least 1.")
   }
-  if (output=="Annotations") {
+  if (output=="Annotation") {
     if (type != "data" | name != "annomate") {
       stop("Query does not gives results that can be turned into Annotation objects.")
     }
@@ -129,7 +137,7 @@ audioblast <- function(
     }
     ret <- .audioblast_convert(do.call(rbind, rets), info)
 
-    if (output=="Annotations") {
+    if (output=="Annotation") {
       ret <- .audioblast_annotations(ret)
     }
     return(ret)

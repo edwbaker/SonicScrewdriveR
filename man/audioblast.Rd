@@ -41,8 +41,9 @@ need fewer requests to fetch many results.}
 \item{on.issue}{Function to call on error or warning. By default \code{stop} to raise
 a standard R error. Setting to \code{warning} will instead a warning.}
 
-\item{output}{By default a \code{data.frame}. "Annotations" will return a list of
-\code{Annotation} objects. "JSON-LD" and "Turtle" return the RDF that audioBlast
+\item{output}{By default a \code{data.frame}. "Annotation" will return a list of
+\code{Annotation} objects; "Annotations", as it was spelt before, still works and
+is deprecated. "JSON-LD" and "Turtle" return the RDF that audioBlast
 gives for modules that describe their records as linked data, as a
 character vector with one element for each page.}
 

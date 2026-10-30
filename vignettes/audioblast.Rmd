@@ -81,7 +81,7 @@ audioblast("data", "taxa", "classification", source="bio.acousti.ca", id=247)
 Annotations of recordings can be returned as `Annotation` objects, which can be used with the other annotation functions of `SonicScrewdriveR`.
 
 ```{r, eval=FALSE}
-a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotation")
 ```
 
 ## Downloading recordings

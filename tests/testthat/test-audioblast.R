@@ -17,14 +17,14 @@ test_that("audioblast rejects bad arguments", {
     "koala is not a valid output type."
   )
   expect_error(
-    audioblast("data", "recordings", max_pages=1, output="Annotations"),
+    audioblast("data", "recordings", max_pages=1, output="Annotation"),
     "Query does not gives results that can be turned into Annotation objects."
   )
   expect_error(audioblast("data", "recordings", page_size=0), "page_size")
   expect_error(audioblast("data", "recordings", page_size=c(10, 20)), "page_size")
   expect_error(audioblast("data", "recordings", max_pages=0), "max_pages")
   expect_silent(
-    audioblast("data", "annomate", max_pages=1, on.issue=invisible, output="Annotations")
+    audioblast("data", "annomate", max_pages=1, on.issue=invisible, output="Annotation")
   )
 })
 
@@ -77,7 +77,7 @@ test_that("Annotation output is as expected", {
   expect_true(is.data.frame(data))
 
   # Get annotations from audioblast as Annotation objects
-  anns <- audioblast("data", "annomate", max_pages = 1, source="bio.acousti.ca", output="Annotations")
+  anns <- audioblast("data", "annomate", max_pages = 1, source="bio.acousti.ca", output="Annotation")
   expect_true(all(sapply(anns, inherits, "Annotation")))
 
   d <- data[2,]
@@ -101,6 +101,16 @@ test_that("the frequency limits of an annotation from audioBlast are kept", {
   anns <- .audioblast_annotations(ret)
   expect_identical(c(anns[[1]]@low, anns[[1]]@high), c(1000, 8000))
   expect_identical(c(anns[[2]]@low, anns[[2]]@high), c(0, Inf))
+})
+
+test_that("annotations asked for as they were spelt before still come, with a warning", {
+  local_audioblast()
+  expect_warning(
+    old <- audioblast("data", "annomate", max_pages=1, source="bio.acousti.ca", output="Annotations"),
+    'output="Annotations" is deprecated'
+  )
+  new <- audioblast("data", "annomate", max_pages=1, source="bio.acousti.ca", output="Annotation")
+  expect_identical(old, new)
 })
 
 # ------------------------------------------------------------- the pages ---
