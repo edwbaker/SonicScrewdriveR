@@ -12,7 +12,8 @@ beatComplexity(wave, plot = FALSE)
 \item{plot}{If TRUE a spectrogram overlaid with the peaks is plotted.}
 }
 \value{
-A list of the complexity, a vector of the peak periods, and the number of peaks.
+A list of the complexity, a vector of the peak periods, and the number of
+  peaks. The complexity is NA if the beat spectrum has no peak.
 }
 \description{
 This function computes a \code{beatSpectrum} and calculates some basic
