@@ -406,8 +406,8 @@
   so the same recording gave its recording time, make, model and serial in one
   container and none of the four in another. A recording transcoded out of a
   wave keeps the recorder's comment in whatever its new container holds one in,
-  which is why the comment is looked for in an MP3's tag as well as in a wave's
-  list; FLAC and Ogg write it as a Vorbis comment, under `COMMENT` or
+  which is why the comment is looked for in the tag of an MP3 as well as in a
+  wave's list; FLAC and Ogg write it as a Vorbis comment, under `COMMENT` or
   `DESCRIPTION` and sometimes under both, and that is where it was going
   unread. The bundled AUDIOMOTH.flac and AUDIOMOTH.mp3 are the same recording
   and now give the same datetime, make, model and serial.
