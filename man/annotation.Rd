@@ -39,5 +39,7 @@ annotation(
 An Annotation object.
 }
 \description{
-Create a new Annotation object
+Every argument but \code{metadata} is a single value. An annotation whose start
+is after its end, or whose low frequency is above its high, is refused; \code{NA}
+stands for a limit that is not known.
 }

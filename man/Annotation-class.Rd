@@ -7,6 +7,12 @@
 \description{
 The \code{Annotation} class is used to store annotations on \code{Wave}-like objects.
 }
+\details{
+Every slot but \code{metadata} holds a single value. The start of an annotation
+is not after its end, nor its low frequency above its high, and an
+annotation that breaks either rule is refused when it is made. A limit that
+is not known is \code{NA}, which no rule refuses.
+}
 \section{Slots}{
 
 \describe{

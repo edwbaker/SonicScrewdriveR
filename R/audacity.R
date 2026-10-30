@@ -84,16 +84,14 @@ readAudacityLabels <- function(file, output="Annotation") {
 #' Internally this uses the `write.audacity()` function from the `seewave`
 #' package \insertCite{seewave2008}{sonicscrewdriver}.
 #'
-#' @param annotations A list of `Annotation` objects.
+#' @param annotations A list of `Annotation` objects, or a single one.
 #' @param file Path to the Audacity label file.
 #' @references
 #'   \insertAllCited{}
 #' @return No return value, called for its side effect of writing a label file.
 #' @export
 writeAudacityLabels <- function(annotations, file) {
-  if (!all(sapply(annotations, inherits, "Annotation"))) {
-    stop("Input must be a list of Annotation objects.")
-  }
+  annotations <- .annotationList(annotations)
 
   #vapply() rather than sapply(), which gives a list of no annotations, and
   #is.finite() refused that.

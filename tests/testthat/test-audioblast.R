@@ -103,6 +103,30 @@ test_that("the frequency limits of an annotation from audioBlast are kept", {
   expect_identical(c(anns[[2]]@low, anns[[2]]@high), c(0, Inf))
 })
 
+test_that("a record of audioBlast whose limits run backwards does not lose the others", {
+  # An Annotation that ends before it starts is refused, which would have
+  # refused the whole of a fetch for one record.
+  ret <- data.frame(
+    source="s", source_id="1", annotator="a", annotation_id=c("ok", "late", "high"),
+    annotation_date="", annotation_info_url="", lat=NA, lon=NA, contact="",
+    recording_url="r.wav", time_start=c(1, 5, 1), time_end=c(2, 3, 2),
+    freq_low=c(100, 100, 9000), freq_high=c(200, 200, 8000), type="Call", taxon="t",
+    stringsAsFactors=FALSE
+  )
+  expect_message(anns <- .audioblast_annotations(ret),
+                 "2 annotations ending before they start.*\\(late, high\\)")
+  expect_length(anns, 3)
+  expect_identical(c(anns[[1]]@start, anns[[1]]@end, anns[[1]]@low, anns[[1]]@high),
+                   c(1, 2, 100, 200))
+  expect_identical(c(anns[[2]]@start, anns[[2]]@end), c(NA_real_, NA_real_))
+  expect_identical(c(anns[[2]]@low, anns[[2]]@high), c(100, 200))
+  expect_identical(c(anns[[3]]@start, anns[[3]]@end), c(1, 2))
+  expect_identical(c(anns[[3]]@low, anns[[3]]@high), c(NA_real_, NA_real_))
+
+  expect_message(.audioblast_annotations(ret[2, ]), "1 annotation ending before it starts.*\\(late\\)")
+  expect_silent(.audioblast_annotations(ret[1, ]))
+})
+
 test_that("annotations asked for as they were spelt before still come, with a warning", {
   local_audioblast()
   expect_warning(

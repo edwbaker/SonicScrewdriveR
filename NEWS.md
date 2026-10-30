@@ -931,6 +931,16 @@
   them all in both domains.
 - sort_annotations() returned the annotations unsorted when given a domain it
   does not know, without saying so. It now gives an error.
+- annotation() made an annotation ending before it started, with its lowest
+  frequency above its highest, or with two starts or no value, and each failed
+  later in merging or converting with an error that did not say why. Such an
+  annotation is now refused when it is made, saying what is wrong; `NA` is still
+  allowed for a limit that is not known. A record of audioBlast whose limits run
+  backwards is kept with those limits as `NA`, and a message names it, rather
+  than refusing the whole of a fetch. merge_annotations(), sort_annotations(),
+  AnnotationList2DataFrame() and writeAudacityLabels() failed given a single
+  annotation rather than a list, as writeAnnotationWave() takes, and now take
+  one; given a list holding something else, each says so.
 - AnnotationList2DataFrame() raised an error when no annotation had any metadata.
 - labelReduction() raised a subscript error, and duplicated any label wholly inside
   another, as two of its three merge cases read the regions accumulated so far using

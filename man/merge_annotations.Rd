@@ -7,7 +7,7 @@
 merge_annotations(annotations, domain = "time", same.source = TRUE)
 }
 \arguments{
-\item{annotations}{A list of Annotation objects.}
+\item{annotations}{A list of Annotation objects, or a single one.}
 
 \item{domain}{Domain of the annotations, either "time" or "frequency".}
 
