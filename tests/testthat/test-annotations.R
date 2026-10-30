@@ -370,3 +370,80 @@ test_that("a list holding something other than an annotation is refused", {
   )
   expect_error(AnnotationList2DataFrame(list(1, 2)), "must be Annotation objects")
 })
+
+test_that("metadata keeps its class in a data frame", {
+  # Every value was written into a column of text, so a confidence came back
+  # as "0.9".
+  x <- list(
+    annotation(start=0, end=1, metadata=list(confidence=0.9, name="a", when=as.Date("2024-06-30"))),
+    annotation(start=1, end=2, metadata=list(confidence=0.8)),
+    annotation(start=2, end=3, metadata=list(name="c"))
+  )
+  d <- AnnotationList2DataFrame(x)
+  expect_identical(d$start, c(0, 1, 2))
+  expect_identical(d$confidence, c(0.9, 0.8, NA))
+  expect_identical(d$name, c("a", NA, "c"))
+  expect_identical(d$when, as.Date(c("2024-06-30", NA, NA)))
+})
+
+test_that("a plain NA among values of one class keeps that class", {
+  d <- AnnotationList2DataFrame(list(
+    annotation(metadata=list(confidence=NA, when=NA)),
+    annotation(metadata=list(confidence=0.8, when=as.Date("2024-06-30")))
+  ))
+  expect_identical(d$confidence, c(NA, 0.8))
+  expect_identical(d$when, as.Date(c(NA, "2024-06-30")))
+  # A column of TRUE, FALSE and NA stays logical.
+  d <- AnnotationList2DataFrame(list(
+    annotation(metadata=list(flag=NA)), annotation(metadata=list(flag=TRUE))
+  ))
+  expect_identical(d$flag, c(NA, TRUE))
+})
+
+test_that("metadata of differing classes, or of more than one value, is kept", {
+  d <- AnnotationList2DataFrame(list(
+    annotation(metadata=list(id=1, tags=c("a", "b"))),
+    annotation(metadata=list(id="two", tags="c"))
+  ))
+  expect_identical(nrow(d), 2L)
+  expect_identical(d$id, c("1", "two"))
+  expect_true(is.list(d$tags))
+  expect_identical(d$tags[[1]], c("a", "b"))
+  expect_identical(d$tags[[2]], "c")
+})
+
+test_that("metadata that is NULL wherever it is given is NA", {
+  d <- AnnotationList2DataFrame(list(annotation(metadata=list(empty=NULL, 1))))
+  expect_identical(d$empty, NA)
+  # A value with no name has nothing to name a column by, and is left out.
+  expect_identical(
+    colnames(d),
+    c("file", "start", "end", "low", "high", "source", "type", "value", "empty")
+  )
+})
+
+test_that("a metadata name that is also a slot is given a column of its own", {
+  # audioblast() keeps the collection an annotation came from as metadata named
+  # source. That made a second column named source, and its value was written
+  # over the slot's in the first.
+  d <- AnnotationList2DataFrame(list(
+    annotation(source="audioblast", metadata=list(source="sounds_of_norway"))
+  ))
+  expect_identical(d$source, "audioblast")
+  expect_identical(d$metadata.source, "sounds_of_norway")
+  expect_identical(anyDuplicated(colnames(d)), 0L)
+
+  d <- AnnotationList2DataFrame(list(
+    annotation(source="a", metadata=list(source="b", metadata.source="c"))
+  ))
+  expect_identical(anyDuplicated(colnames(d)), 0L)
+  expect_identical(d$source, "a")
+  expect_setequal(unlist(d[1, -(1:8)]), c("b", "c"))
+})
+
+test_that("no annotations give a data frame of no rows", {
+  d <- AnnotationList2DataFrame(list())
+  expect_identical(nrow(d), 0L)
+  expect_identical(d$start, numeric(0))
+  expect_identical(d$value, character(0))
+})

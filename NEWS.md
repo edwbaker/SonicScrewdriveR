@@ -309,6 +309,9 @@
   warning handler treat them as the warnings they are.
 
 ## Deprecations
+- audioblast() asks for annotations with `output="Annotation"`, as
+  birdNetAnalyse() does. `output="Annotations"` still works and warns, and will
+  be removed in a future release.
 - audiomothWave() is deprecated in favour of readMetadata(), whose `audiomoth`
   source holds the same fields and whose normalised record additionally gives
   the recording time as a `datetime` rather than the separate `start_date`,
@@ -1240,6 +1243,17 @@
   no fault: GUANO records the factor in its `TE` field, so a rate meeting the
   header rate multiplied by that factor is agreement, and of a coding history
   holding several generations any one of them meeting the header is enough.
+- AnnotationList2DataFrame() wrote every metadata value as text, so the
+  confidence of a birdNetAnalyse() detection came back as "0.9". A metadata
+  column now keeps the class its values share. A metadata name that is also a
+  slot, as the `source` that audioblast() keeps of the collection an annotation
+  came from, made a second column of that name and wrote its value over the
+  slot's; it is now given a column of its own named `metadata.source`. The data
+  frame is also built a column at a time rather than a cell at a time.
+- audioblast() with `output="Annotation"` left out the frequency limits
+  audioBlast gives, so every annotation spanned every frequency.
+- birdNetAnalyse() set up its Python environment before refusing an unknown
+  `output`, and its example called it by a name it does not have.
 
 ## Internal
 - directionPlot() named its columns with aes_string(), deprecated since ggplot2

@@ -157,7 +157,7 @@ Next, we will download the annotations for this file from audioBlast.
 
 ```{r, results=FALSE}
 # Fetch annotations from audioBlast as `Annotation` objects
-a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotation")
 ```
 
 This has downloaded the annotations from audioBlast and converted them to a list of `Annotation` objects. Once annotation data are converted to `Annotation` objects they can be easily manipulated into a number of other useful formats.

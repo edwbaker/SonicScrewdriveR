@@ -24,3 +24,9 @@ test_that("birdNetAnalyse() returns correct format", {
   expect_type(a, "list")
   expect_true(all(sapply(a, is, "Annotation")))
 })
+
+test_that("birdNetAnalyse() refuses an unknown output before it looks for Python", {
+  # The output was checked after the Python environment had been set up.
+  local_mocked_bindings(package.installed=function(...) stop("Python was looked for"))
+  expect_error(birdNetAnalyse("filename", output="christmas cactus"), "Unknown output format.")
+})

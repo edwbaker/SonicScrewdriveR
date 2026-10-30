@@ -34,7 +34,7 @@ either returns a data frame with the results of the analysis or a list of
 }
 \examples{
 \dontrun{
-  birdnetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")
+  birdNetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")
 }
 }
 \references{
