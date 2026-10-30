@@ -490,23 +490,32 @@
   return(!is.null(source) && length(source) > 0L)
 }
 
-#' Read the AudioMoth comment a wave carries, if it carries one
+#' Read the AudioMoth comment a recording carries, if it carries one
 #'
 #' The comment has already been read out of the chunk list by the time this is
-#' called, as the `ICMT` of the list or the `COMM` of an ID3 tag, so it is
-#' parsed where it stands rather than read again. Working from the chunk means
-#' a wave whose `LIST` trails its `data` reads the same as one whose `LIST`
-#' comes first, and that bytes in hand are as good as a path.
+#' called, as the `ICMT` of the list, the `COMM` of an ID3 tag or the `COMMENT`
+#' or `DESCRIPTION` of a Vorbis comment block, so it is parsed where it stands
+#' rather than read again. Working from the chunk means a wave whose `LIST`
+#' trails its `data` reads the same as one whose `LIST` comes first, and that
+#' bytes in hand are as good as a path.
+#'
+#' @param info The `LIST`/`INFO` fields of a wave, or NULL
+#' @param tag An ID3 tag, or NULL
+#' @param vorbis A Vorbis comment block, or NULL
 #' @keywords internal
 #' @noRd
-.mdAudiomothSource <- function(info, tag=NULL) {
+.mdAudiomothSource <- function(info, tag=NULL, vorbis=NULL) {
   # A version 2 tag names the frame COMM, and names it by its description
   # besides; a version 1 tag has a fixed comment field, which this package
   # reads under the name "comment". Version 1 allows it 30 bytes, so a comment
   # found there is the start of one and the fields past the cut are not there
   # to be read.
+  # A transcoded recording keeps the comment wherever its new container holds
+  # one: FLAC and Ogg write it as a Vorbis comment, under either name, and some
+  # encoders write it under both.
   comment <- c(
-    .mdPick(info, "ICMT"), .mdPickPrefix(tag, "COMM"), .mdPick(tag, "comment")
+    .mdPick(info, "ICMT"), .mdPickPrefix(tag, "COMM"), .mdPick(tag, "comment"),
+    .mdPick(vorbis, "COMMENT", "DESCRIPTION")
   )
   if (length(comment) == 0L) {
     return(NULL)
@@ -827,6 +836,13 @@ readMetadata <- function(x, filename=TRUE) {
   if (identical(container, "FLAC") || identical(container, "Ogg")) {
     sources$vorbisComment <- vorbisComment(file)
     sources$id3 <- id3(file)
+    # A recording transcoded to FLAC or Ogg keeps the recorder's comment the
+    # same way an MP3 does, so it is read here too: the same recording in two
+    # containers gave its datetime, make, model and serial in one and none of
+    # them in the other.
+    sources$audiomoth <- .mdAudiomothSource(
+      NULL, sources$id3, sources$vorbisComment
+    )
   }
   # FALSE to read no name at all, NA to work out the format from the name, or
   # the name of the format the caller knows their files follow.
