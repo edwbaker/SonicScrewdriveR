@@ -68,7 +68,17 @@ validateBulkModulus <- function(b) {
 }
 
 validateSpeed <- function(b) {
+  #A speed of sound of zero is as unphysical as a negative one, and the bounds
+  #.validateNumericRange() takes are inclusive, so the bound is tested here. A
+  #negative speed reverses the path-length differences bearing() fits a
+  #direction to, and reports the exact opposite direction as though it were
+  #sound; zero gives NaN.
   .validateNumericRange(b, "Speed")
+  v <- unlist(b)
+  if (any(!is.na(v) & v <= 0)) {
+    stop("Speed of sound must be greater than zero.")
+  }
+  return(b)
 }
 
 validateWavelength <- function(b) {

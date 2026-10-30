@@ -173,3 +173,18 @@ test_that("bearing rejects what it cannot use", {
     "positions are all the same point"
   )
 })
+
+test_that("bearing refuses an impossible speed of sound", {
+  # A negative speed returned the exact reverse of the right direction, with a
+  # magnitude of 1 and a residual of 0 to say the delays were consistent.
+  mics <- rbind(c(0, 0), c(1, 0), c(0, 1))
+  expect_error(
+    bearing(c(0, -1/343, 0), mics, speed=-343),
+    "Speed of sound must be greater than zero."
+  )
+  expect_error(
+    bearing(c(0, -1/343, 0), mics, speed=0),
+    "Speed of sound must be greater than zero."
+  )
+  expect_equal(bearing(c(0, -1/343, 0), mics)$azimuth, 0)
+})
