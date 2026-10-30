@@ -104,7 +104,7 @@ test_that("A list written in lower case is still a list", {
   ))
 
   expect_identical(wavInfo(f)[["adtl/labl"]], "Ende: a taxon")
-  expect_identical(wavCues(f)$label, "Ende: a taxon")
+  expect_identical(wavCues(f, output="data.frame")$label, "Ende: a taxon")
 })
 
 test_that("Lists of either spelling are read in the order the file holds them", {

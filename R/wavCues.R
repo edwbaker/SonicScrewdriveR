@@ -41,40 +41,56 @@
 #' position zero, which is a writer reserving the room rather than marking
 #' anything.
 #'
+#' By default each cue point is given as an [Annotation][Annotation-class]
+#' object. A labelled region is an annotation of type `region` running from its
+#' position for its length, and any other point an annotation of type `cue`
+#' that starts and ends at its position. The value of the annotation is the
+#' label of the point, or failing that the text of its region; its source is
+#' `wavCues`, its file the path read, and its metadata the fields of its row
+#' in the data frame other than `seconds`. An annotation whose position is not
+#' known, or not known in seconds, starts and ends at `NA`.
+#'
 #' @param x Path to a wave file, or a raw vector holding one
-#' @return A data frame of one row per cue point, with its identifier,
+#' @param output One of "Annotation" or "data.frame".
+#' @return A list of Annotation objects, one per cue point, or with `output`
+#'   "data.frame" a data frame of one row per cue point, with its identifier,
 #'   position, position in seconds, label, note, region length, purpose, region
 #'   text and the chunk its position is into. A file holding no cue points and
-#'   no labels gives a data frame of no rows.
+#'   no labels gives an empty list, or a data frame of no rows.
 #' @export
 #' @seealso [wavChunks()] lists the chunks a file holds, and [wavInfo()] reads
 #'   the text of the same labels without the positions they belong to.
+#'   [writeAudacityLabels()] writes the annotations as an Audacity label file.
 #' @examples
 #' \dontrun{
-#' cues <- wavCues("marked.wav")
+#' cues <- wavCues("marked.wav", output="data.frame")
 #' cues[!is.na(cues$label), c("seconds", "label")]
+#' writeAudacityLabels(wavCues("marked.wav"), "marked.txt")
 #' }
 #'
-wavCues <- function(x) {
+wavCues <- function(x, output="Annotation") {
+  .validateChoice(output, c("Annotation", "data.frame"), msg="Unknown output format.")
   if (is.raw(x)) {
-    return(.wavCueFrame(.wavChunks(x), function(at, n) x[at:(at + n - 1L)]))
+    return(.wavCueFrame(.wavChunks(x), function(at, n) x[at:(at + n - 1L)], output, ""))
   }
   .mdCheckFile(x)
   con <- file(x, "rb")
   on.exit(close(con))
   size <- file.size(x)
   read <- .wavConReader(con)
-  return(.wavCueFrame(.wavWalk(read, size, size), read))
+  return(.wavCueFrame(.wavWalk(read, size, size), read, output, x))
 }
 
-#' Build the data frame that wavCues() returns
+#' Build what wavCues() returns
 #'
 #' @param walked What .wavWalk() returned
 #' @param read A function of a one-based position and a number of bytes
-#' @return A data frame of one row per cue point
+#' @param output One of "Annotation" or "data.frame"
+#' @param path The path of the file, or "" for bytes given directly
+#' @return A list of Annotation objects, or a data frame of one row per cue point
 #' @keywords internal
 #' @noRd
-.wavCueFrame <- function(walked, read) {
+.wavCueFrame <- function(walked, read, output, path) {
   body <- function(id, cap=.MD_BLOCK_MAX) {
     chunk <- .wavFindChunk(walked$chunks, id)
     if (is.null(chunk) || chunk$size < 1) {
@@ -101,7 +117,36 @@ wavCues <- function(x) {
       labels <- .wavCueLabels(one, labels)
     }
   }
-  return(.wavCueJoin(points, labels, rate))
+  cues <- .wavCueJoin(points, labels, rate)
+  if (output == "data.frame") {
+    return(cues)
+  }
+  return(.wavCueAnnotations(cues, rate, path))
+}
+
+#' Make the cue points of a wave file into Annotation objects
+#'
+#' @param cues The data frame of cue points
+#' @param rate The sample rate the file declares, or NA
+#' @param path The path of the file, or ""
+#' @return A list of Annotation objects
+#' @keywords internal
+#' @noRd
+.wavCueAnnotations <- function(cues, rate, path) {
+  fields <- c("id", "position", "label", "note", "length", "purpose", "text", "chunk")
+  lapply(seq_len(nrow(cues)), function(i) {
+    cue <- cues[i, ]
+    region <- !is.na(cue$length)
+    annotation(
+      file = path,
+      start = cue$seconds,
+      end = cue$seconds + if (region) cue$length / rate else 0,
+      source = "wavCues",
+      type = if (region) "region" else "cue",
+      value = Find(Negate(is.na), c(cue$label, cue$text, "")),
+      metadata = as.list(cue[fields])
+    )
+  })
 }
 
 #' Read the points of a cue chunk

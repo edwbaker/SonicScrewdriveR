@@ -182,7 +182,11 @@
   point is missing is reported without a position rather than dropped, and a
   point with no label is reported without text: nine files in that corpus
   declare ninety-nine points and name none of them, which is a writer
-  reserving the room rather than marking anything.
+  reserving the room rather than marking anything. The points are given as
+  `Annotation` objects by default, so that they can be merged, sorted and
+  written as any other annotation: a labelled region runs from its position
+  for its length, and any other point starts and ends where it is. The data
+  frame is given with `output="data.frame"`.
 - wavChunks() lists the chunks a wave file holds: every one of them, in the
   order the file holds them, with where its body begins, how large it is,
   whether it was cut short, and, for a list, which kind of list it is. The
