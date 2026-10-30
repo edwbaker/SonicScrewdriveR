@@ -76,11 +76,16 @@ setClass(
 #' A list of Annotation objects
 #'
 #' The functions that take a list of annotations take a single one as well.
-#' @param x An Annotation object, or a list of them.
+#' NULL, which audioblast() gives when nothing matches, is no annotations, as
+#' it was before the list was checked.
+#' @param x An Annotation object, a list of them, or NULL.
 #' @return A list of Annotation objects.
 #' @keywords internal
 #' @noRd
 .annotationList <- function(x) {
+  if (is.null(x)) {
+    return(list())
+  }
   if (is(x, "Annotation")) {
     return(list(x))
   }
@@ -154,7 +159,7 @@ annotation <- function(
 #'   whose region holds none of the wave.
 #' @export
 writeAnnotationWave <- function(annotation, wave=NULL, dir=".") {
-  if (is.list(annotation)) {
+  if (is.null(annotation) || is.list(annotation)) {
     annotation <- .annotationList(annotation)
     return(invisible(vapply(annotation, writeAnnotationWave, character(1), wave=wave, dir=dir)))
   }

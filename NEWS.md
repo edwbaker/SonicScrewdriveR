@@ -940,7 +940,8 @@
   than refusing the whole of a fetch. merge_annotations(), sort_annotations(),
   AnnotationList2DataFrame() and writeAudacityLabels() failed given a single
   annotation rather than a list, as writeAnnotationWave() takes, and now take
-  one; given a list holding something else, each says so.
+  one; given a list holding something else, each says so. `NULL`, which
+  audioblast() gives when nothing matches, is still taken as no annotations.
 - AnnotationList2DataFrame() raised an error when no annotation had any metadata.
 - labelReduction() raised a subscript error, and duplicated any label wholly inside
   another, as two of its three merge cases read the regions accumulated so far using

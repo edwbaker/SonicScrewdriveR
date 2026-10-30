@@ -483,6 +483,17 @@ test_that("a single annotation is taken where a list of them is", {
   expect_identical(readLines(f), "0\t1\tx")
 })
 
+test_that("NULL is no annotations, as audioblast() gives when nothing matches", {
+  # It was taken as no annotations before the list was checked, and still is.
+  expect_identical(merge_annotations(NULL), list())
+  expect_identical(sort_annotations(NULL), list())
+  expect_identical(nrow(AnnotationList2DataFrame(NULL)), 0L)
+  f <- tempfile(fileext=".txt")
+  writeAudacityLabels(NULL, f)
+  expect_identical(readAudacityLabels(f), list())
+  expect_identical(writeAnnotationWave(NULL, tuneR::sine(440)), character(0))
+})
+
 test_that("a list holding something other than an annotation is refused by name", {
   a <- annotation(start=0, end=1)
   msg <- "All items in list must be Annotation objects."
