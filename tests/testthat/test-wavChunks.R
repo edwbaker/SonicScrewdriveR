@@ -651,6 +651,23 @@ test_that("A printable pad byte is padding, however much it reads as a header", 
                                function(c) c$id, character(1)))
 })
 
+test_that("A pad byte that is not a nul is padding where neither reading gives a chunk", {
+  # The remaining case: the byte is not a nul, so the writer did something the
+  # format does not allow, but nothing reads as a chunk from either position.
+  # There is no evidence to step back on, so the file is read as the padding
+  # says and the chunks in front of the fault are kept.
+  bytes <- mdWav(
+    mdFmt(),
+    c(charToRaw("guan"), mdU32(5), charToRaw("GUANO"), charToRaw("X")),
+    as.raw(rep(1, 16))
+  )
+
+  info <- .wavChunks(bytes)
+  ids <- vapply(info$chunks, function(c) c$id, character(1))
+  expect_identical(ids[1:2], c("fmt ", "guan"))
+  expect_identical(.wavFindChunk(info$chunks, "guan")$size, 5)
+})
+
 test_that("An unpadded body is still recovered where the padding's own position reads as a header", {
   # The two readings have to be told apart on more than four printable bytes
   # and a size that fits. Here the pad really was left out, and the position

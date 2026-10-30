@@ -402,9 +402,6 @@
   the label field even where the label is empty, leaving a trailing tab, so
   such a file is not one of its label files and is now refused by name, with
   the count of columns it has.
-- A chunk of an odd size padded with something other than a nul lost every
-  chunk behind it. The byte where the pad belongs is read to tell a writer that
-  left the pad out from one that wrote it, and a byte that was not a nul was
 - A chunk of an odd size padded with a byte other than zero lost every chunk
   behind it. The byte where the pad belongs is read to tell a writer that
   left the pad out from one that wrote it, and a byte that was not zero was
