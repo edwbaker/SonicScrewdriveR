@@ -12,11 +12,24 @@
 #' @param fn The name of the calling function, used in the default message.
 #' @param prep The preposition joining `what` to `fn`, either "to" or "for".
 #' @param msg A complete error message, used in place of the default one.
+#' @param n The number of values the call site takes, or NULL where any number of
+#'   them is meaningful. Two valid units are each one of `choices`, so a call site
+#'   taking a single unit used to pass them both and fail in the comparison it
+#'   reached next.
 #' @return The value unchanged. An error is raised if it is not one of `choices`.
 #' @keywords internal
 #' @noRd
-.validateChoice <- function(value, choices, what="input", fn=NULL, prep="to", msg=NULL) {
-  bad <- setdiff(value, choices)
+.validateChoice <- function(value, choices, what="input", fn=NULL, prep="to", msg=NULL, n=NULL) {
+  if (length(value) == 0) {
+    #setdiff() of a zero-length value is empty, so there was nothing to report
+    #and NULL was handed on to a caller that could not use it, which then failed
+    #with an R error naming neither the argument nor the function.
+    bad <- if (is.null(value)) "NULL" else "no value"
+  } else if (!is.null(n) && length(value) != n) {
+    bad <- paste(value, collapse=", ")
+  } else {
+    bad <- setdiff(value, choices)
+  }
   if (length(bad) == 0) {
     return(value)
   }

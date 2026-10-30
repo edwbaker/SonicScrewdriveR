@@ -22,7 +22,7 @@ convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL
   if (!is.null(redone)) {
     return(redone[[1]])
   }
-  .validateChoice(input.unit, .convertable2seconds(), "input.unit", "convert2seconds")
+  .validateChoice(input.unit, .convertable2seconds(), "input.unit", "convert2seconds", n=1)
   factors <- .secondMultipliers()
   if (input.unit %in% names(factors)) {
     s <- as.numeric(t) * factors[[input.unit]]
@@ -39,7 +39,7 @@ convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL
     s <- as.numeric(substr(t,1,2))*60*60 + as.numeric(substr(t,3,4))*60
   }
   if (input.unit == "POSIX") {
-    .validateChoice(origin, c("day", "unix"), "origin", "convert2seconds")
+    .validateChoice(origin, c("day", "unix"), "origin", "convert2seconds", n=1)
     if (origin == "day") {
       #Which day a moment falls in, and how far through it, depends on the zone
       #it is read in. Breaking it down without naming one read a time carrying

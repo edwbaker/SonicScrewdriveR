@@ -19,6 +19,7 @@ convert2Kelvin <- function(temp, input.unit="C", input) {
   if (!is.null(redone)) {
     return(redone[[1]])
   }
+  .validateChoice(input.unit, .temperatureUnits(), "input.unit", "convert2Kelvin", n=1)
   if (input.unit == "C") {
     K <- 273.15 + temp
     validateKelvin(K)
@@ -29,11 +30,16 @@ convert2Kelvin <- function(temp, input.unit="C", input) {
     validateKelvin(K)
     return(K)
   }
-  if (input.unit == "K") {
-    validateKelvin(temp)
-    return(temp)
-  }
-  stop("Unknown unit: ", input.unit)
+  validateKelvin(temp)
+  return(temp)
+}
+
+#' Units of temperature the converters take
+#'
+#' @return A character vector of unit names.
+#' @noRd
+.temperatureUnits <- function() {
+  return(c("K", "C", "F"))
 }
 
 #' Convert temperature to Celsius
@@ -57,6 +63,7 @@ convert2Celsius <- function(temp, input.unit="K", input) {
   if (!is.null(redone)) {
     return(redone[[1]])
   }
+  .validateChoice(input.unit, .temperatureUnits(), "input.unit", "convert2Celsius", n=1)
   if (input.unit == "K") {
     validateKelvin(temp)
     C <- temp - 273.15
@@ -67,11 +74,8 @@ convert2Celsius <- function(temp, input.unit="K", input) {
     validateKelvin(convert2Kelvin(C, input.unit="C"))
     return(C)
   }
-  if (input.unit == "C") {
-    validateKelvin(convert2Kelvin(temp, input.unit="C"))
-    return(temp)
-  }
-  stop("Unknown unit: ", input.unit)
+  validateKelvin(convert2Kelvin(temp, input.unit="C"))
+  return(temp)
 }
 
 #' Convert temperature to Fahrenheit
