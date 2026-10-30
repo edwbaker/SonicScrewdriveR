@@ -98,17 +98,23 @@ generateNoise <- function(
   # peak was scaled so that the trough went past the level asked for, and with
   # the level now being full scale that is far enough to leave the format.
   n@left <- n@left * noise.level / max(abs(n@left))
-  noise.frac = 1 / (1/noise.ratio - 1)
+  #The mix is written as a weighted sum of signal and noise rather than through
+  #noise.frac = 1/(1/noise.ratio - 1). The two are identical for every ratio
+  #below one - with f the fraction, (x + f*n)/(1 + f) is (1-r)*x + r*n - but
+  #noise.frac is Inf at noise.ratio=1 and (x + Inf*n)/(1 + Inf) is Inf/Inf, so
+  #every sample came back NaN. Written this way the endpoint is the limit the
+  #arithmetic implies: all noise and none of the signal.
+  signal.weight <- 1 - noise.ratio
 
   if (inherits(wave, c("Wave"))) {
-    wave@left <- (wave@left - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
+    wave@left <- signal.weight * (wave@left - wave.offset) + noise.ratio * n@left + wave.offset
     if (wave@stereo) {
-      wave@right <- (wave@right - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
+      wave@right <- signal.weight * (wave@right - wave.offset) + noise.ratio * n@left + wave.offset
     }
   }
   if (inherits(wave, c("WaveMC"))) {
     for (i in 1:ncol(wave@.Data)) {
-      wave@.Data[,i] <- (wave@.Data[,i] - wave.offset + noise.frac * n@left) / (1 + noise.frac) + wave.offset
+      wave@.Data[,i] <- signal.weight * (wave@.Data[,i] - wave.offset) + noise.ratio * n@left + wave.offset
     }
   }
   return(wave)

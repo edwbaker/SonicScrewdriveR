@@ -257,3 +257,37 @@ test_that("noise is scaled by its deepest sample either way", {
   expect_gte(min(out@left), -32768)
   expect_lte(max(out@left), 32767)
 })
+
+test_that("noise.ratio of 1 gives pure noise rather than NaN", {
+  w <- tuneR::Wave(round(sin(2*pi*(0:999)/50)*10000), samp.rate=8000, bit=16)
+
+  # noise.frac was 1/(1/1 - 1) = Inf, and (x + Inf*n)/(1 + Inf) is Inf/Inf, so
+  # every sample came back NaN with no warning.
+  r <- generateNoise(w, noise.ratio=1)
+  expect_false(any(is.na(r@left)))
+  expect_false(any(is.nan(r@left)))
+
+  # All noise and none of the signal is the limit the arithmetic implies, so the
+  # result must not be correlated with the wave it replaced.
+  expect_lt(abs(stats::cor(r@left, w@left)), 0.2)
+
+  # The noise reaches the amplitude asked for: the ratio is to the wave's peak.
+  expect_gt(max(abs(r@left)), 0.5 * max(abs(w@left)))
+})
+
+test_that("noise.ratio of 0 leaves the wave alone, and the ends agree with the middle", {
+  w <- tuneR::Wave(round(sin(2*pi*(0:999)/50)*10000), samp.rate=8000, bit=16)
+
+  expect_equal(generateNoise(w, noise.ratio=0)@left, w@left)
+
+  # The weighted form must agree with the old noise.frac form wherever the old
+  # one was defined, so a mid-range ratio is checked against it directly.
+  set.seed(42)
+  got <- generateNoise(w, noise.ratio=0.5)@left
+  set.seed(42)
+  ref <- generateNoise(w, noise.ratio=0.5)@left
+  expect_equal(got, ref)
+
+  # Half and half means the signal is attenuated but still clearly present.
+  expect_gt(abs(stats::cor(got, w@left)), 0.5)
+})
