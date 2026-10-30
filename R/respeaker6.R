@@ -28,7 +28,10 @@ readRespeaker6 <- function(filename, from=1, to=Inf, input.unit="samples",
   }
   w <- readWave(filename, from, to, input.unit, header, toWaveMC=TRUE)
   w@.Data[which(is.na(w@.Data))] <- 0
-  w@.Data <- w@.Data[,1:6]
+  #A recording of one sample frame is a matrix of one row, and selecting
+  #channels from it drops to a plain vector unless told not to, which the slot
+  #will not take and which has no channels left to name.
+  w@.Data <- w@.Data[, 1:6, drop=FALSE]
   colnames(w@.Data) <- c("FL", "FR", "FC", "BL", "BR", "BC")
   return(w)
 }
