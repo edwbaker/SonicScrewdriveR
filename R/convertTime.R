@@ -28,7 +28,6 @@ convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL
     s <- as.numeric(t) * factors[[input.unit]]
   }
   if (input.unit == "HHMM") {
-    # TODO: Validate hours and minutes
     #Anchored, so that input which merely contains a digit is rejected here with
     #the intended message rather than failing later with an unrelated one.
     if (!all(grepl("^[[:digit:]]{1,4}$", t))) {
@@ -36,7 +35,16 @@ convert2seconds <- function(t, input.unit="minutes", origin="day", timezone=NULL
     }
     # Pad start with 0 to length 4
     t <- sprintf("%04d", as.numeric(t))
-    s <- as.numeric(substr(t,1,2))*60*60 + as.numeric(substr(t,3,4))*60
+    hours <- as.numeric(substr(t,1,2))
+    minutes <- as.numeric(substr(t,3,4))
+    #A time of day, so the two halves are a clock reading and not just digits to
+    #multiply out: "2360" used to give 86400 seconds and "9999" just over four
+    #days. 2400 is the end of the day, as ISO 8601 writes it, and is kept; no
+    #minute belongs after it.
+    if (any(hours > 24) || any(minutes > 59) || any(hours == 24 & minutes > 0)) {
+      stop("HHMM input must be a time of day, from 0000 to 2400")
+    }
+    s <- hours*60*60 + minutes*60
   }
   if (input.unit == "POSIX") {
     .validateChoice(origin, c("day", "unix"), "origin", "convert2seconds")

@@ -108,3 +108,48 @@ for (tz in sessionTimezones) {
     })
   })
 }
+
+test_that("an HHMM input that is not a clock time is refused", {
+  # The two halves used to be multiplied out whatever they were, so "2360" gave
+  # 86400 seconds -- 24:00, a reading no clock shows -- and "9999" gave 362340,
+  # just over four days, for what is a time of day.
+  expect_error(
+    convert2seconds("2360", input.unit="HHMM"),
+    "HHMM input must be a time of day, from 0000 to 2400"
+  )
+  expect_error(
+    convert2seconds("9999", input.unit="HHMM"),
+    "HHMM input must be a time of day, from 0000 to 2400"
+  )
+  expect_error(
+    convert2seconds(2500, input.unit="HHMM"),
+    "HHMM input must be a time of day, from 0000 to 2400"
+  )
+  expect_error(
+    convert2seconds(2401, input.unit="HHMM"),
+    "HHMM input must be a time of day, from 0000 to 2400"
+  )
+  expect_error(
+    convert2seconds(60, input.unit="HHMM"),
+    "HHMM input must be a time of day, from 0000 to 2400"
+  )
+  # One bad value in a vector is enough, as it is for every other unit.
+  expect_error(
+    convert2seconds(c("1200", "2360"), input.unit="HHMM"),
+    "HHMM input must be a time of day, from 0000 to 2400"
+  )
+})
+
+test_that("every clock time an HHMM input can hold is still accepted", {
+  expect_equal(convert2seconds("0000", input.unit="HHMM"), 0)
+  expect_equal(convert2seconds("2359", input.unit="HHMM"), 23*3600 + 59*60)
+  expect_equal(convert2seconds("2400", input.unit="HHMM"), 24*3600)
+  expect_equal(convert2seconds(c("0000", "1200", "2359"), input.unit="HHMM"),
+               c(0, 12*3600, 23*3600 + 59*60))
+  # Every minute of the day round trips.
+  all.minutes <- sprintf("%02d%02d", rep(0:23, each=60), rep(0:59, times=24))
+  expect_equal(
+    convert2seconds(all.minutes, input.unit="HHMM"),
+    seq(0, 86340, by=60)
+  )
+})
