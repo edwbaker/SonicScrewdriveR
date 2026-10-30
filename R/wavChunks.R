@@ -718,10 +718,53 @@
   if (length(pad) < 1L || pad[1] == as.raw(0)) {
     return(pos)
   }
+  # A byte that is not zero where the pad belongs says the writer did something
+  # the specification does not allow, but not which thing: it may have left the
+  # pad out, or written a pad of its own. Where the position the padding gives
+  # begins a chunk that accounts for what follows it, the file is read as
+  # written and nothing behind it is lost. The step back is kept for the writer
+  # that really did leave the pad out, which leaves no such chunk there.
+  if (.wavHeaderFits(read, pos, n, total)) {
+    return(pos)
+  }
   if (.wavIsChunkHeader(read(pos - 1L, 8L), total - pos + 2)) {
     return(pos - 1L)
   }
   return(pos)
+}
+
+#' Does a chunk header here account for the bytes that follow it?
+#'
+#' A header on its own is weak evidence: four printable bytes and a size that
+#' fits the rest of the file are easily come by, in audio and in the middle of
+#' another header alike, and a size of zero fits anywhere. A header whose body
+#' ends where the file ends, or where another header begins, is evidence worth
+#' choosing on, and is what tells a pad byte that is not a nul from a pad byte
+#' that was never written.
+#'
+#' @param read A function of a one-based position and a number of bytes
+#' @param pos Where a header might be
+#' @param n Number of bytes that can be read
+#' @param total Size of the whole file
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.wavHeaderFits <- function(read, pos, n, total) {
+  if (pos < 1L || pos + 7L > n) {
+    return(FALSE)
+  }
+  bytes <- read(pos, 8L)
+  if (!.wavIsChunkHeader(bytes, total - pos + 1)) {
+    return(FALSE)
+  }
+  size <- .rawToUInt(bytes[5:8])
+  after <- pos + 8L + size + (size %% 2)
+  if (after + 7L > n) {
+    # The chunk is the last the file has room for, which is what a chunk
+    # written where the padding says it is looks like at the end of a file.
+    return(TRUE)
+  }
+  return(.wavIsChunkHeader(read(after, 8L), total - after + 1))
 }
 
 #' Could a run of bytes be the start of a RIFF chunk?

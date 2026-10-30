@@ -630,6 +630,47 @@ test_that("Padding that is not a nul is still padding where a chunk follows it",
   expect_identical(ids, c("fmt ", "data", "bext"))
 })
 
+test_that("A printable pad byte is padding, however much it reads as a header", {
+  # The test above pads with 255, which cannot begin an identifier. A writer is
+  # free to pad with anything, and where the byte is printable the four bytes
+  # from it read as an identifier and the four behind them as a size. Where that
+  # size happens to fit the rest of the file, a step back used to look right:
+  # here "guan" padded with an X reads as a chunk "XLIS" of 1108 bytes, which
+  # swallowed the list and the audio behind it.
+  bytes <- mdWav(
+    mdFmt(),
+    c(charToRaw("guan"), mdU32(15), raw(15), charToRaw("X")),
+    mdChunk("LIST", charToRaw("INFO")),
+    mdChunk("data", raw(1100))
+  )
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "guan", "LIST", "data"))
+  expect_identical(.wavFindChunk(.wavChunks(bytes)$chunks, "guan")$size, 15)
+  expect_identical(ids, vapply(.wavChunksFile(mdFile(bytes))$chunks,
+                               function(c) c$id, character(1)))
+})
+
+test_that("An unpadded body is still recovered where the padding's own position reads as a header", {
+  # The two readings have to be told apart on more than four printable bytes
+  # and a size that fits. Here the pad really was left out, and the position
+  # the padding gives falls one byte into the next header: "wamd" with a size
+  # of 66 whose body begins with a nul reads there as "amdB" with a size of
+  # zero, which fits anywhere. What settles it is that nothing follows that
+  # reading - the bytes after it are the wamd body - while the step back gives
+  # a chunk the audio follows.
+  bytes <- mdWav(
+    mdFmt(),
+    mdChunkRagged("guan", charToRaw("GUANO|Version:1.0\nMake:X\n")),
+    c(charToRaw("wamd"), mdU32(66),
+      c(as.raw(0), charToRaw("A Recorder"), raw(55))),
+    mdChunk("data", raw(16))
+  )
+
+  ids <- vapply(.wavChunks(bytes)$chunks, function(c) c$id, character(1))
+  expect_identical(ids, c("fmt ", "guan", "wamd", "data"))
+})
+
 test_that("Several unpadded bodies in a row are all walked past", {
   bytes <- mdWav(
     mdFmt(),
