@@ -592,7 +592,9 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
     return(NULL)
   }
   rets <- list(res$data)
-  last <- min(res$last_page, page + .audioblast_null(max_pages, Inf) - 1)
+  last <- .audioblast_last_page(
+    res$last_page, page, page + .audioblast_null(max_pages, Inf) - 1
+  )
   show_progress <- !quiet & last > page
   if (show_progress) {
     pb <- txtProgressBar(min = page, max = last, initial = page, style = 3)
@@ -768,6 +770,44 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
 
 .audioblast_null <- function(x, default) {
   if (is.null(x)) default else x
+}
+
+#' The page count of a response, as a usable number
+#'
+#' The page loop is bounded by `last_page`, so a response that does not carry a
+#' number there left `min(NULL, Inf)` as `Inf` and the loop with no terminating
+#' condition of its own: it ran until the API refused the page past the last,
+#' and because that refusal is raised as an error every row already fetched was
+#' thrown away. A count arriving as a string was worse, because `min()` then
+#' coerced to character and `page < last` became a text comparison, which stops
+#' as soon as the page number sorts above the count ("2" < "10" is FALSE), so a
+#' ten page search returned two pages and reported success.
+#'
+#' Where the response gives no usable count and `max_pages` has not bounded the
+#' search either, the page fetched is treated as the only one, which returns the
+#' rows it did carry rather than discarding them. The note is a message rather
+#' than a warning because [audioblast()] routes a warning to `on.issue`, which
+#' defaults to `stop`, and that would discard the rows again.
+#'
+#' @param last_page The `last_page` field of the response, which may be NULL.
+#' @param page The page just fetched.
+#' @param bound The last page `max_pages` allows, or `Inf` where it was not given.
+#' @return A single number, never NA, never below `page` and never above `bound`.
+#' @keywords internal
+#' @noRd
+.audioblast_last_page <- function(last_page, page, bound) {
+  n <- suppressWarnings(as.numeric(last_page))
+  if (length(n) != 1 || is.na(n)) {
+    if (is.finite(bound)) {
+      return(bound)
+    }
+    message(
+      "This audioBlast response did not say how many pages the search has, ",
+      "so it is being read as the only page. Give max_pages to read more."
+    )
+    return(page)
+  }
+  return(min(max(n, page), bound))
 }
 
 .audioblast_sha256 <- function(path) {
