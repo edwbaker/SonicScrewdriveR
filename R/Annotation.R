@@ -78,30 +78,57 @@ annotation <- function(
 
 #' Save a time region defined by an Annotation object as a Wave file
 #'
-#' @param annotation An Annotation object.
+#' The region is cut from the wave by [cutws()], so a stereo or multichannel
+#' wave keeps all of its channels and its bit depth.
+#'
+#' Each region is written to `dir`, in a file named from the annotated file, the
+#' start and end of the annotation and, where it has one, its value, as
+#' `AUDIOMOTH_0-3_Turdus_merula.wav`. Characters of the value other than
+#' letters, digits, dots, dashes and underscores are written as underscores.
+#' Two annotations of the same region, such as two species found in the same
+#' window by [birdNetAnalyse()], are written to two files.
+#'
+#' @param annotation An Annotation object, or a list of them.
 #' @param wave (Optional) A Wave object, if not given will load the wave file from Annotation filename.
+#' @param dir The directory to write the files to.
 #' @importFrom tuneR writeWave
 #' @importFrom tools  file_path_sans_ext
-#' @return No return value, called for its side effect of writing a Wave file.
+#' @return Invisibly, the path of each file written, or `NA` for an annotation
+#'   whose region holds none of the wave.
 #' @export
-writeAnnotationWave <- function(annotation, wave=NULL) {
+writeAnnotationWave <- function(annotation, wave=NULL, dir=".") {
   if (is.list(annotation)) {
-    lapply(annotation, writeAnnotationWave, wave=wave)
-    return()
+    return(invisible(vapply(annotation, writeAnnotationWave, character(1), wave=wave, dir=dir)))
   }
   if (is.null(wave)) {
     wave <- readWave(annotation@file)
   }
 
-  output <- paste0(file_path_sans_ext(basename(annotation@file)), "_", annotation@start, "-", annotation@end, ".wav")
-
-  end <- annotation@end
-  if (duration(wave) < annotation@end) {
-    message("Annotation end time is greater than the duration of the wave file.")
-    end <- duration(wave)
+  name <- paste0(file_path_sans_ext(basename(annotation@file)), "_", annotation@start, "-", annotation@end)
+  if (!is.na(annotation@value) && nzchar(annotation@value)) {
+    name <- paste0(name, "_", gsub("[^A-Za-z0-9._-]", "_", annotation@value, perl=TRUE))
   }
-  region <- cutw(wave, from=annotation@start, to=end, unit="seconds", output="Wave")
-  writeWave(region, filename=output)
+  output <- file.path(dir, paste0(name, ".wav"))
+
+  #Counted rather than asked of seewave's duration(), which refuses a tagged wave.
+  seconds <- length(wave) / wave@samp.rate
+  end <- annotation@end
+  if (!is.na(end) && seconds < end) {
+    #An end of Inf is an annotation running to the end of the file, as it says.
+    if (is.finite(end)) {
+      message("Annotation end time is greater than the duration of the wave file.")
+    }
+    end <- seconds
+  }
+  #Cut by samples, keeping every channel: seewave's cutw() kept only the first.
+  from <- max(round(annotation@start * wave@samp.rate) + 1, 1)
+  to <- round(end * wave@samp.rate)
+  if (is.na(from) || is.na(to) || from > to) {
+    message("Annotation holds none of the wave, so nothing is written for it.")
+    return(invisible(NA_character_))
+  }
+  writeWave(cutws(wave, from=from, to=to), filename=output)
+  return(invisible(output))
 }
 
 #' Check if two annotations overlap or are continuous

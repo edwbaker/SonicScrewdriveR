@@ -4,12 +4,13 @@
 \alias{readAudacityLabels}
 \title{Read an Audacity label file}
 \usage{
-readAudacityLabels(file, output = "annotations")
+readAudacityLabels(file, output = "Annotation")
 }
 \arguments{
 \item{file}{Path to the Audacity label file.}
 
-\item{output}{One of "annotations" or "data.frame".}
+\item{output}{One of "Annotation" or "data.frame". "annotations", as it was
+spelt before, still works and is deprecated.}
 }
 \value{
 A list of Annotation objects, or a data frame if output is "data.frame".

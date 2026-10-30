@@ -364,6 +364,10 @@
   are exactly a thousand times larger, and Q and the spectral flatness are ratios,
   the same in either unit. autoBandPass() asks for Hz rather than converting the
   results itself, and filters exactly as it did.
+- readAudacityLabels() asks for annotations with `output="Annotation"`, as
+  birdNetAnalyse() does, and gives them by default as before.
+  `output="annotations"` still works and warns, and will be removed in a future
+  release.
 
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each
@@ -933,6 +937,20 @@
   giving a file with neither times nor frequencies. readAudacityLabels() read the
   frequency rows of such a file as labels in their own right, and now returns the
   frequency limits it finds.
+- readAudacityLabels() read a label of NA as a missing value, took double quotes
+  out of a label, and read labels left empty as NA. Each label is now read as it
+  was written. writeAudacityLabels() raised an error given no annotations; it
+  now writes a file of no labels, which readAudacityLabels() reads back as none.
+- writeAnnotationWave() cut regions with cutw() from the seewave package, which
+  kept only the first channel of a stereo wave; it now cuts by samples with
+  cutws(), keeping every channel, and regions next to each other no longer
+  share a sample. It also raised an error given a tagged wave.
+  Annotations of the same region with different values, as two species BirdNET
+  finds in one window, were written to one file; the value is now part of the
+  file name. The files can be written to a directory other than the working one
+  with `dir`, their paths are returned, and an annotation holding none of the
+  wave writes nothing rather than raising an error. An end of `Inf` is taken as
+  the end of the file without a message.
 - pulseIntervals() ignored its nsd argument, wrote its results at the index of the
   interval being examined so that the output was padded with zeroes, and paired each
   gap with the onset before the one it started at. It also failed for fewer than

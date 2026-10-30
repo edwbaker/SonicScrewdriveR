@@ -85,3 +85,51 @@ test_that("Audacity labels without frequencies use the three column form", {
   expect_equal(length(readLines(f)), 1)
   expect_equal(readAudacityLabels(f, output="data.frame")$from, 1)
 })
+
+test_that("a label is read as it was written", {
+  # A label of NA was read as a missing value, double quotes were taken out of
+  # a label, and a file of labels left empty gave NA for each.
+  f <- tempfile(fileext=".txt")
+  writeLines(c("0.000000\t1.000000\tNA", "1.500000\t2.000000\tsay \"hi\"",
+               "2.500000\t3.000000\tit's"), f)
+  expect_identical(sapply(readAudacityLabels(f), function(x) x@value),
+                   c("NA", "say \"hi\"", "it's"))
+
+  writeLines(c("0.000000\t1.000000\t", "1.500000\t2.000000\t"), f)
+  a <- readAudacityLabels(f)
+  expect_identical(sapply(a, function(x) x@value), c("", ""))
+  expect_identical(sapply(a, function(x) x@end), c(1, 2))
+  expect_identical(readAudacityLabels(f, output="data.frame")$label, c("", ""))
+})
+
+test_that("times and frequencies written with a decimal comma are read", {
+  f <- tempfile(fileext=".txt")
+  writeLines(c("1,5\t2,5\tcomma", "\\\t100,5\t200", "3,25\t4\tagain"), f)
+  d <- readAudacityLabels(f, output="data.frame")
+  expect_identical(d$from, c(1.5, 3.25))
+  expect_identical(d$to, c(2.5, 4))
+  expect_identical(d$low, c(100.5, 0))
+  expect_identical(d$high, c(200, Inf))
+  expect_identical(d$label, c("comma", "again"))
+})
+
+test_that("no annotations are written as a label file, and read back as none", {
+  # Writing none raised an error, as is.finite() was given an empty list.
+  f <- tempfile(fileext=".txt")
+  writeAudacityLabels(list(), f)
+  expect_true(file.exists(f))
+  expect_identical(readAudacityLabels(f), list())
+  d <- readAudacityLabels(f, output="data.frame")
+  expect_identical(nrow(d), 0L)
+  expect_identical(colnames(d), c("from", "to", "label", "low", "high"))
+})
+
+test_that("annotations are asked for as Annotation, and the former spelling warns", {
+  f <- system.file("extdata/Audacity_labels.txt", package="sonicscrewdriver")
+  expect_identical(readAudacityLabels(f, output="Annotation"), readAudacityLabels(f))
+  expect_warning(
+    old <- readAudacityLabels(f, output="annotations"),
+    'output="annotations" is deprecated'
+  )
+  expect_identical(old, readAudacityLabels(f))
+})

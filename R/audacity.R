@@ -3,14 +3,35 @@
 #' Reads an Audacity label file and returns either a list of `Annotation` objects
 #' or a data frame.
 #' @param file Path to the Audacity label file.
-#' @param output One of "annotations" or "data.frame".
+#' @param output One of "Annotation" or "data.frame". "annotations", as it was
+#'   spelt before, still works and is deprecated.
 #' @importFrom utils read.csv2
 #' @return A list of Annotation objects, or a data frame if output is "data.frame".
 #' @export
-readAudacityLabels <- function(file, output="annotations") {
-  .validateChoice(output, c("annotations", "data.frame"), msg="Unknown output format.")
-  labels <- read.csv2(file, header=FALSE, sep='\t')
+readAudacityLabels <- function(file, output="Annotation") {
+  #Annotations are asked for as "Annotation" across the package, as
+  #birdNetAnalyse() always asked for them.
+  if (identical(output, "annotations")) {
+    warning('output="annotations" is deprecated and will be removed in a future ',
+            'release, use output="Annotation" instead.', call.=FALSE)
+    output <- "Annotation"
+  }
+  .validateChoice(output, c("Annotation", "data.frame"), msg="Unknown output format.")
+  #Every field is read as text and without quoting, so that a label is kept as
+  #it was written. Read otherwise, a label of NA was a missing value, double
+  #quotes were taken out of a label, and labels left empty were each NA.
+  lines <- readLines(file, warn=FALSE)
+  lines <- lines[nzchar(lines)]
+  if (length(lines) == 0) {
+    #A file with no labels in it, as writeAudacityLabels() writes of none.
+    labels <- data.frame(from=character(0), to=character(0), label=character(0))
+  } else {
+    labels <- read.csv2(text=lines, header=FALSE, sep='\t', colClasses="character",
+                        quote="", na.strings=character(0))
+  }
   colnames(labels)[1:3] <- c("from", "to", "label")
+  #A decimal comma is read as read.csv2() read it.
+  number <- function(x) as.numeric(sub(",", ".", x, fixed=TRUE))
 
   #Audacity puts the frequency limits of a label on a row of their own, following
   #the label and beginning with a backslash, rather than in further columns of the
@@ -20,15 +41,15 @@ readAudacityLabels <- function(file, output="annotations") {
   high <- rep(Inf, nrow(labels))
   if (any(continuation)) {
     carries <- which(continuation) - 1
-    low[carries] <- as.numeric(labels$to[continuation])
-    high[carries] <- as.numeric(labels$label[continuation])
+    low[carries] <- number(labels$to[continuation])
+    high[carries] <- number(labels$label[continuation])
     low <- low[!continuation]
     high <- high[!continuation]
     labels <- labels[!continuation, , drop=FALSE]
   }
 
-  labels$from <- as.numeric(labels$from)
-  labels$to <- as.numeric(labels$to)
+  labels$from <- number(labels$from)
+  labels$to <- number(labels$to)
   labels$low <- low
   labels$high <- high
 
@@ -39,7 +60,7 @@ readAudacityLabels <- function(file, output="annotations") {
   if (output=="data.frame") {
     return(labels)
   }
-  if (output=="annotations") {
+  if (output=="Annotation") {
     ret <- vector("list", length=nrow(labels))
     for (i in seq_len(nrow(labels))) {
       ret[[i]] <- annotation(
@@ -74,11 +95,13 @@ writeAudacityLabels <- function(annotations, file) {
     stop("Input must be a list of Annotation objects.")
   }
 
-  from=sapply(annotations, function(x) x@start)
-  to=sapply(annotations, function(x) x@end)
-  label=sapply(annotations, function(x) x@value)
-  low <- sapply(annotations, function(x) x@low)
-  high <- sapply(annotations, function(x) x@high)
+  #vapply() rather than sapply(), which gives a list of no annotations, and
+  #is.finite() refused that.
+  from <- vapply(annotations, function(x) x@start, numeric(1))
+  to <- vapply(annotations, function(x) x@end, numeric(1))
+  label <- vapply(annotations, function(x) x@value, character(1))
+  low <- vapply(annotations, function(x) x@low, numeric(1))
+  high <- vapply(annotations, function(x) x@high, numeric(1))
 
   #Frequency limits are worth writing when any of them says something. The test
   #used to hold the other way round, so they were written only when they did not.
