@@ -742,17 +742,17 @@
 #' choosing on, and is what tells a pad byte that is not a nul from a pad byte
 #' that was never written.
 #'
+#' Called only where the caller has already found room for a header at `pos`,
+#' which .wavUnpadded() checks before it reads the pad byte at all.
+#'
 #' @param read A function of a one-based position and a number of bytes
-#' @param pos Where a header might be
+#' @param pos Where a header might be, with eight bytes to read there
 #' @param n Number of bytes that can be read
 #' @param total Size of the whole file
 #' @return A logical value
 #' @keywords internal
 #' @noRd
 .wavHeaderFits <- function(read, pos, n, total) {
-  if (pos < 1L || pos + 7L > n) {
-    return(FALSE)
-  }
   bytes <- read(pos, 8L)
   if (!.wavIsChunkHeader(bytes, total - pos + 1)) {
     return(FALSE)
