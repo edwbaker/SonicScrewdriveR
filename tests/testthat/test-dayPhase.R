@@ -364,3 +364,21 @@ test_that("daysPhases plots a polar month, where some phases never arrive", {
     daysPhases(as.Date("2024-06-15"), period="month", lat=78, lon=15, plot=TRUE)
   )
 })
+
+test_that("dayPhase refuses a time that names no instant", {
+  # A Date is a count of days, so time + duration added the duration as days and
+  # the answer was hundreds of thousands of rows reaching back into the year
+  # before, with only a warning about incompatible methods to show for it.
+  expect_error(
+    dayPhase(time=as.Date("2024-06-15"), duration=40000, lat=LAT, lon=LON, tz="UTC"),
+    "time must be a POSIXct or POSIXlt, not Date"
+  )
+  expect_error(
+    dayPhase(time="2024-06-15 20:00:00", duration=40000, lat=LAT, lon=LON, tz="UTC"),
+    "time must be a POSIXct or POSIXlt, not character"
+  )
+  expect_error(
+    dayPhase(time=1718481600, duration=40000, lat=LAT, lon=LON, tz="UTC"),
+    "time must be a POSIXct or POSIXlt, not numeric"
+  )
+})
