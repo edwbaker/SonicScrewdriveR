@@ -24,4 +24,5 @@ Check if two annotations overlap or are continuous
 
 ## Value
 
-TRUE if the annotations overlap, FALSE otherwise.
+TRUE if the annotations overlap, FALSE otherwise. An annotation whose
+limits in the domain are not known, being `NA`, overlaps nothing.
