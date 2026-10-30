@@ -696,6 +696,30 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
 #' @keywords internal
 #' @noRd
 .audioblast_annotations <- function(ret) {
+  start <- as.numeric(ret$time_start)
+  end <- as.numeric(ret$time_end)
+  low <- vapply(ret$freq_low, .audioblast_frequency, numeric(1), 0, USE.NAMES=FALSE)
+  high <- vapply(ret$freq_high, .audioblast_frequency, numeric(1), Inf, USE.NAMES=FALSE)
+
+  #An Annotation cannot end before it starts, nor have its lowest frequency
+  #above its highest. A record that does is kept with those limits not known,
+  #rather than refusing every other record along with it.
+  times <- which(start > end)
+  start[times] <- NA
+  end[times] <- NA
+  frequencies <- which(low > high)
+  low[frequencies] <- NA
+  high[frequencies] <- NA
+  odd <- sort(union(times, frequencies))
+  if (length(odd) > 0) {
+    message(
+      "audioBlast gives ", length(odd), " annotation", if (length(odd) > 1) "s",
+      " ending before ", if (length(odd) > 1) "they start" else "it starts",
+      " or with a lowest frequency above the highest (",
+      paste(ret$annotation_id[odd], collapse=", "), "). Those limits are given as NA."
+    )
+  }
+
   lapply(seq_len(nrow(ret)), function(i) {
     annotation(
       metadata = list(
@@ -711,10 +735,10 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
       ),
       file = ret[i, "recording_url"],
       source = "audioblast",
-      start = ret[i, "time_start"],
-      end = ret[i, "time_end"],
-      low = .audioblast_frequency(ret[i, "freq_low"], 0),
-      high = .audioblast_frequency(ret[i, "freq_high"], Inf),
+      start = start[i],
+      end = end[i],
+      low = low[i],
+      high = high[i],
       type = ret[i, "type"],
       value = ret[i, "taxon"]
     )

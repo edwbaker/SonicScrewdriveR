@@ -7,7 +7,7 @@
 AnnotationList2DataFrame(x)
 }
 \arguments{
-\item{x}{A list of Annotation objects.}
+\item{x}{A list of Annotation objects, or a single one.}
 }
 \value{
 A data.frame.

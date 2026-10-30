@@ -7,7 +7,7 @@
 sort_annotations(annotations, domain = "time", decreasing = FALSE)
 }
 \arguments{
-\item{annotations}{A list of Annotation objects.}
+\item{annotations}{A list of Annotation objects, or a single one.}
 
 \item{domain}{Domain of the annotations, either "time", "frequency", or "both".}
 

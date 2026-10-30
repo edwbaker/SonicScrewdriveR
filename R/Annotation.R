@@ -2,6 +2,11 @@
 #'
 #' The `Annotation` class is used to store annotations on `Wave`-like objects.
 #'
+#' Every slot but `metadata` holds a single value. The start of an annotation
+#' is not after its end, nor its low frequency above its high, and an
+#' annotation that breaks either rule is refused when it is made. A limit that
+#' is not known is `NA`, which no rule refuses.
+#'
 #' @slot file File being annotated.
 #' @slot metadata A list for storing metadata.
 #' @slot start Start time of annotation.
@@ -34,10 +39,67 @@ setClass(
     source = "",
     type = "",
     value = ""
-  )
+  ),
+  validity = function(object) .annotationProblems(object)
 )
 
+#' What is wrong with an Annotation object
+#'
+#' An annotation with two starts, or one that ends before it starts, was made
+#' without complaint and failed later, in merging or converting, with an error
+#' that did not say why.
+#' @param object An Annotation object.
+#' @return TRUE, or a character vector of what is wrong.
+#' @keywords internal
+#' @noRd
+.annotationProblems <- function(object) {
+  problems <- character(0)
+  for (name in c("file", "start", "end", "low", "high", "source", "type", "value")) {
+    n <- length(slot(object, name))
+    if (n != 1) {
+      problems <- c(problems, paste0(name, " must be a single value, not ", n, " values."))
+    }
+  }
+  #isTRUE() as a limit that is not known, NA, breaks neither rule.
+  if (isTRUE(object@start > object@end)) {
+    problems <- c(problems, paste0("start (", object@start, ") is after end (", object@end, ")."))
+  }
+  if (isTRUE(object@low > object@high)) {
+    problems <- c(problems, paste0("low (", object@low, ") is above high (", object@high, ")."))
+  }
+  if (length(problems) == 0) {
+    return(TRUE)
+  }
+  return(problems)
+}
+
+#' A list of Annotation objects
+#'
+#' The functions that take a list of annotations take a single one as well.
+#' NULL, which audioblast() gives when nothing matches, is no annotations, as
+#' it was before the list was checked.
+#' @param x An Annotation object, a list of them, or NULL.
+#' @return A list of Annotation objects.
+#' @keywords internal
+#' @noRd
+.annotationList <- function(x) {
+  if (is.null(x)) {
+    return(list())
+  }
+  if (is(x, "Annotation")) {
+    return(list(x))
+  }
+  if (!is.list(x) || !all(vapply(x, is, logical(1), "Annotation"))) {
+    stop("All items in list must be Annotation objects.")
+  }
+  return(x)
+}
+
 #' Create a new Annotation object
+#'
+#' Every argument but `metadata` is a single value. An annotation whose start
+#' is after its end, or whose low frequency is above its high, is refused; `NA`
+#' stands for a limit that is not known.
 #'
 #' @param file File being annotated.
 #' @param metadata A list of metadata.
@@ -97,7 +159,8 @@ annotation <- function(
 #'   whose region holds none of the wave.
 #' @export
 writeAnnotationWave <- function(annotation, wave=NULL, dir=".") {
-  if (is.list(annotation)) {
+  if (is.null(annotation) || is.list(annotation)) {
+    annotation <- .annotationList(annotation)
     return(invisible(vapply(annotation, writeAnnotationWave, character(1), wave=wave, dir=dir)))
   }
   if (is.null(wave)) {
@@ -155,12 +218,13 @@ writeAnnotationWave <- function(annotation, wave=NULL, dir=".") {
 #' The merged annotation spans all of those merged into it, in both domains. It
 #' keeps the `source` and `metadata` of the last of them in the order
 #' [sort_annotations()] puts them in.
-#' @param annotations A list of Annotation objects.
+#' @param annotations A list of Annotation objects, or a single one.
 #' @param domain Domain of the annotations, either "time" or "frequency".
 #' @param same.source If TRUE, annotations must have the same source to be merged.
 #' @return A list of Annotation objects.
 #' @export
 merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
+  annotations <- .annotationList(annotations)
   if (length(annotations) == 0) {
     return(list())
   }
@@ -222,12 +286,13 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
 #' Sort annotations
 #'
 #' Sorts a list of annotations by either start time, frequency, or both.
-#' @param annotations A list of Annotation objects.
+#' @param annotations A list of Annotation objects, or a single one.
 #' @param domain Domain of the annotations, either "time", "frequency", or "both".
 #' @param decreasing If TRUE, sort in decreasing order.
 #' @return A list of Annotation objects.
 #' @export
 sort_annotations <- function(annotations, domain="time", decreasing=FALSE) {
+  annotations <- .annotationList(annotations)
   .validateChoice(domain, c("time", "frequency", "both"), msg=paste("Unknown domain for sort_annotations:", domain))
   if (domain == "frequency" | domain == "both") {
     annotations <- annotations[order(sapply(annotations, function(x) x@low))]
@@ -255,14 +320,12 @@ sort_annotations <- function(annotations, domain="time", decreasing=FALSE) {
 #' an annotation came from, is given a column of its own named with `metadata.`
 #' in front, rather than writing over the slot's.
 #'
-#' @param x A list of Annotation objects.
+#' @param x A list of Annotation objects, or a single one.
 #' @return A data.frame.
 #' @importFrom methods slot
 #' @export
 AnnotationList2DataFrame <- function(x) {
-  if (!all(sapply(x, inherits, "Annotation"))) {
-    stop("All items in list must be Annotation objects.")
-  }
+  x <- .annotationList(x)
 
   #Filled a column at a time: filling a data frame a cell at a time copied it
   #on every assignment.

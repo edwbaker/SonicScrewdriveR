@@ -7,7 +7,7 @@
 writeAudacityLabels(annotations, file)
 }
 \arguments{
-\item{annotations}{A list of \code{Annotation} objects.}
+\item{annotations}{A list of \code{Annotation} objects, or a single one.}
 
 \item{file}{Path to the Audacity label file.}
 }

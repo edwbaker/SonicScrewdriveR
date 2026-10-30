@@ -447,3 +447,60 @@ test_that("no annotations give a data frame of no rows", {
   expect_identical(d$start, numeric(0))
   expect_identical(d$value, character(0))
 })
+
+test_that("an annotation that ends before it starts is refused when it is made", {
+  # It was made without complaint and merged into nonsense later.
+  expect_error(annotation(start=2, end=1), "start \\(2\\) is after end \\(1\\)")
+  expect_error(annotation(low=2000, high=1000), "low \\(2000\\) is above high \\(1000\\)")
+  expect_error(new("Annotation", start=2, end=1), "is after end")
+  expect_error(annotation(start=2, end=1, low=2, high=1), "after end.*above high")
+})
+
+test_that("each slot but metadata holds a single value", {
+  # Two starts failed later, in sorting, with "unimplemented type 'list'".
+  expect_error(annotation(start=c(0, 1), end=2), "start must be a single value, not 2 values")
+  expect_error(annotation(value=NULL), "value must be a single value, not 0 values")
+  expect_error(annotation(file=c("a", "b"), type=character(0)),
+               "file must be a single value.*type must be a single value")
+  expect_s4_class(annotation(metadata=list(a=1:3, b="x")), "Annotation")
+})
+
+test_that("a limit that is not known, or a point in time, is still an annotation", {
+  expect_s4_class(annotation(start=NA, end=NA, low=NA, high=NA), "Annotation")
+  expect_s4_class(annotation(start=1, end=NA), "Annotation")
+  expect_s4_class(annotation(start=1, end=1, low=500, high=500), "Annotation")
+  expect_s4_class(annotation(), "Annotation")
+})
+
+test_that("a single annotation is taken where a list of them is", {
+  # Each failed with "no method for coercing this S4 class to a vector".
+  a <- annotation(start=0, end=1, value="x", metadata=list(confidence=0.9))
+  expect_identical(merge_annotations(a), list(a))
+  expect_identical(sort_annotations(a), list(a))
+  expect_identical(AnnotationList2DataFrame(a), AnnotationList2DataFrame(list(a)))
+  f <- tempfile(fileext=".txt")
+  writeAudacityLabels(a, f)
+  expect_identical(readLines(f), "0\t1\tx")
+})
+
+test_that("NULL is no annotations, as audioblast() gives when nothing matches", {
+  # It was taken as no annotations before the list was checked, and still is.
+  expect_identical(merge_annotations(NULL), list())
+  expect_identical(sort_annotations(NULL), list())
+  expect_identical(nrow(AnnotationList2DataFrame(NULL)), 0L)
+  f <- tempfile(fileext=".txt")
+  writeAudacityLabels(NULL, f)
+  expect_identical(readAudacityLabels(f), list())
+  expect_identical(writeAnnotationWave(NULL, tuneR::sine(440)), character(0))
+})
+
+test_that("a list holding something other than an annotation is refused by name", {
+  a <- annotation(start=0, end=1)
+  msg <- "All items in list must be Annotation objects."
+  expect_error(merge_annotations(list(a, "b")), msg, fixed=TRUE)
+  expect_error(sort_annotations(list(a, 1)), msg, fixed=TRUE)
+  expect_error(writeAudacityLabels(list(a, 1), tempfile()), msg, fixed=TRUE)
+  expect_error(writeAnnotationWave(list(a, 1), tuneR::sine(440)), msg, fixed=TRUE)
+  expect_error(AnnotationList2DataFrame(data.frame(start=1)), msg, fixed=TRUE)
+  expect_error(merge_annotations("a"), msg, fixed=TRUE)
+})
