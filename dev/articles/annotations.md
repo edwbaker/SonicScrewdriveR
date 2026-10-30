@@ -80,7 +80,20 @@ a5 <- annotation(
 ``` r
 
 # Fetch annotations from audioBlast as `Annotation` objects
-a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotation")
+```
+
+#### From the cue points of a wave file
+
+Audio editors save the markers and labelled regions someone has put on a
+recording as cue points in the wave file. `wavCues` reads them as
+`Annotation` objects: a labelled region runs from its position for its
+length, and a marker starts and ends where it is.
+
+``` r
+
+# Read the markers and labelled regions saved in a wave file
+a <- wavCues("marked.wav")
 ```
 
 ### Generating annotations

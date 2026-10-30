@@ -106,7 +106,7 @@ can be used with the other annotation functions of `SonicScrewdriveR`.
 
 ``` r
 
-a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotation")
 ```
 
 ## Downloading recordings

@@ -9,7 +9,7 @@ holds them.
 ## Usage
 
 ``` r
-wavCues(x)
+wavCues(x, output = "Annotation")
 ```
 
 ## Arguments
@@ -18,12 +18,17 @@ wavCues(x)
 
   Path to a wave file, or a raw vector holding one
 
+- output:
+
+  One of "Annotation" or "data.frame".
+
 ## Value
 
-A data frame of one row per cue point, with its identifier, position,
-position in seconds, label, note, region length, purpose, region text
-and the chunk its position is into. A file holding no cue points and no
-labels gives a data frame of no rows.
+A list of Annotation objects, one per cue point, or with `output`
+"data.frame" a data frame of one row per cue point, with its identifier,
+position, position in seconds, label, note, region length, purpose,
+region text and the chunk its position is into. A file holding no cue
+points and no labels gives an empty list, or a data frame of no rows.
 
 ## Details
 
@@ -47,18 +52,31 @@ files in a cached copy of bio.acousti.ca declare 99 such points, all of
 them at position zero, which is a writer reserving the room rather than
 marking anything.
 
+By default each cue point is given as an
+[Annotation](https://sonicscrewdriver.ebaker.me.uk/dev/reference/Annotation-class.md)
+object. A labelled region is an annotation of type `region` running from
+its position for its length, and any other point an annotation of type
+`cue` that starts and ends at its position. The value of the annotation
+is the label of the point, or failing that the text of its region; its
+source is `wavCues`, its file the path read, and its metadata the fields
+of its row in the data frame other than `seconds`. An annotation whose
+position is not known, or not known in seconds, starts and ends at `NA`.
+
 ## See also
 
 [`wavChunks()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavChunks.md)
 lists the chunks a file holds, and
 [`wavInfo()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/wavInfo.md)
 reads the text of the same labels without the positions they belong to.
+[`writeAudacityLabels()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudacityLabels.md)
+writes the annotations as an Audacity label file.
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-cues <- wavCues("marked.wav")
+cues <- wavCues("marked.wav", output="data.frame")
 cues[!is.na(cues$label), c("seconds", "label")]
+writeAudacityLabels(wavCues("marked.wav"), "marked.txt")
 } # }
 ```

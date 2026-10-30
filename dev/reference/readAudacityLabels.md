@@ -6,7 +6,7 @@ objects or a data frame.
 ## Usage
 
 ``` r
-readAudacityLabels(file, output = "annotations")
+readAudacityLabels(file, output = "Annotation")
 ```
 
 ## Arguments
@@ -17,7 +17,8 @@ readAudacityLabels(file, output = "annotations")
 
 - output:
 
-  One of "annotations" or "data.frame".
+  One of "Annotation" or "data.frame". "annotations", as it was spelt
+  before, still works and is deprecated.
 
 ## Value
 

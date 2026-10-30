@@ -58,7 +58,7 @@ together, one row per cue point, in the order the file holds them.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">wavCues</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">wavCues</span><span class="op">(</span><span class="va">x</span>, output <span class="op">=</span> <span class="st">"Annotation"</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,13 +68,18 @@ together, one row per cue point, in the order the file holds them.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>Path to a wave file, or a raw vector holding one</p></dd>
 
+
+<dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
+<dd><p>One of "Annotation" or "data.frame".</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame of one row per cue point, with its identifier,
+    <p>A list of Annotation objects, one per cue point, or with <code>output</code>
+"data.frame" a data frame of one row per cue point, with its identifier,
 position, position in seconds, label, note, region length, purpose, region
 text and the chunk its position is into. A file holding no cue points and
-no labels gives a data frame of no rows.</p>
+no labels gives an empty list, or a data frame of no rows.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -95,18 +100,28 @@ point with no label is likewise reported with no text; nine files in a
 cached copy of bio.acousti.ca declare 99 such points, all of them at
 position zero, which is a writer reserving the room rather than marking
 anything.</p>
+<p>By default each cue point is given as an <a href="Annotation-class.html">Annotation</a>
+object. A labelled region is an annotation of type <code>region</code> running from its
+position for its length, and any other point an annotation of type <code>cue</code>
+that starts and ends at its position. The value of the annotation is the
+label of the point, or failing that the text of its region; its source is
+<code>wavCues</code>, its file the path read, and its metadata the fields of its row
+in the data frame other than <code>seconds</code>. An annotation whose position is not
+known, or not known in seconds, starts and ends at <code>NA</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="wavChunks.html">wavChunks()</a></code> lists the chunks a file holds, and <code><a href="wavInfo.html">wavInfo()</a></code> reads
-the text of the same labels without the positions they belong to.</p></div>
+the text of the same labels without the positions they belong to.
+<code><a href="writeAudacityLabels.html">writeAudacityLabels()</a></code> writes the annotations as an Audacity label file.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">cues</span> <span class="op">&lt;-</span> <span class="fu">wavCues</span><span class="op">(</span><span class="st">"marked.wav"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cues</span> <span class="op">&lt;-</span> <span class="fu">wavCues</span><span class="op">(</span><span class="st">"marked.wav"</span>, output<span class="op">=</span><span class="st">"data.frame"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cues</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cues</span><span class="op">$</span><span class="va">label</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seconds"</span>, <span class="st">"label"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="writeAudacityLabels.html">writeAudacityLabels</a></span><span class="op">(</span><span class="fu">wavCues</span><span class="op">(</span><span class="st">"marked.wav"</span><span class="op">)</span>, <span class="st">"marked.txt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

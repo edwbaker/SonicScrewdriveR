@@ -241,7 +241,7 @@ Next, we will download the annotations for this file from audioBlast.
 ``` r
 
 # Fetch annotations from audioBlast as `Annotation` objects
-a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotations")
+a <- audioblast("data", "annomate", source="bio.acousti.ca", source_id=10754, output="Annotation")
 ```
 
 This has downloaded the annotations from audioBlast and converted them

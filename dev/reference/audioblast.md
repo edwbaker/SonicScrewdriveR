@@ -64,8 +64,9 @@ audioblast(
 
 - output:
 
-  By default a `data.frame`. "Annotations" will return a list of
-  `Annotation` objects. "JSON-LD" and "Turtle" return the RDF that
+  By default a `data.frame`. "Annotation" will return a list of
+  `Annotation` objects; "Annotations", as it was spelt before, still
+  works and is deprecated. "JSON-LD" and "Turtle" return the RDF that
   audioBlast gives for modules that describe their records as linked
   data, as a character vector with one element for each page.
 

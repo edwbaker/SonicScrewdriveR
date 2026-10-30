@@ -53,6 +53,6 @@ solution for avian diversity monitoring.” *Ecological Informatics*,
 
 ``` r
 if (FALSE) { # \dontrun{
-  birdnetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")
+  birdNetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")
 } # }
 ```
