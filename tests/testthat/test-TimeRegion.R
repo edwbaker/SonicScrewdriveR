@@ -51,3 +51,44 @@ test_that("0 and Inf are handled correctly", {
   w <- w[region("seconds", 0, Inf)]
   expect_equal(length(w@left), 88200)
 })
+
+test_that("a TimeRegion that cannot be resolved is refused when it is built", {
+  #The class had no validity method, so new() accepted anything the slot types
+  #allowed and region() checked only its input.unit. A region running backwards
+  #survived until `[` reported "Time region begins after the end of the wave.",
+  #which is false and points at the wave rather than at the region.
+  expect_error(
+    new("TimeRegion", from=10, to=1, unit="seconds"),
+    "cannot end before it begins"
+  )
+  expect_error(region("seconds", 10, 1), "cannot end before it begins")
+  expect_error(
+    new("TimeRegion", from=1, to=2, unit="furlongs"),
+    "unit must be one of samples, seconds, minutes, hours"
+  )
+  expect_error(
+    new("TimeRegion", from=-5, to=10, unit="seconds"),
+    "from cannot be negative"
+  )
+  expect_error(
+    new("TimeRegion", from=NA_real_, to=10, unit="seconds"),
+    "from must be a single number"
+  )
+  expect_error(
+    new("TimeRegion", from=c(1, 2), to=10, unit="seconds"),
+    "from must be a single number"
+  )
+})
+
+test_that("the regions the package already builds are still valid", {
+  expect_silent(validObject(region("samples", 0, 10)))
+  expect_silent(validObject(region("seconds", 0, Inf)))
+  expect_silent(validObject(region("seconds", 1, 2)))
+  expect_silent(validObject(region("minutes", 0, 1)))
+  expect_silent(validObject(region("hours", 0, 1)))
+  #region()'s own defaults, and the class prototype
+  expect_silent(validObject(region("seconds")))
+  expect_silent(validObject(new("TimeRegion")))
+  #A region of no length is a region, so it is not refused
+  expect_silent(validObject(new("TimeRegion", from=5, to=5, unit="samples")))
+})

@@ -1,3 +1,13 @@
+#' The units a TimeRegion may be given in
+#'
+#' Held once, so that the class and [region()] cannot disagree about them.
+#' @return A character vector of the allowed units.
+#' @keywords internal
+#' @noRd
+.timeRegionUnits <- function() {
+  return(c("samples", "seconds", "minutes", "hours"))
+}
+
 #' An S4 class to represent a TimeRegion within a Wave object.
 #'
 #' @slot from Start position
@@ -14,7 +24,41 @@ setClass(
     from = 1,
     to = 100,
     unit = "samples"
-  )
+  ),
+  #Without a validity method new("TimeRegion", ...) accepted anything the slot
+  #types allowed, and region() checked only its input.unit. A region running
+  #backwards survived until `[` reported "Time region begins after the end of
+  #the wave.", which is false and points at the wave rather than at the region;
+  #an unknown unit survived until .timeRegion2samples() reached its stop().
+  validity = function(object) {
+    problems <- character(0)
+    if (length(object@unit) != 1 || !object@unit %in% .timeRegionUnits()) {
+      problems <- c(problems, paste0(
+        "unit must be one of ", paste(.timeRegionUnits(), collapse=", "),
+        ", not ", paste(object@unit, collapse=", ")
+      ))
+    }
+    if (length(object@from) != 1 || is.na(object@from)) {
+      problems <- c(problems, "from must be a single number")
+    } else if (object@from < 0) {
+      problems <- c(problems, paste0("from cannot be negative, and is ", object@from))
+    }
+    if (length(object@to) != 1 || is.na(object@to)) {
+      problems <- c(problems, "to must be a single number")
+    }
+    #Both ends are checked for being numbers first, so this cannot be reached
+    #with an NA on either side.
+    if (!length(problems) && object@to < object@from) {
+      problems <- c(problems, paste0(
+        "a region cannot end before it begins, and runs from ",
+        object@from, " to ", object@to
+      ))
+    }
+    if (length(problems)) {
+      return(problems)
+    }
+    return(TRUE)
+  }
 )
 
 #' Specify a region with a file to analyse
@@ -35,7 +79,7 @@ region <- function(input.unit, from=0, to=Inf, unit) {
     return(redone[[1]])
   }
   .validateChoice(
-    input.unit, c("samples", "seconds", "minutes", "hours"),
+    input.unit, .timeRegionUnits(),
     msg="Unit must be one of samples, seconds, minutes, hours"
   )
   return(new("TimeRegion", from=from, to=to, unit=input.unit))
