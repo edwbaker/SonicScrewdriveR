@@ -68,6 +68,14 @@ test_that("audio_filesize refuses a recording that could not have been made", {
     audio_filesize(samp.rate=44100, bit.depth=16, channels=1, duration=-1),
     "Time in Seconds cannot be negative"
   )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth="sixteen", channels=1, duration=1),
+    "bit.depth must be numeric"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=16, channels="two", duration=1),
+    "channels must be numeric"
+  )
 })
 
 test_that("audio_filesize still sizes the recordings it sized", {
