@@ -319,8 +319,11 @@ test_that("a multi-channel wave is analysed one channel at a time", {
 test_that("pd_threshold refuses a wave holding NA samples", {
   # max(mag) was NA, so every comparison was NA and which() dropped them all:
   # a clean "no pulses" answer for a wave with an obvious pulse in it.
-  w <- tuneR::Wave(c(rep.int(0, 50), NA, rep.int(1, 20), rep.int(0, 50)),
+  # The NA goes into the slot rather than through Wave(), so the test is of the
+  # detector and not of tuneR's validity checking.
+  w <- tuneR::Wave(c(rep.int(0, 51), rep.int(1, 20), rep.int(0, 50)),
                    samp.rate=8000, bit=16)
+  w@left[51] <- NA
 
   expect_error(pd_threshold(w, threshold=0.5), "NA samples")
   expect_error(pulseDetection(w, method="threshold", threshold=0.5), "NA samples")
