@@ -252,6 +252,32 @@ test_that("pd_threshold copes with an empty wave", {
   expect_equal(r$offsets, integer(0))
 })
 
+test_that("the energy detectors cope with an empty wave", {
+  # ste() of no samples is a zero-length vector, so min() and max() warned and
+  # returned Inf and -Inf, leaving theta as NaN. There is no energy to threshold,
+  # so theta is undefined and the result is empty, as pd_threshold() already gave.
+  w <- tuneR::Wave(numeric(0), samp.rate=8000, bit=16)
+
+  for (detector in c("simple", "dietrich2004")) {
+    expect_silent(r <- pulseDetection(w, method=detector))
+    expect_identical(r$theta, NA_real_, info=detector)
+    expect_length(r$onsets, 0)
+    expect_length(r$offsets, 0)
+  }
+})
+
+test_that("the energy detectors still threshold a wave shorter than the window", {
+  # ste() returns a zero for every sample here rather than nothing at all, so
+  # theta is a real number and the empty-wave guard must not catch this case.
+  w <- tuneR::Wave(rep.int(1, 50), samp.rate=8000, bit=16)
+
+  for (detector in c("simple", "dietrich2004")) {
+    expect_silent(r <- pulseDetection(w, method=detector))
+    expect_identical(r$theta, 0, info=detector)
+    expect_length(r$onsets, 0)
+  }
+})
+
 test_that("pulseDetection dispatches to pd_threshold", {
   w <- pulsed_wave()
 

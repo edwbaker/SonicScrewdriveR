@@ -23,7 +23,15 @@ pd_simple <- function(
 ){
   e_u <- ste(wave, U=U)
   e_v <- ste(wave, U=V)
-  theta <- min(e_u) + gamma*(max(e_u) - min(e_u))
+  #A wave with no samples gives no short term energy to threshold, and min() and
+  #max() of nothing warn and return Inf and -Inf, making theta NaN. There is
+  #nothing to detect, so theta is undefined and the empty comparisons below carry
+  #that through to an empty result, as pd_threshold() already does.
+  if (length(e_u) == 0) {
+    theta <- NA_real_
+  } else {
+    theta <- min(e_u) + gamma*(max(e_u) - min(e_u))
+  }
   F_a <- theta + alpha / scaling * e_v
   F_1 <- theta + e_v / scaling
   pulse <- e_u > F_a
