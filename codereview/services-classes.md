@@ -9,6 +9,44 @@ Area reviewed: `R/audioblast.R`, `R/audioblastProcessors.R`, `R/xenoCanto.R`, `R
 
 Correctness only. 30 findings, most severe first.
 
+## Issues filed
+
+Filed in `edwbaker/SonicScrewdriveR`, all labelled `bug`. Findings not listed
+here were judged too marginal to open an issue for, or are folded into the issue
+of a finding they share a cause with.
+
+| Issue | Finding |
+|---|---|
+| [#124](https://github.com/edwbaker/SonicScrewdriveR/issues/124) | 1 — `req_retry(retry_on_failure=)` vs the declared httr2 minimum |
+| [#125](https://github.com/edwbaker/SonicScrewdriveR/issues/125) | 2 — `directionPlot()` drops directions above 180° |
+| [#129](https://github.com/edwbaker/SonicScrewdriveR/issues/129) | 3, 22 — `package.installed()` installs unasked; `pythonInstall()` cancel |
+| [#130](https://github.com/edwbaker/SonicScrewdriveR/issues/130) | 9, 9a — `last_page` termination and the string case |
+| [#134](https://github.com/edwbaker/SonicScrewdriveR/issues/134) | 8 — `rbind` column mismatch across pages and batches |
+| [#135](https://github.com/edwbaker/SonicScrewdriveR/issues/135) | 5 — xeno-canto am/pm comments lose date and time |
+| [#139](https://github.com/edwbaker/SonicScrewdriveR/issues/139) | 20 — xeno-canto empty field shifts later fields |
+| [#141](https://github.com/edwbaker/SonicScrewdriveR/issues/141) | 4 — `dielHistogram()` bars drawn from a hard-coded radius |
+| [#144](https://github.com/edwbaker/SonicScrewdriveR/issues/144) | 11, 21 — right-closed bins; empty `times` crash |
+| [#147](https://github.com/edwbaker/SonicScrewdriveR/issues/147) | 12 — `radialPolygon()` narrow sector not drawn |
+| [#150](https://github.com/edwbaker/SonicScrewdriveR/issues/150) | 10 — `yearlyFraction()` takes the year from `year=` |
+| [#153](https://github.com/edwbaker/SonicScrewdriveR/issues/153) | 13, 24 — `yearlyPositions("days")` off by one; `.isLeapYear()` not vectorised |
+| [#158](https://github.com/edwbaker/SonicScrewdriveR/issues/158) | 15, 16 — `TimeRegion` one sample too long; no `validity` method |
+| [#159](https://github.com/edwbaker/SonicScrewdriveR/issues/159) | 6 — `maad_spectrogram(mode=)` never reaches Python |
+| [#164](https://github.com/edwbaker/SonicScrewdriveR/issues/164) | 7 — `.spectrogram_maad_power()` ignores `@mode` |
+| [#168](https://github.com/edwbaker/SonicScrewdriveR/issues/168) | 17, 18 — `fn` passed as a list; `maad$util` never imported |
+| [#170](https://github.com/edwbaker/SonicScrewdriveR/issues/170) | 19 — unnormalised samples sent to scikit-maad |
+| [#173](https://github.com/edwbaker/SonicScrewdriveR/issues/173) | 23 — `defaultCluster()` sets no RNG stream |
+| [#176](https://github.com/edwbaker/SonicScrewdriveR/issues/176) | 25 — `readBirdNet()` column layout, timestamp `NA`, empty directory |
+| [#177](https://github.com/edwbaker/SonicScrewdriveR/issues/177) | 29 — `filter = NA` dropped; `ab_range(NA)`; `mime = NA` → `.NA` |
+
+Finding 14 (`emptyDiel()` has no `plotrix` guard) and finding 26 (`alt` is `NA`
+at the poles) were added as a [comment on #70](https://github.com/edwbaker/SonicScrewdriveR/issues/70#issuecomment-6530804355),
+which already covers `dielPlot(method=)` and would be fixed in the same lines.
+
+Not filed: findings 27 and 28 (a single filter value containing a comma; the
+non-ASCII escape under `LC_ALL=C`), both PLAUSIBLE and conditional on behaviour
+I could not verify here — audioBlast's own comma handling, and whether users meet
+the C locale. They are recorded above if either is worth confirming later.
+
 ## How this was verified
 
 CRAN is unreachable from this container and building cloned CRAN sources is blocked, so the
