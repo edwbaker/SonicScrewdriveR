@@ -34,10 +34,22 @@ sweptsine <- function(f0=100, f1=2500, mode="linear", sweep.time=1, time.unit="s
   if (time.unit == "seconds") {
     vector_length <- samp.rate*sweep.time
   } else if (time.unit == "samples") {
+    #A count of samples has to be a whole number. seq() silently rounded it, so
+    #sweep.time=0.5 gave a sweep of one sample rather than an error.
+    if (!isTRUE(round(sweep.time) == sweep.time)) {
+      stop("sweptsine: with time.unit 'samples' sweep.time must be a whole number of samples")
+    }
     vector_length <- sweep.time
   } else {
     stop("time.unit must be one of 'seconds' or 'samples'")
   }
+
+  #The wave can only hold a whole number of samples, and seq() below rounds the
+  #length to one. The duration is taken from the rounded length so that the
+  #phase is integrated over the sweep that is actually generated: taken from the
+  #unrounded length, it set the instantaneous frequency at the end of the sweep
+  #to something the last sample never reached.
+  vector_length <- round(vector_length)
 
   #Duration in seconds, however sweep.time was specified
   sweep.duration <- vector_length / samp.rate
