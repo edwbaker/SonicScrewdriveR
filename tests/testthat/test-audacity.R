@@ -123,3 +123,13 @@ test_that("no annotations are written as a label file, and read back as none", {
   expect_identical(nrow(d), 0L)
   expect_identical(colnames(d), c("from", "to", "label", "low", "high"))
 })
+
+test_that("annotations are asked for as Annotation, and the former spelling warns", {
+  f <- system.file("extdata/Audacity_labels.txt", package="sonicscrewdriver")
+  expect_identical(readAudacityLabels(f, output="Annotation"), readAudacityLabels(f))
+  expect_warning(
+    old <- readAudacityLabels(f, output="annotations"),
+    'output="annotations" is deprecated'
+  )
+  expect_identical(old, readAudacityLabels(f))
+})

@@ -360,6 +360,10 @@
   are exactly a thousand times larger, and Q and the spectral flatness are ratios,
   the same in either unit. autoBandPass() asks for Hz rather than converting the
   results itself, and filters exactly as it did.
+- readAudacityLabels() asks for annotations with `output="Annotation"`, as
+  birdNetAnalyse() does, and gives them by default as before.
+  `output="annotations"` still works and warns, and will be removed in a future
+  release.
 
 ## Performance
 - ste() with method="dietrich2004" now uses a cumulative sum rather than summing each

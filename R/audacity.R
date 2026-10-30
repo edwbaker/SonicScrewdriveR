@@ -3,12 +3,20 @@
 #' Reads an Audacity label file and returns either a list of `Annotation` objects
 #' or a data frame.
 #' @param file Path to the Audacity label file.
-#' @param output One of "annotations" or "data.frame".
+#' @param output One of "Annotation" or "data.frame". "annotations", as it was
+#'   spelt before, still works and is deprecated.
 #' @importFrom utils read.csv2
 #' @return A list of Annotation objects, or a data frame if output is "data.frame".
 #' @export
-readAudacityLabels <- function(file, output="annotations") {
-  .validateChoice(output, c("annotations", "data.frame"), msg="Unknown output format.")
+readAudacityLabels <- function(file, output="Annotation") {
+  #Annotations are asked for as "Annotation" across the package, as
+  #birdNetAnalyse() always asked for them.
+  if (identical(output, "annotations")) {
+    warning('output="annotations" is deprecated and will be removed in a future ',
+            'release, use output="Annotation" instead.', call.=FALSE)
+    output <- "Annotation"
+  }
+  .validateChoice(output, c("Annotation", "data.frame"), msg="Unknown output format.")
   #Every field is read as text and without quoting, so that a label is kept as
   #it was written. Read otherwise, a label of NA was a missing value, double
   #quotes were taken out of a label, and labels left empty were each NA.
@@ -52,7 +60,7 @@ readAudacityLabels <- function(file, output="annotations") {
   if (output=="data.frame") {
     return(labels)
   }
-  if (output=="annotations") {
+  if (output=="Annotation") {
     ret <- vector("list", length=nrow(labels))
     for (i in seq_len(nrow(labels))) {
       ret[[i]] <- annotation(
