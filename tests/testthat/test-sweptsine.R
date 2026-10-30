@@ -57,3 +57,38 @@ test_that("Sweeps are identical whether sweep.time is in seconds or samples", {
     )
   }
 })
+
+test_that("a fractional count of samples is refused rather than rounded", {
+  # seq(length=) rounds, so this gave a one-sample "sweep" with no warning.
+  expect_error(
+    sweptsine(1000, 4000, sweep.time=0.5, time.unit="samples", output="vector"),
+    "must be a whole number of samples"
+  )
+  expect_error(
+    sweptsine(1000, 4000, sweep.time=100.5, time.unit="samples", output="vector"),
+    "must be a whole number of samples"
+  )
+  # A whole number of samples is still accepted.
+  expect_equal(
+    length(sweptsine(1000, 4000, sweep.time=256, time.unit="samples", output="vector")),
+    256
+  )
+})
+
+test_that("the sweep is generated over the duration its phase is integrated over", {
+  # vector_length was left unrounded while seq() rounded it, so the wave was a
+  # different length from the sweep.duration that set the phase, and the
+  # frequency at the last sample was not quite f1.
+  x <- sweptsine(1000, 4000, sweep.time=1.00005, samp.rate=44100, output="vector")
+  expect_equal(length(x), round(44100 * 1.00005))
+
+  # The instantaneous frequency at the last sample is f1, which is only true if
+  # the duration and the generated length agree. Measured from the final zero
+  # crossing interval of the linear sweep.
+  f <- 44100
+  n <- length(x)
+  # Half-period at the end, in samples, gives the final frequency.
+  tail.crossings <- which(diff(sign(x[(n-200):n])) != 0)
+  half.period <- diff(tail.crossings)
+  expect_equal(f / (2 * mean(half.period)), 4000, tolerance = 0.01)
+})
