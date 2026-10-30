@@ -211,6 +211,42 @@ test_that("Text written as UTF-16 with no byte order mark is read big-endian", {
   expect_identical(id3(f)[["TIT2"]], "AB")
 })
 
+# Every string in a frame declaring encoding 1 carries its own byte order mark.
+# The order of a value used to be taken from the description in front of it, and
+# an empty description is the bare terminator rather than a mark, so a value
+# written little end first was decoded big end first: "dusk" came back as four
+# byte-swapped CJK characters behind U+FFFE.
+
+test_that("A comment whose description carries no mark keeps its value's order", {
+  body <- c(
+    as.raw(1), charToRaw("eng"), as.raw(c(0, 0)),
+    as.raw(c(255, 254)), mdUtf16("dusk")
+  )
+  f <- mdFile(mdId3Tag(mdFrame24("COMM", body)), ".mp3")
+
+  expect_identical(id3(f)[["COMM"]], "dusk")
+})
+
+test_that("A user-defined frame with no description keeps its value's order", {
+  body <- c(as.raw(1), as.raw(c(0, 0)), as.raw(c(255, 254)), mdUtf16("A Recordist"))
+  f <- mdFile(mdId3Tag(mdFrame24("TXXX", body)), ".mp3")
+
+  expect_identical(id3(f)[["TXXX"]], "A Recordist")
+})
+
+test_that("A description and a value in opposite orders are both read", {
+  # Nothing requires the two strings of a frame to agree, and each says which
+  # order it is in.
+  body <- c(
+    as.raw(1), charToRaw("eng"),
+    as.raw(c(255, 254)), mdUtf16("Remarks"), as.raw(c(0, 0)),
+    as.raw(c(254, 255)), as.raw(c(0, 0x64, 0, 0x75, 0, 0x73, 0, 0x6b))
+  )
+  f <- mdFile(mdId3Tag(mdFrame24("COMM", body)), ".mp3")
+
+  expect_identical(id3(f)[["COMM|Remarks"]], "dusk")
+})
+
 test_that("Text written as UTF-8 is read", {
   body <- c(as.raw(3), charToRaw("Hirundo"), as.raw(c(0xc2, 0xa9)))
   f <- mdFile(mdId3Tag(mdFrame24("TIT2", body)), ".mp3")
