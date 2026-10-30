@@ -25,3 +25,25 @@ test_that("tSamples from wave functions", {
   expect_silent(tSamples(wave=tuneR::silence(duration=1,samp.rate=10)))
   expect_equal(tSamples(wave=tuneR::silence(duration=1,samp.rate=10)), 10)
 })
+
+test_that("sDuration refuses a sample rate at which nothing could be sampled", {
+  # sDuration(n=20, samp.rate=0) returned Inf seconds.
+  expect_error(sDuration(n=20, samp.rate=0), "Sample rate must be greater than zero.")
+  expect_error(sDuration(n=20, samp.rate=-44100), "Sample rate must be greater than zero.")
+  expect_error(sDuration(n=20, samp.rate="fast"), "Sample rate must be numeric.")
+  expect_equal(sDuration(n=20, samp.rate=44100), 20/44100)
+})
+
+test_that("sDuration refuses a negative count of samples", {
+  expect_error(sDuration(n=-20, samp.rate=44100), "Number of samples must not be negative.")
+  expect_equal(sDuration(n=0, samp.rate=44100), 0)
+})
+
+test_that("tSamples refuses an impossible rate or duration", {
+  # tSamples(time=-1, samp.rate=44100) returned -44100 samples.
+  expect_error(tSamples(time=-1, samp.rate=44100), "Time in Seconds cannot be negative")
+  expect_error(tSamples(time=1, samp.rate=0), "Sample rate must be greater than zero.")
+  expect_error(tSamples(time=1, samp.rate=-44100), "Sample rate must be greater than zero.")
+  expect_equal(tSamples(time=1, samp.rate=44100), 44100)
+  expect_equal(tSamples(time=0, samp.rate=44100), 0)
+})

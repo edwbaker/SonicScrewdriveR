@@ -28,3 +28,56 @@ test_that("equivalent sizes", {
     audio_filesize(samp.rate=44100, bit.depth=16, channels=2, duration=1, duration.unit="seconds", output.unit="bits")
   )
 })
+
+test_that("audio_filesize refuses a recording that could not have been made", {
+  # samp.rate, bit.depth and channels were multiplied raw, so these returned
+  # negative sizes, or zero, rather than refusing the arithmetic.
+  expect_error(
+    audio_filesize(samp.rate=-44100, bit.depth=16, channels=1, duration=1),
+    "Sample rate must be greater than zero."
+  )
+  expect_error(
+    audio_filesize(samp.rate=0, bit.depth=16, channels=1, duration=1),
+    "Sample rate must be greater than zero."
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=0, channels=1, duration=1),
+    "bit.depth must be a positive whole number"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=-16, channels=1, duration=1),
+    "bit.depth must be a positive whole number"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=16.5, channels=1, duration=1),
+    "bit.depth must be a positive whole number"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=16, channels=-2, duration=1),
+    "channels must be a positive whole number"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=16, channels=0, duration=1),
+    "channels must be a positive whole number"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=16, channels=1.5, duration=1),
+    "channels must be a positive whole number"
+  )
+  expect_error(
+    audio_filesize(samp.rate=44100, bit.depth=16, channels=1, duration=-1),
+    "Time in Seconds cannot be negative"
+  )
+})
+
+test_that("audio_filesize still sizes the recordings it sized", {
+  expect_equal(
+    audio_filesize(samp.rate=44100, bit.depth=16, channels=1, duration=1),
+    44100*16
+  )
+  expect_equal(
+    audio_filesize(samp.rate=96000, bit.depth=24, channels=2, duration=1, duration.unit="years"),
+    96000*24*2*60*60*24*365
+  )
+  expect_equal(audio_filesize(duration=0), 0)
+})

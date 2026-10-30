@@ -120,6 +120,47 @@ validateFreq <- function(f) {
   )
 }
 
+#' Check a sample rate is a rate at which something could be sampled
+#'
+#' A sample rate of zero gives an infinite duration for any number of samples,
+#' and a negative one a negative duration, so the bound is exclusive and tested
+#' here rather than passed to `.validateNumericRange()`.
+#'
+#' @param samp.rate The sample rate to check.
+#' @return The value unchanged. An error is raised if it is not a possible rate.
+#' @keywords internal
+#' @noRd
+validateSampRate <- function(samp.rate) {
+  .validateNumericRange(samp.rate, "Sample rate", type.msg="Sample rate must be numeric.")
+  v <- unlist(samp.rate)
+  if (any(!is.na(v) & v <= 0)) {
+    stop("Sample rate must be greater than zero.")
+  }
+  return(samp.rate)
+}
+
+#' Check a count of something is a positive whole number
+#'
+#' Bit depths and channel counts are counts of indivisible things, so a
+#' fractional or negative one describes no recording that could exist.
+#'
+#' @param x The value to check.
+#' @param what The noun for the quantity, used in the messages.
+#' @return The value unchanged. An error is raised if it is not such a count.
+#' @keywords internal
+#' @noRd
+.validatePositiveCount <- function(x, what) {
+  v <- unlist(x)
+  if (!is.numeric(v)) {
+    stop(paste(what, "must be numeric"))
+  }
+  known <- v[!is.na(v)]
+  if (any(known <= 0 | known != round(known))) {
+    stop(paste(what, "must be a positive whole number"))
+  }
+  return(x)
+}
+
 validateFreqIsPossible <- function(f, wave=NULL, samp.rate=NULL) {
   validateFreq(f)
   #The wave/samp.rate arguments do not vary over the frequencies, so they are
