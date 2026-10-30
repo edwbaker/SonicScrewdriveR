@@ -396,6 +396,12 @@
   the recording is.
 
 ## Fixes
+- readAudacityLabels() given a label file of fewer than three columns failed
+  with "'names' attribute [3] must be the same length as the vector [2]", which
+  names an internal operation and says nothing about the file. Audacity writes
+  the label field even where the label is empty, leaving a trailing tab, so
+  such a file is not one of its label files and is now refused by name, with
+  the count of columns it has.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for
