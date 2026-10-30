@@ -405,13 +405,16 @@
 - A chunk of an odd size padded with something other than a nul lost every
   chunk behind it. The byte where the pad belongs is read to tell a writer that
   left the pad out from one that wrote it, and a byte that was not a nul was
+- A chunk of an odd size padded with a byte other than zero lost every chunk
+  behind it. The byte where the pad belongs is read to tell a writer that
+  left the pad out from one that wrote it, and a byte that was not zero was
   taken for the first byte of the next identifier, so the walk stepped back one
   byte. That step needed only four printable bytes and a size that fitted the
   rest of the file, which a header read one byte early supplies whenever what
   follows is long enough: a file padded with an X reported a chunk `XLIS` of
   1,108 bytes where a list and the audio behind it were written. wavChunks()
   invented chunks, guano() and wavInfo() reported the file as carrying nothing,
-  and .wavFormat() could not find the data chunk, so readAudio() abandoned its
+  and `.wavFormat()` could not find the data chunk, so readAudio() abandoned its
   readWave() path for a file it could have read.
   Where the position the padding gives begins a chunk whose body ends at the
   end of the file or where another header begins, the file is now read as
@@ -419,9 +422,9 @@
   out, and is settled on the same evidence rather than on the pad byte alone: a
   header one byte back is preferred only where the padding's own position
   accounts for nothing that follows it. Four printable bytes and a size of zero
-  fit anywhere, so that is what a reading has to beat - a nul-headed body one
-  byte into a `wamd` header reads as `amdB` of zero bytes, and the chunk the
-  pad byte was left out of is still recovered.
+  fit anywhere, so that is what a reading has to beat: one byte into a `wamd`
+  header whose body begins with a zero reads as `amdB` of zero bytes, and the
+  chunk the pad byte was left out of is still recovered.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for
