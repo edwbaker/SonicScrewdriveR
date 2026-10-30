@@ -407,7 +407,7 @@
   order mark, and an empty description is the bare two-byte terminator rather
   than a mark, so the reader fell back to big-endian and applied it to a value
   that had said it was little-endian: `dusk` came back as four byte-swapped CJK
-  characters behind U+FFFE. A comment, an unsynchronised lyric, a user-defined
+  characters behind `U+FFFE`. A comment, an unsynchronised lyric, a user-defined
   text frame and a user-defined link were all read that way. The order of a
   value is now read from the value, and a description and a value written in
   opposite orders are both read correctly.
