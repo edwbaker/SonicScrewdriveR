@@ -33,7 +33,7 @@ wavelength <- function(frequency, speed=soundSpeed(medium="air"), output.unit="m
   }
   wl <- .convertLinear(
     validateSpeed(speed)/frequency, "m", output.unit, .wavelengthMultipliers(),
-    msg=paste0("Invalid unit selection: ", output.unit)
+    what="output.unit", fn="wavelength"
   )
   return(validateWavelength(wl))
 }

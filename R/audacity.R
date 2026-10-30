@@ -29,6 +29,14 @@ readAudacityLabels <- function(file, output="Annotation") {
     labels <- read.csv2(text=lines, header=FALSE, sep='\t', colClasses="character",
                         quote="", na.strings=character(0))
   }
+  if (ncol(labels) < 3L) {
+    #Audacity writes the label field even where the label is empty, leaving a
+    #trailing tab, and that form reads correctly. A file with fewer columns
+    #than that is not one of its label files, and used to say so only through
+    #the three names it could not assign to two columns.
+    stop("A label file needs three tab-separated columns (start, end, label), ",
+         "but this one has ", ncol(labels), ": ", file)
+  }
   colnames(labels)[1:3] <- c("from", "to", "label")
   #A decimal comma is read as read.csv2() read it.
   number <- function(x) as.numeric(sub(",", ".", x, fixed=TRUE))

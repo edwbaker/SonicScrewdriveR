@@ -532,3 +532,81 @@ test_that("one argument too many is still unused, with a former name given", {
   )
   expect_equal(x, convert2seconds(1, input.unit="POSIX", origin="unix", timezone=NULL))
 })
+
+#A unit that is NULL, NA or more than one value is not a unit any of these
+#functions can use, and each used to carry it past the guard and fail somewhere
+#further in with an R error naming neither the argument nor the function.
+test_that("a unit argument of NULL is named in the error", {
+  expect_error(convert2seconds(1, input.unit=NULL), "Unknown input.unit to convert2seconds: NULL")
+  expect_error(convert2bytes(1, input.unit=NULL), "Unknown input.unit to convert2bytes: NULL")
+  expect_error(convert2degrees(1, input.unit=NULL), "Unknown input.unit to convert2degrees: NULL")
+  expect_error(convert2Pascals(1, input.unit=NULL), "Unknown input.unit to convert2Pascals: NULL")
+  expect_error(convert2Kelvin(1, input.unit=NULL), "Unknown input.unit to convert2Kelvin: NULL")
+  expect_error(convert2Celsius(1, input.unit=NULL), "Unknown input.unit to convert2Celsius: NULL")
+  expect_error(audio_filesize(output.unit=NULL), "Unknown output.unit to audio_filesize: NULL")
+  expect_error(
+    convert2seconds(1, input.unit="POSIX", origin=NULL),
+    "Unknown origin to convert2seconds: NULL"
+  )
+})
+
+test_that("a unit argument with no values at all is named in the error", {
+  expect_error(
+    convert2seconds(1, input.unit=character(0)),
+    "Unknown input.unit to convert2seconds: no value"
+  )
+  expect_error(
+    convert2Kelvin(1, input.unit=character(0)),
+    "Unknown input.unit to convert2Kelvin: no value"
+  )
+})
+
+test_that("a unit argument of NA is named in the error", {
+  expect_error(convert2Kelvin(1, input.unit=NA), "Unknown input.unit to convert2Kelvin: NA")
+  expect_error(convert2Celsius(1, input.unit=NA), "Unknown input.unit to convert2Celsius: NA")
+  expect_error(convert2seconds(1, input.unit=NA), "Unknown input.unit to convert2seconds: NA")
+  expect_error(convert2degrees(1, input.unit=NA), "Unknown input.unit to convert2degrees: NA")
+  expect_error(audio_filesize(output.unit=NA), "Unknown output.unit to audio_filesize: NA")
+})
+
+test_that("more than one unit is named in the error, even where each is valid", {
+  expect_error(
+    convert2Kelvin(1, input.unit=c("C", "F")),
+    "Unknown input.unit to convert2Kelvin: C, F"
+  )
+  expect_error(
+    convert2Celsius(1, input.unit=c("K", "C")),
+    "Unknown input.unit to convert2Celsius: K, C"
+  )
+  expect_error(
+    convert2seconds(1, input.unit=c("seconds", "minutes")),
+    "Unknown input.unit to convert2seconds: seconds, minutes"
+  )
+  expect_error(
+    convert2bytes(1, input.unit=c("bits", "bytes")),
+    "Unknown input.unit to convert2bytes: bits, bytes"
+  )
+  expect_error(
+    convert2degrees(1, input.unit=c("degrees", "radians")),
+    "Unknown input.unit to convert2degrees: degrees, radians"
+  )
+  expect_error(
+    wavelength(1000, speed=343, output.unit=c("m", "cm")),
+    "Unknown output.unit to wavelength: m, cm"
+  )
+  expect_error(
+    audio_filesize(output.unit=c("bits", "bytes")),
+    "Unknown output.unit to audio_filesize: bits, bytes"
+  )
+})
+
+test_that("an unknown unit is still named as it was", {
+  expect_error(
+    convert2Kelvin(1, input.unit="fortnights"),
+    "Unknown input.unit to convert2Kelvin: fortnights"
+  )
+  expect_error(
+    audio_filesize(output.unit="octopus"),
+    "Unknown output.unit to audio_filesize: octopus"
+  )
+})

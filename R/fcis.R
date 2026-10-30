@@ -10,7 +10,11 @@ scaleRGB <- function(vector, no.diff=255) {
   }
   vector <- (255 / (high - low)) * (vector - low)
   vector[is.na(vector)] <- 0
-  return(as.integer(vector))
+  #The rescaled value is rounded rather than truncated. as.integer() rounds
+  #towards zero, which cost every value that did not land on an integer up to a
+  #whole level and so darkened the channel: the midpoint of a range scaled to
+  #127.5 and came back 127 instead of 128.
+  return(as.integer(round(vector)))
 }
 
 #' Map three vectors to RGB

@@ -25,15 +25,15 @@
 #' audio_filesize(samp.rate=96000, bit.depth=24, channels=2, duration=1, duration.unit="years")
 #'
 audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1, duration.unit="seconds", output.unit="bits", units="decimal") {
+  .validateChoice(
+    output.unit, c("bits", "bytes", "human"), "output.unit", "audio_filesize", n=1
+  )
   duration <- convert2seconds(duration, duration.unit)
   bits <- samp.rate * bit.depth * duration * channels
   if (output.unit == "bits") {
     return (bits)
   } else if (output.unit == "bytes") {
     return (convert2bytes(bits, "bits"))
-  } else if (output.unit == "human") {
-    return (humanBytes(convert2bytes(bits, "bits"), units=units))
-  } else {
-    stop(paste("Unknown output unit:", output.unit))
   }
+  return (humanBytes(convert2bytes(bits, "bits"), units=units))
 }

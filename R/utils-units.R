@@ -18,8 +18,8 @@
 .convertLinear <- function(x, from, to, table, what="input", fn=NULL, prep="to", msg=NULL) {
   #Both ends are checked because which of them the user supplied varies: the
   #convert2*() functions take `from`, while wavelength() takes `to`.
-  .validateChoice(from, names(table), what=what, fn=fn, prep=prep, msg=msg)
-  .validateChoice(to, names(table), what=what, fn=fn, prep=prep, msg=msg)
+  .validateChoice(from, names(table), what=what, fn=fn, prep=prep, msg=msg, n=1)
+  .validateChoice(to, names(table), what=what, fn=fn, prep=prep, msg=msg, n=1)
   #Converting a unit to itself returns the value untouched. Multiplying and then
   #dividing by the same factor is not exact for a factor such as 0.1, and these
   #functions used to return their input unchanged in that case.

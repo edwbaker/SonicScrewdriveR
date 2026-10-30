@@ -84,3 +84,26 @@ test_that("inserting silence into a WaveMC silences every channel", {
   expect_true(all(shifted@.Data[1:1000, ] == 0))
   expect_equal(shifted@.Data[1001:3000, 1], mc@.Data[1:2000, 1])
 })
+
+test_that("a shift that rounds to no samples returns the wave unchanged", {
+  # tuneR::silence() refuses a duration of zero, so a shift shorter than half a
+  # sample aborted for a Wave while a WaveMC, whose silence is built as a
+  # matrix, went through. amount=c(0, 1, 2) - the unshifted wave alongside two
+  # shifts - therefore failed for one class and not the other.
+  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=32, pcm=FALSE)
+
+  expect_silent(generateTimeShift(w, type="silent", amount=1e-6))
+  expect_equal(generateTimeShift(w, type="silent", amount=0)[[1]]@left, as.numeric(1:10))
+  expect_equal(generateTimeShift(w, type="silent", amount=1e-6)[[1]]@left, as.numeric(1:10))
+  expect_equal(generateTimeShift(w, type="rotate", amount=0)[[1]]@left, as.numeric(1:10))
+
+  # The whole point of the report: a zero alongside real shifts no longer
+  # aborts the call, and the real shifts still happen.
+  r <- generateTimeShift(w, type="silent", amount=c(0, 0.001), where="start")
+  expect_equal(r[[1]]@left, as.numeric(1:10))
+  expect_equal(r[[2]]@left, c(0, 0, 0, 0, 0, 0, 0, 0, 1, 2))
+
+  # A WaveMC behaves the same way, as it did before.
+  mc <- tuneR::WaveMC(cbind(1:10, 11:20), samp.rate=8000, bit=32, pcm=FALSE)
+  expect_equal(nrow(generateTimeShift(mc, type="silent", amount=0)[[1]]@.Data), 10L)
+})

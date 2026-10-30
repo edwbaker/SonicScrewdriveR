@@ -27,7 +27,7 @@ convert2bytes <- function(S, input.unit="bits", input) {
     .fileSizeMultipliers("decimal"),
     .fileSizeMultipliers("binary")
   )
-  .validateChoice(input.unit, names(multipliers), "input.unit", "convert2bytes")
+  .validateChoice(input.unit, names(multipliers), "input.unit", "convert2bytes", n=1)
   return(S * multipliers[[input.unit]])
 }
 

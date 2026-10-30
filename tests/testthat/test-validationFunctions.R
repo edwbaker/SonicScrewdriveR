@@ -33,6 +33,18 @@ test_that("Speed is numeric", {
   expect_equal(validateSpeed(1), 1)
 })
 
+test_that("Speed of sound is greater than zero", {
+  # A negative speed reversed every path-length difference bearing() fits a
+  # direction to, so it reported the exact opposite direction with no warning,
+  # and a speed of zero gave NaN.
+  expect_error(validateSpeed(-343), "Speed of sound must be greater than zero.")
+  expect_error(validateSpeed(0), "Speed of sound must be greater than zero.")
+  expect_error(validateSpeed(c(343, -1)), "Speed of sound must be greater than zero.")
+  expect_equal(validateSpeed(343), 343)
+  expect_equal(validateSpeed(c(343, 1430)), c(343, 1430))
+  expect_equal(validateSpeed(1e-6), 1e-6)
+})
+
 test_that("Inputs to validateFreqIsPossible are valid", {
   expect_error(validateFreqIsPossible("string", samp.rate="string"), "Frequency must be numeric.")
   expect_error(validateFreqIsPossible(12), "Frequency requires Wave object or samp.rate")
@@ -217,4 +229,30 @@ test_that("time in seconds passes NA through", {
     validateTimeInSeconds(c(-1, NA, 500), coerceNegative=TRUE, max_t=400, coerceMaximum=TRUE),
     c(0, NA, 400)
   )
+})
+
+test_that("the range validators pass NA through", {
+  # An unknown value is not an out-of-range one, and one missing element used to
+  # abort the whole call with "missing value where TRUE/FALSE needed".
+  expect_equal(validateRH(c(0, NA, 100)), c(0, NA, 100))
+  expect_equal(validateKelvin(c(273.15, NA)), c(273.15, NA))
+  expect_equal(validateFreq(c(1000, NA)), c(1000, NA))
+  expect_equal(validateWavelength(NA_real_), NA_real_)
+  expect_equal(validateDensity(NA_real_), NA_real_)
+  expect_equal(validateBulkModulus(NA_real_), NA_real_)
+  expect_equal(validateSpeed(NA_real_), NA_real_)
+  expect_equal(validateQ(NA_real_), NA_real_)
+  expect_equal(validateDutyCycle(c(NA, 0.5)), c(NA, 0.5))
+  expect_equal(validateKelvin(c(NA_real_, NA_real_)), c(NA_real_, NA_real_))
+})
+
+test_that("a value out of range is still refused beside an NA", {
+  expect_error(validateRH(c(NA, 100.1)), "Relative humidity must be between 0 and 100.")
+  expect_error(validateKelvin(c(NA, -1)), "Temperatures must be above 0K.")
+  expect_error(validateDutyCycle(c(NA, 1.5)), "Duty cycle must be less than or equal to one.")
+})
+
+test_that("a temperature conversion of a vector holding NA returns NA for it", {
+  expect_equal(convert2Kelvin(c(20, NA, 25), input.unit="C"), c(293.15, NA, 298.15))
+  expect_equal(convert2Celsius(c(293.15, NA), input.unit="K"), c(20, NA))
 })

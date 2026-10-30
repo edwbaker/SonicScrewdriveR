@@ -31,6 +31,19 @@
 #' dayPhase(time=as.POSIXct("2024-06-15 20:00:00", tz="UTC"), duration=40000)
 #'
 dayPhase <- function(time=Sys.time(), duration=40000, lat=50.1, lon=1.83, tz="UTC") {
+  #A Date is a count of days, so time + duration below would add the duration as
+  #days rather than seconds, and the overlap filter would then compare epoch
+  #seconds against day counts, which warns rather than stops and returns the
+  #wrong answer entirely. Both sibling functions in this file take a Date, so
+  #one arrives here easily.
+  if (!inherits(time, "POSIXt")) {
+    stop(
+      "time must be a POSIXct or POSIXlt, not ", class(time)[1],
+      ". A recording starts at an instant rather than on a day: give ",
+      "as.POSIXct(\"2024-06-15 20:00:00\", tz=\"UTC\"), or use dayPhases() or ",
+      "daysPhases() for whole days."
+    )
+  }
   duration <- validateTimeInSeconds(duration)
   etime <- time + duration
 
