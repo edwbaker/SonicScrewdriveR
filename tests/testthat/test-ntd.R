@@ -58,3 +58,29 @@ test_that("normalise=TRUE turns the outputs into a probability density", {
   expect_equal(sum(dens[, "Fk"]), 1)
   expect_equal(dens[, "Fk"], raw[, "Fk"] / sum(raw[, "Fk"]))
 })
+
+test_that("ntd keeps the format of the wave it cuts", {
+  # pcm was left to tuneR's default of TRUE whatever the input was, so a float
+  # wave reached FUN declaring itself integer PCM.
+  w32 <- tuneR::Wave(sin(2*pi*(0:39)/10), samp.rate=8000, bit=32, pcm=FALSE)
+  expect_equal(
+    unname(ntd(w32, events=c(1, 11, 21, 31), FUN=function(wave) wave@pcm)[, 2]),
+    c(0, 0, 0)
+  )
+  expect_equal(
+    unname(ntd(w32, events=c(1, 11, 21, 31), FUN=function(wave) wave@bit)[, 2]),
+    c(32, 32, 32)
+  )
+
+  # tuneR forbids pcm with 64 bit, so dropping pcm=FALSE made ntd unusable on a
+  # 64 bit float recording rather than merely mislabelling it.
+  w64 <- tuneR::Wave(sin(2*pi*(0:39)/10), samp.rate=8000, bit=64, pcm=FALSE)
+  expect_silent(ntd(w64, events=c(1, 11, 21, 31), FUN=function(wave) length(wave)))
+
+  # An integer PCM wave is still integer PCM.
+  w16 <- tuneR::Wave(round(sin(2*pi*(0:39)/10)*1000), samp.rate=8000, bit=16, pcm=TRUE)
+  expect_equal(
+    unname(ntd(w16, events=c(1, 11, 21, 31), FUN=function(wave) wave@pcm)[, 2]),
+    c(1, 1, 1)
+  )
+})
