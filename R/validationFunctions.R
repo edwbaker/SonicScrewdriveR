@@ -111,6 +111,26 @@ validateKelvin <- function(T) {
   .validateNumericRange(T, "Kelvin", min=0, range.msg="Temperatures must be above 0K.")
 }
 
+#' Check a pressure is a pressure something could be at
+#'
+#' The pressures in this package are absolute rather than gauge pressures, so
+#' zero is a perfect vacuum and nothing is below it. The bound is exclusive, and
+#' so tested here rather than passed to `.validateNumericRange()`, because the
+#' expressions that take a pressure divide by it.
+#'
+#' @param P The pressure to check.
+#' @return The value unchanged. An error is raised if it is not a pressure.
+#' @keywords internal
+#' @noRd
+validatePressure <- function(P) {
+  .validateNumericRange(P, "Pressure", type.msg="Pressure must be numeric.")
+  v <- unlist(P)
+  if (any(!is.na(v) & v <= 0)) {
+    stop("Pressure must be greater than zero.")
+  }
+  return(P)
+}
+
 #' Check an object is a Wave object
 #'
 #' Helper function to test that the input is a Wave object. Will create an error if not.

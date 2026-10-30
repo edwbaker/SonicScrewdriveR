@@ -87,3 +87,42 @@ test_that("seewave method works as expected", {
   expect_equal(soundSpeed(method="seewave", temp=20), 343.4)
   expect_error(soundSpeed(method="seewave"), "Temperature must be specified.")
 })
+
+test_that("cramer's method refuses a pressure that is not a pressure", {
+  # The mole fraction of water vapour is divided by the pressure, so a pressure
+  # of zero returned NaN and a negative one returned a speed.
+  expect_error(
+    soundSpeed(method="cramer", temp=20, pressure=0),
+    "Pressure must be greater than zero."
+  )
+  expect_error(
+    soundSpeed(method="cramer", temp=20, pressure=-101.325),
+    "Pressure must be greater than zero."
+  )
+  expect_error(
+    soundSpeed(method="cramer", temp=20, pressure="high"),
+    "Pressure must be numeric."
+  )
+})
+
+test_that("validatePressure passes the pressures something could be at", {
+  expect_equal(validatePressure(101325), 101325)
+  expect_equal(validatePressure(c(75000, 102000)), c(75000, 102000))
+  expect_error(validatePressure(0), "Pressure must be greater than zero.")
+  expect_error(validatePressure(-1), "Pressure must be greater than zero.")
+})
+
+test_that("cramer's method still gives the speeds it gave", {
+  # The NPL reference value for 20 C, 101.325 kPa, dry air.
+  expect_equal(
+    round(soundSpeed(method="cramer", temp=20, pressure=101.325, RH=0), 2),
+    343.36
+  )
+  expect_equal(
+    round(soundSpeed(method="cramer", temp=20, pressure=101.325, RH=100), 2),
+    344.61
+  )
+  # The function's own documented example, 3 kPa, which is an extrapolation far
+  # outside the 75-102 kPa the method is stated to be valid over.
+  expect_equal(round(soundSpeed(method="cramer", temp=14, pressure=3, RH=10), 2), 342.65)
+})
