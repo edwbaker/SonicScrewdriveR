@@ -363,6 +363,8 @@ London.
   : Normalise a Wave object
 - [`ntd()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/ntd.md)
   : Natural Time Domain
+- [`` `-`( ``*`<numeric>`*`,`*`<PseudoWave>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/numeric-PseudoWave-method.md)
+  : Numeric subtraction by PseudoWave
 - [`olym()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/olym.md)
   : Read what an Olympus recorder wrote about a recording
 - [`parseFilename()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/parseFilename.md)
@@ -423,6 +425,8 @@ London.
   : Calculate the shimmer in a Wave object
 - [`` `/`( ``*`<PseudoWave>`*`,`*`<numeric>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/slash-PseudoWave-numeric-method.md)
   : PseudoWave scalar division
+- [`` `/`( ``*`<numeric>`*`,`*`<PseudoWave>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/slash-numeric-PseudoWave-method.md)
+  : Numeric division by PseudoWave
 - [`sort_annotations()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/sort_annotations.md)
   : Sort annotations
 - [`soundSpeed()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/soundSpeed.md)
