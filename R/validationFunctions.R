@@ -47,10 +47,15 @@
   if (!is.numeric(v)) {
     stop(if (is.null(type.msg)) paste(what, "must be numeric") else type.msg)
   }
-  if (!is.null(min) && any(v < min)) {
+  #NA is an unknown value, not an out-of-range one. any() on it is NA, so a
+  #single missing element used to abort the whole call with R's own "missing
+  #value where TRUE/FALSE needed", naming neither the argument nor the
+  #function. validateTimeInSeconds() below already passes an NA through.
+  known <- v[!is.na(v)]
+  if (!is.null(min) && any(known < min)) {
     stop(range.msg)
   }
-  if (!is.null(max) && any(v > max)) {
+  if (!is.null(max) && any(known > max)) {
     stop(range.msg)
   }
   return(x)
