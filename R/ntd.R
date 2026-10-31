@@ -22,7 +22,16 @@ ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {
  k <- seq_len(N) / N
  Fk <- vector(length = N)
  for (i in seq_len(N)) {
-   wave_event <- tuneR::Wave(wave@left[events[i]:events[i+1]], samp.rate=wave@samp.rate, bit=wave@bit)
+   #pcm is carried over with bit. Left to tuneR's default of TRUE, a float wave
+   #reached FUN declaring itself integer PCM, so anything reading the format
+   #worked from a full scale 2^31 times too large, and a 64 bit float wave
+   #failed tuneR's validity rule outright.
+   wave_event <- tuneR::Wave(
+     wave@left[events[i]:events[i+1]],
+     samp.rate=wave@samp.rate,
+     bit=wave@bit,
+     pcm=wave@pcm
+   )
    if (argument=="wave") {
      Fk[i] <- do.call(FUN, c(list(wave=wave_event),...))
    }
