@@ -20,6 +20,13 @@ sDuration <- function(
   samp.rate = NULL
 ){
   samp.rate <- .resolveSampRate(wave, samp.rate)
+  #A count of samples cannot be negative, and the rate was never checked, so
+  #sDuration(n=20, samp.rate=0) returned Inf seconds.
+  .validateNumericRange(
+    n, "Number of samples", min=0,
+    range.msg="Number of samples must not be negative.",
+    type.msg="Number of samples must be numeric."
+  )
   duration <- n / samp.rate
   return(duration)
 }
@@ -47,6 +54,9 @@ tSamples <- function(
   samp.rate = NULL
 ){
   samp.rate <- .resolveSampRate(wave, samp.rate)
+  #A duration cannot be negative: tSamples(time=-1, samp.rate=44100) returned
+  #-44100 samples.
+  time <- validateTimeInSeconds(time)
   #Multiplied directly. Dividing by sDuration(), which is one over the sample
   #rate, put a second rounding in the way and left floor() a sample short of an
   #exact duration.
@@ -71,7 +81,7 @@ tSamples <- function(
     stop("Give either a wave or a samp.rate, not both")
   }
   if (!is.null(wave)) {
-    return(wave@samp.rate)
+    return(validateSampRate(wave@samp.rate))
   }
-  return(samp.rate)
+  return(validateSampRate(samp.rate))
 }

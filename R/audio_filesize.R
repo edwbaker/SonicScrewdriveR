@@ -28,6 +28,12 @@ audio_filesize <- function(samp.rate=44100, bit.depth=16, channels=1, duration=1
   .validateChoice(
     output.unit, c("bits", "bytes", "human"), "output.unit", "audio_filesize", n=1
   )
+  #Only the duration was validated. The other three were multiplied raw, so a
+  #negative sample rate or channel count gave a negative size and a bit depth
+  #of zero gave a size of zero.
+  validateSampRate(samp.rate)
+  .validatePositiveCount(bit.depth, "bit.depth")
+  .validatePositiveCount(channels, "channels")
   duration <- convert2seconds(duration, duration.unit)
   bits <- samp.rate * bit.depth * duration * channels
   if (output.unit == "bits") {
