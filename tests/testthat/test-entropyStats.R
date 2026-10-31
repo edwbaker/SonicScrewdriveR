@@ -19,3 +19,24 @@ test_that("entropyStats analyses each channel of multi-channel input", {
 test_that("entropyStats rejects things that are not waves", {
   expect_error(entropyStats("string"), "Expecting a Wave object")
 })
+
+test_that("entropyStats asks meanspec not to plot", {
+  # meanspec() plots by default, so asking for four numbers drew a spectrum as a
+  # side effect: under Rscript that silently wrote Rplots.pdf, and inside
+  # windowing() over a ten-minute recording it drew one plot per window.
+  w <- tuneR::sine(440, duration=4096, samp.rate=44100)
+
+  plot.arg <- NULL
+  local_mocked_bindings(
+    meanspec = function(wave, ...) {
+      args <- list(...)
+      plot.arg <<- if ("plot" %in% names(args)) args$plot else NA
+      seewave::meanspec(wave, plot=FALSE)
+    },
+    .package = "sonicscrewdriver"
+  )
+
+  entropyStats(w)
+  expect_false(is.na(plot.arg))
+  expect_false(plot.arg)
+})
