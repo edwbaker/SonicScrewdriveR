@@ -21,12 +21,20 @@ wavelength <- function(frequency, speed=soundSpeed(medium="air"), output.unit="m
   if (!is.null(redone)) {
     return(redone[[1]])
   }
-  #The message was built by pasting output.unit into it, which repeated the
-  #whole message once per element when more than one unit was given. The shared
-  #wording names the argument and the function, as every other converter does.
-  .convertLinear(
-    speed/frequency, "m", output.unit, .wavelengthMultipliers(),
+  #frequencySound(), the same relationship the other way round, validates both
+  #its input and its result. This validated neither, so a negative frequency
+  #gave a negative wavelength and a frequency of zero gave Inf, each of which
+  #went on into whatever consumed it. The zero is refused here rather than in
+  #validateFreq(), whose bound is inclusive because the first bin of a spectrum
+  #is 0 Hz.
+  validateFreq(frequency)
+  if (any(!is.na(frequency) & frequency == 0)) {
+    stop("Frequency must be greater than zero to have a wavelength.")
+  }
+  wl <- .convertLinear(
+    validateSpeed(speed)/frequency, "m", output.unit, .wavelengthMultipliers(),
     what="output.unit", fn="wavelength"
   )
+  return(validateWavelength(wl))
 }
 
