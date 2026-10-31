@@ -27,11 +27,29 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
   if (is.infinite(to)) {
     to <- length(wave)
   }
-  if (!is.numeric(from) | !is.numeric(to) | !(as.integer(from)==from) | !(as.integer(to) == to)) {
+  #The wholeness test is made with round() rather than as.integer(), which is NA
+  #for anything past the largest integer: a from of 3e9, or an NA, made the test
+  #itself NA and aborted with R's message about a missing condition rather than
+  #with the one below.
+  #The tests are chained with || so that each one is reached only once the ones
+  #before it have passed: round() of a character aborts, and is.na() of a vector
+  #is not a condition || accepts.
+  if (!is.numeric(from) || !is.numeric(to) ||
+      length(from) != 1 || length(to) != 1 ||
+      is.na(from) || is.na(to) ||
+      round(from) != from || round(to) != to) {
     stop("In cutws both from and to must be integers")
   }
   if (to > length(wave)) {
     to <- length(wave)
+  }
+  #from is clamped to the first sample as to is clamped to the last. A from of 0
+  #indexed the wave with a zero subscript, which R drops rather than refuses, so
+  #the section came back one sample short and shifted by one with no error; a
+  #negative from mixed negative subscripts with that zero and failed with R's
+  #message about subscripts.
+  if (from < 1) {
+    from <- 1
   }
   if (from > to){
     stop("In cutws to must be greater than from")
