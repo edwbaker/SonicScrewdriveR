@@ -26,6 +26,22 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
   if (is.null(n) & is.null(t)) {
     stop("Dolbear's law calculation requires either n or t to be specified.")
   }
+  #Neither argument was checked at all, so a negative rate of chirping gave a
+  #temperature as though it were a reading.
+  if (!is.null(n)) {
+    .validateNumericRange(
+      n, "Chirps per minute", min=0,
+      range.msg="Chirps per minute must not be negative.",
+      type.msg="Chirps per minute must be numeric."
+    )
+  }
+  if (!is.null(t)) {
+    .validateNumericRange(
+      t, "Temperature", min=-273.15,
+      range.msg="Temperature must be above absolute zero.",
+      type.msg="Temperature must be numeric."
+    )
+  }
 
   data <- dolbear.data()
 
@@ -50,6 +66,38 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
   } else {
     t <- values
     n <- data$m*t + data$c
+    #Every regression in the table crosses zero between about 3.9 and 4.7
+    #degrees, so below that each returns a rate of chirping that is negative:
+    #dolbear(t=3) gave -6.85, -8.93 and -13.99 chirps per minute without a word,
+    #and dolbear(t=-40) gave -341.7.
+    negative <- !is.na(n) & n < 0
+    if (any(negative)) {
+      stop(paste0(
+        "Dolbear's law gives a negative rate of chirping at ",
+        paste(unique(t[negative]), collapse=", "),
+        " degrees Celsius, below every temperature its regressions were ",
+        "fitted over."
+      ))
+    }
+  }
+
+  #The table carries the range of temperature each regression was fitted over,
+  #and nothing read it. The answer outside that range is still given, since it
+  #is a line that can be extended, but the extrapolation is no longer silent.
+  outside <- !is.na(t) & (t < data$min | t > data$max)
+  if (any(outside)) {
+    warning(paste0(
+      "Dolbear's law is extrapolated beyond the temperatures it was fitted ",
+      "over for ",
+      paste(
+        unique(paste0(
+          data$species[outside], ", ", data$location[outside],
+          " (", data$min[outside], "-", data$max[outside], " C)"
+        )),
+        collapse="; "
+      ),
+      "."
+    ))
   }
 
   return(cbind(data,t,n))
