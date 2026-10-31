@@ -1,6 +1,7 @@
 # PseudoWave scalar division
 
-PseudoWave scalar division
+Dividing the whole of a PseudoWave by e2 divides the offset as well as
+the scale, for the reason given for multiplication above.
 
 ## Usage
 
@@ -21,4 +22,4 @@ e1/e2
 
 ## Value
 
-A PseudoWave object with its scale divided by e2.
+A PseudoWave object with its scale and its offset divided by e2.

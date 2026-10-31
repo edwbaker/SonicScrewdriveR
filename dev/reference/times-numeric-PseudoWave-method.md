@@ -21,4 +21,4 @@ e1 * e2
 
 ## Value
 
-A PseudoWave object with its scale multiplied by e1.
+A PseudoWave object with its scale and its offset multiplied by e1.
