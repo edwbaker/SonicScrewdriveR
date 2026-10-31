@@ -93,6 +93,14 @@ dielFraction <- function(t, input.unit="POSIX", output.unit="radians", timezone=
 emptyDiel <- function(method="plotrix", rot=pi) {
   .validateChoice(method, .dielPlotMethods(), "method", "emptyDiel", prep="for")
   if (method == "plotrix") {
+    #emptyYearly() checks for plotrix and this, its exported sibling, did not,
+    #so a machine without plotrix got "there is no package called 'plotrix'"
+    #from inside radial.plot(), naming neither what to install nor why.
+    #askInstall=FALSE because a plotting function should not install a package
+    #unasked, which is what the default does in a non-interactive session.
+    if (!package.installed("plotrix", askInstall=FALSE)) {
+      stop("Plotrix must be installed to plot using Plotrix.")
+    }
     plotrix::radial.plot(
       lengths=0,
       radial.pos=0,
@@ -144,6 +152,12 @@ dielPlot <- function(
     method="plotrix",
     legend=FALSE
 ){
+  #The whole body below sits inside if (method=="plotrix") with no else, so any
+  #other value did the work of reading the sun's position for the day and then
+  #returned NULL without drawing anything or saying why. .dielPlotMethods()
+  #already held the allowed set; dielPlot() just never consulted it.
+  .validateChoice(method, .dielPlotMethods(), "method", "dielPlot", prep="for")
+
   #Built in UTC from the start. Taking local midnight and then relabelling the
   #instants as UTC moved them by the session's offset, so a session east of UTC
   #drew the previous day's twilight.
