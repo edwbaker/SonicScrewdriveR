@@ -87,6 +87,13 @@ windowing <- function(
     }
   }
 
+  #An overlap at or above the window length leaves no hop to advance by, so the
+  #window count below divided by zero or by a negative number and seq_len()
+  #rejected the result with a message about a non-negative integer, naming
+  #neither argument.
+  if (window.overlap >= window.length) {
+    stop("In windowing window.overlap must be less than window.length.")
+  }
 
   n.windows <- ceiling(n.samples / (window.length - window.overlap))
 

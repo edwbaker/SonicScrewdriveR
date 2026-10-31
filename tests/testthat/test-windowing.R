@@ -391,3 +391,23 @@ test_that("A file read through the av package is windowed over every sample it h
     expect_equal(unlist(windowing(f, window.length=10000, FUN=windowLengths)), rep(10000, 24), info=x)
   }
 })
+
+test_that("an overlap at or above the window length is refused by name", {
+  w <- tuneR::Wave(as.numeric(1:1000), samp.rate=8000, bit=32, pcm=FALSE)
+
+  # The hop is window.length - window.overlap, so these left nothing to advance
+  # by and failed inside seq_len() with "argument must be coercible to
+  # non-negative integer", which names neither argument.
+  expect_error(
+    windowing(w, window.length=1000, window.overlap=1000, FUN=function(...) 1),
+    "In windowing window.overlap must be less than window.length"
+  )
+  expect_error(
+    windowing(w, window.length=1000, window.overlap=1200, FUN=function(...) 1),
+    "In windowing window.overlap must be less than window.length"
+  )
+
+  # An overlap just below the window length is a hop of one sample, which is
+  # extreme but possible, and is still allowed.
+  expect_silent(windowing(w, window.length=10, window.overlap=9, FUN=function(...) 1))
+})
