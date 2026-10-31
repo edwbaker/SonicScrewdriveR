@@ -45,7 +45,17 @@ radialPolygon <- function(
   max_a <- max(c(angle1, angle2), na.rm=T)
 
   angles<-seq(min_a,max_a,by=angleinc)
-  angles[length(angles)]<-max_a
+  #A sector narrower than angleinc left seq() with a single element, which the
+  #line below then overwrote with max_a, so the start angle was lost and xpos held
+  #two points: polygon() drew nothing visible. angleinc defaults to 0.01 rad,
+  #which is 138 seconds of a day, and dielPlot() draws its sunrise and sunset
+  #bands from the time the sun's disc takes to clear the horizon - about two
+  #minutes near the equator - so those bands vanished at low latitudes.
+  if (length(angles) < 2) {
+    angles <- c(min_a, max_a)
+  } else {
+    angles[length(angles)]<-max_a
+  }
   if (min_a < 0) {
     angles <- rev(angles)
   }
