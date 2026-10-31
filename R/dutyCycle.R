@@ -30,6 +30,13 @@ dutyCycle <- function(
       channel.param = NULL
     ))
   }
+  #An NA sample reached validateDutyCycle() as an NA duty cycle and surfaced as
+  #"missing value where TRUE/FALSE needed", which mentions neither NA nor the
+  #wave. The check comes before normalise(), which would spread the NA over the
+  #whole wave first.
+  if (anyNA(wave@left)) {
+    stop("Wave contains NA samples, so its duty cycle cannot be calculated.")
+  }
   if (normalise) {
     wave <- normalise(wave)
   }

@@ -129,7 +129,9 @@ soundSpeed <- function(medium=NULL, method=NULL, wl=NULL, f=NULL, bulkModulus=NU
   validateRH(RH)
   K <- convert2Kelvin(temp, input.unit=temp.unit)
   celsius <- convert2Celsius(temp, input.unit=temp.unit)
-  P <- convert2Pascals(pressure, input.unit=pressure.unit)
+  #The mole fraction of water vapour below is divided by the pressure, so a
+  #pressure of zero returned NaN and a negative one returned a number.
+  P <- convert2Pascals(validatePressure(pressure), input.unit=pressure.unit)
 
   #Davis, Metrologia, 29, p67, 1992
   ENH <- pi * 10^-8 * P + 1.00062 + celsius^2 * 5.6 * 10^-7

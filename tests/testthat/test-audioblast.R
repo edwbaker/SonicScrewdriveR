@@ -171,6 +171,68 @@ test_that("no more than the maximum number of pages asked for is fetched", {
   expect_length(api$urls, 2)
 })
 
+#As pagedApi(), but the page count can be left out of the body altogether or
+#sent as a string. jsonlite gives NULL for an absent key and for a JSON null
+#alike, so leaving it out covers both. The requests are capped because the loop
+#this guards had no terminating condition of its own: without the cap a
+#regression here would keep asking for pages until the test timed out.
+oddPageCountApi <- function(last_page=NULL, cap=15, env=parent.frame()) {
+  asked <- new.env(parent=emptyenv())
+  asked$urls <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    asked$urls <- c(asked$urls, req$url)
+    if (length(asked$urls) > cap) {
+      stop("asked for more than ", cap, " pages")
+    }
+    page <- as.integer(regmatches(req$url, regexpr("(?<=[?&]page=)[0-9]+", req$url, perl=TRUE)))
+    body <- list(data = list(list(page=page, taxon=paste("taxon", page))))
+    body$last_page <- last_page
+    body$params <- list()
+    httr2::response_json(body=body)
+  }, env=env)
+  return(asked)
+}
+
+test_that("a response that gives no page count is read as the only page", {
+  #min(NULL, Inf) is Inf, so the loop had no terminating condition of its own:
+  #it ran until the API refused the page past the last, and that refusal is
+  #raised as an error, so every row already fetched was thrown away.
+  api <- oddPageCountApi()
+  expect_message(
+    res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE),
+    "did not say how many pages"
+  )
+  expect_equal(nrow(res), 1)
+  expect_equal(res$page, 1)
+  expect_length(api$urls, 1)
+})
+
+test_that("a page count that is not a number is read as the only page", {
+  api <- oddPageCountApi(last_page="several")
+  expect_message(
+    res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE),
+    "did not say how many pages"
+  )
+  expect_equal(nrow(res), 1)
+  expect_length(api$urls, 1)
+})
+
+test_that("max_pages still bounds a search whose response gives no page count", {
+  api <- oddPageCountApi()
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE, max_pages=3)
+  expect_equal(res$page, 1:3)
+  expect_length(api$urls, 3)
+})
+
+test_that("a page count sent as a string is read as a number, not as text", {
+  #min() coerced to character, and "2" < "10" is FALSE, so a ten page search
+  #stopped after two pages and reported success.
+  api <- oddPageCountApi(last_page="10")
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE)
+  expect_equal(res$page, 1:10)
+  expect_length(api$urls, 10)
+})
+
 # An endpoint of a module answers in one response: asked for
 # data/annomate/taxa/ the API gives neither a data field nor a last page, where
 # a search of a module gives both. So an endpoint is asked once, and the test

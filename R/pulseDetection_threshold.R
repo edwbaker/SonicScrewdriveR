@@ -7,6 +7,13 @@ pd_threshold <- function(wave, threshold=0.2, pd=FALSE, U=1) {
     mag <- abs(mag)
   }
 
+  #An NA sample makes max(mag) NA, so every comparison below is NA and which()
+  #drops them all: the function reported no pulses at all for a wave that plainly
+  #has them, without a word. There is no sensible threshold for a wave whose peak
+  #is unknown, so say so instead.
+  if (anyNA(mag)) {
+    stop("Wave contains NA samples, so pd_threshold() cannot find a threshold.")
+  }
   threshold <- threshold* max(mag)
   n <- length(mag)
   if (n < U + 1) {

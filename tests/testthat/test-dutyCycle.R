@@ -43,3 +43,16 @@ test_that("Arguments are passed through to each channel", {
   expect_equal(unlist(dutyCycle(st, normalise=FALSE)),
                c(dutyCycle(L, normalise=FALSE), dutyCycle(R, normalise=FALSE)))
 })
+
+test_that("a wave holding NA samples is refused by name", {
+  # The NA reached validateDutyCycle() as an NA duty cycle and came back as
+  # "missing value where TRUE/FALSE needed", naming neither NA nor the wave.
+  # The NA goes into the slot rather than through Wave(), so the test is of
+  # dutyCycle() and not of tuneR's validity checking.
+  w <- tuneR::Wave(c(rep.int(1, 500), rep.int(0, 500)), samp.rate=8000, bit=16)
+  w@left[501] <- NA
+
+  expect_error(dutyCycle(w, normalise=FALSE), "NA samples")
+  expect_error(dutyCycle(w, normalise=TRUE), "NA samples")
+  expect_error(dutyCycle(w, output="percent", normalise=FALSE), "NA samples")
+})

@@ -252,6 +252,32 @@ test_that("pd_threshold copes with an empty wave", {
   expect_equal(r$offsets, integer(0))
 })
 
+test_that("the energy detectors cope with an empty wave", {
+  # ste() of no samples is a zero-length vector, so min() and max() warned and
+  # returned Inf and -Inf, leaving theta as NaN. There is no energy to threshold,
+  # so theta is undefined and the result is empty, as pd_threshold() already gave.
+  w <- tuneR::Wave(numeric(0), samp.rate=8000, bit=16)
+
+  for (detector in c("simple", "dietrich2004")) {
+    expect_silent(r <- pulseDetection(w, method=detector))
+    expect_identical(r$theta, NA_real_, info=detector)
+    expect_length(r$onsets, 0)
+    expect_length(r$offsets, 0)
+  }
+})
+
+test_that("the energy detectors still threshold a wave shorter than the window", {
+  # ste() returns a zero for every sample here rather than nothing at all, so
+  # theta is a real number and the empty-wave guard must not catch this case.
+  w <- tuneR::Wave(rep.int(1, 50), samp.rate=8000, bit=16)
+
+  for (detector in c("simple", "dietrich2004")) {
+    expect_silent(r <- pulseDetection(w, method=detector))
+    expect_identical(r$theta, 0, info=detector)
+    expect_length(r$onsets, 0)
+  }
+})
+
 test_that("pulseDetection dispatches to pd_threshold", {
   w <- pulsed_wave()
 
@@ -314,4 +340,17 @@ test_that("a multi-channel wave is analysed one channel at a time", {
   expect_length(res, 3)
   expect_equal(res[[1]], res[[3]])
   expect_false(any(res[[2]]$pulse))
+})
+
+test_that("pd_threshold refuses a wave holding NA samples", {
+  # max(mag) was NA, so every comparison was NA and which() dropped them all:
+  # a clean "no pulses" answer for a wave with an obvious pulse in it.
+  # The NA goes into the slot rather than through Wave(), so the test is of the
+  # detector and not of tuneR's validity checking.
+  w <- tuneR::Wave(c(rep.int(0, 51), rep.int(1, 20), rep.int(0, 50)),
+                   samp.rate=8000, bit=16)
+  w@left[51] <- NA
+
+  expect_error(pd_threshold(w, threshold=0.5), "NA samples")
+  expect_error(pulseDetection(w, method="threshold", threshold=0.5), "NA samples")
 })

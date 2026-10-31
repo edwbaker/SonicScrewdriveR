@@ -1,5 +1,5 @@
 test_that("scaleRGB scales to the full range", {
-  expect_equal(scaleRGB(c(0, 5, 10)), c(0L, 127L, 255L))
+  expect_equal(scaleRGB(c(0, 5, 10)), c(0L, 128L, 255L))
   # A vector with no variation has no differences to show.
   expect_equal(scaleRGB(rep.int(3, 4)), rep.int(255, 4))
   expect_equal(scaleRGB(rep.int(3, 4), no.diff=0), rep.int(0, 4))
@@ -244,4 +244,21 @@ test_that("a channel with nothing to show is left as it is", {
   # The same where the middle of the data is flat but its tails are not
   mostly.flat <- matrix(c(-50, rep(7, 10), 90), nrow=3)
   expect_identical(fcisClip(probs=c(0.2, 0.8))(mostly.flat), mostly.flat)
+})
+
+test_that("scaleRGB rounds to the nearest level rather than truncating", {
+  # The midpoint of the range scales to 127.5, which belongs at 128. Truncation
+  # returned 127 and so biased every channel down by up to a whole level.
+  expect_equal(scaleRGB(0:2), c(0L, 128L, 255L))
+
+  # The endpoints are still exact, and nothing leaves the byte range.
+  s <- scaleRGB(seq(0, 1, length.out = 9))
+  expect_equal(s[1], 0L)
+  expect_equal(s[9], 255L)
+  expect_true(all(s >= 0L & s <= 255L))
+
+  # Every value is now within half a level of the exact rescaling, which
+  # truncation could not promise: it was short by up to a whole level.
+  exact <- seq(0, 255, length.out = 9)
+  expect_true(all(abs(s - exact) <= 0.5))
 })

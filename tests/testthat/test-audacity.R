@@ -133,3 +133,19 @@ test_that("annotations are asked for as Annotation, and the former spelling warn
   )
   expect_identical(old, readAudacityLabels(f))
 })
+
+# Audacity writes the label field even where the label is empty, leaving a
+# trailing tab, so a file of fewer than three columns is not one of its label
+# files. It used to say so only through the three names it could not assign to
+# two columns. The empty-label form that does read is covered above.
+
+test_that("A label file of fewer than three columns is refused by name", {
+  f <- withr::local_tempfile(fileext=".txt")
+  writeLines("0.000000\t1.000000", f)
+
+  expect_error(
+    readAudacityLabels(f, output="data.frame"),
+    "A label file needs three tab-separated columns"
+  )
+  expect_error(readAudacityLabels(f, output="data.frame"), "has 2")
+})

@@ -55,8 +55,18 @@ generateTimeShift <- function(
 #' @noRd
 .timeShift <- function(wave, type, amount, where) {
   original.length <- length(wave)
+  #A shift of less than half a sample rounds to no samples at all, and a shift
+  #of nothing is the wave itself. tuneR::silence() refuses a duration of zero,
+  #so a Wave aborted here where a WaveMC, whose silence is built as a matrix,
+  #went through: amount=c(0, 1, 2), asking for the unshifted wave alongside two
+  #shifts, failed for one class and not the other. The rotate branch below
+  #already returns the wave for a whole-wave rotation.
+  samples <- round(amount * wave@samp.rate)
+  if (samples == 0) {
+    return(wave)
+  }
   if (type == "silent") {
-    insert <- .silence(wave, round(amount * wave@samp.rate))
+    insert <- .silence(wave, samples)
     if (where == "start") {
       #Insertion at the start pushes the end of the wave off the end
       return(cutws(concat(insert, wave), to=original.length))
@@ -68,7 +78,7 @@ generateTimeShift <- function(
   #length of the wave is the same as its remainder. Taken literally it asked
   #cutws() for a section running backwards, which failed on any recording
   #shorter than the largest shift.
-  offset <- round(amount * wave@samp.rate) %% original.length
+  offset <- samples %% original.length
   if (offset == 0) {
     return(wave)
   }

@@ -247,6 +247,44 @@ setMethod("+", signature(e1 = "numeric", e2 = "PseudoWave"),
   }
 )
 
+#' Numeric subtraction by PseudoWave
+#'
+#' A PseudoWave is applied as (samples * scale) + offset, so subtracting one
+#' from a number negates the scale and takes the offset from the number:
+#' e1 - ((g * scale) + offset) is (g * -scale) + (e1 - offset).
+#' @docType methods
+#' @param e1 Input 1
+#' @param e2 Input 2
+#' @return A PseudoWave object giving e1 minus the wave e2 stands for.
+setMethod("-", signature(e1 = "numeric", e2 = "PseudoWave"),
+  function(e1, e2){
+    validObject(e2)
+    e2@scale <- -e2@scale
+    e2@offset <- e1 - e2@offset
+    return(e2)
+  }
+)
+
+#' Numeric division by PseudoWave
+#'
+#' A PseudoWave stands for (samples * scale) + offset, and the reciprocal of
+#' that is not of the same form, so dividing a number by a PseudoWave cannot be
+#' held as a scale and an offset. The method exists to say so, rather than
+#' leaving R to report that a PseudoWave is not a numeric argument.
+#' @docType methods
+#' @param e1 Input 1
+#' @param e2 Input 2
+#' @return Nothing: this combination is always an error.
+setMethod("/", signature(e1 = "numeric", e2 = "PseudoWave"),
+  function(e1, e2){
+    stop(paste(
+      "Cannot divide a number by a PseudoWave: a PseudoWave holds only a scale",
+      "and an offset, and the reciprocal of a wave is neither. Depseudowave it",
+      "first, or divide by the Wave the PseudoWave is applied to."
+    ))
+  }
+)
+
 #' Types of PseudoWave that can be generated
 #'
 #' @return A character vector of the supported types.

@@ -12,11 +12,24 @@
 #' @param fn The name of the calling function, used in the default message.
 #' @param prep The preposition joining `what` to `fn`, either "to" or "for".
 #' @param msg A complete error message, used in place of the default one.
+#' @param n The number of values the call site takes, or NULL where any number of
+#'   them is meaningful. Two valid units are each one of `choices`, so a call site
+#'   taking a single unit used to pass them both and fail in the comparison it
+#'   reached next.
 #' @return The value unchanged. An error is raised if it is not one of `choices`.
 #' @keywords internal
 #' @noRd
-.validateChoice <- function(value, choices, what="input", fn=NULL, prep="to", msg=NULL) {
-  bad <- setdiff(value, choices)
+.validateChoice <- function(value, choices, what="input", fn=NULL, prep="to", msg=NULL, n=NULL) {
+  if (length(value) == 0) {
+    #setdiff() of a zero-length value is empty, so there was nothing to report
+    #and NULL was handed on to a caller that could not use it, which then failed
+    #with an R error naming neither the argument nor the function.
+    bad <- if (is.null(value)) "NULL" else "no value"
+  } else if (!is.null(n) && length(value) != n) {
+    bad <- paste(value, collapse=", ")
+  } else {
+    bad <- setdiff(value, choices)
+  }
   if (length(bad) == 0) {
     return(value)
   }
@@ -47,10 +60,15 @@
   if (!is.numeric(v)) {
     stop(if (is.null(type.msg)) paste(what, "must be numeric") else type.msg)
   }
-  if (!is.null(min) && any(v < min)) {
+  #NA is an unknown value, not an out-of-range one. any() on it is NA, so a
+  #single missing element used to abort the whole call with R's own "missing
+  #value where TRUE/FALSE needed", naming neither the argument nor the
+  #function. validateTimeInSeconds() below already passes an NA through.
+  known <- v[!is.na(v)]
+  if (!is.null(min) && any(known < min)) {
     stop(range.msg)
   }
-  if (!is.null(max) && any(v > max)) {
+  if (!is.null(max) && any(known > max)) {
     stop(range.msg)
   }
   return(x)
@@ -68,7 +86,17 @@ validateBulkModulus <- function(b) {
 }
 
 validateSpeed <- function(b) {
+  #A speed of sound of zero is as unphysical as a negative one, and the bounds
+  #.validateNumericRange() takes are inclusive, so the bound is tested here. A
+  #negative speed reverses the path-length differences bearing() fits a
+  #direction to, and reports the exact opposite direction as though it were
+  #sound; zero gives NaN.
   .validateNumericRange(b, "Speed")
+  v <- unlist(b)
+  if (any(!is.na(v) & v <= 0)) {
+    stop("Speed of sound must be greater than zero.")
+  }
+  return(b)
 }
 
 validateWavelength <- function(b) {
@@ -81,6 +109,26 @@ validateDensity <- function(b) {
 
 validateKelvin <- function(T) {
   .validateNumericRange(T, "Kelvin", min=0, range.msg="Temperatures must be above 0K.")
+}
+
+#' Check a pressure is a pressure something could be at
+#'
+#' The pressures in this package are absolute rather than gauge pressures, so
+#' zero is a perfect vacuum and nothing is below it. The bound is exclusive, and
+#' so tested here rather than passed to `.validateNumericRange()`, because the
+#' expressions that take a pressure divide by it.
+#'
+#' @param P The pressure to check.
+#' @return The value unchanged. An error is raised if it is not a pressure.
+#' @keywords internal
+#' @noRd
+validatePressure <- function(P) {
+  .validateNumericRange(P, "Pressure", type.msg="Pressure must be numeric.")
+  v <- unlist(P)
+  if (any(!is.na(v) & v <= 0)) {
+    stop("Pressure must be greater than zero.")
+  }
+  return(P)
 }
 
 #' Check an object is a Wave object
