@@ -523,11 +523,27 @@
 #' [parseFilename()] raises an error for a name that matches none of the
 #' conventions it knows, which most names do, so a failure to read one is not
 #' an error here.
+#'
+#' Its warning for a name whose digits spell no real date is silenced rather
+#' than allowed to abandon the reading. No date is taken from such a name here
+#' in any case — `.mdNormaliseFilename()` drops a datetime that is not a finite
+#' instant, for the reason given there — so the warning would say nothing about
+#' this record, while losing the reading would cost the model, the prefix, the
+#' species and the collection that the same name may also carry. A caller who
+#' wants to hear about the date calls [parseFilename()], where the warning is
+#' raised.
 #' @keywords internal
 #' @noRd
 .mdFilenameSource <- function(file, format=NULL) {
+  # The muffling handler is established inside the tryCatch, so that it is the
+  # nearer of the two and an unparsedField warning reaches it rather than the
+  # exiting handler that would abandon the reading. The other way round the
+  # tryCatch is nearer and wins.
   read <- tryCatch(
-    parseFilename(file, format=format),
+    withCallingHandlers(
+      parseFilename(file, format=format),
+      unparsedField=function(cond) invokeRestart("muffleWarning")
+    ),
     error=function(cond) NULL,
     warning=function(cond) NULL
   )
