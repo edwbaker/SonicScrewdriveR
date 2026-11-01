@@ -422,6 +422,24 @@
   the recording is.
 
 ## Fixes
+- upsample() left the interpolated samples fractional in a wave that went on to
+  declare the input's bit depth and pcm, so a 16 bit PCM wave came back saying
+  16 bit PCM while holding values a 16 bit PCM wave cannot hold. The validity
+  rules of tuneR check the bit and pcm combination but not whether a PCM wave's
+  samples are whole, so nothing complained: `upsample(Wave(c(0, 1000, 0,
+  -1000), samp.rate=4, bit=16), 12)` gave eight fractional samples out of
+  twelve, and the only thing that ever said so was writeWave() rounding them
+  with its generic warning. Anything reading bit to work out full scale read a
+  scale the data was not on.
+  Where the wave declares integer PCM the interpolated samples are now rounded
+  to whole numbers, which costs at most half a quantisation step, 96 dB below
+  full scale at 16 bit. Rounding cannot carry a sample outside the range the
+  input held, as linear interpolation returns convex combinations of two
+  neighbouring samples and the final sample is held rather than extrapolated,
+  so eight bit unsigned PCM stays within 0 to 255 as well. A floating point
+  wave is interpolated without rounding, its samples being the values they say
+  they are. A function given as the method is held to the format in the same
+  way.
 - pulseIntervals() returned intervals that hold a pulse rather than areas of no
   pulses. Each interval started at the preceding pulse's onset rather than at its
   offset, so the whole of that pulse fell inside the interval, an error of one
