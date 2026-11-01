@@ -459,6 +459,25 @@
   stacked the two would count every detection twice. A directory holding no
   results file gives a data frame of no rows, with a warning, where
   `do.call(rbind, list())` gave NULL.
+- beatSpectrum() and beatComplexity() read only the left channel of a stereo
+  Wave, so the rhythm of the second channel was never reported: a wave whose
+  left channel pulses every 0.1 s and whose right pulses every 0.2 s gave one
+  spectrum, peaking at 0.1 s, with nothing to say the other channel had been
+  dropped. A WaveMC, which has no left slot at all, failed with a message
+  naming that slot. Both are now passed to allChannels() when they are given
+  more than one channel, as dutyCycle() and frequencyStats() already are, and
+  return one spectrum or one set of measurements per channel. With plot=TRUE
+  beatComplexity() draws one plot per channel.
+- generateNoise() added one sequence of noise to every channel of a
+  multi-channel wave, so the noise was identical in each. Its correlation
+  between the two channels of a stereo wave was exactly 1 and it cancelled
+  completely in any difference between them, which left the noise invisible to
+  tdoa(), bearing() and corWaveMC(): all three read inter-channel differences,
+  so a wave given noise this way tested none of them. Each channel is now given
+  a sequence of its own, at the same level as the rest, and the correlation
+  between the channels of a stereo wave falls to the 0.02 of two independent
+  sequences. The first channel draws first, so a wave of one channel is mixed
+  exactly as before and a mono result under a given seed is unchanged.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
@@ -493,6 +512,23 @@
   raises the loudest sample to full scale and so hands the threshold back to
   it, and removes the offset as well, which lifts silence off zero: a wave nine
   tenths of which is silent measured 1 rather than 0.1.
+- audioblast() lost every record of a search whose responses did not carry the
+  same fields, failing with "numbers of columns of arguments do not match"
+  after fetching them all. The responses of a search were joined with
+  `rbind()`, which needs the same columns in each of its arguments, and
+  audioBlast gives the fields its records carry rather than every field a
+  module has: two pages of one search can differ in them, and so can the
+  batches that a filter of more than a hundred values is sent in, which are by
+  construction different records. The responses are now joined on all the
+  fields any of them carried, with `NA` where a response came without one,
+  which is what the `jsonlite` package already does for a field that one
+  record of a response does not carry. Such an `NA` is what audioBlast did not
+  give rather than what the source does not hold, so the fields that only some
+  responses carried are named in a message.
+  A response carrying a single record has come back as the record itself
+  rather than as an array holding it, which `rbind()` made a matrix of rather
+  than the data frame audioblast() is documented to return; that shape is now
+  read as one row, in audioblast() and in audioblastRecord() alike.
 - parseFilename() reported a name whose digits spell no real date the same way
   it reports a name carrying no time at all. A format is matched on the shape
   of the digits, and `20240230_120000` satisfies the shape of

@@ -291,3 +291,102 @@ test_that("noise.ratio of 0 leaves the wave alone, and the ends agree with the m
   # Half and half means the signal is attenuated but still clearly present.
   expect_gt(abs(stats::cor(got, w@left)), 0.5)
 })
+
+# A wave whose channels hold the same signal, so whatever differs between the
+# channels of the result is the noise that was added to them.
+sameInBothChannels <- function(n=2000, rate=8000, channels=2) {
+  samples <- round(sin(2*pi*300*(1:n)/rate) * 10000)
+  if (channels == 2) {
+    return(tuneR::Wave(left=samples, right=samples, samp.rate=rate, bit=16))
+  }
+  tuneR::WaveMC(
+    matrix(rep(samples, channels), ncol=channels), samp.rate=rate, bit=16
+  )
+}
+
+test_that("each channel of a stereo wave is given noise of its own", {
+  # One sequence was generated and added to every channel, so the noise was
+  # perfectly correlated between them (r = 1) and cancelled exactly in the
+  # difference between channels. tdoa(), bearing() and corWaveMC() all read
+  # inter-channel differences, so noise identical in every channel tested none
+  # of them.
+  st <- sameInBothChannels()
+  set.seed(7)
+  out <- generateNoise(st, "white", noise.ratio=0.5)
+
+  added.left <- out@left - 0.5*st@left
+  added.right <- out@right - 0.5*st@right
+  expect_false(isTRUE(all.equal(added.left, added.right)))
+  expect_lt(abs(stats::cor(added.left, added.right)), 0.2)
+
+  # The channels of the result used to be identical sample for sample, so their
+  # difference was exactly zero everywhere.
+  expect_gt(max(abs(out@left - out@right)), 0)
+})
+
+test_that("each channel of a WaveMC is given noise of its own", {
+  w <- sameInBothChannels(channels=3)
+  set.seed(7)
+  out <- generateNoise(w, "white", noise.ratio=0.5)
+
+  added <- sapply(1:3, function(i) out@.Data[,i] - 0.5*w@.Data[,i])
+  for (pair in list(c(1,2), c(1,3), c(2,3))) {
+    expect_false(isTRUE(all.equal(added[,pair[1]], added[,pair[2]])))
+    expect_lt(abs(stats::cor(added[,pair[1]], added[,pair[2]])), 0.2)
+  }
+})
+
+test_that("every channel is given noise at the level asked for", {
+  # The reference is taken over the whole wave, so the channels differ in their
+  # noise but not in how loud it is.
+  st <- sameInBothChannels()
+  set.seed(7)
+  out <- generateNoise(st, "white", noise.ratio=0.5)
+
+  peak <- 0.5 * max(abs(st@left))
+  expect_equal(max(abs(out@left - 0.5*st@left)), peak)
+  expect_equal(max(abs(out@right - 0.5*st@right)), peak)
+})
+
+test_that("several noise sources stay independent between channels", {
+  st <- sameInBothChannels()
+  set.seed(3)
+  out <- generateNoise(st, c("white", "pink"), noise.ratio=0.5)
+
+  added.left <- out@left - 0.5*st@left
+  added.right <- out@right - 0.5*st@right
+  expect_false(isTRUE(all.equal(added.left, added.right)))
+  expect_lt(abs(stats::cor(added.left, added.right)), 0.2)
+})
+
+test_that("per-channel noise keeps an 8-bit stereo wave inside the range", {
+  # Each channel is scaled to the same level, so the headroom the reference is
+  # capped to holds for every channel rather than only for the first.
+  w <- Wave(
+    left = c(0L, 255L, rep(128L, 98)),
+    right = c(255L, 0L, rep(128L, 98)),
+    samp.rate = 8000, bit = 8L
+  )
+  set.seed(24)
+  out <- generateNoise(w, "white", noise.ratio=0.5, noise.ref="file")
+
+  expect_gte(min(out@left), 0)
+  expect_lte(max(out@left), 255)
+  expect_gte(min(out@right), 0)
+  expect_lte(max(out@right), 255)
+})
+
+test_that("a wave of one channel gets the sequence it always did", {
+  # The first channel draws first, so a mono wave is mixed exactly as before and
+  # the left channel of a stereo wave matches it under the same seed. Only the
+  # channels behind the first are given anything new.
+  mono <- tuneR::Wave(
+    round(sin(2*pi*300*(1:2000)/8000) * 10000), samp.rate=8000, bit=16
+  )
+  set.seed(11)
+  alone <- generateNoise(mono, "white", noise.ratio=0.5)
+  set.seed(11)
+  together <- generateNoise(sameInBothChannels(), "white", noise.ratio=0.5)
+
+  expect_equal(together@left, alone@left)
+})

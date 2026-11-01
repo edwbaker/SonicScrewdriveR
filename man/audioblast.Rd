@@ -72,6 +72,14 @@ matched exactly, or a range made with \code{\link[=ab_range]{ab_range()}}, e.g.
 
 Columns that audioBlast describes as numeric are returned as numbers, and
 all others as character strings.
+
+audioBlast gives the fields its records carry rather than every field the
+module has, and the records of one search can come from sources that do not
+hold the same fields, so the responses of a search can differ in them. The
+results are joined on all the fields any response carried, and a record that
+came without a field has \code{NA} there. The fields that only some responses
+carried are named in a message, as such an \code{NA} says that audioBlast did not
+give the field for that record rather than that its source holds nothing.
 }
 \examples{
 \dontrun{
