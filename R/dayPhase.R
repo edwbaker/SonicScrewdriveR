@@ -13,7 +13,9 @@
 #' midsummer the sun never reaches astronomical twilight, so there is no Night, and
 #' the Dusk.Astro phase runs from the end of nautical twilight through to the next
 #' morning; in polar day and polar night a single phase can last for months, and is
-#' named for the sun's altitude through it. A phase therefore need not start or end
+#' named for the sun's altitude through it and for which way the sun is heading, a
+#' twilight that brightens towards the polar sunrise being a dawn and one that
+#' darkens a dusk. A phase therefore need not start or end
 #' on the day of the recording, and the start and end given for it are the real
 #' ones, however far outside the recording they fall.
 #'
@@ -266,9 +268,16 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 #' polar night, and the weeks of unbroken twilight between them. dayPhase() used to
 #' return no solar phase at all for those. The sun is where it is for the whole of
 #' such a stretch, give or take the turn at either end of it, so its altitude
-#' halfway through names the phase; and the phase is named for the band of altitude
-#' as everywhere else, a sun held between 12 and 18 degrees below the horizon being
-#' in astronomical twilight, which is the Dusk.Astro phase.
+#' halfway through names the band it is in: a sun held between 12 and 18 degrees
+#' below the horizon is in astronomical twilight.
+#'
+#' Which half of the day that is cannot be had from the altitude, as the same band
+#' is crossed on the way up and on the way down, and naming it for the evening
+#' whichever way the sun was going made every polar twilight a dusk: the five weeks
+#' in which the sun climbs towards the polar sunrise at 89.9 degrees north were
+#' reported as Dusk.Astro. It is taken from the sun's altitude at the two ends of
+#' the stretch instead, so that a twilight which brightens is Dawn.Astro and one
+#' which darkens is Dusk.Astro.
 #'
 #' @param from Start of the stretch of time
 #' @param to End of the stretch of time
@@ -280,16 +289,63 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
   #An instant is an instant whatever zone it is written in, and getSunlightPosition()
   #warns about one that carries no zone of its own, so it is given UTC.
   middle <- as.numeric(from) + as.numeric(difftime(to, from, units="secs")) / 2
-  middle <- as.POSIXct(middle, tz="UTC", origin="1970-01-01")
-  altitude <- getSunlightPosition(date=middle, lat=lat, lon=lon,
+  at <- as.POSIXct(c(as.numeric(from), middle, as.numeric(to)), tz="UTC",
+                   origin="1970-01-01")
+  altitude <- getSunlightPosition(date=at, lat=lat, lon=lon,
                                   keep="altitude")$altitude * 180 / pi
-  #The altitude in degrees at which each band begins, highest first.
-  bands <- c(Day=0, Dusk.Civil=-6, Dusk.Naut=-12, Dusk.Astro=-18)
+  #Which way the sun is heading over the stretch as well as where it is in the
+  #middle of it, as the altitude alone cannot tell a dawn from a dusk: the five
+  #weeks in which the sun climbs from astronomical twilight to the polar sunrise
+  #were reported as Dusk.Astro. The two ends say which way rather than a pair of
+  #instants in the middle, because the sun's daily wobble at 89.9 degrees north is
+  #as wide as the climb of a whole day and so names the wrong half of the day at
+  #the wrong hour. A stretch that ends where it began is as much a dusk as a dawn
+  #and keeps the dusk name, which is the only name this gave before.
+  return(.phaseAtAltitude(altitude[[2]], altitude[[3]] > altitude[[1]]))
+}
+
+#' The phase a sun of a given altitude is in
+#'
+#' @param altitude The sun's altitude in degrees
+#' @param rising Whether the sun is climbing
+#' @return The name of the phase.
+#' @noRd
+.phaseAtAltitude <- function(altitude, rising) {
+  #The altitude at which each phase begins, highest first. The thresholds are the
+  #ones the events themselves are taken at, so that a phase named from the sun's
+  #altitude and a phase named from the event that began it cannot disagree: Day
+  #begins where sunriseEnd puts it, three tenths of a degree below the horizon,
+  #and not at the horizon, where a band table of its own used to begin it.
+  up <- c("sunriseEnd", "sunrise", "dawn", "nauticalDawn", "nightEnd")
+  down <- c("sunriseEnd", "sunsetStart", "sunset", "dusk", "nauticalDusk")
+  phases <- .solarEventPhases()
+  bands <- .solarEventAltitudes()[up]
+  names(bands) <- phases[if (rising) up else down]
   phase <- names(bands)[altitude >= bands]
   if (length(phase) == 0) {
-    return("Night")
+    #Below the last of them is the night, the one phase that is neither a dawn
+    #nor a dusk.
+    return(phases[["night"]])
   }
   return(phase[[1]])
+}
+
+#' The sun's altitude at each solar event
+#'
+#' In degrees, as suncalc takes them: sunrise and sunset are the moment the sun's
+#' upper edge meets the horizon and sunriseEnd and sunsetStart the moment its
+#' lower edge leaves it, which is why neither of those is zero, and the three
+#' twilights end 6, 12 and 18 degrees below it.
+#'
+#' @return A named numeric vector, suncalc event name to altitude in degrees.
+#' @noRd
+.solarEventAltitudes <- function() {
+  return(c(
+    nightEnd = -18, nauticalDawn = -12, dawn = -6,
+    sunrise = -0.833, sunriseEnd = -0.3,
+    sunsetStart = -0.3, sunset = -0.833, dusk = -6,
+    nauticalDusk = -12, night = -18
+  ))
 }
 
 #' Moonlight for a run of days
