@@ -37,6 +37,29 @@ test_that("A comment the collection wrote is read into its parts", {
   expect_false(d$playback_used)
 })
 
+test_that("An empty field keeps its place", {
+  # Empty fields were dropped before the first five were read by where they
+  # sit, so every field after one moved up: a time was read as an elevation.
+  d <- xc(elevation = "")
+  expect_null(d$elevation)
+  expect_null(d$stated_elevation)
+  expect_equal(d$time, "07:00")
+  expect_equal(d$date, "2006-05-05")
+  expect_equal(d$type, "song")
+  expect_equal(
+    format(sonicscrewdriver:::.mdNormaliseXenoCanto(d)$datetime),
+    "2006-05-05 07:00:00"
+  )
+
+  p <- xc(place = "")
+  expect_null(p$locality)
+  expect_null(p$country)
+  expect_equal(p$elevation, 2000)
+
+  # An empty field among the remarks is not a remark.
+  expect_equal(xc(rest = c("", "a remark", ""))$remarks, "a remark")
+})
+
 test_that("A comment nobody at the collection wrote is left alone", {
   expect_null(sonicscrewdriver:::.mdXenoCanto("Recorded at 21:06:00 14/05/2026"))
   expect_null(sonicscrewdriver:::.mdXenoCanto("A comment // with // slashes"))

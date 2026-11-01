@@ -1036,6 +1036,11 @@
   text frame and a user-defined link were all read that way. The order of a
   value is now read from the value, and a description and a value written in
   opposite orders are both read correctly.
+- readMetadata() read a xeno-canto comment with an empty field among its first
+  five as though the field were not there, so every field after it moved up
+  one: with no elevation written, the time and date were read as the elevation
+  and the kind of vocalisation as the time, and the record had no datetime. An
+  empty field now keeps its place and is read as nothing said.
 - readMetadata() did not read the AudioMoth comment of a FLAC or Ogg recording,
   so the same recording gave its recording time, make, model and serial in one
   container and none of the four in another. A recording transcoded out of a
