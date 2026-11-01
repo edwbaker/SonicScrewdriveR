@@ -13,7 +13,9 @@ channel separately.}
 
 \item{min_period}{the minimal rhythmicity period expected, in seconds}
 
-\item{max_period}{the maximal rhythmicity period expected, in seconds}
+\item{max_period}{the maximal rhythmicity period expected, in seconds, which
+is the longest period the spectrum runs to. It must be at least twice
+min_period.}
 
 \item{dj}{the frequency resolution of the cwt (in voices per octave)}
 
