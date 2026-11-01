@@ -440,6 +440,19 @@
   wave is interpolated without rounding, its samples being the values they say
   they are. A function given as the method is held to the format in the same
   way.
+- dutyCycle() counted an eight bit recording's silence as signal. Eight bit PCM
+  is unsigned about a midpoint of 128, so `abs(wave@left)` read its silence as
+  128 and the threshold was compared against the sample value rather than
+  against its distance from silence. Every sample of an eight bit wave therefore
+  cleared any limit below half of full scale: a pulse train with a duty cycle of
+  0.1 measured 1 at every limit up to 0.5, and 0.1 at 0.6 only because the
+  threshold happened to land between the silence and the signal. The same train
+  at 16 bit, 24 bit and floating point measured 0.1 throughout.
+  The limit is now a proportion of the largest excursion from silence the
+  format allows, 127 either side of 128 for eight bit, and is compared against
+  each sample's distance from silence, so one recording held at several depths
+  gives one duty cycle. Nothing changes for a signed or floating point wave,
+  whose silence is zero and whose excursion is full scale.
 - pulseIntervals() returned intervals that hold a pulse rather than areas of no
   pulses. Each interval started at the preceding pulse's onset rather than at its
   offset, so the whole of that pulse fell inside the interval, an error of one
