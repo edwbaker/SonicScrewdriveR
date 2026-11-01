@@ -39,3 +39,23 @@ test_that("shimmer returns NA when there are too few periods", {
 test_that("shimmer rejects incorrect input", {
   expect_error(shimmer("not a wave"), "Expecting a Wave object")
 })
+
+test_that("shimmer measures every channel", {
+  # A stereo wave read only its left channel, so the shimmer of the right one
+  # was never reported, and a WaveMC has no left slot to read at all.
+  sr <- 8000
+  n <- 4000
+  L <- tuneR::Wave(round(sin(2*pi*250*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(sin(2*pi*1100*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+
+  left <- shimmer(L)
+  right <- shimmer(R)
+  expect_false(isTRUE(all.equal(left, right)))
+  expect_false(isTRUE(all.equal(shimmer(tuneR::stereo(L, R)), left)))
+
+  expect_equal(shimmer(tuneR::stereo(L, R)), list(list(left), list(right)))
+  expect_equal(
+    shimmer(tuneR::WaveMC(cbind(L@left, R@left, L@left), samp.rate=sr, bit=16)),
+    list(list(left), list(right), list(left))
+  )
+})
