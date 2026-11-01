@@ -428,6 +428,15 @@
   object's own slot will not take and which has no channels left to name. The
   selection now keeps its dimensions, so a frame reads as a recording of one
   frame in six channels.
+- id3() read the byte order of a UTF-16 value from the description in front of
+  it. Every string in a frame declaring that encoding carries its own byte
+  order mark, and an empty description is the bare two-byte terminator rather
+  than a mark, so the reader fell back to big-endian and applied it to a value
+  that had said it was little-endian: `dusk` came back as four byte-swapped CJK
+  characters behind `U+FFFE`. A comment, an unsynchronised lyric, a user-defined
+  text frame and a user-defined link were all read that way. The order of a
+  value is now read from the value, and a description and a value written in
+  opposite orders are both read correctly.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for
