@@ -123,6 +123,9 @@
   : Check if two annotations overlap or are continuous
 - [`.merge_annotations()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-merge_annotations.md)
   : Combine annotations helper function
+- [`.spectrogram_maad_dB()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-spectrogram_maad_dB.md)
+  : Helper function to convert a Wave-like object to a dB scikit-maad
+  spectrogram
 - [`.spectrogram_maad_power()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/dot-spectrogram_maad_power.md)
   : Helper function to convert a Wave-like object to scikit-maad
   spectrogram

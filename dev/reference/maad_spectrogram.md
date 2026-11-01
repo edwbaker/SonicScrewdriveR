@@ -20,7 +20,8 @@ maad_spectrogram(wave, mode = "power", ..., maad = NULL)
 - mode:
 
   The type of spectrogram to compute. Options are "power", "amplitude"
-  "complex". Default is "power".
+  "complex". Default is "power". A "complex" spectrogram holds complex
+  numbers, and the indices built on it take its magnitude.
 
 - ...:
 

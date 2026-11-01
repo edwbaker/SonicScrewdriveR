@@ -26,3 +26,17 @@ pulseDetection(wave, method = "simple", ...)
 ## Value
 
 The output of the pulse detection method used.
+
+## Details
+
+Each method reports a pulse as an onset and an offset. An onset is the
+first sample of the pulse and an offset the first sample after it, so
+the pulse occupies the half-open range from onset to offset and
+`offset - onset` is its length in samples. A sample exactly equal to the
+detection threshold is not part of a pulse.
+
+`onsets[i]` and `offsets[i]` are always the two ends of the same pulse.
+A pulse still in progress at the last analysed sample has an onset and
+no offset, so there can be one more onset than offset, and in that case
+the unmatched onset is the last. A pulse already in progress at the
+first analysed sample is reported with its onset at that sample.
