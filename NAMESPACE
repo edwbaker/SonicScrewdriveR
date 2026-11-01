@@ -206,6 +206,7 @@ importFrom(methods,
 )
 importFrom(mime,guess_type)
 importFrom(parallel,
+  clusterSetRNGStream,
   detectCores,
   makeCluster,
   makeForkCluster

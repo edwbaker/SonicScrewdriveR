@@ -857,6 +857,26 @@
   out of order they gave the samples between two events as an interval that
   overlapped its neighbours, and two events at the same sample gave a one-sample
   interval that bounds nothing.
+- defaultCluster() gave its workers no random number stream, so each one seeded
+  itself from its own entropy: a windowed analysis using randomness gave
+  different numbers on every run and set.seed() in the session could not reach
+  them. Windowing a 400 sample wave into four windows and summing ten samples
+  drawn from each gave `63892 32186 39956 -11508` under seed 42 and
+  `4574 -130702 143999 13175` under the same seed on the next run. A result
+  that cannot be reproduced cannot be published, and generateNoise() and
+  generateTimeMask(method="random") are what a window is likely to be asked
+  for. The workers are now given parallel random number streams, drawn from
+  the session's own random number state where no seed is given, so set.seed()
+  before the call fixes them, and that state and the session's generator are
+  left as they were found. A `seed` argument seeds the streams directly,
+  without touching the session's.
+
+  The streams are one per worker, so which worker computes a window decides
+  which numbers it draws: reproducing a result needs a cluster of the same size
+  as well as the same seed, and the four windows above gave
+  `47159 -14504 52112 -929` on two workers and `47159 52112 10857 103662` on
+  four. windowing() without a cluster draws from the session's own stream,
+  which set.seed() already fixed, and so gives numbers of its own again.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes
