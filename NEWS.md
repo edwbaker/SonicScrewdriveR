@@ -1629,6 +1629,14 @@
   seconds, as the multiplier was applied only to the end of the region. Regions
   given in samples now start at sample one, as they do for every other unit, and an
   unknown unit gives an error.
+- A TimeRegion given in seconds, minutes or hours was one sample too long, and
+  consecutive regions shared a sample: both ends were taken as sample numbers
+  and both kept, so a second at 44100 Hz was 44101 samples, and the sample at
+  1 s was in the regions either side of it. A region in time now holds the
+  samples that begin within it, from its start up to its end, so a second is
+  44100 samples and consecutive regions meet without overlapping. A bound
+  falling between two samples was cut short rather than placed, and is now
+  placed. A region given in samples still holds both of the samples it names.
 - merge_annotations() kept only the start of the earlier annotation, so merging one
   annotation into another that contained it discarded the longer one's end. The
   merged annotation now spans both. The same applied to frequency limits. An empty

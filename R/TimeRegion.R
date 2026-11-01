@@ -96,7 +96,20 @@ region <- function(input.unit, from=0, to=Inf, unit) {
     hours = samp.rate * 3600,
     stop(paste("Unknown unit for TimeRegion:", t@unit))
   )
-  return(c(max(1, t@from * multiplier), t@to * multiplier))
+  if (t@unit == "samples") {
+    return(c(max(1, t@from), t@to))
+  }
+  #A region in time runs from its start up to its end, and holds the samples
+  #that begin within it, sample k beginning at (k - 1) / samp.rate. Both ends
+  #were taken as sample numbers and both kept, so a second at 100 Hz was 101
+  #samples, the sample between two regions was in both, and a bound between
+  #two samples was cut short rather than placed. signif() keeps a product such
+  #as 0.07 * 100, which is 7.000000000000001, from being taken as past the
+  #sample it names.
+  return(c(
+    ceiling(signif(t@from * multiplier, 12)) + 1,
+    ceiling(signif(t@to * multiplier, 12))
+  ))
 }
 
 #' Allow subsetting a Wave object with a TimeRegion
@@ -111,12 +124,15 @@ setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
     #with NA rather than one ending where the audio does.
     tr[1] <- max(1, tr[1])
     tr[2] <- min(tr[2], length(x@left))
-    if (tr[2] < tr[1]) {
+    if (tr[1] > length(x@left)) {
       stop("Time region begins after the end of the wave.")
     }
-    x@left <- x@left[tr[1]:tr[2]]
+    #A region in time ends before the sample at its end, so one of no length
+    #holds no samples.
+    samples <- if (tr[2] < tr[1]) integer(0) else tr[1]:tr[2]
+    x@left <- x@left[samples]
     if (x@stereo) {
-      x@right <- x@right[tr[1]:tr[2]]
+      x@right <- x@right[samples]
     }
     return(x)
   }

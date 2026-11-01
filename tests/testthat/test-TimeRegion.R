@@ -42,8 +42,36 @@ test_that("TimeRegion with hours", {
 test_that("Subsetting Wave by TimeRegion works", {
   w <- tuneR::sawtooth(440, duration=2*44100, samp.rate=44100, stereo=TRUE)
   w <- w[region("seconds", 1, 2)]
-  expect_equal(length(w@left), 44101)
-  expect_equal(length(w@right), 44101)
+  expect_equal(length(w@left), 44100)
+  expect_equal(length(w@right), 44100)
+})
+
+test_that("a region in time holds the samples that begin within it", {
+  # Both ends were taken as sample numbers and both kept, so a second was one
+  # sample too long and consecutive regions shared a sample.
+  w <- tuneR::Wave(as.numeric(1:1000), samp.rate=100, bit=32, pcm=FALSE)
+  expect_equal(w[region("seconds", 0, 1)]@left, 1:100)
+  expect_equal(w[region("seconds", 1, 2)]@left, 101:200)
+  expect_equal(w[region("seconds", 2, 3)]@left, 201:300)
+  expect_equal(.timeRegion2samples(region("minutes", 1, 2), 1), c(61, 120))
+  expect_equal(.timeRegion2samples(region("hours", 1, 2), 1), c(3601, 7200))
+
+  # A bound between two samples is placed rather than cut short: the span of
+  # one sample from 0.015 s holds the sample beginning at 0.02 s.
+  expect_equal(w[region("seconds", 0.015, 0.025)]@left, 3)
+  # 0.07 * 100 is 7.000000000000001, which is not past the eighth sample.
+  expect_equal(.timeRegion2samples(region("seconds", 0.07, 0.1), 100), c(8, 10))
+
+  # A region of no length holds no samples.
+  expect_length(w[region("seconds", 1, 1)]@left, 0)
+  # A region beginning after the wave ends is still refused.
+  expect_error(w[region("seconds", 10, 11)], "Time region begins after the end of the wave.")
+})
+
+test_that("a region in samples holds the samples it names", {
+  w <- tuneR::Wave(as.numeric(1:1000), samp.rate=100, bit=32, pcm=FALSE)
+  expect_equal(w[region("samples", 101, 200)]@left, 101:200)
+  expect_equal(w[region("samples", 5, 5)]@left, 5)
 })
 
 test_that("0 and Inf are handled correctly", {
