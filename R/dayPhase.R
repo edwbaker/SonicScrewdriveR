@@ -336,17 +336,71 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 
 #' The first instant of a local day
 #'
-#' as.POSIXct() of a midnight the local clock skips, as it does where daylight
-#' saving begins at midnight, is NA. Noon exists on every day, so the day is
-#' anchored there and twelve hours are taken off in real time, which lands on the
-#' first instant the clock did reach that day.
+#' Local midnight where the clock reaches it, and the moment the clock jumps where
+#' it does not: where daylight saving begins at midnight, as it does in Cuba and
+#' Chile, the first reading of the day is 01:00, and where it ends at 01:00 the
+#' clock reaches midnight twice and the first of the two is the one wanted.
+#'
+#' Twelve hours were taken off local noon, and taken in real time, but there are
+#' not twelve real hours between midnight and noon on a 23- or 25-hour day, so the
+#' result was an hour out in the direction of the transition: in London it landed
+#' at 23:00 the day before every spring and lost the first hour of the day every
+#' autumn. Zeroing the clock fields of noon instead goes wrong the other way, as
+#' the reading it names does not exist on a day whose midnight is skipped, which
+#' as.POSIXct() gives as NA where it does not refuse it outright.
+#'
+#' The day is therefore found as an instant rather than as a clock reading. Local
+#' midnight falls at one instant for each UTC offset in force around the boundary,
+#' and the first instant of the day is the earliest of those the local clock still
+#' reads as being on it.
+#'
+#' @param date A date, or a vector of dates
+#' @param tz Time-zone
+#' @return The first instant of each day, as POSIXct.
+#' @noRd
+.startOfDay <- function(date, tz) {
+  date <- as.Date(date)
+  secs <- vapply(seq_along(date), function(i) .firstInstantOfDay(date[[i]], tz),
+                 numeric(1))
+  return(as.POSIXct(secs, tz=tz, origin="1970-01-01"))
+}
+
+#' The first instant of one local day
 #'
 #' @param date A date
 #' @param tz Time-zone
-#' @return The first instant of the day, as POSIXct.
+#' @return The first instant of the day, in seconds since the epoch.
 #' @noRd
-.startOfDay <- function(date, tz) {
-  return(as.POSIXct(paste(as.Date(date), "12:00:00"), tz=tz) - 43200)
+.firstInstantOfDay <- function(date, tz) {
+  midnight <- as.numeric(as.POSIXct(paste(date, "00:00:00"), tz="UTC"))
+  #A transition moves the clock for months at a time, so every offset in force
+  #anywhere near the boundary is in force at one of these instants.
+  probes <- as.POSIXct(midnight + seq(-86400, 86400, by=43200), tz="UTC",
+                       origin="1970-01-01")
+  cand <- sort(unique(midnight - .utcOffset(probes, tz)))
+  on <- as.Date(as.POSIXct(cand, tz=tz, origin="1970-01-01"), tz=tz) == date
+  if (any(on)) {
+    return(cand[on][[1]])
+  }
+  #The clock skipped this date altogether, as Samoa's did on 30 December 2011 in
+  #crossing the date line. Nothing belongs to a day that never began, and the day
+  #after it starts where this one would have ended.
+  return(.firstInstantOfDay(date + 1, tz))
+}
+
+#' How far ahead of UTC a local clock is
+#'
+#' In seconds at each of the instants given, negative to the west of Greenwich.
+#' Read from the clock rather than from the gmtoff field of a POSIXlt, which is
+#' optional and is NA on a platform that does not supply it.
+#'
+#' @param t Instants, as POSIXct
+#' @param tz Time-zone
+#' @return The offset in seconds at each instant.
+#' @noRd
+.utcOffset <- function(t, tz) {
+  local <- format(t, tz=tz, format="%Y-%m-%d %H:%M:%S")
+  return(as.numeric(as.POSIXct(local, tz="UTC")) - as.numeric(t))
 }
 
 #' Moon rise and set times

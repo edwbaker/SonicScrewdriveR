@@ -72,6 +72,110 @@ test_that("dayPhases finds the moon's set beyond the following day", {
   expect_equal(as.Date(d["Moon", "End"]), as.Date("2024-04-17"))
 })
 
+test_that(".startOfDay gives the first instant of the local day", {
+  # Each instant below is written in UTC and comes from the zone's own published
+  # transition rather than from the function under test. British Summer Time
+  # begins at 01:00 UTC on 31 March 2024, so the London day begins at 00:00 UTC
+  # as usual, and ends at 01:00 UTC on 27 October, so that day begins at 23:00
+  # UTC the evening before. Cuba and Chile move their clocks at midnight, which
+  # leaves the day beginning at 01:00 local; the United States, Australia and
+  # New Zealand move theirs at 02:00 or 03:00, which leaves midnight in place.
+  cases <- rbind(
+    c("Europe/London",       "2024-03-31", "2024-03-31 00:00:00"),
+    c("Europe/London",       "2024-10-27", "2024-10-26 23:00:00"),
+    c("Europe/London",       "2024-06-15", "2024-06-14 23:00:00"),
+    c("America/New_York",    "2024-03-10", "2024-03-10 05:00:00"),
+    c("America/New_York",    "2024-11-03", "2024-11-03 04:00:00"),
+    c("America/Havana",      "2024-03-10", "2024-03-10 05:00:00"),
+    c("America/Havana",      "2024-11-03", "2024-11-03 04:00:00"),
+    c("America/Santiago",    "2024-09-08", "2024-09-08 04:00:00"),
+    c("Australia/Sydney",    "2024-10-06", "2024-10-05 14:00:00"),
+    c("Australia/Sydney",    "2024-04-07", "2024-04-06 13:00:00"),
+    c("Pacific/Auckland",    "2024-09-29", "2024-09-28 12:00:00"),
+    c("Australia/Lord_Howe", "2024-10-06", "2024-10-05 13:30:00"),
+    c("Asia/Kolkata",        "2024-03-31", "2024-03-30 18:30:00"),
+    c("UTC",                 "2024-06-15", "2024-06-15 00:00:00")
+  )
+  for (i in seq_len(nrow(cases))) {
+    expect_equal(as.numeric(.startOfDay(as.Date(cases[i, 2]), tz=cases[i, 1])),
+                 as.numeric(as.POSIXct(cases[i, 3], tz="UTC")),
+                 tolerance=0, info=paste(cases[i, 1], cases[i, 2]))
+  }
+
+  # Where the clock skips midnight the first reading of the day is 01:00, which
+  # is the case the noon anchor was written for and did not handle.
+  expect_equal(format(.startOfDay(as.Date("2024-03-10"), tz="America/Havana"),
+                      "%H:%M:%S", tz="America/Havana"), "01:00:00")
+  # A day is 24 hours long except where the clock says otherwise.
+  london <- function(d) .startOfDay(as.Date(d), tz="Europe/London")
+  expect_equal(as.numeric(difftime(london("2024-04-01"), london("2024-03-31"),
+                                   units="hours")), 23)
+  expect_equal(as.numeric(difftime(london("2024-10-28"), london("2024-10-27"),
+                                   units="hours")), 25)
+})
+
+test_that(".startOfDay takes a vector of dates and a date the clock skipped", {
+  days <- as.Date(c("2024-03-30", "2024-03-31", "2024-10-27"))
+  starts <- .startOfDay(days, tz="Europe/London")
+  expect_length(starts, 3)
+  expect_equal(as.numeric(starts),
+               as.numeric(as.POSIXct(c("2024-03-30 00:00:00", "2024-03-31 00:00:00",
+                                       "2024-10-26 23:00:00"), tz="UTC")), tolerance=0)
+  expect_equal(attr(starts, "tzone"), "Europe/London")
+
+  # Samoa crossed the date line at the end of 29 December 2011, so 30 December
+  # never happened there and has no first instant of its own. The day after it
+  # begins where it would have ended, which leaves a day that never happened
+  # holding no part of the run of time rather than NA.
+  expect_equal(as.numeric(.startOfDay(as.Date("2011-12-31"), tz="Pacific/Apia")),
+               as.numeric(as.POSIXct("2011-12-30 10:00:00", tz="UTC")), tolerance=0)
+  expect_equal(as.numeric(.startOfDay(as.Date("2011-12-30"), tz="Pacific/Apia")),
+               as.numeric(.startOfDay(as.Date("2011-12-31"), tz="Pacific/Apia")),
+               tolerance=0)
+})
+
+test_that("dayPhases files an event near midnight under the day it falls in", {
+  # At 20 N, 100 E the sun rises at a quarter past six in local solar time, which
+  # on 30 March 2024 reads 23:15 in London and so belongs to the 30th. No sunrise
+  # falls within the London day of the 31st at all, the clocks having gone forward
+  # at 01:00 that morning: the next one reads 00:14 on 1 April. The window that
+  # decides which events belong to the day began an hour early, so the previous
+  # day's sunrise was reported as this day's.
+  d <- dayPhases(as.Date("2024-03-31"), lat=20, lon=100, tz="Europe/London")
+  expect_true(is.na(d["Sunrise", "Start"]))
+  expect_true(is.na(d["Day", "Start"]))
+
+  # The other way about: the sunrise of 27 October 2024 at 20 N, 105 E falls in
+  # the first hour of that London day, which is the hour the window began after.
+  d <- dayPhases(as.Date("2024-10-27"), lat=20, lon=105, tz="Europe/London")
+  sunrise <- d["Sunrise", "Start"]
+  expect_false(is.na(sunrise))
+  expect_equal(as.Date(sunrise, tz="Europe/London"), as.Date("2024-10-27"))
+  expect_lt(as.numeric(difftime(sunrise, .startOfDay(as.Date("2024-10-27"),
+                                                     tz="Europe/London"),
+                                units="hours")), 1)
+})
+
+test_that("dayPhases gives no day an event from a neighbouring day", {
+  # The day an event belongs to is the one the local clock reads at its own
+  # instant, which settles the matter without reference to the window. Swept over
+  # both 2024 transitions in London and over longitudes far enough from the zone's
+  # own meridian for an event to fall within an hour of local midnight, which is
+  # where an hour-wide error at either end of the day can be seen at all.
+  dates <- as.Date(c("2024-03-31", "2024-10-27"))
+  for (i in seq_along(dates)) {
+    date <- dates[i]
+    for (lon in c(-105, -75, 0, 75, 100, 105)) {
+      d <- dayPhases(date, lat=20, lon=lon, tz="Europe/London")
+      starts <- d[.dayPhaseNames(), "Start"]
+      starts <- starts[!is.na(starts)]
+      expect_equal(as.Date(starts, tz="Europe/London"),
+                   rep(as.Date(date), length(starts)),
+                   info=paste(format(as.Date(date)), "lon", lon))
+    }
+  }
+})
+
 test_that("dayPhase covers a recording within a single day", {
   r <- dayPhase(time=as.POSIXct("2024-12-15 12:00:00", tz="UTC"), duration=3600,
                 lat=LAT, lon=LON, tz="UTC")
