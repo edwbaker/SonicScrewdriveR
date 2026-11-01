@@ -1551,6 +1551,13 @@
 - humanTime() raised an error when given more than one time, for the same reason as
   humanBytes(). It now returns one string per time, and rounds to three decimal
   places, which can be changed with the new digits argument.
+- humanBytes() and humanTime() chose the unit before rounding, so a value just
+  under a unit rounded up onto it while keeping the unit below: 999999.9 bytes
+  was "1000 kB" rather than "1 MB", and 3599.9999 seconds "60 minutes" rather
+  than "1 hour". The unit is now chosen again for the value as it is shown. A
+  negative size, which audio_filesize() can give, had no unit at all, so -1500
+  bytes was "-1500 bytes"; it is now "-1.5 kB", and -1 byte is singular. A
+  size such as 1.0001 bytes, shown as 1, is "1 byte" rather than "1 bytes".
 - soundSpeed() with method="cramer" used the constant T, which R resolves to TRUE, in
   place of the temperature in the pressure term of Cramer's expression. Speeds were
   biased by 3.73e-8 * (1 - t) * P, which is -0.11 m/s at 30 C and standard pressure,

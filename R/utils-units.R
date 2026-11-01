@@ -94,8 +94,16 @@
   pluralise <- match.arg(pluralise)
 
   #findInterval() gives zero for values smaller than the first unit, and otherwise
-  #the position of the largest unit that applies.
-  largest <- findInterval(S, multipliers)
+  #the position of the largest unit that applies. It is given the size of the
+  #value, as it gives zero for anything negative, which had no unit at all.
+  largest <- findInterval(abs(S), multipliers)
+  #The unit is chosen again for the value as it will be shown. Chosen before
+  #rounding alone, a value just under a unit rounded up onto that unit in the
+  #one below it: 999999.9 bytes was "1000 kB", and 3599.9999 s "60 minutes".
+  if (!is.null(digits)) {
+    scale <- c(1, multipliers)[largest + 1]
+    largest <- findInterval(round(abs(S) / scale, digits) * scale, multipliers)
+  }
   applies <- pmax(largest, 1)
 
   value <- ifelse(largest == 0, S, S / multipliers[applies])
@@ -105,11 +113,11 @@
 
   if (pluralise == "all") {
     name <- ifelse(largest == 0, base.name, names(multipliers)[applies])
-    name <- ifelse(value == 1, name, paste0(name, "s"))
+    name <- ifelse(abs(value) == 1, name, paste0(name, "s"))
   } else {
     name <- ifelse(
       largest == 0,
-      ifelse(S == 1, base.name, paste0(base.name, "s")),
+      ifelse(abs(value) == 1, base.name, paste0(base.name, "s")),
       names(multipliers)[applies]
     )
   }
