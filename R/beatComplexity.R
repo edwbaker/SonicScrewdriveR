@@ -33,8 +33,15 @@ beatComplexity <-function(
   }
   bs <- beatSpectrum(wave)
 
-  e <- c(0,diff(sign(diff(bs$power))),0)
-  peaks <- e==-2
+  #A peak may be flat-topped. Across a run of equal powers the sign of the
+  #difference goes from a rise to nothing to a fall, never straight from one to
+  #the other, so the peak was missed. Each run is taken as one point, and a
+  #peak on a run is put at its middle, rounded down, as scipy's find_peaks()
+  #puts one.
+  runs <- rle(bs$power)
+  e <- c(0,diff(sign(diff(runs$values))),0)
+  ends <- cumsum(runs$lengths)
+  peaks <- ((ends - runs$lengths + 1 + ends) %/% 2)[e==-2]
 
   if (plot) {
     plot(bs$period, bs$power, type="l")

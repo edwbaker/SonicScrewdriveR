@@ -105,6 +105,34 @@ test_that("a spectrum with no peak gives an undefined complexity, not -Inf", {
   expect_identical(bc$complexity, NA_real_)
 })
 
+test_that("a flat-topped peak is found, at the middle of its top", {
+  #Across a run of equal powers the sign of the difference goes from a rise to
+  #nothing to a fall, never straight from one to the other, so the peak was
+  #missed.
+  local_mocked_bindings(
+    beatSpectrum = function(wave, ...)
+      data.frame(power=c(1, 2, 10, 10, 10, 2, 1, 5, 1), period=(1:9)*0.02)
+  )
+  bc <- beatComplexity(NULL)
+  expect_equal(bc$peak.periods, c(0.08, 0.16))
+  expect_identical(bc$num.peaks, 2L)
+  expect_equal(bc$complexity, 0.16 / 2)
+
+  #A top of an even number of powers is put at the first of the middle two.
+  local_mocked_bindings(
+    beatSpectrum = function(wave, ...)
+      data.frame(power=c(1, 2, 10, 10, 2, 1), period=(1:6)*0.02)
+  )
+  expect_equal(beatComplexity(NULL)$peak.periods, 0.06)
+
+  #A run of equal powers on the way up is not a peak.
+  local_mocked_bindings(
+    beatSpectrum = function(wave, ...)
+      data.frame(power=c(1, 2, 2, 3, 1), period=(1:5)*0.02)
+  )
+  expect_equal(beatComplexity(NULL)$peak.periods, 0.08)
+})
+
 test_that("a spectrum too short to hold a peak gives an undefined complexity", {
   for (power in list(5, c(1, 2))) {
     local_mocked_bindings(
