@@ -7,7 +7,7 @@
 yearlyPositions(year = 2022, format = "months")
 }
 \arguments{
-\item{year}{Year to calculate}
+\item{year}{Year to calculate, which must be a single year}
 
 \item{format}{One of months, mid-months, days}
 }

@@ -262,3 +262,208 @@ test_that("scaleRGB rounds to the nearest level rather than truncating", {
   exact <- seq(0, 255, length.out = 9)
   expect_true(all(abs(s - exact) <= 0.5))
 })
+
+#Two channels holding different tones, so the channels must give different
+#spectrograms for the tests below to mean anything.
+channelTone <- function(frequency, rate=8000, seconds=2) {
+  round(10000 * sin(2*pi*frequency*seq_len(rate*seconds)/rate))
+}
+twoChannelWave <- function(rate=8000, seconds=2) {
+  tuneR::Wave(
+    left = channelTone(500, rate, seconds),
+    right = channelTone(3000, rate, seconds),
+    samp.rate = rate, bit = 16, pcm = TRUE
+  )
+}
+oneChannelWave <- function(frequency, rate=8000, seconds=2) {
+  tuneR::Wave(channelTone(frequency, rate, seconds), samp.rate=rate, bit=16, pcm=TRUE)
+}
+
+test_that("a stereo wave gives one spectrogram per channel", {
+  # The spectrograms read the first channel, so a stereo recording was described
+  # by its left channel alone with nothing to say which channel that was.
+  st <- twoChannelWave()
+  f <- fcis(st, window.length=4000, wl=128)
+
+  expect_type(f, "list")
+  expect_length(f, 2)
+  expect_s3_class(f[[1]], "fcis")
+  expect_s3_class(f[[2]], "fcis")
+  expect_equal(f[[1]]$channel, 1L)
+  expect_equal(f[[2]]$channel, 2L)
+
+  # Each channel is what describing that channel on its own gives, and the two
+  # are not the same image.
+  expect_false(identical(f[[1]]$colours, f[[2]]$colours))
+  expect_equal(f[[1]]$colours, fcis(oneChannelWave(500), window.length=4000, wl=128)$colours)
+  expect_equal(f[[2]]$colours, fcis(oneChannelWave(3000), window.length=4000, wl=128)$colours)
+})
+
+test_that("a WaveMC gives one spectrogram per channel", {
+  # A WaveMC could not be described at all: windowing() takes a Wave, and the
+  # spectrograms read a left slot a WaveMC does not have.
+  samples <- cbind(channelTone(500), channelTone(3000), channelTone(500))
+  w <- tuneR::WaveMC(samples, samp.rate=8000, bit=16, pcm=TRUE)
+  f <- fcis(w, window.length=4000, wl=128)
+
+  expect_length(f, 3)
+  expect_equal(sapply(f, function(e) e$channel), c(1L, 2L, 3L))
+  expect_false(identical(f[[1]]$colours, f[[2]]$colours))
+  expect_equal(f[[1]]$colours, f[[3]]$colours)
+  expect_equal(f[[1]]$colours, fcis(oneChannelWave(500), window.length=4000, wl=128)$colours)
+})
+
+test_that("a WaveMC of one channel is described as the wave it holds", {
+  mono <- oneChannelWave(500)
+  w <- tuneR::WaveMC(matrix(mono@left, ncol=1), samp.rate=8000, bit=16, pcm=TRUE)
+  f <- fcis(w, window.length=4000, wl=128)
+
+  expect_s3_class(f, "fcis")
+  expect_true(is.na(f$channel))
+  expect_equal(f$colours, fcis(mono, window.length=4000, wl=128)$colours)
+})
+
+test_that("a recording of one channel is described as it always was", {
+  mono <- oneChannelWave(500)
+  f <- fcis(mono, window.length=4000, wl=128)
+
+  expect_s3_class(f, "fcis")
+  # Nothing is recorded for a recording with only one channel to describe.
+  expect_true(is.na(f$channel))
+  expect_equal(f$channels, c("power", "ACI", "entropy"))
+})
+
+test_that("one channel of a recording can be asked for", {
+  st <- twoChannelWave()
+  f <- fcis(st, window.length=4000, wl=128, channel=2)
+
+  expect_s3_class(f, "fcis")
+  expect_equal(f$channel, 2L)
+  expect_equal(f$colours, fcis(oneChannelWave(3000), window.length=4000, wl=128)$colours)
+})
+
+test_that("a channel the recording does not have is refused", {
+  st <- twoChannelWave()
+  for (bad in list(0, 3, 1.5, NA, "left", c(1, 2))) {
+    expect_error(
+      fcis(st, window.length=4000, wl=128, channel=bad),
+      "channel must be one of the 2 channels of the recording."
+    )
+  }
+})
+
+test_that("a plot of one channel of several says which channel it shows", {
+  # There was nothing in the image to tell one channel from another.
+  st <- twoChannelWave()
+  f <- fcis(st, window.length=4000, wl=128)
+
+  expect_equal(.fcisTitle(f[[1]]), "False-colour index spectrogram (channel 1)")
+  expect_equal(.fcisTitle(f[[2]]), "False-colour index spectrogram (channel 2)")
+  expect_silent(plot(f[[2]]))
+
+  # A recording of one channel is titled as it always was.
+  expect_equal(
+    .fcisTitle(fcis(oneChannelWave(500), window.length=4000, wl=128)),
+    "False-colour index spectrogram"
+  )
+
+  # The channel is read by its exact name: $channel on an object from a release
+  # that recorded none matched the "channels" holding the names of the indices,
+  # and asking whether three index names were NA was an error, not a title.
+  older <- fcis(oneChannelWave(500), window.length=4000, wl=128)
+  older$channel <- NULL
+  expect_equal(.fcisTitle(older), "False-colour index spectrogram")
+
+  # A title given is still used.
+  expect_silent(plot(f[[1]], main="Mine"))
+})
+
+test_that("a stereo file gives one spectrogram per channel", {
+  skip_if_not_installed("av")
+  st <- twoChannelWave()
+  path <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(st, path)
+
+  f <- fcis(path, window.length=4000, wl=128)
+  expect_length(f, 2)
+  expect_equal(sapply(f, function(e) e$channel), c(1L, 2L))
+
+  # The same answer as describing the wave itself, channel for channel.
+  fromWave <- fcis(st, window.length=4000, wl=128)
+  expect_equal(f[[1]]$colours, fromWave[[1]]$colours)
+  expect_equal(f[[2]]$colours, fromWave[[2]]$colours)
+})
+
+test_that("several stereo files are one spectrogram per channel", {
+  skip_if_not_installed("av")
+  st <- twoChannelWave()
+  path <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(st, path)
+
+  one <- fcis(path, window.length=4000, wl=128)
+  two <- fcis(c(path, path), window.length=4000, wl=128)
+  expect_length(two, 2)
+  # The columns of both files, in each channel.
+  expect_equal(ncol(two[[2]]$colours), 2*ncol(one[[2]]$colours))
+  expect_equal(nrow(two[[2]]$colours), nrow(one[[2]]$colours))
+})
+
+test_that("the settings reach every channel", {
+  st <- twoChannelWave()
+
+  fine <- fcis(st, window.length=4000, wl=128)
+  coarse <- fcis(st, window.length=4000, wl=64)
+  # A shorter spectrogram window gives fewer frequency bins, in both channels.
+  expect_lt(nrow(coarse[[1]]$colours), nrow(fine[[1]]$colours))
+  expect_lt(nrow(coarse[[2]]$colours), nrow(fine[[2]]$colours))
+
+  named <- fcis(st, window.length=4000, wl=128, indices=c("background", "ACI", "cover"))
+  expect_equal(named[[1]]$channels, c("background", "ACI", "cover"))
+  expect_equal(named[[2]]$channels, c("background", "ACI", "cover"))
+
+  # One column covering the whole recording, per channel.
+  whole <- fcis(st, window.length=NULL, wl=128)
+  expect_equal(ncol(whole[[1]]$colours), 1)
+  expect_equal(ncol(whole[[2]]$colours), 1)
+  expect_true(is.na(whole[[2]]$window.seconds))
+})
+
+test_that(".waveChannel takes a channel from either class", {
+  st <- twoChannelWave()
+  expect_equal(.waveChannel(st, 1)@left, st@left)
+  expect_equal(.waveChannel(st, 2)@left, st@right)
+  expect_false(.waveChannel(st, 2)@stereo)
+  expect_equal(.waveChannel(st, 2)@samp.rate, st@samp.rate)
+  expect_equal(.waveChannel(st, 2)@bit, st@bit)
+  expect_equal(.waveChannel(st, 2)@pcm, st@pcm)
+
+  w <- tuneR::WaveMC(
+    cbind(channelTone(500), channelTone(3000)), samp.rate=8000, bit=16, pcm=TRUE
+  )
+  expect_equal(.waveChannel(w, 2)@left, w@.Data[,2])
+  expect_s4_class(.waveChannel(w, 2), "Wave")
+
+  mono <- oneChannelWave(500)
+  expect_equal(.waveChannel(mono, 1)@left, mono@left)
+
+  expect_error(.waveChannel(st, 3), "The recording has 2 channels, so channel 3 is not one of them.")
+  expect_error(.waveChannel(mono, 2), "The recording has 1 channels, so channel 2 is not one of them.")
+})
+
+test_that(".fcisChannels counts the channels of either class and of a file", {
+  expect_equal(.fcisChannels(oneChannelWave(500)), 1)
+  expect_equal(.fcisChannels(twoChannelWave()), 2)
+  expect_equal(
+    .fcisChannels(tuneR::WaveMC(cbind(1:10, 1:10, 1:10), samp.rate=8000, bit=16)),
+    3
+  )
+
+  # A file whose channel count cannot be read is treated as holding one, which
+  # is how it was read before.
+  expect_equal(.fcisChannels("not-a-file.wav"), 1)
+
+  skip_if_not_installed("av")
+  path <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(twoChannelWave(), path)
+  expect_equal(.fcisChannels(path), 2)
+})

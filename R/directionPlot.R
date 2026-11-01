@@ -4,6 +4,15 @@ directionPlot <- function(angles,
                           angle.unit="degrees",
                           plot.mean=TRUE) {
   angles <- convert2radians(angles, input.unit=angle.unit)
+  #The axis of this plot runs over (-pi, pi], half a turn either side of north,
+  #so a bearing is wrapped into that range. convert2radians() gives [0, 2*pi)
+  #for a compass bearing, and ggplot2 drops a value outside a scale's limits
+  #without a word, so every direction above 180 degrees was removed from the
+  #plot: a bearing of 270 degrees is drawn where -90 is, which is the same place
+  #on the compass, rather than not drawn at all. The modulo also brings a
+  #bearing of more than one turn onto the compass.
+  angles <- angles %% (2*pi)
+  angles[angles > pi] <- angles[angles > pi] - 2*pi
   #Named before the row is appended. data.frame(0, 0) names its columns X0 and
   #X0.1, which match nothing, so rbind() failed for every input.
   data <- data.frame(Angles=angles, Speeds=speeds)

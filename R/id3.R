@@ -137,11 +137,15 @@
 #' Read a frame that carries a description before its value
 #' @keywords internal
 #' @noRd
-.id3Described <- function(id, bytes, encoding, url=FALSE) {
+.id3Described <- function(id, bytes, code, url=FALSE) {
+  encoding <- .id3Encoding(code, bytes)
   split <- .id3SplitDescription(bytes, encoding)
   # The address in a user-defined link frame is written in ISO-8859-1 whatever
-  # the frame declared, which applies only to its description.
-  value <- if (url) .mdDecode(split$rest) else .mdDecodeValues(split$rest, from=encoding)
+  # the frame declared, which applies only to its description. The value's own
+  # byte order mark settles its order, as the description's settles only its
+  # own.
+  value <- if (url) .mdDecode(split$rest)
+           else .mdDecodeValues(split$rest, from=.id3Encoding(code, split$rest))
   if (length(value) == 0L || !any(nzchar(value))) {
     return(NULL)
   }
@@ -165,9 +169,13 @@
     rest <- data[-1L]
     language <- .mdDecode(rest[1:3])
     rest <- rest[-(1:3)]
-    encoding <- .id3Encoding(as.integer(data[1]), rest)
+    code <- as.integer(data[1])
+    encoding <- .id3Encoding(code, rest)
     split <- .id3SplitDescription(rest, encoding)
-    value <- .mdDecode(split$rest, from=encoding)
+    # Every string in a frame carries its own byte order mark, so the value's
+    # order is read from the value rather than from the description in front of
+    # it: a description with no mark of its own settles nothing about the text.
+    value <- .mdDecode(split$rest, from=.id3Encoding(code, split$rest))
     if (!nzchar(value)) {
       return(NULL)
     }
@@ -182,9 +190,10 @@
       return(NULL)
     }
     rest <- data[-1L]
-    encoding <- .id3Encoding(as.integer(data[1]), rest)
+    code <- as.integer(data[1])
+    encoding <- .id3Encoding(code, rest)
     if (id %in% c("TXXX", "TXX")) {
-      return(.id3Described(id, rest, encoding))
+      return(.id3Described(id, rest, code))
     }
     values <- .mdDecodeValues(rest, from=encoding)
     if (length(values) == 0L) {
@@ -198,7 +207,7 @@
         return(NULL)
       }
       rest <- data[-1L]
-      return(.id3Described(id, rest, .id3Encoding(as.integer(data[1]), rest), url=TRUE))
+      return(.id3Described(id, rest, as.integer(data[1]), url=TRUE))
     }
     value <- .mdDecode(data)
     if (!nzchar(value)) {

@@ -50,3 +50,45 @@ test_that("ste has a window length of its own", {
   expect_equal(ste(w), .ste_dietrich2004(w, U=120))
   expect_false(identical(ste(w, U=8), ste(w, U=120)))
 })
+
+test_that("ste measures every channel", {
+  # A stereo wave read only its left channel, so the energy of the right one was
+  # never reported, and a WaveMC has no left slot to read at all.
+  sr <- 8000
+  n <- 4000
+  L <- tuneR::Wave(round(sin(2*pi*300*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(sin(2*pi*1500*(1:n)/sr) * 3000), samp.rate=sr, bit=16)
+
+  left <- ste(L)
+  right <- ste(R)
+  expect_false(isTRUE(all.equal(left, right)))
+  expect_false(isTRUE(all.equal(ste(tuneR::stereo(L, R)), left)))
+
+  expect_equal(ste(tuneR::stereo(L, R)), list(list(left), list(right)))
+  expect_equal(
+    ste(tuneR::WaveMC(cbind(L@left, R@left, L@left), samp.rate=sr, bit=16)),
+    list(list(left), list(right), list(left))
+  )
+})
+
+test_that("ste passes its window length and method to each channel", {
+  sr <- 8000
+  n <- 2000
+  L <- tuneR::Wave(round(sin(2*pi*300*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(sin(2*pi*1500*(1:n)/sr) * 3000), samp.rate=sr, bit=16)
+  st <- tuneR::stereo(L, R)
+
+  expect_equal(ste(st, U=20), list(list(ste(L, U=20)), list(ste(R, U=20))))
+  expect_false(isTRUE(all.equal(ste(st, U=20), ste(st, U=120))))
+
+  # An unknown method is reported once, before the channels are split, rather
+  # than once per channel.
+  expect_error(ste(st, method="not-a-method"), "Unknown method for ste: not-a-method")
+})
+
+test_that("ste rejects things that are not waves", {
+  # Nothing checked the class, so anything that was not a wave reached the left
+  # slot and failed there, naming a slot rather than the argument.
+  expect_error(ste("string"), "Expecting a Wave object")
+  expect_error(ste(1:10), "Expecting a Wave object")
+})

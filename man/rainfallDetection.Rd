@@ -15,8 +15,13 @@ objects are passed to allChannels(), which returns one value per channel.}
 \item{...}{Other arguments to pass to rain detection function}
 }
 \value{
-Numeric value from the rainfall detection algorithm chosen. For
-multi-channel input, a list of such values.
+Numeric value from the rainfall detection algorithm chosen, or zero
+where the recording is not rainfall. For "bedoya2017" the value is the mean
+power spectral density of the 600-1200 Hz band in power per Hz, relative to
+the full scale of the format the wave is held in, so it is the same number
+whatever that bit depth is and is comparable between recordings. Its
+\code{Tmean} threshold is in those units. For multi-channel input, a list of
+such values.
 }
 \description{
 Detects rainfall in a Wave. An uncalibrated version of Bedoya et al (2017) \url{doi:10.1016/j.ecolind.2016.12.018} is available in this package. The hardRain

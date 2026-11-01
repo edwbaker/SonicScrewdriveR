@@ -118,6 +118,7 @@ export(radarPower)
 export(radarRange)
 export(radialPolygon)
 export(rainfallDetection)
+export(readAOEF)
 export(readAudacityLabels)
 export(readAudio)
 export(readBirdNet)
@@ -151,6 +152,7 @@ export(wavCues)
 export(wavInfo)
 export(wavelength)
 export(windowing)
+export(writeAOEF)
 export(writeAnnotationWave)
 export(writeAudacityLabels)
 export(writeAudio)
@@ -162,6 +164,7 @@ export(yearlyPositions)
 export(zeroSpectrum)
 export(zerocross)
 importFrom(Rdpack,reprompt)
+importFrom(digest,digest)
 importFrom(ggplot2,
   .data,
   aes,
@@ -212,6 +215,7 @@ importFrom(seewave,
   cutw,
   duration,
   env,
+  ftwindow,
   meanspec,
   resamp,
   savewav,

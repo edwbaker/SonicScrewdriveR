@@ -7,7 +7,9 @@
 beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 }
 \arguments{
-\item{wave}{an R object or path to a wave file}
+\item{wave}{an R object or path to a wave file. Stereo Wave and WaveMC
+objects are passed to allChannels(), which returns the spectrum of each
+channel separately.}
 
 \item{min_period}{the minimal rhythmicity period expected, in seconds}
 
@@ -21,6 +23,7 @@ beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 a spectrum as a data frame.
 It contains two columns: \code{power} and \code{period}.
 The number of rows depend on the resolution and frequency range.
+For multi-channel input, one such data frame per channel.
 }
 \description{
 Beat spectra represent the periodicity in signal amplitude.

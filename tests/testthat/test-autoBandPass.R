@@ -29,8 +29,10 @@ bandEnergy <- function(wave, from, to) {
 }
 
 test_that("something that is not a wave is refused", {
-  expect_error(autoBandPass("sheep"), "Expecting a Wave object")
-  expect_error(autoBandPass(1:100), "Expecting a Wave object")
+  # A WaveMC is now accepted, as the filter underneath can take one, so the
+  # refusal names both of the classes that are.
+  expect_error(autoBandPass("sheep"), "Expecting a Wave or WaveMC object")
+  expect_error(autoBandPass(1:100), "Expecting a Wave or WaveMC object")
 })
 
 test_that("a bandwidth the function does not measure is refused by name", {
@@ -214,4 +216,102 @@ test_that("the band is built from frequencies in Hz without a warning about thei
   expect_gt(peakFrequency(filtered), 1800)
   expect_lt(peakFrequency(filtered), 2200)
   expect_null(state$warned)
+})
+
+#A second band-limited channel, so the two channels of a stereo wave hold
+#different signals and must choose different bands.
+otherBandWave <- function(samp.rate=8000, seconds=1, strong=c(3200, 3600)) {
+  set.seed(7)
+  noise <- tuneR::Wave(round(10000*rnorm(samp.rate*seconds)), samp.rate=samp.rate, bit=16)
+  loud <- seewave::ffilter(noise, from=strong[1], to=strong[2], output="Wave")
+  tuneR::Wave(round(loud@left), samp.rate=samp.rate, bit=16)
+}
+
+test_that("a stereo wave keeps both of its channels", {
+  # seewave reads the left slot of a Wave, so a stereo wave came back mono with
+  # its right channel silently discarded.
+  L <- bandWave()
+  R <- otherBandWave()
+  st <- tuneR::stereo(L, R)
+  filtered <- autoBandPass(st)
+
+  expect_s4_class(filtered, "Wave")
+  expect_true(filtered@stereo)
+  expect_equal(length(filtered@left), length(st@left))
+  expect_equal(length(filtered@right), length(st@right))
+  expect_equal(filtered@samp.rate, st@samp.rate)
+  expect_equal(filtered@bit, st@bit)
+  expect_equal(filtered@pcm, st@pcm)
+})
+
+test_that("each channel is filtered around its own strongest frequency", {
+  L <- bandWave()
+  R <- otherBandWave()
+  filtered <- autoBandPass(tuneR::stereo(L, R))
+
+  # The channels must choose different bands for the test to mean anything.
+  expect_gt(peakFrequency(tuneR::channel(filtered, "left")), 1800)
+  expect_lt(peakFrequency(tuneR::channel(filtered, "left")), 2200)
+  expect_gt(peakFrequency(tuneR::channel(filtered, "right")), 3200)
+  expect_lt(peakFrequency(tuneR::channel(filtered, "right")), 3600)
+
+  # Each channel is what filtering that channel alone gives.
+  expect_equal(filtered@left, autoBandPass(L)@left)
+  expect_equal(filtered@right, autoBandPass(R)@left)
+})
+
+test_that("a WaveMC keeps all of its channels", {
+  # A WaveMC was refused outright, although the filter underneath can take one.
+  L <- bandWave()
+  R <- otherBandWave()
+  w <- tuneR::WaveMC(cbind(L@left, R@left, L@left), samp.rate=L@samp.rate, bit=16)
+  filtered <- autoBandPass(w)
+
+  expect_s4_class(filtered, "WaveMC")
+  expect_equal(ncol(filtered@.Data), 3)
+  expect_equal(nrow(filtered@.Data), nrow(w@.Data))
+  expect_equal(filtered@samp.rate, w@samp.rate)
+  expect_equal(filtered@bit, w@bit)
+
+  channel <- function(i) tuneR::Wave(filtered@.Data[,i], samp.rate=w@samp.rate, bit=16)
+  expect_lt(peakFrequency(channel(1)), 2200)
+  expect_gt(peakFrequency(channel(2)), 3200)
+  expect_equal(filtered@.Data[,1], filtered@.Data[,3])
+})
+
+test_that("the settings reach every channel", {
+  L <- bandWave()
+  R <- otherBandWave()
+  st <- tuneR::stereo(L, R)
+
+  narrow <- autoBandPass(st, n.bw=1)
+  wide <- autoBandPass(st, n.bw=3)
+  # A wider band keeps more of the recording, in the second channel as well as
+  # the first.
+  expect_gt(sum(wide@left^2), sum(narrow@left^2))
+  expect_gt(sum(wide@right^2), sum(narrow@right^2))
+
+  # A low cut above the band of the left channel changes what that channel
+  # chooses and leaves the right channel, whose band is above the cut, exactly
+  # as it was: each channel is measured and filtered on its own.
+  cut <- autoBandPass(st, lowcut=3000)
+  expect_false(isTRUE(all.equal(cut@left, narrow@left)))
+  expect_equal(cut@right, narrow@right)
+})
+
+test_that("the tagged classes keep their channels and their record", {
+  L <- bandWave()
+  R <- otherBandWave()
+
+  tagged <- autoBandPass(tagWave(tuneR::stereo(L, R)))
+  expect_s4_class(tagged, "TaggedWave")
+  expect_true(tagged@stereo)
+  expect_equal(length(tagged@processing), 1)
+  expect_equal(tagged@processing[[1]]$func, "autoBandPass")
+
+  w <- tuneR::WaveMC(cbind(L@left, R@left), samp.rate=L@samp.rate, bit=16)
+  taggedMC <- autoBandPass(tagWave(w))
+  expect_s4_class(taggedMC, "TaggedWaveMC")
+  expect_equal(ncol(taggedMC@.Data), 2)
+  expect_equal(length(taggedMC@processing), 1)
 })

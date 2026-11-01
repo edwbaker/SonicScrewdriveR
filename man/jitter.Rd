@@ -7,13 +7,15 @@
 jitter(wave, method = "absolute")
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the jitter of each channel separately.}
 
 \item{method}{One of "absolute" or "relative"}
 }
 \value{
 The jitter, in samples for method "absolute" and as a proportion of the
-mean period for method "relative"
+mean period for method "relative". For multi-channel input, one such value per
+channel.
 }
 \description{
 Jitter is a measure of the variability of the length of successive periods in the
