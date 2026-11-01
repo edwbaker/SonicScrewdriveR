@@ -1851,6 +1851,12 @@
   holding nothing at all compared NaN against the thresholds.
 - generateTimeMask() gave every member of a list the default duty cycle and period
   count, whatever was asked for, and returned a list that was not of waves unmasked.
+- generateTimeShift() with type="silent" filled the silence it inserted into a
+  WaveMC with zero whatever its format, which for eight bit PCM, unsigned about
+  128, is the most negative sample it holds, so the silence was a step to full
+  scale. A Wave was given the 127 of `tuneR::silence()`. Silence is now the
+  midpoint of the format in both: 128 for eight bit PCM, and zero, as before,
+  for every other format.
 - generateTimeShift() with type="rotate" asked for a section running backwards when
   the shift was longer than the recording, so the default failed on anything shorter
   than two seconds. A rotation now wraps, as a rotation should.
