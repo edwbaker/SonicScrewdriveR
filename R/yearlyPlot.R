@@ -15,12 +15,18 @@ yearlyLabels <- function() {
 #' start of the month, or middle of the month.
 #'
 #' The function allows for leap years if the year parameter is provided.
-#' @param year Year to calculate
+#' @param year Year to calculate, which must be a single year
 #' @param format One of months, mid-months, days
 #' @return A numeric vector of label positions, in radians.
 #' @export
 yearlyPositions <- function(year=2022, format="months") {
   .validateChoice(format, c("months", "mid-months", "days"), msg=paste("Unknown format:", format))
+  #One ring of labels belongs to one year, so a vector of years has no set of
+  #positions to give. .isLeapYear() reads a vector, which would otherwise leave
+  #this as the error of an if() given a condition longer than one.
+  if (length(year) != 1) {
+    stop("yearlyPositions draws one year at a time, so year must be a single value.")
+  }
   if (.isLeapYear(year)) {
     FebDays <- 29
     YearDays <- 366
@@ -29,7 +35,13 @@ yearlyPositions <- function(year=2022, format="months") {
     YearDays <- 365
   }
   if (format=="days") {
-    ret <- 2*pi * (1:YearDays)/YearDays
+    #Counted from zero, so that 1 January is at zero as it is in every other
+    #reading of a year here: yearlyPositions("months")[1] is 0, yearlyFraction()
+    #takes the day of the year from yday, which is 0 for 1 January, and
+    #yearlyPlot() builds its own ring from 0. Counting from one put each label a
+    #day clockwise of the day it names and the last one at 2*pi, on top of the
+    #first.
+    ret <- 2*pi * (0:(YearDays-1))/YearDays
   } else {
     days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
               FebDays+123, FebDays+153, FebDays+184, FebDays+215,
@@ -49,19 +61,19 @@ yearlyPositions <- function(year=2022, format="months") {
 
 .isLeapYear <- function(year) {
   year <- as.numeric(year)
-  if((year %% 4) == 0) {
-    if((year %% 100) == 0) {
-      if((year %% 400) == 0) {
-        return(TRUE)
-      } else {
-        return(FALSE)
-      }
-    } else {
-      return(TRUE)
-    }
-  } else {
-    return(FALSE)
-  }
+  #Written as nested ifs on one year, which a vector of years failed with "the
+  #condition has length > 1". yearlyFraction() asks the question of each of a
+  #vector of times, which may span more than one year.
+  year %% 4 == 0 & (year %% 100 != 0 | year %% 400 == 0)
+}
+
+#' The number of days in a year
+#'
+#' @param year Numeric vector of years.
+#' @return The length of each year in days.
+#' @noRd
+.yearDays <- function(year) {
+  ifelse(.isLeapYear(year), 366, 365)
 }
 
 #' Calculate the fraction of a year given by a value
@@ -69,7 +81,9 @@ yearlyPositions <- function(year=2022, format="months") {
 #' Given an object that can be coerced to POSIXlt, return the fraction of a year represented by the object.
 #'
 #' @param t Object to be converted to a fraction
-#' @param year Year to calculate fractions of (allows for leap years)
+#' @param year The year a day number belongs to, which decides whether it is
+#'   measured against 366 days. Read for `input.unit="day"` only: a POSIX time
+#'   carries the year it falls in, and is measured against that.
 #' @param input.unit The unit the date is given in, one of "POSIX", "day".
 #' @param output.unit If set to radians outputs a position around a circle. If set to fraction outputs the raw fraction.
 #' @param timezone The timezone to read the time in, which decides which day of
@@ -89,19 +103,19 @@ yearlyFraction <- function(t, year=2022, input.unit="POSIX", output.unit="radian
     return(redone[[1]])
   }
   .validateChoice(input.unit, c("POSIX", "day"), msg=paste("Unknown input:", input.unit))
-  if (.isLeapYear(year)) {
-    dc <- 366
-  } else {
-    dc <- 365
-  }
   if (input.unit=="POSIX") {
     #Which day of the year a moment falls on depends on the zone it is read in.
     #Breaking it down without naming one read a time carrying no timezone in the
     #session's, so a moment near midnight moved a day with the machine.
     t <- unclass(as.POSIXlt(.asInstant(t), tz=.timezoneOf(t, timezone)))
-    f <- t$yday/dc
+    #The length of the year comes from the date itself. Taken from the year
+    #argument, whose default is 2022, a leap year's 366 days of yday were
+    #divided by 365: 31 December of such a year landed on 2*pi, which is where 1
+    #January is, and every date after February was a day out. A vector of times
+    #spanning more than one year has no single year to pass either.
+    f <- t$yday/.yearDays(t$year + 1900)
   } else if (input.unit=="day") {
-    f <- t/dc
+    f <- t/.yearDays(year)
   }
 
   if (output.unit=="radians") {

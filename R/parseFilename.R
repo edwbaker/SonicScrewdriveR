@@ -92,6 +92,24 @@
 #' hash, and a reading the name left in doubt gives `ambiguous` and
 #' `alternatives`. A format carrying no time, which TSA names do not, reports
 #' `datetime` as NA rather than leaving it out.
+#'
+#' ## A name whose digits are not a date
+#' A format is matched on the shape of the digits, and `20240230_120000`
+#' satisfies the shape of `YYYYMMDD_HHMMSS` while spelling a day that does not
+#' exist. Such a name reports `datetime` as NA, names `datetime` in `unparsed`,
+#' and warns, with a class of `unparsedDatetime` and `unparsedField`.
+#'
+#' `unparsed` is what tells that apart from a format carrying no time, which
+#' reports NA and names nothing: the first is a date this could not read and
+#' the second is a name with no date in it, and before this they were the same
+#' answer. `match` is not moved, since `20240230_120000` does follow the
+#' `YYYYMMDD_HHMMSS` convention — what it does not do is spell a real date.
+#'
+#' The same goes for a format the caller names that the name cannot be in, as
+#' `parseFilename("recording.wav", format="YYYYMMDD")`.
+#'
+#' [readMetadata()] silences this one warning, since it takes no date from such
+#' a name in any case and says so, and reports the rest of what the name holds.
 #' @references
 #'   \insertAllCited{}
 #' @seealso [readMetadata()] reads a file's own embedded metadata and puts what
@@ -170,7 +188,8 @@ parseFilename <- function(file, format=NULL, timezone="UTC") {
         match=format,
         datetime = datetime
       ),
-      .ambiguityOf(alternatives)
+      .ambiguityOf(alternatives),
+      .unparsedDatetime(file, format, datetime)
     ))
   }
   if (format %in% c("Wildlife Acoustics SM2", "Wildlife Acoustics SM3")) {
@@ -190,7 +209,11 @@ parseFilename <- function(file, format=NULL, timezone="UTC") {
       mic = data[,"mic"],
       geo = data[,"geo"]
     ))
-    return(c(ret, .ambiguityOf(alternatives)))
+    return(c(
+      ret,
+      .ambiguityOf(alternatives),
+      .unparsedDatetime(file, format, ret$datetime)
+    ))
   }
   if (format == "YYYYMMDD") {
     datetime <- .parseWallClock(bn, "%Y%m%d", timezone)
@@ -202,8 +225,13 @@ parseFilename <- function(file, format=NULL, timezone="UTC") {
     #A timestamp counts from the epoch in UTC wherever it is read. Taking the
     #origin in whatever zone the session happened to be in moved the instant by
     #that zone's offset, and the timezone argument was not used at all.
+    #
+    #A name that is not a count of seconds, which a caller naming the format
+    #themselves can give, coerces to NA. The coercion warning says only "NAs
+    #introduced by coercion", which names neither the file nor the format, so
+    #it is left to .unparsedDatetime() below to report.
     datetime <- as.POSIXct(
-      as.numeric(bn),
+      suppressWarnings(as.numeric(bn)),
       origin = as.POSIXct("1970-01-01", tz="UTC"),
       tz = timezone
     )
@@ -214,7 +242,8 @@ parseFilename <- function(file, format=NULL, timezone="UTC") {
       match=format,
       datetime = datetime
     ),
-    .ambiguityOf(alternatives)
+    .ambiguityOf(alternatives),
+    .unparsedDatetime(file, format, datetime)
   ))
 }
 
@@ -240,6 +269,44 @@ parseFilename <- function(file, format=NULL, timezone="UTC") {
 
 .parseWallClock <- function(bn, format, timezone) {
   return(as.POSIXct(strptime(bn, format, tz=timezone), tz=timezone))
+}
+
+#' Say where a name matched a format and its digits are not a real date
+#'
+#' `strptime()` is the only thing in this that knows 30 February is not a day,
+#' because a format is matched on the shape of the digits and `^[0-9]{8}_`
+#' `[0-9]{6}$` is satisfied by `20240230_120000`. Its answer was discarded, so
+#' such a name gave `datetime` as NA beside a confident `match` — and NA is
+#' also what a format carrying no time gives, which TSA names do, so the two
+#' could not be told apart by a caller.
+#'
+#' They are told apart by `unparsed`, as elsewhere in this package: a name
+#' carrying no time reports `datetime` as NA and names nothing, and a name
+#' whose digits spell no date reports NA and names `datetime`. `match` is left
+#' alone deliberately. It reports which convention a name follows, and
+#' `20240230_120000` does follow `YYYYMMDD_HHMMSS` — eight digits, an
+#' underscore, six digits; what it does not do is spell a real date. Reporting
+#' `match` as NA would say the name is in no known format, which is a different
+#' and wronger thing to say.
+#'
+#' @param file The filename, for the message
+#' @param format The format it matched
+#' @param datetime What was read from it
+#' @return A list to add to the reading, empty where the datetime was read
+#' @keywords internal
+#' @noRd
+.unparsedDatetime <- function(file, format, datetime) {
+  if (inherits(datetime, "POSIXt") && length(datetime) == 1L &&
+      !is.na(datetime)) {
+    return(list())
+  }
+  .unparsedWarning(
+    "unparsedDatetime",
+    "The name ", basename(file), " matches the ", format, " format and the ",
+    "digits in it spell no date and time that exists, so no datetime is ",
+    "reported for it."
+  )
+  return(list(unparsed="datetime"))
 }
 
 .matchFormat <- function(file) {

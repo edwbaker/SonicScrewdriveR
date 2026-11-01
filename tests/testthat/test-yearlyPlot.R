@@ -125,3 +125,68 @@ for (tz in sessionTimezones) {
     })
   })
 }
+
+test_that("yearlyFraction measures a date against its own year", {
+  # The divisor came from the year argument, whose default is 2022, so a leap
+  # year's 366 days of yday were divided by 365 and the last of them landed on
+  # 2*pi, exactly where 1 January is.
+  expect_equal(yearlyFraction(as.POSIXct("2024-12-31", tz="UTC")), 2*pi*365/366)
+  expect_equal(yearlyFraction(as.POSIXct("2023-12-31", tz="UTC")), 2*pi*364/365)
+  expect_equal(
+    yearlyFraction(as.POSIXct("2024-02-29", tz="UTC"), output.unit="fraction"),
+    59/366
+  )
+})
+
+test_that("1 January is at zero and no date reaches a full turn", {
+  for (year in c(2023, 2024)) {
+    first <- as.POSIXct(paste0(year, "-01-01 00:00:00"), tz="UTC")
+    last <- as.POSIXct(paste0(year, "-12-31 23:59:59"), tz="UTC")
+    expect_equal(yearlyFraction(first), 0)
+    expect_lt(yearlyFraction(last), 2*pi)
+  }
+})
+
+test_that("29 February and 1 March are not drawn in the same place", {
+  expect_false(isTRUE(all.equal(
+    yearlyFraction(as.POSIXct("2024-02-29", tz="UTC")),
+    yearlyFraction(as.POSIXct("2022-03-01", tz="UTC"))
+  )))
+})
+
+test_that("the year argument does not move a POSIX date", {
+  # It alone decided the length of the year, so the default moved every date
+  # after February of a leap year a day.
+  d <- as.POSIXct("2024-12-31", tz="UTC")
+  expect_equal(yearlyFraction(d, year=2022), yearlyFraction(d, year=2024))
+})
+
+test_that("yearlyFraction reads a vector of times spanning more than one year", {
+  # No single year argument is right for such a vector.
+  d <- as.POSIXct(c("2023-12-31", "2024-12-31"), tz="UTC")
+  expect_equal(yearlyFraction(d, output.unit="fraction"), c(364/365, 365/366))
+})
+
+test_that("a day number is measured against the year it is given", {
+  expect_equal(
+    yearlyFraction(365, year=2023, input.unit="day", output.unit="fraction"), 1
+  )
+  expect_equal(
+    yearlyFraction(365, year=2024, input.unit="day", output.unit="fraction"), 365/366
+  )
+  # One year per day number, now that the question is asked of a vector.
+  expect_equal(
+    yearlyFraction(c(365, 365), year=c(2023, 2024), input.unit="day",
+                   output.unit="fraction"),
+    c(1, 365/366)
+  )
+})
+
+test_that("the length of a year is answered for a vector of years", {
+  expect_equal(.isLeapYear(c(1900, 2000, 2023, 2024)), c(FALSE, TRUE, FALSE, TRUE))
+  expect_equal(.yearDays(c(2023, 2024)), c(365, 366))
+})
+
+test_that("yearlyPositions is refused more than one year by name", {
+  expect_error(yearlyPositions(c(2023, 2024)), "one year at a time")
+})
