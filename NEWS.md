@@ -1302,6 +1302,25 @@
   that event left it: the midnight sun begins with the sun's disc touching the
   horizon, which is the Sunset phase, and then climbs away from it for weeks, and
   is reported as Day.
+- dayPhase() named every phase it took from the sun's altitude for the evening,
+  so a polar twilight was a dusk however the sun was heading. At 89.9 degrees
+  north the sun climbs from 18 degrees below the horizon on 29 January 2024 to 6
+  below on 5 March without crossing a threshold in between, and those five weeks
+  of brightening twilight, which is a dawn five weeks long, were reported as
+  Dusk.Astro; anything sorting recordings into dawns and dusks had the whole of
+  it in the wrong half of the day. Five of the ten names a day has could not be
+  returned that way at all. The direction the sun is heading is now taken from
+  its altitude at the two ends of the stretch and the dawn names are used where
+  it is climbing. A stretch that ends where it began is as much one as the other
+  and keeps the dusk name.
+  The altitudes the bands begin at are now the ones the events themselves are
+  taken at, so that the two ways of naming a phase agree. Day begins where
+  `sunriseEnd` puts it, three tenths of a degree below the horizon, where the band
+  table began it at the horizon and so called a sun at two tenths below
+  Dusk.Civil although the event path called it Day; and Sunrise and Sunset, which
+  the band table could not return either, are the names for a sun between three
+  tenths and five sixths of a degree below the horizon, which is the time its
+  disc is crossing it.
 - dayPhase() and dayPhases() dropped the moon's interval wherever the moon did not
   set on the day it rose or the day after, which at high latitudes it does not for
   days on end, and dayPhase() also missed moonlight that began before the days it

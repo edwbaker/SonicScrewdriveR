@@ -295,6 +295,78 @@ test_that("dayPhase names a phase the search cannot bound", {
   expect_equal(as.numeric(unended$End[1]), as.numeric(start) + 40000, tolerance=0)
 })
 
+test_that(".phaseAtAltitude names the band the sun is in and the half of the day", {
+  # A sun on the way up is in a dawn and one on the way down in a dusk, which the
+  # band table could not say: Dawn.Astro, Dawn.Naut, Dawn.Civil, Sunrise and
+  # Sunset were unreachable, and a polar twilight was a dusk however it was
+  # heading.
+  expect_equal(.phaseAtAltitude(5, TRUE), "Day")
+  expect_equal(.phaseAtAltitude(5, FALSE), "Day")
+  expect_equal(.phaseAtAltitude(-0.5, TRUE), "Sunrise")
+  expect_equal(.phaseAtAltitude(-0.5, FALSE), "Sunset")
+  expect_equal(.phaseAtAltitude(-3, TRUE), "Dawn.Civil")
+  expect_equal(.phaseAtAltitude(-3, FALSE), "Dusk.Civil")
+  expect_equal(.phaseAtAltitude(-8, TRUE), "Dawn.Naut")
+  expect_equal(.phaseAtAltitude(-8, FALSE), "Dusk.Naut")
+  expect_equal(.phaseAtAltitude(-15, TRUE), "Dawn.Astro")
+  expect_equal(.phaseAtAltitude(-15, FALSE), "Dusk.Astro")
+  expect_equal(.phaseAtAltitude(-19, TRUE), "Night")
+  expect_equal(.phaseAtAltitude(-19, FALSE), "Night")
+
+  # Every name a day has can be reached from an altitude, which is what makes the
+  # altitude a way of naming a phase at all.
+  rising <- vapply(c(5, -0.5, -3, -8, -15, -19), .phaseAtAltitude, character(1),
+                   rising=TRUE)
+  falling <- vapply(c(-0.5, -3, -8, -15), .phaseAtAltitude, character(1),
+                    rising=FALSE)
+  expect_setequal(c(rising, falling), .dayPhaseNames())
+})
+
+test_that("a phase named from the altitude begins where its own event does", {
+  # The band table began Day at the horizon while the event path takes it from
+  # sunriseEnd, three tenths of a degree below, so a sun at -0.2 degrees was
+  # Dusk.Civil by one path and Day by the other. Both now read the same
+  # thresholds, which are suncalc's own: -0.833 for sunrise and sunset, -0.3 for
+  # sunriseEnd and sunsetStart, and -6, -12 and -18 for the three twilights.
+  altitudes <- .solarEventAltitudes()
+  phases <- .solarEventPhases()
+  expect_named(altitudes, names(phases))
+  for (event in c("nightEnd", "nauticalDawn", "dawn", "sunrise", "sunriseEnd")) {
+    expect_equal(.phaseAtAltitude(altitudes[[event]], TRUE), phases[[event]],
+                 info=event)
+  }
+  for (event in c("sunsetStart", "sunset", "dusk", "nauticalDusk", "night")) {
+    expect_equal(.phaseAtAltitude(altitudes[[event]] - 0.01, FALSE), phases[[event]],
+                 info=event)
+  }
+  # The boundary that disagreed.
+  expect_equal(.phaseAtAltitude(-0.2, FALSE), "Day")
+})
+
+test_that("dayPhase names a brightening polar twilight a dawn", {
+  # At 89.9 N the sun crosses 18 degrees below the horizon on 29 January 2024 and
+  # does not cross another threshold until it reaches 6 below on 5 March, so those
+  # five weeks are one phase. The sun climbs for the whole of it, 12 degrees in
+  # all, and it was reported as Dusk.Astro.
+  r <- dayPhase(time=as.POSIXct("2024-03-01 12:00:00", tz="UTC"), duration=86400,
+                lat=89.9, lon=0, tz="UTC")
+  solar <- r[!grepl("^Moon", rownames(r)), , drop=FALSE]
+  expect_equal(sub("[0-9]+$", "", rownames(solar)), "Dawn.Astro")
+  altitude <- function(t) {
+    suncalc::getSunlightPosition(date=t, lat=89.9, lon=0,
+                                 keep="altitude")$altitude * 180 / pi
+  }
+  expect_lt(altitude(solar$Start[[1]]), altitude(solar$End[[1]]))
+  expect_lt(altitude(solar$Start[[1]]), -17.5)
+  expect_gt(altitude(solar$End[[1]]), -6.5)
+
+  # The same band in the autumn, with the sun going the other way, stays a dusk.
+  autumn <- dayPhase(time=as.POSIXct("2024-11-01 12:00:00", tz="UTC"), duration=86400,
+                     lat=89.9, lon=0, tz="UTC")
+  autumn <- autumn[!grepl("^Moon", rownames(autumn)), , drop=FALSE]
+  expect_equal(sub("[0-9]+$", "", rownames(autumn)), "Dusk.Astro")
+})
+
 test_that("dayPhase accounts for the whole of a recording wherever it was made", {
   # The phases partition the day at every latitude, so there is no date or place at
   # which part of a recording belongs to no phase.
