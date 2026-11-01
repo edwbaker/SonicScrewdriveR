@@ -46,8 +46,10 @@
   # Some comments end in a separator with nothing after it, which would
   # otherwise leave the slashes on the end of the last field read.
   text <- sub("[[:space:]]*/+[[:space:]]*$", "", text)
+  # An empty field keeps its place, as the first five are read by where they
+  # sit: dropping one moved every field after it up one, so a time was read as
+  # an elevation. Each reader takes an empty field as nothing said.
   parts <- trimws(strsplit(text, " // ", fixed=TRUE)[[1]])
-  parts <- parts[nzchar(parts)]
   f <- list()
 
   # 1: the catalogue number and, after the copyright sign, the recordist.
@@ -89,6 +91,7 @@
     f$type <- .mdXcNonEmpty(parts[5])
   }
   rest <- if (length(parts) >= 6) parts[6:length(parts)] else character(0)
+  rest <- rest[nzchar(rest)]
   also <- grepl("^also:", rest)
   if (any(also)) {
     f$also <- .mdXcList(sub("^also:[[:space:]]*", "", rest[also][1]))
