@@ -23,6 +23,26 @@ test_that("humanBytes is correct", {
   expect_equal(humanBytes(1000000000000000000), "1 EB")
 })
 
+test_that("a size just under a unit is shown in that unit once rounded", {
+  # The unit was chosen before rounding, so a size rounding up onto a unit kept
+  # the unit below it.
+  expect_equal(humanBytes(999999.9), "1 MB")
+  expect_equal(humanBytes(999999999.9), "1 GB")
+  expect_equal(humanBytes(999.9999), "1 kB")
+  expect_equal(humanBytes(1023.9999, units="binary"), "1 KiB")
+  expect_equal(humanBytes(1.0001), "1 byte")
+  # A size that stays below the unit once rounded is shown in the unit below.
+  expect_equal(humanBytes(999999), "999.999 kB")
+  expect_equal(humanBytes(999.9999, digits=NULL), "999.9999 bytes")
+})
+
+test_that("a negative size takes the unit its size does", {
+  # findInterval() gives no unit to anything negative.
+  expect_equal(humanBytes(-1500), "-1.5 kB")
+  expect_equal(humanBytes(-1), "-1 byte")
+  expect_equal(humanBytes(-2), "-2 bytes")
+})
+
 test_that("binary units are converted", {
   expect_equal(convert2bytes(1, input.unit="KiB"), 1024)
   expect_equal(convert2bytes(1, input.unit="MiB"), 1024^2)

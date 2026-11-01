@@ -52,6 +52,15 @@ test_that("humanTime rounds, and can be asked not to", {
   expect_equal(humanTime(100, digits=NULL), paste(100/60, "minutes"))
 })
 
+test_that("a time just under a unit is shown in that unit once rounded", {
+  # The unit was chosen before rounding, so a time rounding up onto a unit kept
+  # the unit below it.
+  expect_equal(humanTime(59.9999), "1 minute")
+  expect_equal(humanTime(3599.9999), "1 hour")
+  expect_equal(humanTime(86399.9999), "1 day")
+  expect_equal(humanTime(59.9999, digits=NULL), "59.9999 seconds")
+})
+
 test_that("humanTime converts from other units", {
   expect_equal(humanTime(1, input.unit="hours"), "1 hour")
   expect_equal(humanTime(90, input.unit="minutes"), "1.5 hours")
