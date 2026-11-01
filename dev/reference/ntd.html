@@ -61,7 +61,10 @@
 
 
 <dt id="arg-events">events<a class="anchor" aria-label="anchor" href="#arg-events"></a></dt>
-<dd><p>Onset of detected events, e.g. from pulseDetection()</p></dd>
+<dd><p>Onset of detected events, e.g. from pulseDetection(). The
+events must be in increasing order. Each interval runs from one event up to
+the sample before the next, so the final event bounds the last interval
+without belonging to it.</p></dd>
 
 
 <dt id="arg-fun">FUN<a class="anchor" aria-label="anchor" href="#arg-fun"></a></dt>

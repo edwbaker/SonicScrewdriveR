@@ -18,7 +18,10 @@ ntd(wave, events, FUN, normalise = FALSE, argument = "wave", ...)
 
 - events:
 
-  Onset of detected events, e.g. from pulseDetection()
+  Onset of detected events, e.g. from pulseDetection(). The events must
+  be in increasing order. Each interval runs from one event up to the
+  sample before the next, so the final event bounds the last interval
+  without belonging to it.
 
 - FUN:
 
