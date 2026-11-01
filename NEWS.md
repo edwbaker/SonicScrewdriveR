@@ -431,6 +431,16 @@
   more than one channel, as dutyCycle() and frequencyStats() already are, and
   return one spectrum or one set of measurements per channel. With plot=TRUE
   beatComplexity() draws one plot per channel.
+- generateNoise() added one sequence of noise to every channel of a
+  multi-channel wave, so the noise was identical in each. Its correlation
+  between the two channels of a stereo wave was exactly 1 and it cancelled
+  completely in any difference between them, which left the noise invisible to
+  tdoa(), bearing() and corWaveMC(): all three read inter-channel differences,
+  so a wave given noise this way tested none of them. Each channel is now given
+  a sequence of its own, at the same level as the rest, and the correlation
+  between the channels of a stereo wave falls to the 0.02 of two independent
+  sequences. The first channel draws first, so a wave of one channel is mixed
+  exactly as before and a mono result under a given seed is unchanged.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
@@ -465,6 +475,53 @@
   raises the loudest sample to full scale and so hands the threshold back to
   it, and removes the offset as well, which lifts silence off zero: a wave nine
   tenths of which is silent measured 1 rather than 0.1.
+- parseFilename() reported a name whose digits spell no real date the same way
+  it reports a name carrying no time at all. A format is matched on the shape
+  of the digits, and `20240230_120000` satisfies the shape of
+  `YYYYMMDD_HHMMSS` while naming a day that does not exist, so `strptime()`
+  gave NA and that NA was returned beside a confident `match` with no warning.
+  NA is also the documented reading of a format carrying no time, which TSA
+  names are, so a caller could not tell "this name has no date in it" from
+  "this name has a date I could not read". The second now names `datetime` in
+  `unparsed` and warns, naming the file and the format it matched; the first
+  reports NA and names nothing, as before. A format the caller names that the
+  name cannot be in, as `parseFilename("recording.wav", format="YYYYMMDD")`,
+  reads the same way, and a `timestamp` that is not a count of seconds no
+  longer reports only R's own "NAs introduced by coercion", which names
+  neither the file nor the format.
+
+  `match` is unchanged. It reports which convention a name follows, and
+  `20240230_120000` does follow that one; what it does not do is spell a real
+  date, which is what `unparsed` says. readMetadata() silences this one
+  warning, since it takes no date from such a name in any case and says so,
+  and it keeps the model, prefix, species and collection the same name may
+  carry.
+- An AudioMoth comment in a wording this package does not know reported two
+  facts about the recording that the file never stated. `filter`, `filter.limit`
+  and `cancelled` were set FALSE and replaced only where a pattern matched, and
+  FALSE is documented to mean that no filter was applied and that the recording
+  ran to completion; `external_mic` was the same. So a comment the parser did
+  not understand came back looking like a successful reading of a recording that
+  used no filter and ran to its end, and anything branching on either took the
+  wrong branch in silence. A default is no longer presented as a reading: a
+  clause the comment carries and this could not read gives NA, and the fields it
+  holds are named in a new `unparsed`, with a warning carrying the comment so
+  that the wording can be reported. FALSE still means what it has always meant,
+  for the comment that carries no such clause at all — which is how the
+  firmware says there was no filter and no early stop, by writing nothing.
+
+  Every wording AudioMoth-Firmware-Basic has written from 1.0 onwards still
+  reads with nothing unparsed, which is the test this carries: the gain index
+  and two-decimal voltage of 1.0, the `< 3.6V` and `less than 2.5V` battery
+  forms, the 1.4.0 named gain and temperature, the 1.5.0 deployment ID, the
+  1.6.0 rewording, both filter phrasings, band-pass, both cancellation
+  phrasings and the magnetic switch, the external microphone, a `UTC+1` zone, a
+  negative temperature, and the 1.8 amplitude-threshold and frequency-trigger
+  clauses. The exposure was always a future release rather than any file that
+  exists, and gain coming back empty for every file from 1.6.0 onwards is the
+  record of it having happened before. A comment cut short, as a version 1 ID3
+  tag cuts one at 30 bytes, reports nothing unparsed: what is past the cut is
+  absent from the file rather than unread.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes
@@ -506,6 +563,15 @@
   text frame and a user-defined link were all read that way. The order of a
   value is now read from the value, and a description and a value written in
   opposite orders are both read correctly.
+- readMetadata() did not read the AudioMoth comment of a FLAC or Ogg recording,
+  so the same recording gave its recording time, make, model and serial in one
+  container and none of the four in another. A recording transcoded out of a
+  wave keeps the recorder's comment in whatever its new container holds one in,
+  which is why the comment is looked for in the tag of an MP3 as well as in
+  the list of a wave; FLAC and Ogg write it as a Vorbis comment, under
+  `COMMENT` or `DESCRIPTION` and sometimes under both, and that is where it
+  was going unread. The AUDIOMOTH.flac and AUDIOMOTH.mp3 in this package are
+  the same recording, and now give the same datetime, make, model and serial.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for
