@@ -123,6 +123,26 @@ test_that("eight bit audio is filtered about its midpoint", {
   expect_true(all(filtered@left >= 0 & filtered@left <= 255))
 })
 
+test_that("a filtered WaveMC keeps the names of its channels", {
+  # The channels were bound without their names, and writeWave() builds the
+  # channel mask of the file from them.
+  set.seed(1)
+  mc <- tuneR::WaveMC(
+    cbind(FL=round(runif(8000, -1e4, 1e4)), FR=round(runif(8000, -1e4, 1e4))),
+    samp.rate=8000, bit=16
+  )
+  expect_equal(colnames(filterWave(mc, bandpass(from=500, to=2000))@.Data), c("FL", "FR"))
+  expect_equal(colnames(autoBandPass(mc)@.Data), c("FL", "FR"))
+
+  path <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(filterWave(mc, bandpass(from=500, to=2000)), path)
+  expect_equal(colnames(tuneR::readWave(path, toWaveMC=TRUE)@.Data), c("FL", "FR"))
+
+  # A WaveMC whose channels have no names still has none.
+  unnamed <- tuneR::WaveMC(unname(mc@.Data), samp.rate=8000, bit=16)
+  expect_null(colnames(filterWave(unnamed, bandpass(from=500, to=2000))@.Data))
+})
+
 test_that("filterWave carries the tags across", {
   w <- tagWave(mono, origin="test")
   w@metadata <- list(site="a")

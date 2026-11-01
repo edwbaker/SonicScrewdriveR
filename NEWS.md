@@ -1723,6 +1723,10 @@
 - filterWave() returned only the first channel of a stereo Wave or a WaveMC, as the
   filters read the left slot. Each channel is now filtered and the result put back
   together with the same class and channel count as the input.
+- filterWave() and autoBandPass() put the filtered channels of a WaveMC back
+  together without their names, and writeWave() builds the channel mask of a
+  file from those names, so a filtered recording was written without the
+  speaker positions it was read with. The names are now kept.
 - filterWave() raised an error for TaggedWave and TaggedWaveMC objects, as the
   filters do not know that class and addProcess() has no method for the plain wave
   they return. The tags are now carried across the filter.
