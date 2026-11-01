@@ -1957,6 +1957,19 @@
 - validateFreqIsPossible() and validateSpectrum() now test their input in one
   vectorised pass rather than looping over each frequency, or each cell of the
   spectrum, in turn.
+- The functions that put samples back in a wave with the format of the one they
+  came from - cutws(), ntd(), upsample(), allChannels(), generateTimeShift()
+  and the filters - now do it through one helper rather than eight copies of
+  the same few lines, three of which had been wrong in turn. The helper rounds
+  the samples to whole numbers wherever the format is integer PCM, so a
+  function computing samples cannot forget to. Samples taken from a wave whose
+  format holds them are whole already and come back unchanged, integers as
+  integers. A wave declaring integer PCM while holding samples that are not
+  whole, which is what `tuneR::Wave()` makes of floating point samples with its
+  default of 16 bit, is now rounded by a cut as writeWave() would round it:
+  cutws() of such a wave returns -1, 0 and 1 where it returned the samples it
+  was given. Declaring the format the samples are in, `bit=32, pcm=FALSE` for
+  floating point, keeps them.
 - The option arguments the package validates, the physical-quantity validators, the
   unit conversions, the human-readable size and time formatting, the -3dB and -10dB
   halves of frequencyStats(), the twilight bands of dielPlot(), the four TimeRegion

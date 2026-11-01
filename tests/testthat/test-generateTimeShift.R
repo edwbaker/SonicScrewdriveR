@@ -68,8 +68,10 @@ test_that("generateTimeShift shifts WaveMC objects", {
 })
 
 test_that("rotating a WaveMC moves the audio without losing any", {
+  #A sine from tuneR is floating point, and declared as 16 bit PCM its samples
+  #would be rounded to whole numbers by the cuts the rotation is made of.
   w <- tuneR::sine(440, samp.rate=1000, duration=3000)
-  mc <- tuneR::WaveMC(cbind(w@left, w@left * 0.5), samp.rate=1000, bit=16)
+  mc <- tuneR::WaveMC(cbind(w@left, w@left * 0.5), samp.rate=1000, bit=32, pcm=FALSE)
 
   rotated <- generateTimeShift(mc, type="rotate", amount=1)[[1]]
   expect_equal(rotated@.Data[1:1000, 1], mc@.Data[2001:3000, 1])
@@ -78,7 +80,7 @@ test_that("rotating a WaveMC moves the audio without losing any", {
 
 test_that("inserting silence into a WaveMC silences every channel", {
   w <- tuneR::sine(440, samp.rate=1000, duration=3000)
-  mc <- tuneR::WaveMC(cbind(w@left, w@left * 0.5), samp.rate=1000, bit=16)
+  mc <- tuneR::WaveMC(cbind(w@left, w@left * 0.5), samp.rate=1000, bit=32, pcm=FALSE)
 
   shifted <- generateTimeShift(mc, type="silent", amount=1)[[1]]
   expect_true(all(shifted@.Data[1:1000, ] == 0))

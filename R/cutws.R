@@ -65,12 +65,13 @@ cutws <- function(wave, from=1, to=Inf, plot=FALSE) {
 #' @noRd
 .cutws <- function(wave, from, to, plot) {
   if (inherits(wave, "WaveMC")) {
-    cutwave <- tuneR::WaveMC(wave@.Data[from:to, , drop=FALSE], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
+    samples <- wave@.Data[from:to, , drop=FALSE]
   } else if (wave@stereo) {
-    cutwave <- tuneR::Wave(wave@left[from:to], right=wave@right[from:to], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
+    samples <- cbind(wave@left[from:to], wave@right[from:to])
   } else {
-    cutwave <- tuneR::Wave(wave@left[from:to], samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm)
+    samples <- wave@left[from:to]
   }
+  cutwave <- .rebuildWave(samples, wave)
 
   if (plot) {
     seewave::oscillo(wave)

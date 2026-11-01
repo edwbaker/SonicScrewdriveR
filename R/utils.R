@@ -163,10 +163,42 @@
       " is not one of them."
     )
   }
-  return(tuneR::Wave(
-    samples[, channel],
-    samp.rate = wave@samp.rate,
-    bit = wave@bit,
-    pcm = wave@pcm
-  ))
+  return(.rebuildWave(samples[, channel], wave))
+}
+
+#' A wave of the given samples in the format of another
+#'
+#' Several functions take samples from a wave, or compute new ones from it, and
+#' put them in a wave declaring the format of the one they came from. Each wrote
+#' that out for itself, and three of the copies were wrong: `cutws()` and `ntd()`
+#' left the pcm flag to tuneR's default, and `upsample()` declared integer PCM
+#' for samples that were not whole. tuneR's validity rules check the bit and pcm
+#' combination but not whether a PCM wave's samples are whole, so nothing
+#' complained until `writeWave()` rounded them with only its generic warning to
+#' show for it.
+#'
+#' Samples are rounded wherever the format is integer PCM, so that a function
+#' computing samples need not remember to. Samples taken from a PCM wave are
+#' whole already, and integer samples are left as they are, as `round()` would
+#' return them as doubles. A floating point format is not rounded, as its
+#' samples are the values they say they are.
+#'
+#' A vector gives a mono Wave. A matrix gives a WaveMC where `wave` is one, and
+#' otherwise a Wave of its one or two columns, so that a function taking one
+#' channel of a multi-channel wave and one keeping all of them can both use it.
+#'
+#' @param samples A vector of samples, or a matrix with one column per channel.
+#' @param wave The Wave or WaveMC object whose format the result declares.
+#' @param samp.rate,bit,pcm The format of the result, by default that of `wave`.
+#'   Rounding follows `pcm` rather than the format of `wave`.
+#' @return A Wave or WaveMC object holding the samples.
+#' @noRd
+.rebuildWave <- function(samples, wave, samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm) {
+  if (pcm && !is.integer(samples)) {
+    samples <- round(samples)
+  }
+  if (is.matrix(samples) && inherits(wave, "WaveMC")) {
+    return(tuneR::WaveMC(samples, samp.rate=samp.rate, bit=bit, pcm=pcm))
+  }
+  return(tuneR::Wave(samples, samp.rate=samp.rate, bit=bit, pcm=pcm))
 }
