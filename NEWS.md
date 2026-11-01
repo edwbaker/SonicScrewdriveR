@@ -751,8 +751,8 @@
   23:00 the evening before every spring and an hour into the day every autumn. At
   20 degrees north and 100 east, where the sun rises at a quarter past six by its
   own local time, the sunrise of 30 March 2024 reads 23:15 in London and was
-  reported as the sunrise of the 31st, a day on which no sunrise falls in London
-  time at all; a degree further east the sunrise of 27 October, which reads
+  reported as the sunrise of 31 March, a day on which no sunrise falls in London
+  time at all; five degrees further east the sunrise of 27 October, which reads
   00:00 that morning, was reported as not happening. The day now begins at the
   instant the local clock first reads as being on it, which is midnight where the
   clock reaches it and the moment the clock jumps where it does not: in Cuba and
