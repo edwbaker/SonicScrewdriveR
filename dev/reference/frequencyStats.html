@@ -82,9 +82,10 @@ generated), with its frequencies in kHz as seewave::meanspec() returns them.</p>
 
 <dt id="arg-lowcut">lowcut<a class="anchor" aria-label="anchor" href="#arg-lowcut"></a></dt>
 <dd><p>Frequency below which values are ignored, in Hz, as every other
-frequency the package takes is. This argument was in kHz in earlier
-releases: the default is the same frequency as before, but a value given
-explicitly needs multiplying by a thousand.</p></dd>
+frequency the package takes is. Every statistic is measured over the band
+above it, the spectral flatness included. This argument was in kHz in
+earlier releases: the default is the same frequency as before, but a value
+given explicitly needs multiplying by a thousand.</p></dd>
 
 
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
@@ -104,7 +105,8 @@ before and after that change.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with an entry for each of the -3dB and -10dB thresholds, and
-the spectral flatness of the spectrum. Each threshold holds the frequencies
+the spectral flatness of the spectrum above <code>lowcut</code>, which is the band
+every other statistic is measured over. Each threshold holds the frequencies
 <code>min</code>, <code>max</code>, <code>longest_min</code>, <code>longest_max</code>, <code>peak</code>, <code>centre</code>, <code>outer min</code>
 and <code>outer max</code> and the bandwidths <code>bandwidth</code> and <code>outer bandwidth</code>, all
 in output.unit, and the quality factor <code>Q</code>. Q and the spectral flatness are

@@ -36,9 +36,10 @@ frequencyStats(
 - lowcut:
 
   Frequency below which values are ignored, in Hz, as every other
-  frequency the package takes is. This argument was in kHz in earlier
-  releases: the default is the same frequency as before, but a value
-  given explicitly needs multiplying by a thousand.
+  frequency the package takes is. Every statistic is measured over the
+  band above it, the spectral flatness included. This argument was in
+  kHz in earlier releases: the default is the same frequency as before,
+  but a value given explicitly needs multiplying by a thousand.
 
 - plot:
 
@@ -57,8 +58,9 @@ frequencyStats(
 ## Value
 
 A list with an entry for each of the -3dB and -10dB thresholds, and the
-spectral flatness of the spectrum. Each threshold holds the frequencies
-`min`, `max`, `longest_min`, `longest_max`, `peak`, `centre`,
-`outer min` and `outer max` and the bandwidths `bandwidth` and
+spectral flatness of the spectrum above `lowcut`, which is the band
+every other statistic is measured over. Each threshold holds the
+frequencies `min`, `max`, `longest_min`, `longest_max`, `peak`,
+`centre`, `outer min` and `outer max` and the bandwidths `bandwidth` and
 `outer bandwidth`, all in output.unit, and the quality factor `Q`. Q and
 the spectral flatness are ratios, the same in either unit.
