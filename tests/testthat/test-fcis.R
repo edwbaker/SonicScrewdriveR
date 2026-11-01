@@ -164,6 +164,17 @@ test_that("several files are analysed as one spectrogram", {
   expect_equal(two$freq, one$freq)
 })
 
+test_that("a window shorter than wl is refused, naming both", {
+  # seewave failed with "wrong sign in 'by' argument" from seq(), which names
+  # neither argument.
+  w <- tuneR::Wave(sin(2*pi*500*(0:4095)/8000), samp.rate=8000, bit=32, pcm=FALSE)
+  expect_error(
+    fcis(w, window.length=128, wl=256),
+    "window.length (128) must be at least wl (256)", fixed=TRUE
+  )
+  expect_s3_class(fcis(w, window.length=256, wl=256), "fcis")
+})
+
 test_that("a window longer than the recording is reported rather than drawn empty", {
   w <- tuneR::readWave(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
   expect_error(

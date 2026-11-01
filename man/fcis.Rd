@@ -18,8 +18,8 @@ fcis(
 \item{x}{A Wave object, or a vector of filenames which are treated as consecutive
 parts of one recording.}
 
-\item{window.length}{Length of each column of the image in samples. If NULL, each
-file gives a single column.}
+\item{window.length}{Length of each column of the image in samples, which must be
+at least \code{wl}. If NULL, each file gives a single column.}
 
 \item{indices}{The three indices to map to the red, green and blue channels.}
 
