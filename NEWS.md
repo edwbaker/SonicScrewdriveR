@@ -422,6 +422,20 @@
   the recording is.
 
 ## Fixes
+- autoBandPass() returned a mono wave for stereo input, silently discarding the
+  right channel: the filters in seewave read a Wave through its first channel, so
+  the band was measured on the left channel and only that channel came back. A
+  WaveMC was refused outright, although the filter underneath can take one.
+  Every channel is now measured and filtered on its own, by the same helper the
+  other filters of the package go through, and the result has the channels the
+  input had with its sample rate, bit depth and pcm flag intact. A wave whose
+  left channel holds noise between 1800 and 2200 Hz and whose right holds noise
+  between 3200 and 3600 Hz is now filtered to 2063 Hz in the left channel and
+  3516 Hz in the right, where before it came back as the left channel alone.
+  The band is measured per channel rather than once for the whole recording,
+  because the channels of a recording need not hold the same signal. Something
+  that is not a wave is now refused as "Expecting a Wave or WaveMC object",
+  naming both of the classes that are taken.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
