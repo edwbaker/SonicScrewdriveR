@@ -116,3 +116,68 @@ test_that("a spectrum too short to hold a peak gives an undefined complexity", {
     expect_identical(bc$num.peaks, 0L)
   }
 })
+
+test_that("beatSpectrum analyses each channel of multi-channel input", {
+  skip_if_not_installed("WaveletComp")
+  # Only the left slot was read, so the stereo spectrum was the left channel's
+  # and a WaveMC failed with a message naming a slot it does not have.
+  L <- rhythmWave(cycle=0.1, seconds=4)
+  R <- rhythmWave(cycle=0.2, seconds=4)
+
+  left <- beatSpectrum(L, max_period=1)
+  right <- beatSpectrum(R, max_period=1)
+  # The channels must give different answers for the test to mean anything.
+  expect_false(isTRUE(all.equal(left, right)))
+  expect_false(isTRUE(all.equal(beatSpectrum(tuneR::stereo(L, R), max_period=1), left)))
+
+  # beatSpectrum returns a data frame, so allChannels() does not wrap it again.
+  expect_equal(beatSpectrum(tuneR::stereo(L, R), max_period=1), list(left, right))
+  expect_equal(
+    beatSpectrum(
+      tuneR::WaveMC(cbind(L@left, R@left, L@left), samp.rate=L@samp.rate, bit=16),
+      max_period=1
+    ),
+    list(left, right, left)
+  )
+})
+
+test_that("beatSpectrum finds the rhythm of each channel separately", {
+  skip_if_not_installed("WaveletComp")
+  L <- rhythmWave(cycle=0.1, seconds=4)
+  R <- rhythmWave(cycle=0.2, seconds=4)
+
+  bs <- beatSpectrum(tuneR::stereo(L, R), max_period=1)
+  expect_equal(bs[[1]]$period[which.max(bs[[1]]$power)], 0.1, tolerance=0.05)
+  expect_equal(bs[[2]]$period[which.max(bs[[2]]$power)], 0.2, tolerance=0.05)
+})
+
+test_that("beatComplexity measures each channel of multi-channel input", {
+  skip_if_not_installed("WaveletComp")
+  L <- rhythmWave(cycle=0.1, seconds=4)
+  R <- rhythmWave(cycle=0.2, seconds=4)
+
+  left <- beatComplexity(L)
+  right <- beatComplexity(R)
+  expect_false(isTRUE(all.equal(left, right)))
+  expect_false(isTRUE(all.equal(beatComplexity(tuneR::stereo(L, R)), left)))
+
+  # beatComplexity returns a list, so allChannels() does not wrap it again.
+  expect_equal(beatComplexity(tuneR::stereo(L, R)), list(left, right))
+  expect_equal(
+    beatComplexity(tuneR::WaveMC(cbind(L@left, R@left), samp.rate=L@samp.rate, bit=16)),
+    list(left, right)
+  )
+})
+
+test_that("beatSpectrum passes its arguments to each channel", {
+  skip_if_not_installed("WaveletComp")
+  L <- rhythmWave(cycle=0.1, seconds=4)
+  R <- rhythmWave(cycle=0.2, seconds=4)
+  st <- tuneR::stereo(L, R)
+
+  fine <- beatSpectrum(st, max_period=1, dj=1/32)
+  coarse <- beatSpectrum(st, max_period=1, dj=1/8)
+  expect_gt(nrow(fine[[1]]), nrow(coarse[[1]]))
+  expect_gt(nrow(fine[[2]]), nrow(coarse[[2]]))
+  expect_equal(min(beatSpectrum(st, min_period=0.02, max_period=1)[[2]]$period), 2*0.02)
+})

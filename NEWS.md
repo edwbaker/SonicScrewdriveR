@@ -422,6 +422,15 @@
   the recording is.
 
 ## Fixes
+- beatSpectrum() and beatComplexity() read only the left channel of a stereo
+  Wave, so the rhythm of the second channel was never reported: a wave whose
+  left channel pulses every 0.1 s and whose right pulses every 0.2 s gave one
+  spectrum, peaking at 0.1 s, with nothing to say the other channel had been
+  dropped. A WaveMC, which has no left slot at all, failed with a message
+  naming that slot. Both are now passed to allChannels() when they are given
+  more than one channel, as dutyCycle() and frequencyStats() already are, and
+  return one spectrum or one set of measurements per channel. With plot=TRUE
+  beatComplexity() draws one plot per channel.
 - generateNoise() added one sequence of noise to every channel of a
   multi-channel wave, so the noise was identical in each. Its correlation
   between the two channels of a stereo wave was exactly 1 and it cancelled
