@@ -6,6 +6,12 @@
 #' that a module does not have with an error naming it, and
 #' [audioblastFilters()] lists the filters a module has.
 #'
+#' A filter given `NULL` is a filter left out, as it is elsewhere in R. A
+#' filter given `NA`, or no values at all, is refused by name instead: such a
+#' filter is almost always a lookup that failed or a column that holds nothing,
+#' and leaving it out would search the whole module rather than the part that
+#' was asked for.
+#'
 #' A filter that audioBlast lists as taking several values can be given a
 #' vector, e.g. `id = c(10754, 11096)`, which matches a row holding any one of
 #' them. audioBlast takes at most 100 values in a request, so longer vectors are
@@ -17,6 +23,14 @@
 #'
 #' Columns that audioBlast describes as numeric are returned as numbers, and
 #' all others as character strings.
+#'
+#' audioBlast gives the fields its records carry rather than every field the
+#' module has, and the records of one search can come from sources that do not
+#' hold the same fields, so the responses of a search can differ in them. The
+#' results are joined on all the fields any response carried, and a record that
+#' came without a field has `NA` there. The fields that only some responses
+#' carried are named in a message, as such an `NA` says that audioBlast did not
+#' give the field for that record rather than that its source holds nothing.
 #'
 #' @param type One of data, analysis, standalone.
 #' @param name Name of data or analysis source.
@@ -131,11 +145,11 @@ audioblast <- function(
     if (output %in% c("JSON-LD", "Turtle")) {
       return(unlist(rets))
     }
-    rets <- rets[!vapply(rets, is.null, logical(1))]
-    if (length(rets) == 0) {
+    ret <- .audioblast_bind(rets)
+    if (is.null(ret)) {
       return(NULL)
     }
-    ret <- .audioblast_convert(do.call(rbind, rets), info)
+    ret <- .audioblast_convert(ret, info)
 
     if (output=="Annotation") {
       ret <- .audioblast_annotations(ret)
@@ -184,8 +198,8 @@ audioblastRecord <- function(type, source, id, output="data.frame") {
   if (output != "data.frame") {
     return(httr2::resp_body_string(resp))
   }
-  ret <- .audioblast_json(resp)$data
-  if (length(ret) == 0) {
+  ret <- .audioblast_rows(.audioblast_json(resp)$data)
+  if (nrow(ret) == 0) {
     return(NULL)
   }
   module <- names(.audioblast_record_types)[.audioblast_record_types == type]
@@ -249,6 +263,17 @@ ab_range <- function(min=NULL, max=NULL) {
   }
   if (length(min) > 1 | length(max) > 1) {
     stop("min and max must each be a single value.")
+  }
+  #Compared before this was checked, so a bound given NA failed in the
+  #comparison with "missing value where TRUE/FALSE needed", and a range given
+  #only one bound was not compared at all and sent audioBlast ">=NA"
+  if (anyNA(min) | anyNA(max)) {
+    unknown <- c("min", "max")[c(anyNA(min), anyNA(max))]
+    stop(
+      "A range needs a value at each end it is given, and ",
+      paste(unknown, collapse=" and "),
+      if (length(unknown) > 1) " are NA." else " is NA."
+    )
   }
   if (!is.null(min) & !is.null(max)) {
     if (min > max) {
@@ -409,6 +434,11 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
         flac="audio/flac", ogg="audio/ogg", mime::mimemap
       )
       ext <- vapply(d[, "mime"], function(m) {
+        # names(map)[map == NA] is a vector of NAs rather than empty, so a row
+        # whose MIME type is not known was given the extension ".NA"
+        if (is.na(m)) {
+          return("")
+        }
         e <- names(map)[map == m]
         if (length(e) == 0) "" else paste0(".", e[1])
       }, character(1))
@@ -499,8 +529,10 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
   }
   for (n in names(query)) {
     v <- query[[n]]
-    # A value with a comma in it can only be sent in the list form
-    if (length(v) > 1 && any(grepl(",", v, fixed=TRUE))) {
+    # A comma in the joined form is the separator between two values, so a value
+    # that holds one can only be sent in the list form, whether it was given on
+    # its own or alongside others
+    if (any(grepl(",", v, fixed=TRUE))) {
       q <- stats::setNames(list(v), paste0(n, "[]"))
     } else {
       q <- stats::setNames(list(paste(v, collapse=",")), n)
@@ -608,7 +640,111 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
       setTxtProgressBar(pb, query$page)
     }
   }
-  do.call(rbind, rets)
+  .audioblast_bind(rets)
+}
+
+#' The records of one response, as a data frame
+#'
+#' A search of a module gives its records as an array, which jsonlite reads as
+#' a data frame, filling in with NA a field that one record of the array does
+#' not carry: one response is always rectangular. A response carrying a single
+#' record has come back as the record itself rather than as an array holding
+#' it, which jsonlite reads as a list of its fields, and a list of fields went
+#' through rbind() to a matrix of them rather than to a data frame.
+#'
+#' @param d The `data` field of a response.
+#' @return A data frame of the records the response holds, with no rows and no
+#'   columns where it holds none.
+#' @keywords internal
+#' @noRd
+.audioblast_rows <- function(d) {
+  if (is.data.frame(d)) {
+    return(d)
+  }
+  # A field holding a record of its own, rather than one value, is kept as it
+  # came, in a column of one element
+  fields <- lapply(d, function(v) if (length(v) == 1 && !is.list(v)) v else I(list(v)))
+  as.data.frame(fields, stringsAsFactors=FALSE, optional=TRUE)
+}
+
+#' Join the responses of a search into one data frame
+#'
+#' The responses of a search were joined with rbind(), which needs the same
+#' columns in each of its arguments, so a search whose responses did not carry
+#' the same fields failed with "numbers of columns of arguments do not match"
+#' and threw away every record already fetched. Responses of one search do
+#' differ in their fields, both between the pages of a search and between the
+#' batches that a filter of more than a hundred values is sent in, because
+#' audioBlast gives the fields its records carry rather than every field the
+#' module has, and indexes sources that do not hold the same fields.
+#'
+#' The responses are joined on all the fields any of them carried, with NA
+#' where a response came without one, which is what jsonlite already does for a
+#' field that one record of a response does not carry. Such an NA is not a
+#' value audioBlast gave, so the fields that only some responses carried are
+#' named in a message; a warning would be routed to the `on.issue` of
+#' [audioblast()], which is `stop` by default and would again discard the
+#' records the warning is about.
+#'
+#' @param rets The `data` field of each response, in the order fetched.
+#' @return A data frame of every record, or NULL where there are none.
+#' @keywords internal
+#' @noRd
+.audioblast_bind <- function(rets) {
+  rows <- lapply(rets, .audioblast_rows)
+  rows <- rows[vapply(rows, nrow, integer(1)) > 0]
+  if (length(rows) == 0) {
+    return(NULL)
+  }
+  if (length(rows) == 1) {
+    return(rows[[1]])
+  }
+  # One NA of each field, taken from the first response that carried it, which
+  # also puts the fields in the order they were first seen
+  absent <- list()
+  for (d in rows) {
+    for (col in setdiff(colnames(d), names(absent))) {
+      absent[[col]] <- .audioblast_na(d[[col]], 1L)
+    }
+  }
+  cols <- names(absent)
+  partial <- setdiff(cols, Reduce(intersect, lapply(rows, colnames)))
+  if (length(partial) > 0) {
+    message(
+      "audioBlast gave ", length(partial), " field", if (length(partial) > 1) "s",
+      " for only some of the records of this search (", paste(partial, collapse=", "),
+      "). A record that came without ", if (length(partial) > 1) "them" else "it",
+      " has NA there, which says that audioBlast did not give the field for that ",
+      "record rather than that its source holds nothing."
+    )
+  }
+  rows <- lapply(rows, function(d) {
+    for (col in setdiff(cols, colnames(d))) {
+      d[[col]] <- .audioblast_na(absent[[col]], nrow(d))
+    }
+    d[, cols, drop=FALSE]
+  })
+  do.call(rbind, rows)
+}
+
+#' As many NAs as a column needs, of the type that column holds
+#'
+#' Indexing a column with NA gives NAs of its own type, which a logical NA is
+#' not: a field holding a record of its own is a data frame within the data
+#' frame, and a logical NA in its place is recycled across that frame with a
+#' warning and leaves the record mangled.
+#'
+#' @param x The column, as the response that carried the field holds it.
+#' @param n How many NAs are wanted.
+#' @return n NAs of the type of x.
+#' @keywords internal
+#' @noRd
+.audioblast_na <- function(x, n) {
+  i <- rep(NA_integer_, n)
+  if (is.data.frame(x)) {
+    return(x[i, , drop=FALSE])
+  }
+  x[i]
 }
 
 #' Prepare filters for sending to audioBlast
@@ -628,7 +764,16 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
   if (any(duplicated(nams))) {
     stop("Filter ", nams[duplicated(nams)][1], " was given more than once. Give all of its values at once, e.g. id = c(1, 2).")
   }
-  args <- args[!vapply(args, function(v) is.null(v) || all(is.na(v)), logical(1))]
+  #A filter given NULL is a filter left out, as it is elsewhere in R. A filter
+  #given NA, or no values at all, was left out in the same way, which widened
+  #the query to the whole module instead of narrowing it as the caller asked:
+  #an NA filter is almost always a lookup that failed or a column holding
+  #nothing, and a query it silently drops gives a plausible result to a
+  #question nobody asked.
+  args <- args[!vapply(args, is.null, logical(1))]
+  .audioblast_refuse(vapply(args, function(v) length(v) == 0, logical(1)),
+                     "given no values to match")
+  .audioblast_refuse(vapply(args, anyNA, logical(1)), "given NA")
   lapply(args, function(v) {
     if (inherits(v, "ab_range")) {
       return(unclass(v))
@@ -638,6 +783,27 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
     }
     as.character(v)
   })
+}
+
+#' Refuse the filters that cannot be sent, naming them
+#'
+#' @param bad Named logical, which of the filters cannot be sent.
+#' @param said What was wrong with them, as it reads after their names.
+#' @return Nothing, invisibly, where there is nothing to refuse.
+#' @keywords internal
+#' @noRd
+.audioblast_refuse <- function(bad, said) {
+  if (!any(bad)) {
+    return(invisible(NULL))
+  }
+  named <- names(bad)[bad]
+  stop(
+    if (length(named) > 1) "Filters " else "Filter ",
+    paste(named, collapse=" and "),
+    if (length(named) > 1) " were " else " was ", said,
+    ". A filter needs a value to match; leave it out, or give it NULL, to ",
+    "search without it."
+  )
 }
 
 #' Split filters with more values than audioBlast takes into batches

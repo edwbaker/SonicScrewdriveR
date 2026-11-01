@@ -40,3 +40,9 @@ A data frame of start and end points of bins.
 \description{
 Draws a histogram on a dielPlot() using pre-defined bins related to time of day.
 }
+\details{
+Each bin is closed at its start and open at its end, as the data frame
+returned labels it, so a time falling exactly on a boundary is counted in the
+bin that begins there: a recording made at 01:00 is in the 01:00 bin and not
+in the midnight one.
+}

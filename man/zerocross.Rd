@@ -7,10 +7,12 @@
 zerocross(wave)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the crossings of each channel separately.}
 }
 \value{
-A vector of zero crossing locations
+A vector of zero crossing locations. For multi-channel input, one
+such vector per channel.
 }
 \description{
 Returns a vector of the position (in samples) of zero crossings in

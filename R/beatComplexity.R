@@ -5,10 +5,14 @@
 #' maximum identified repeating period (in seconds) divided by the number of
 #' peaks.
 #'
-#' @param wave A Wave object
-#' @param plot If TRUE a spectrogram overlaid with the peaks is plotted.
+#' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
+#'   allChannels(), which measures each channel separately.
+#' @param plot If TRUE a spectrogram overlaid with the peaks is plotted. One
+#'   plot is drawn per channel, so a multi-channel wave needs a layout of its
+#'   own for all of them to be seen.
 #' @return A list of the complexity, a vector of the peak periods, and the number of
-#'   peaks. The complexity is NA if the beat spectrum has no peak.
+#'   peaks. The complexity is NA if the beat spectrum has no peak. For
+#'   multi-channel input, one such list per channel.
 #' @examples
 #' \dontrun{
 #'   beatComplexity(sheep)
@@ -21,6 +25,12 @@ beatComplexity <-function(
   wave,
   plot=FALSE
 ) {
+  #The complexity of a stereo recording was that of its left channel alone, as
+  #beatSpectrum() read only the left slot, and a WaveMC has no such slot.
+  if (.useAllChannels(wave)) {
+    #A closure keeps the arguments away from the formals of allChannels()
+    return(allChannels(wave, function(w) beatComplexity(w, plot=plot), channel.param=NULL))
+  }
   bs <- beatSpectrum(wave)
 
   e <- c(0,diff(sign(diff(bs$power))),0)

@@ -5,14 +5,21 @@
 #' level between the peak amplitudes of consecutive periods. A waveform of constant
 #' amplitude has a shimmer of zero.
 #'
-#' @param wave A Wave object
+#' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
+#'   allChannels(), which returns the shimmer of each channel separately.
 #' @export
-#' @return The shimmer in decibels
+#' @return The shimmer in decibels. For multi-channel input, one such value per
+#'   channel.
 #' @examples
 #' \dontrun{
 #' shimmer(sheep)
 #' }
 shimmer <- function(wave) {
+    #A stereo Wave read only its left channel, so the shimmer of the right one
+    #was never reported, and a WaveMC has no left slot to read at all.
+    if (.useAllChannels(wave)) {
+      return(allChannels(wave, shimmer, channel.param=NULL))
+    }
     return(shimmer_db(wave))
 }
 

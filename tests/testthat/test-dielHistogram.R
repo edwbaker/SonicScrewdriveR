@@ -96,3 +96,56 @@ test_that("the histogram is drawn on the plot that is already open", {
   expect_silent(dielHistogram(histTimes(), by="hour"))
   expect_silent(dielHistogram(histTimes(), by="hour", col="red", rot=tzRot(2)))
 })
+
+test_that("a time on the hour is counted in the hour it begins", {
+  emptyDiel()
+  # The bins were right-closed, so each of these was counted in the hour before
+  # it - except midnight, which include.lowest caught.
+  mk <- function(t) as.POSIXct(paste("2024-06-15", t), tz="UTC")
+  data <- dielHistogram(
+    c(mk("00:00:00"), mk("01:00:00"), mk("02:00:00"), mk("23:00:00")),
+    by="hour", timezone="UTC"
+  )
+  expect_equal(which(data$value > 0), c(1, 2, 3, 24))
+})
+
+test_that("a bin holds the times from its own start up to the next bin's", {
+  emptyDiel()
+  mk <- function(t) as.POSIXct(paste("2024-06-15", t), tz="UTC")
+  data <- dielHistogram(
+    c(mk("01:00:00"), mk("01:30:00"), mk("01:59:59"), mk("02:00:00")),
+    by="hour", timezone="UTC", maxval=3
+  )
+  # Three times in the 01:00 bin and the one on the next boundary in the 02:00
+  # bin.
+  expect_equal(data$value[2], 1)
+  expect_equal(data$value[3], 1/3)
+  expect_equal(sum(data$value > 0), 2)
+})
+
+test_that("a time in the last bin of the day is counted", {
+  emptyDiel()
+  data <- dielHistogram(as.POSIXct("2024-06-15 23:59:59", tz="UTC"), by="hour",
+                        timezone="UTC")
+  expect_equal(which(data$value > 0), 24)
+})
+
+test_that("the smallest bins are counted the same way at both ends of the day", {
+  emptyDiel()
+  mk <- function(t) as.POSIXct(paste("2024-06-15", t), tz="UTC")
+  data <- dielHistogram(c(mk("00:00:00"), mk("00:15:00"), mk("23:45:00")),
+                        by="15minute", timezone="UTC")
+  expect_equal(which(data$value > 0), c(1, 2, 96))
+})
+
+test_that("no times at all gives empty bins rather than an error", {
+  emptyDiel()
+  # The fullest bin held nothing, so every value was divided by zero and the
+  # test for an empty bin failed with "missing value where TRUE/FALSE needed".
+  # Filtering a dataset down to no detections in a window reaches that.
+  none <- as.POSIXct(character(0), tz="UTC")
+  data <- dielHistogram(none, by="hour")
+  expect_equal(nrow(data), 24)
+  expect_equal(data$value, rep(0, 24))
+  expect_equal(dielHistogram(none, by="hour", presence.only=TRUE)$value, rep(0, 24))
+})

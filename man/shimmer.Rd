@@ -7,10 +7,12 @@
 shimmer(wave)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the shimmer of each channel separately.}
 }
 \value{
-The shimmer in decibels
+The shimmer in decibels. For multi-channel input, one such value per
+channel.
 }
 \description{
 Shimmer is a measure of the variability of amplitude between successive periods
