@@ -12,20 +12,29 @@ test_that("pulseIntervals finds the gaps between runs of pulses", {
 })
 
 test_that("pulseIntervals uses the nsd it is given", {
-  # nsd was overwritten with 2 immediately before use.
-  onsets <- c(0, 10, 20, 30, 100, 110)
+  # nsd was overwritten with 2 immediately before use. The other gaps differ, so
+  # that their standard deviation is not zero and nsd has something to scale.
+  # Gaps of 5, 7, 3, 65 and 5: the others have a mean of 5 and an sd of 1.63.
+  onsets <- c(0, 10, 22, 30, 100, 110)
   p <- list(onsets=onsets, offsets=onsets + 5)
   expect_equal(length(pulseIntervals(p, nsd=1)$onsets), 1)
-  expect_warning(r <- pulseIntervals(p, nsd=10), "nsd=10")
-  expect_equal(length(r$onsets), 0)
+  expect_equal(length(pulseIntervals(p, nsd=30)$onsets), 1)
+  expect_equal(length(pulseIntervals(p, nsd=40)$onsets), 0)
 })
 
 test_that("pulseIntervals copes with too few pulses", {
-  # 2:length(odds) counted backwards for fewer than three onsets. Two pulses have
-  # one gap between them, which cannot be an outlier of a set of one; one pulse
-  # and no pulses have no gap at all, so there is nothing to say about them.
+  # 2:length(odds) counted backwards for fewer than three onsets. A gap is
+  # compared with the others, which need a standard deviation, so one gap or two
+  # cannot be tested; one pulse and no pulses have no gap at all, so there is
+  # nothing to say about them.
   expect_warning(r <- pulseIntervals(list(onsets=c(0, 10), offsets=c(5, 15))), "1 gap")
   expect_equal(length(r$onsets), 0)
+  expect_warning(
+    r <- pulseIntervals(list(onsets=c(0, 10, 100), offsets=c(5, 15, 105))),
+    "2 gaps: each gap is compared with the mean and standard deviation of the others"
+  )
+  expect_equal(length(r$onsets), 0)
+  expect_silent(pulseIntervals(list(onsets=c(0, 10, 20, 100), offsets=c(5, 15, 25, 105))))
   expect_silent(r <- pulseIntervals(list(onsets=0, offsets=5)))
   expect_equal(length(r$onsets), 0)
   expect_silent(r <- pulseIntervals(list(onsets=numeric(0), offsets=numeric(0))))
@@ -78,29 +87,27 @@ test_that("pulseIntervals does not report an unusually short gap", {
   expect_false(any(gaps > mean(gaps) + 2*stats::sd(gaps)))
 })
 
-test_that("pulseIntervals says so when no gap can reach the nsd it is given", {
-  # An interval is kept only when a gap is more than nsd standard deviations
-  # above the mean, but the gap is one of the values the mean and the standard
-  # deviation are taken from, so the most one gap of k can reach is
-  # (k-1)/sqrt(k). With the default nsd of 2 that is unreachable until there are
-  # 6 gaps, so six or fewer pulses returned an empty result however extreme the
-  # gap, and said nothing about why.
+test_that("a gap is compared with the others, so a few pulses are enough", {
+  # Each gap was one of the values the mean and the standard deviation were
+  # taken from, so it lifted the cut-off it had to clear: the most one gap of k
+  # could reach was (k-1)/sqrt(k), and with the default nsd of 2 six or fewer
+  # pulses returned an empty result however extreme the gap.
   onsets <- c(100, 200, 300, 1000, 1100, 1200)
   p <- list(onsets=onsets, offsets=onsets + 50)
 
   #Five gaps of 50, 50, 650, 50, 50: the long gap is thirteen times the others.
-  expect_warning(r <- pulseIntervals(p), "1\\.789")
-  expect_length(r$onsets, 0)
-  #It is reported as soon as the cut-off is one it can reach.
-  expect_silent(r <- pulseIntervals(p, nsd=1.5))
+  expect_silent(r <- pulseIntervals(p))
   expect_equal(r$onsets, 350)
   expect_equal(r$offsets, 1000)
 
-  #Six gaps can reach 2.041, so seven pulses are enough for the default.
-  seven <- c(100, 200, 300, 400, 1500, 1600, 1700)
-  expect_silent(r <- pulseIntervals(list(onsets=seven, offsets=seven + 50)))
-  expect_equal(r$onsets, 450)
-  expect_equal(r$offsets, 1500)
+  #Four pulses, three gaps, are enough.
+  four <- c(100, 200, 300, 1000)
+  r <- pulseIntervals(list(onsets=four, offsets=four + 50))
+  expect_equal(r$onsets, 350)
+
+  #Gaps all of one length report nothing, as none is longer than the others.
+  even <- seq(100, 1000, by=100)
+  expect_length(pulseIntervals(list(onsets=even, offsets=even + 50))$onsets, 0)
 })
 
 test_that("pulseIntervals needs the offsets to measure a gap from", {
