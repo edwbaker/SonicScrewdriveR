@@ -57,7 +57,8 @@
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>A Wave object</p></dd>
+<dd><p>A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the energy of each channel separately.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -76,7 +77,8 @@ by default "dietrich2004" to use (Dietrich et al. 2004)
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A vector of short term energy values</p>
+    <p>A vector of short term energy values. For multi-channel input, one
+such vector per channel.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

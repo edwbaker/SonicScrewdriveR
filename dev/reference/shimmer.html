@@ -66,12 +66,14 @@ amplitude has a shimmer of zero.</p>
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>A Wave object</p></dd>
+<dd><p>A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the shimmer of each channel separately.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The shimmer in decibels</p>
+    <p>The shimmer in decibels. For multi-channel input, one such value per
+channel.</p>
     </div>
 
     <div class="section level2">

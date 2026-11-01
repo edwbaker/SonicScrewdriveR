@@ -63,7 +63,7 @@ or -10dB.</p>
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>A Wave object</p></dd>
+<dd><p>A Wave or WaveMC object</p></dd>
 
 
 <dt id="arg-bw">bw<a class="anchor" aria-label="anchor" href="#arg-bw"></a></dt>
@@ -83,12 +83,18 @@ frequency is the floor of that calculation, so no band below it is chosen.</p></
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A band-pass filtered Wave object</p>
+    <p>A band-pass filtered Wave or WaveMC object, with the channels the
+input had</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Applied to a <code>TaggedWave</code> the call is recorded in the <code>processing</code> slot of
-the result, as described in <code><a href="tagApply.html">tagApply()</a></code>.</p>
+    <p>Every channel of a stereo <code>Wave</code> or a <code>WaveMC</code> is filtered, each around the
+strongest frequency of that channel, and the result has the channels the
+input had. The band is measured per channel rather than once for the whole
+recording, because the channels of a recording need not hold the same signal
+and measuring one of them would choose the band for all the others.</p>
+<p>Applied to a <code>TaggedWave</code> or <code>TaggedWaveMC</code> the call is recorded in the
+<code>processing</code> slot of the result, as described in <code><a href="tagApply.html">tagApply()</a></code>.</p>
     </div>
 
     <div class="section level2">

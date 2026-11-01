@@ -25,7 +25,9 @@ yearlyFraction(
 
 - year:
 
-  Year to calculate fractions of (allows for leap years)
+  The year a day number belongs to, which decides whether it is measured
+  against 366 days. Read for `input.unit="day"` only: a POSIX time
+  carries the year it falls in, and is measured against that.
 
 - input.unit:
 

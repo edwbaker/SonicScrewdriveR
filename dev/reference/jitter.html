@@ -66,7 +66,8 @@ length. A waveform of constant period has a jitter of zero.</p>
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>A Wave object</p></dd>
+<dd><p>A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the jitter of each channel separately.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -76,7 +77,8 @@ length. A waveform of constant period has a jitter of zero.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The jitter, in samples for method "absolute" and as a proportion of the
-mean period for method "relative"</p>
+mean period for method "relative". For multi-channel input, one such value per
+channel.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

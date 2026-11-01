@@ -15,7 +15,8 @@ fcis(
   indices = c("power", "ACI", "entropy"),
   wl = 256,
   cluster = NULL,
-  scale = NULL
+  scale = NULL,
+  channel = NULL
 )
 ```
 
@@ -55,13 +56,22 @@ fcis(
   [`fcisClip()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/fcisClip.md)
   makes one that clips to a range of percentiles.
 
+- channel:
+
+  Which channel of the recording to describe. If NULL, a recording of
+  more than one channel gives one spectrogram per channel, and each
+  records the channel it describes.
+
 ## Value
 
 An object of class "fcis", being a list of the colours as a character
 matrix of one entry per frequency bin and window, the matrix of values
 for each index, the frequencies of the bins in Hz, the duration of a
-window in seconds, and the names of the indices used. The frequencies
-were in kHz, as seewave::spectro() gives them, in earlier releases.
+window in seconds, the names of the indices used, and the channel it
+describes, which is NA for a recording of one channel. For a recording
+of more than one channel with no channel asked for, a list of one such
+object per channel. The frequencies were in kHz, as seewave::spectro()
+gives them, in earlier releases.
 
 ## Details
 

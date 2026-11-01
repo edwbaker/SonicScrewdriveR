@@ -6,13 +6,7 @@ Plot a false-colour index spectrogram
 
 ``` r
 # S3 method for class 'fcis'
-plot(
-  x,
-  xlab = NULL,
-  ylab = "Frequency (Hz)",
-  main = "False-colour index spectrogram",
-  ...
-)
+plot(x, xlab = NULL, ylab = "Frequency (Hz)", main = NULL, ...)
 ```
 
 ## Arguments
@@ -32,7 +26,8 @@ plot(
 
 - main:
 
-  Title for the plot
+  Title for the plot. The default names the channel described where the
+  recording held more than one.
 
 - ...:
 

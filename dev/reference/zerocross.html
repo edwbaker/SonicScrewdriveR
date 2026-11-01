@@ -60,12 +60,14 @@ a Wave object</p>
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>A Wave object</p></dd>
+<dd><p>A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the crossings of each channel separately.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A vector of zero crossing locations</p>
+    <p>A vector of zero crossing locations. For multi-channel input, one
+such vector per channel.</p>
     </div>
 
     <div class="section level2">

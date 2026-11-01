@@ -15,11 +15,13 @@ shimmer(wave)
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns the shimmer of each channel separately.
 
 ## Value
 
-The shimmer in decibels
+The shimmer in decibels. For multi-channel input, one such value per
+channel.
 
 ## Examples
 

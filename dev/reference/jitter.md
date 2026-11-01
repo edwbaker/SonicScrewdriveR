@@ -16,7 +16,8 @@ jitter(wave, method = "absolute")
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns the jitter of each channel separately.
 
 - method:
 
@@ -25,7 +26,8 @@ jitter(wave, method = "absolute")
 ## Value
 
 The jitter, in samples for method "absolute" and as a proportion of the
-mean period for method "relative"
+mean period for method "relative". For multi-channel input, one such
+value per channel.
 
 ## Details
 

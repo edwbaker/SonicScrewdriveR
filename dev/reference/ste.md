@@ -12,7 +12,8 @@ ste(wave, method = "dietrich2004", U = 120, ...)
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns the energy of each channel separately.
 
 - method:
 
@@ -29,7 +30,8 @@ ste(wave, method = "dietrich2004", U = 120, ...)
 
 ## Value
 
-A vector of short term energy values
+A vector of short term energy values. For multi-channel input, one such
+vector per channel.
 
 ## References
 

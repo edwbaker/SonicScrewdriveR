@@ -14,7 +14,7 @@ autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 
 - wave:
 
-  A Wave object
+  A Wave or WaveMC object
 
 - bw:
 
@@ -35,12 +35,20 @@ autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 
 ## Value
 
-A band-pass filtered Wave object
+A band-pass filtered Wave or WaveMC object, with the channels the input
+had
 
 ## Details
 
-Applied to a `TaggedWave` the call is recorded in the `processing` slot
-of the result, as described in
+Every channel of a stereo `Wave` or a `WaveMC` is filtered, each around
+the strongest frequency of that channel, and the result has the channels
+the input had. The band is measured per channel rather than once for the
+whole recording, because the channels of a recording need not hold the
+same signal and measuring one of them would choose the band for all the
+others.
+
+Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+`processing` slot of the result, as described in
 [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
 
 ## Examples

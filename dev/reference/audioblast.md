@@ -86,6 +86,12 @@ filter that a module does not have with an error naming it, and
 [`audioblastFilters()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastFilters.md)
 lists the filters a module has.
 
+A filter given `NULL` is a filter left out, as it is elsewhere in R. A
+filter given `NA`, or no values at all, is refused by name instead: such
+a filter is almost always a lookup that failed or a column that holds
+nothing, and leaving it out would search the whole module rather than
+the part that was asked for.
+
 A filter that audioBlast lists as taking several values can be given a
 vector, e.g. `id = c(10754, 11096)`, which matches a row holding any one
 of them. audioBlast takes at most 100 values in a request, so longer

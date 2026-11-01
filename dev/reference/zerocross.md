@@ -13,11 +13,13 @@ zerocross(wave)
 
 - wave:
 
-  A Wave object
+  A Wave object. Stereo Wave and WaveMC objects are passed to
+  allChannels(), which returns the crossings of each channel separately.
 
 ## Value
 
-A vector of zero crossing locations
+A vector of zero crossing locations. For multi-channel input, one such
+vector per channel.
 
 ## Examples
 

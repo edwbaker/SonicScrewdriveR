@@ -27,8 +27,13 @@ rainfallDetection(wave, method = "bedoya2017", ...)
 
 ## Value
 
-Numeric value from the rainfall detection algorithm chosen. For
-multi-channel input, a list of such values.
+Numeric value from the rainfall detection algorithm chosen, or zero
+where the recording is not rainfall. For "bedoya2017" the value is the
+mean power spectral density of the 600-1200 Hz band in power per Hz,
+relative to the full scale of the format the wave is held in, so it is
+the same number whatever that bit depth is and is comparable between
+recordings. Its `Tmean` threshold is in those units. For multi-channel
+input, a list of such values.
 
 ## Examples
 

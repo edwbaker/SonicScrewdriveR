@@ -130,6 +130,11 @@ depending on <code>output</code>. <code>NULL</code> if nothing matches the query
     <p>Filters are given as named arguments in <code>...</code>. audioBlast refuses a filter
 that a module does not have with an error naming it, and
 <code><a href="audioblastFilters.html">audioblastFilters()</a></code> lists the filters a module has.</p>
+<p>A filter given <code>NULL</code> is a filter left out, as it is elsewhere in R. A
+filter given <code>NA</code>, or no values at all, is refused by name instead: such a
+filter is almost always a lookup that failed or a column that holds nothing,
+and leaving it out would search the whole module rather than the part that
+was asked for.</p>
 <p>A filter that audioBlast lists as taking several values can be given a
 vector, e.g. <code>id = c(10754, 11096)</code>, which matches a row holding any one of
 them. audioBlast takes at most 100 values in a request, so longer vectors are

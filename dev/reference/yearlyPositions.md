@@ -14,7 +14,7 @@ yearlyPositions(year = 2022, format = "months")
 
 - year:
 
-  Year to calculate
+  Year to calculate, which must be a single year
 
 - format:
 
