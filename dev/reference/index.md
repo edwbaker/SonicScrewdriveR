@@ -253,6 +253,8 @@
   : Plot a radial polygon
 - [`rainfallDetection()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/rainfallDetection.md)
   : Rainfall detection
+- [`readAOEF()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAOEF.md)
+  : Read an AOEF file
 - [`readAudacityLabels()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudacityLabels.md)
   : Read an Audacity label file
 - [`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
@@ -333,6 +335,8 @@
   : Get the wavelength from frequency and speed of sound
 - [`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)
   : Windowing Function for Wave Objects
+- [`writeAOEF()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAOEF.md)
+  : Write an AOEF file
 - [`writeAnnotationWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAnnotationWave.md)
   : Save a time region defined by an Annotation object as a Wave file
 - [`writeAudacityLabels()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAudacityLabels.md)

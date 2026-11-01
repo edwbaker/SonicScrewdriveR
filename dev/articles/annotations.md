@@ -96,6 +96,21 @@ length, and a marker starts and ends where it is.
 a <- wavCues("marked.wav")
 ```
 
+#### From an AOEF file
+
+The Whombat annotation tool exports its projects in the Acoustic Objects
+Exchange Format (AOEF), the JSON format of the soundevent Python
+package. `readAOEF` reads them as `Annotation` objects, one for each tag
+of each sound event. The paths of the recordings in the file are
+relative to the directory the audio is in, which is given as
+`audio.dir`.
+
+``` r
+
+# Read the annotations of a project exported from Whombat
+a <- readAOEF("project.json", audio.dir="audio")
+```
+
 ### Generating annotations
 
 #### Using BirdNET
@@ -187,4 +202,16 @@ seconds.
 
 # Convert the annotations to an Audacity label file
 writeAudacityLabels(annotations, "birdnet_annotations.txt")
+```
+
+#### AOEF file
+
+`writeAOEF` writes annotations to an AOEF file, which soundevent reads,
+and which Whombat imports as an annotation project. Annotations read by
+`readAOEF` are written back as they were read.
+
+``` r
+
+# Write the annotations as an annotation project
+writeAOEF(annotations, "birdnet_annotations.json", audio.dir="audio", collection="annotation_project")
 ```

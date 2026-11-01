@@ -165,6 +165,19 @@ is.</p>
 <code class="sourceCode R"><span><span class="co"># Read the markers and labelled regions saved in a wave file</span></span>
 <span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wavCues.html">wavCues</a></span><span class="op">(</span><span class="st">"marked.wav"</span><span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level4">
+<h4 id="from-an-aoef-file">From an AOEF file<a class="anchor" aria-label="anchor" href="#from-an-aoef-file"></a>
+</h4>
+<p>The Whombat annotation tool exports its projects in the Acoustic
+Objects Exchange Format (AOEF), the JSON format of the soundevent Python
+package. <code>readAOEF</code> reads them as <code>Annotation</code>
+objects, one for each tag of each sound event. The paths of the
+recordings in the file are relative to the directory the audio is in,
+which is given as <code>audio.dir</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Read the annotations of a project exported from Whombat</span></span>
+<span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readAOEF.html">readAOEF</a></span><span class="op">(</span><span class="st">"project.json"</span>, audio.dir<span class="op">=</span><span class="st">"audio"</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level3">
 <h3 id="generating-annotations">Generating annotations<a class="anchor" aria-label="anchor" href="#generating-annotations"></a>
@@ -172,7 +185,7 @@ is.</p>
 <div class="section level4">
 <h4 id="using-birdnet">Using BirdNET<a class="anchor" aria-label="anchor" href="#using-birdnet"></a>
 </h4>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Analyse sound files using BirdNET-Analyzer</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"AUDIOMOTH.WAV"</span>, package<span class="op">=</span><span class="st">"sonicscrewdriver"</span><span class="op">)</span></span>
 <span><span class="va">annotations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/birdNetAnalyse.html">birdNetAnalyse</a></span><span class="op">(</span><span class="va">f</span>, output<span class="op">=</span><span class="st">"Annotation"</span><span class="op">)</span></span></code></pre></div>
@@ -186,7 +199,7 @@ overlapping annotations. The function will merge annotations with
 overlapping time extents with the same <code>file</code>,
 <code>type</code>, <code>value</code> and optionally <code>source</code>
 slots.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/annotation.html">annotation</a></span><span class="op">(</span></span>
 <span>    start<span class="op">=</span><span class="fl">27</span>,</span>
@@ -255,9 +268,20 @@ to 33 seconds.</p>
 <div class="section level4">
 <h4 id="audacity-label-file">Audacity label file<a class="anchor" aria-label="anchor" href="#audacity-label-file"></a>
 </h4>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert the annotations to an Audacity label file</span></span>
 <span><span class="fu"><a href="../reference/writeAudacityLabels.html">writeAudacityLabels</a></span><span class="op">(</span><span class="va">annotations</span>, <span class="st">"birdnet_annotations.txt"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="aoef-file">AOEF file<a class="anchor" aria-label="anchor" href="#aoef-file"></a>
+</h4>
+<p><code>writeAOEF</code> writes annotations to an AOEF file, which
+soundevent reads, and which Whombat imports as an annotation project.
+Annotations read by <code>readAOEF</code> are written back as they were
+read.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Write the annotations as an annotation project</span></span>
+<span><span class="fu"><a href="../reference/writeAOEF.html">writeAOEF</a></span><span class="op">(</span><span class="va">annotations</span>, <span class="st">"birdnet_annotations.json"</span>, audio.dir<span class="op">=</span><span class="st">"audio"</span>, collection<span class="op">=</span><span class="st">"annotation_project"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 </div>
