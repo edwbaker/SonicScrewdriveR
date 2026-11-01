@@ -743,6 +743,23 @@
   the two disagree they returned the phases of the wrong day. A recording made at
   08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
   day's phases.
+- dayPhases() filed a solar event near local midnight under the wrong date on
+  every daylight-saving transition. The first instant of the day, which bounds
+  the window deciding which events belong to it, was found by taking twelve hours
+  off local noon, and taking them in real time: there are not twelve real hours
+  between midnight and noon on a 23- or 25-hour day, so the window opened at
+  23:00 the evening before every spring and an hour into the day every autumn. At
+  20 degrees north and 100 east, where the sun rises at a quarter past six by its
+  own local time, the sunrise of 30 March 2024 reads 23:15 in London and was
+  reported as the sunrise of the 31st, a day on which no sunrise falls in London
+  time at all; a degree further east the sunrise of 27 October, which reads
+  00:00 that morning, was reported as not happening. The day now begins at the
+  instant the local clock first reads as being on it, which is midnight where the
+  clock reaches it and the moment the clock jumps where it does not: in Cuba and
+  Chile, where daylight saving begins at midnight, the day's first reading is
+  01:00, and where the clock reaches midnight twice the first of the two is taken.
+  A date the clock skipped altogether, as Samoa's did in crossing the date line,
+  holds no part of the run of time rather than being read as NA.
 - dayPhase() dropped every phase bounded by a solar event that does not occur at
   the latitude and date asked for, so a recording made during such a phase was
   reported as belonging to no phase at all and nothing said so. At the default
