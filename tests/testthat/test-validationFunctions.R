@@ -256,3 +256,36 @@ test_that("a temperature conversion of a vector holding NA returns NA for it", {
   expect_equal(convert2Kelvin(c(20, NA, 25), input.unit="C"), c(293.15, NA, 298.15))
   expect_equal(convert2Celsius(c(293.15, NA), input.unit="K"), c(20, NA))
 })
+
+test_that("a NaN amplitude is reported rather than coerced to zero", {
+  #is.na() is TRUE of NaN, so NaN amplitudes were replaced with zero under the
+  #rule for an unknown amplitude and a failed calculation reached the caller as
+  #a measurement. coerceNA has nothing to say about them.
+  m <- matrix(c(1, 2, 3, NaN), nrow = 2, ncol = 2)
+  expect_error(validateSpectrum(m, coerceNA=TRUE), "No NaN values allowed in spectra.")
+  expect_error(validateSpectrum(m, coerceNA=FALSE), "No NaN values allowed in spectra.")
+
+  m <- matrix(c(1, 2, NaN, NaN), nrow = 2, ncol = 2)
+  expect_error(validateSpectrum(m), "No NaN values allowed in spectra.")
+
+  #A NaN frequency bin is reported the same way, where it used to be reported as
+  #a missing one.
+  m <- matrix(c(1, NaN, 3, 4), nrow = 2, ncol = 2)
+  expect_error(validateSpectrum(m), "No NaN values allowed in spectra.")
+
+  #A genuinely missing amplitude still stands as zero, which is what the rule
+  #was written for.
+  m <- matrix(c(1, 2, 3, NA_real_), nrow = 2, ncol = 2)
+  expect_equal(validateSpectrum(m, coerceNA=TRUE)[, 2], c(3, 0))
+})
+
+test_that("the spectrum of a silent recording is reported, not silently zeroed", {
+  #seewave::spec() divides by the largest amplitude, so digital silence comes
+  #back as NaN throughout. Every one of them used to be replaced with zero, so a
+  #recording that measured nothing was indistinguishable from one that measured
+  #silence.
+  silence <- tuneR::Wave(rep(0, 1024), samp.rate=8000, bit=16, pcm=TRUE)
+  s <- seewave::spec(silence, plot=FALSE)
+  expect_true(all(is.nan(s[, 2])))
+  expect_error(validateSpectrum(s), "No NaN values allowed in spectra.")
+})
