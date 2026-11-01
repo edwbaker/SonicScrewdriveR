@@ -44,29 +44,298 @@
   inherits(x, c("TaggedWave", "TaggedWaveMC"))
 }
 
-#' Digest of a Wave-like object
+#' Which digest a process record should use
 #'
-#' Hashes the samples and the sampling parameters, not the R object, so the
-#' result does not depend on the R version or on any tags.
+#' The default is the sketch, because a full digest reads every sample - about a
+#' second per minute of stereo 48 kHz audio - and is paid twice per operation,
+#' on the wave going in and the wave coming out. An hour-long recording would
+#' therefore be minutes of hashing per step, which is enough to make a record
+#' not worth keeping; a sketch costs the same whatever the length.
+#'
+#' What that gives up is stated plainly in [tagApply()] and recorded in every
+#' record: a sketch of a recording too long to read whole tells an edited one
+#' from an unedited one, but is not evidence that two recordings are the same.
+#' `options(sonicscrewdriver.provenance="full")` buys that evidence back at the
+#' cost above.
+#' @return "sketch" or "full".
+#' @keywords internal
+#' @noRd
+.hashMethod <- function() {
+  method <- getOption("sonicscrewdriver.provenance", "sketch")
+  if (length(method) != 1 || !is.character(method) ||
+      !method %in% c("full", "sketch")) {
+    warning(
+      "sonicscrewdriver.provenance must be 'sketch' or 'full'; using 'sketch'.",
+      call.=FALSE
+    )
+    return("sketch")
+  }
+  return(method)
+}
+
+#' The parts of a wave that a digest covers
+#'
+#' The samples and the sampling parameters, not the R object, so the digest does
+#' not depend on the R version or on any tags.
+#' @param w A Wave-like object.
+#' @return A list of numeric vectors.
+#' @keywords internal
+#' @noRd
+.waveParts <- function(w) {
+  if (is(w, "WaveMC")) {
+    return(list(as.numeric(w@.Data), dim(w@.Data), c(w@samp.rate, w@bit)))
+  }
+  return(list(w@left, w@right, c(w@samp.rate, w@bit)))
+}
+
+#' Digest of one numeric vector
 #'
 #' The bytes are hashed as they are, rather than as a serialised R object, so
 #' that the digest of a recording is the same whatever version of R wrote it:
 #' `serialize=FALSE` is what keeps digest from wrapping them first.
-#' @param w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object.
+#' @param x A numeric vector.
 #' @return A SHA-256 hex string.
 #' @keywords internal
 #' @noRd
-.waveHash <- function(w) {
-  if (is(w, "WaveMC")) {
-    samples <- list(as.numeric(w@.Data), dim(w@.Data))
-  } else {
-    samples <- list(w@left, w@right)
+.digestNumeric <- function(x) {
+  digest::digest(writeBin(as.numeric(x), raw()), algo="sha256", serialize=FALSE)
+}
+
+#' Evenly spaced blocks of a long vector
+#'
+#' Enough of a channel to tell it from an edited one at a cost that does not
+#' grow with its length. The blocks begin at the first sample and end at the
+#' last, so a recording trimmed at either end is covered. A vector short enough
+#' that the blocks would cover it is returned whole.
+#' @param x A numeric vector.
+#' @param n Samples per block.
+#' @param blocks How many blocks.
+#' @return A numeric vector.
+#' @keywords internal
+#' @noRd
+.waveSketch <- function(x, n=4096, blocks=10) {
+  len <- length(x)
+  if (len <= n * blocks) {
+    return(x)
   }
-  bytes <- unlist(lapply(
-    c(samples, list(c(w@samp.rate, w@bit))),
-    function(x) writeBin(as.numeric(x), raw())
+  starts <- round(seq(1, len - n + 1, length.out=blocks))
+  return(x[unlist(lapply(starts, function(s) seq.int(s, s + n - 1)))])
+}
+
+#' Digest of a Wave-like object
+#'
+#' Each part of the wave is digested on its own and those digests are then
+#' digested together, rather than the samples of every channel being
+#' concatenated into one vector of bytes first. It is as hard to collide, as
+#' every part is covered by a digest of its own and the hex strings joined are
+#' each of a fixed length, but nothing the size of the recording is built to get
+#' it. Concatenating the bytes cost about 16 bytes per sample on top of the wave
+#' itself, which is gigabytes for an hour of stereo audio, and the digest of a
+#' five minute stereo recording could fail for want of memory.
+#'
+#' `method="sketch"`, the default, digests the length of each part and a fixed
+#' number of evenly spaced blocks of it rather than all of it, which takes the
+#' same time whatever the recording's length. A part short enough that the
+#' blocks cover it is still digested whole, so for a recording of up to some
+#' seconds a sketch reads every sample and is as strong as a full digest. Past
+#' that it tells an edited recording from an unedited one, but is not evidence
+#' that two recordings are the same, so a record says which was used.
+#' @param w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object.
+#' @param method "full" or "sketch".
+#' @return A SHA-256 hex string.
+#' @keywords internal
+#' @noRd
+.waveHash <- function(w, method=.hashMethod()) {
+  parts <- .waveParts(w)
+  if (identical(method, "sketch")) {
+    #The lengths go in as well, so that a part the blocks happen to miss a
+    #change in is still told apart by how long it is.
+    parts <- c(
+      list(vapply(parts, length, numeric(1))),
+      lapply(parts, .waveSketch)
+    )
+  }
+  return(digest::digest(
+    paste0(vapply(parts, .digestNumeric, character(1)), collapse=""),
+    algo="sha256", serialize=FALSE
   ))
-  digest::digest(bytes, algo="sha256", serialize=FALSE)
+}
+
+#' Deparse an expression for a record, capped in length
+#' @param x An expression.
+#' @param max The longest string to keep whole.
+#' @return A single string.
+#' @keywords internal
+#' @noRd
+.shortDeparse <- function(x, max=120) {
+  text <- paste(deparse(x), collapse=" ")
+  if (nchar(text) > max) {
+    text <- paste0(substr(text, 1, max - 3), "...")
+  }
+  return(text)
+}
+
+#' Match a call against the formals of the function being applied
+#'
+#' The wave is the first argument of the call being described, so it takes part
+#' in the matching: which formal it filled is then known rather than assumed,
+#' and a function given the wave somewhere other than its first argument is
+#' described as it really ran. Each argument meant for the function stands in
+#' the call as a numbered placeholder, so that the formal it filled can be read
+#' back off the match.
+#'
+#' A call reaching here has already been made, so `match.call()` agreeing with R
+#' is the ordinary case. `NULL` for a call it cannot match leaves the caller to
+#' fall back on the names as they were given.
+#' @param shape A function with the formals to match against.
+#' @param supplied The arguments meant for it, as a list.
+#' @return The matched call, or `NULL`.
+#' @keywords internal
+#' @noRd
+.matchedCall <- function(shape, supplied) {
+  given <- names(supplied)
+  if (is.null(given)) {
+    given <- rep("", length(supplied))
+  }
+  slots <- lapply(seq_along(supplied), function(i) as.name(paste0("..", i)))
+  names(slots) <- given
+  return(tryCatch(
+    match.call(
+      definition=shape,
+      call=as.call(c(list(as.name("fun"), as.name("..wave")), slots)),
+      expand.dots=TRUE
+    ),
+    error=function(e) NULL
+  ))
+}
+
+#' Name the arguments of a call as the function being applied names them
+#'
+#' An argument given by position, or by an abbreviation of a formal's name,
+#' reaches `tagApply()` under none of the function's names, so a record made
+#' from the names as given says only that something was passed: `tagApply(w, f,
+#' 3000)` recorded `3000` and not which setting it was. The name of the formal
+#' an argument filled is what a reader needs to make the call again.
+#' @param matched The call as `.matchedCall()` matched it.
+#' @param supplied The arguments meant for it, as a list.
+#' @return The same values, named as the formals they filled.
+#' @keywords internal
+#' @noRd
+.matchParams <- function(matched, supplied) {
+  parts <- as.list(matched)[-1]
+  filled <- match(
+    vapply(parts, function(p) paste(deparse(p), collapse=""), character(1)),
+    paste0("..", seq_along(supplied))
+  )
+  names_out <- names(parts)
+  if (is.null(names_out)) {
+    #A function whose formals are nothing but `...` names none of them.
+    names_out <- rep("", length(parts))
+  }
+  kept <- !is.na(filled)
+  values <- supplied[filled[kept]]
+  labels <- names_out[kept]
+  if (!any(nzchar(labels))) {
+    #A function that names none of its arguments leaves a record of them as a
+    #bare list, rather than one of empty names.
+    names(values) <- NULL
+    return(values)
+  }
+  names(values) <- labels
+  return(values)
+}
+
+#' The formals a call left to their defaults
+#'
+#' A default is part of what happened: a filter run at the window length its
+#' function happens to prefer was run at that window length, and a record that
+#' says nothing of it cannot be repeated. `seewave::ffilter()` has twelve
+#' defaults, three of which change the samples it returns.
+#'
+#' They are kept as the function writes them rather than as values, because a
+#' default can be an expression over the other arguments - `pcm = object@pcm` in
+#' `tuneR::normalize()` - whose value is known only inside the call, and
+#' evaluating it from outside would either fail or quietly give a different
+#' answer. For a default that is a literal the two are the same thing. Where a
+#' function chooses among a vector of them with `match.arg()`, the first element
+#' of the vector recorded is the one that ran.
+#' @param shape A function with the formals to read the defaults from.
+#' @param matched The call as `.matchedCall()` matched it.
+#' @return A named list of deparsed defaults, or `NULL` if there are none.
+#' @keywords internal
+#' @noRd
+.argDefaults <- function(shape, matched) {
+  formal_args <- as.list(formals(shape))
+  if (length(formal_args) == 0) {
+    return(NULL)
+  }
+  #Every formal the call filled, the wave's among them: the wave is ordinarily
+  #the first, but it is whichever one it was matched to, and a formal something
+  #was passed to was not left to its default.
+  formal_args <- formal_args[
+    !names(formal_args) %in% c("...", names(as.list(matched))[-1])
+  ]
+  kept <- vapply(
+    formal_args, function(d) !identical(d, quote(expr=)), logical(1)
+  )
+  if (!any(kept)) {
+    return(NULL)
+  }
+  return(lapply(formal_args[kept], .shortDeparse))
+}
+
+#' Describe a call for a process record
+#'
+#' What the caller chose and what the function chose for it, told apart, since a
+#' reader needs to know which is which and a record that merged them would say
+#' neither. A function that takes its arguments without matching them against
+#' formals - as a handful of primitives do - has nothing to match or to default,
+#' so its arguments are described as they were given, as are those of a call
+#' that cannot be matched.
+#' @param fun The function being applied.
+#' @param supplied The arguments meant for it, as a list.
+#' @return A list of `params` and `defaults`.
+#' @keywords internal
+#' @noRd
+.describeCall <- function(fun, supplied) {
+  #args() carries the formals of a primitive, which has none of its own, and is
+  #not a function for the few that have no formals to carry.
+  shape <- args(fun)
+  if (!is.function(shape)) {
+    return(list(params=supplied, defaults=NULL))
+  }
+  matched <- .matchedCall(shape, supplied)
+  if (is.null(matched)) {
+    return(list(params=supplied, defaults=NULL))
+  }
+  return(list(
+    params=.matchParams(matched, supplied),
+    defaults=.argDefaults(shape, matched)
+  ))
+}
+
+#' When a process ran, and on what clock
+#'
+#' A `POSIXct` is an instant, so the time a record held was never wrong, but it
+#' is shown in the zone of whoever reads it and the zone is gone altogether once
+#' a record is written out as text: the same record read in London and in Tokyo
+#' gave times nine hours apart. The zone is named in the record, and set on the
+#' time itself so that printing a record gives the clock the machine that ran it
+#' was keeping.
+#' @return A list of `time` and `timezone`.
+#' @keywords internal
+#' @noRd
+.recordTime <- function() {
+  now <- Sys.time()
+  zone <- Sys.timezone()
+  if (length(zone) != 1 || is.na(zone) || !nzchar(zone)) {
+    #Sys.timezone() gives NA where the zone cannot be named, and the
+    #abbreviation the clock is keeping is less use than a name but better than
+    #nothing. It is not set on the time, as it is not something R can read back.
+    return(list(time=now, timezone=format(now, "%Z")))
+  }
+  attr(now, "tzone") <- zone
+  return(list(time=now, timezone=zone))
 }
 
 #' Summarise arguments for a process record
@@ -100,10 +369,57 @@
 #' Apply a function to a tagged wave and record the process
 #'
 #' Runs `fun(w, ...)` and, if `w` is a `TaggedWave` or `TaggedWaveMC`, appends a
-#' record of the call to the `processing` slot of the result. The record holds
-#' the function name, its arguments, the time, the duration and digests of the
-#' input and output. Untagged waves are processed without any record being made,
-#' so `tagApply()` can be used safely in code that handles either.
+#' record of the call to the `processing` slot of the result. Untagged waves are
+#' processed without any record being made, so `tagApply()` can be used safely
+#' in code that handles either.
+#'
+#' A record is a named list holding what is needed to say what was done, with
+#' what, when and to which audio:
+#'
+#' \describe{
+#'   \item{`process`}{The label, which is the function's name unless one was
+#'     given.}
+#'   \item{`func`}{The function as it was called, as a name or `pkg::name`.}
+#'   \item{`params`}{The arguments the caller supplied, under the names of the
+#'     formals they filled rather than the names they were passed under, so an
+#'     argument given by position or by an abbreviation is still named.}
+#'   \item{`defaults`}{The arguments the caller did not supply and the function
+#'     therefore chose, as the function defines them. A default is part of what
+#'     happened, and three of `seewave::ffilter()`'s twelve change the samples
+#'     it returns. They are deparsed rather than evaluated, because a default
+#'     can be an expression over the other arguments whose value is known only
+#'     inside the call; for a literal the two are the same. Absent where a
+#'     function has no defaults left to it, as the functions of this package do
+#'     not, passing their arguments on in full.}
+#'   \item{`time`, `timezone`}{When it ran, and the zone the clock was keeping.
+#'     The zone is named because a `POSIXct` alone is shown in the zone of
+#'     whoever reads it, and loses the zone entirely once written out as text.}
+#'   \item{`duration`}{How long the call took, in seconds.}
+#'   \item{`input_hash`, `output_hash`, `hash_method`}{Digests of the samples
+#'     going in and coming out, and which digest they are. These are what make
+#'     the rest checkable: a history can be tested against the audio it claims
+#'     to describe rather than taken on trust.}
+#' }
+#'
+#' @section How much the digests prove:
+#' A full digest reads every sample, which is about a second per minute of
+#' stereo 48 kHz audio and is paid on the wave going in and the wave coming out
+#' of every step. An hour-long recording would be minutes of hashing per step,
+#' so the default is `"sketch"`: the length of each channel and a fixed number
+#' of evenly spaced blocks of it, at the same cost whatever the length.
+#'
+#' A channel short enough that the blocks cover it is digested whole, so for a
+#' recording of up to some seconds a sketch reads every sample. Past that it
+#' does not, and the difference matters: a sketch will tell an edited recording
+#' from an unedited one, but two recordings that agree on a sketch are not
+#' thereby shown to be the same, as a change between the blocks is not read. If
+#' a history has to be evidence rather than a good indication, set
+#' `options(sonicscrewdriver.provenance="full")` and pay for it.
+#'
+#' Either way `hash_method` records which was used, so a digest is never taken
+#' for more than it is worth. An option is not carried to the workers of a `cl`
+#' cluster that does not inherit it, which use the default and record that they
+#' did.
 #'
 #' If `fun` returns a wave without tags, the `origin`, `metadata` and
 #' `processing` of `w` are carried over to it. The `spectrogram_maad_power` slot
@@ -195,17 +511,25 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
   }
   .recState$active <- TRUE
   on.exit(.recState$active <- FALSE)
-  t0 <- Sys.time()
-  input_hash <- .waveHash(.w)
+  method <- .hashMethod()
+  started <- .recordTime()
+  input_hash <- .waveHash(.w, method)
   res <- .fun(if (.untag) untagWave(.w) else .w, ...)
-  duration <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  duration <- as.numeric(difftime(Sys.time(), started$time, units = "secs"))
+  #Described after the function has run, so that a call that fails costs nothing
+  #to describe. The arguments are already evaluated by then, so naming them does
+  #not run anything a second time.
+  call <- .describeCall(.fun, list(...))
   record <- .processRecord(
     if (is.null(.label)) .func else .label,
     duration = duration,
     func = .func,
-    params = .summariseParams(list(...)),
-    time = t0,
-    input_hash = input_hash
+    params = .summariseParams(call$params),
+    defaults = call$defaults,
+    time = started$time,
+    timezone = started$timezone,
+    input_hash = input_hash,
+    hash_method = method
   )
 
   if (!inherits(res, c("Wave", "WaveMC"))) {
@@ -221,7 +545,7 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
     res@metadata <- .w@metadata
     res@processing <- .w@processing
   }
-  record$output_hash <- .waveHash(res)
+  record$output_hash <- .waveHash(res, method)
 
   res@processing <- c(res@processing, list(record))
   res

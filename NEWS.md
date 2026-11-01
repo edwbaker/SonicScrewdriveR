@@ -166,6 +166,42 @@
   The `duration` an `addProcess()` call gives is now kept as well. The argument
   has always been there and was being dropped; a record made without one still
   has the shape it always had.
+  A record now says enough to repeat the step it describes. The arguments are
+  kept under the names of the formals they filled rather than the names they
+  were passed under, so one given by position or by an abbreviation is named
+  instead of being recorded as a bare value. The arguments the caller did not
+  give, and the function therefore chose, are kept beside them in `defaults`:
+  `seewave::ffilter()` has twelve, and the window length, overlap and shape
+  among them change the samples that come back, so a record naming the band
+  alone could not be repeated. They are kept as the function writes them rather
+  than as values, since a default can be an expression over the other arguments
+  whose value is known only inside the call. The functions of this package pass
+  their arguments on in full and so leave none to a default, and their records
+  are unchanged.
+  The zone the clock was keeping is recorded in `timezone` and set on the time
+  itself. A `POSIXct` is an instant and was never wrong, but it is shown in the
+  zone of whoever reads it, and the zone is gone once a record is written out
+  as text: the same record read in London and in Tokyo gave times nine hours
+  apart.
+  The digests are taken a part at a time and those digests digested together,
+  rather than the samples of every channel being concatenated into one vector
+  of bytes first. It is as hard to collide but nothing the size of the
+  recording is built to get it; concatenating the bytes cost some 16 bytes per
+  sample on top of the wave, gigabytes for an hour of stereo audio, and the
+  digest of a five minute stereo recording could fail for want of memory.
+  Reading every sample costs about a second per minute of stereo 48 kHz audio,
+  though, paid on the wave going in and the wave coming out of every step, and
+  an hour-long recording would be minutes of hashing per step - enough to make
+  a record not worth keeping. The default is therefore a sketch: the length of
+  each channel and a fixed number of evenly spaced blocks of it, at the same
+  cost whatever the length. A channel short enough that the blocks cover it is
+  digested whole, so for a recording of up to some seconds a sketch reads every
+  sample and is as strong as a full digest. Past that it will tell an edited
+  recording from an unedited one, but two recordings agreeing on a sketch are
+  not thereby shown to be the same, as a change between the blocks is not read.
+  `options(sonicscrewdriver.provenance="full")` buys that back at the cost
+  above, and `hash_method` records which a record holds so that a digest is
+  never taken for more than it is worth.
 - wavCues() reads the cue points of a wave file together with the labels that
   name them. The two halves of an annotation are written in different chunks:
   a cue chunk holds positions and nothing else, and the text naming them is in

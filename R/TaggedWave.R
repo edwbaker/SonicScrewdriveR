@@ -35,19 +35,27 @@ setClass(
 #' @param output The output of the process.
 #' @param duration How long it took, in seconds.
 #' @param func The name of the function that was applied.
-#' @param params The arguments it was given.
+#' @param params The arguments it was given, named as it names them.
+#' @param defaults The arguments it was not given, as it defines them.
 #' @param time When it was applied.
+#' @param timezone The zone the clock that timed it was keeping.
 #' @param input_hash A digest of the wave it was applied to.
 #' @param output_hash A digest of the wave it gave back.
+#' @param hash_method Which digest the two hashes are.
 #' @return A named list holding the record.
 #' @keywords internal
 #' @noRd
 .processRecord <- function(process, output=NULL, duration=NULL, func=NULL,
-                           params=NULL, time=NULL, input_hash=NULL,
-                           output_hash=NULL) {
+                           params=NULL, defaults=NULL, time=NULL,
+                           timezone=NULL, input_hash=NULL, output_hash=NULL,
+                           hash_method=NULL) {
   entry <- list("process" = process, "output" = output)
+  #hash_method comes before the digests it describes, so that a record whose
+  #output_hash is only known once the process has run - and so is added to the
+  #record after it is built - still reads with the two digests side by side.
   optional <- list(
-    func = func, params = params, time = time, duration = duration,
+    func = func, params = params, defaults = defaults, time = time,
+    timezone = timezone, duration = duration, hash_method = hash_method,
     input_hash = input_hash, output_hash = output_hash
   )
   return(c(entry, optional[!vapply(optional, is.null, logical(1))]))
