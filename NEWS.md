@@ -422,6 +422,16 @@
   the recording is.
 
 ## Fixes
+- generateNoise() added one sequence of noise to every channel of a
+  multi-channel wave, so the noise was identical in each. Its correlation
+  between the two channels of a stereo wave was exactly 1 and it cancelled
+  completely in any difference between them, which left the noise invisible to
+  tdoa(), bearing() and corWaveMC(): all three read inter-channel differences,
+  so a wave given noise this way tested none of them. Each channel is now given
+  a sequence of its own, at the same level as the rest, and the correlation
+  between the channels of a stereo wave falls to the 0.02 of two independent
+  sequences. The first channel draws first, so a wave of one channel is mixed
+  exactly as before and a mono result under a given seed is unchanged.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
