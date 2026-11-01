@@ -29,8 +29,8 @@ fcis(
 
 - window.length:
 
-  Length of each column of the image in samples. If NULL, each file
-  gives a single column.
+  Length of each column of the image in samples, which must be at least
+  `wl`. If NULL, each file gives a single column.
 
 - indices:
 
