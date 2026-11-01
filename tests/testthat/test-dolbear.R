@@ -26,12 +26,57 @@ test_that("dolbear refuses a rate of chirping or a temperature that cannot be", 
   expect_error(dolbear(t="warm"), "Temperature must be numeric.")
 })
 
-test_that("dolbear refuses to report a negative rate of chirping", {
-  # Every regression in the table crosses zero between about 3.9 and 4.7 C.
-  expect_error(dolbear(t=3), "negative rate of chirping at 3 degrees Celsius")
-  expect_error(dolbear(t=-40), "negative rate of chirping at -40 degrees Celsius")
-  expect_error(dolbear(t=c(25, 3)), "negative rate of chirping at 3 degrees Celsius")
-  expect_error(dolbear(t=0, species=NULL), "negative rate of chirping")
+test_that("dolbear gives no rate of chirping where a regression has none", {
+  # Each regression crosses zero at its own temperature - for Oecanthus
+  # fultoni at 3.88, 3.97 and 4.70 C - so between the lowest and the highest
+  # crossing some rows are a rate and others are not. The rate that cannot
+  # exist is NA; the rows beside it are still an answer and are returned.
+  expect_warning(dolbear(t=3), "no rate of chirping at 3 degrees Celsius")
+  expect_warning(dolbear(t=-40), "no rate of chirping at -40 degrees Celsius")
+
+  # 4 C is inside the crossing window: Iowa and Oregon still give a rate,
+  # Ohio does not.
+  r <- suppressWarnings(dolbear(t=4))
+  expect_equal(nrow(r), 3)
+  expect_false(anyNA(r$n[r$location %in% c("Iowa", "Oregon")]))
+  expect_true(is.na(r$n[r$location == "Ohio"]))
+  expect_true(all(r$n >= 0, na.rm=TRUE))
+
+  # Only the population whose regression has no rate there is named.
+  w <- tryCatch(dolbear(t=4), warning=function(w) conditionMessage(w))
+  expect_true(grepl("Ohio", w))
+  expect_false(grepl("Iowa", w))
+
+  # A temperature below every crossing leaves every rate NA, and the rows are
+  # still returned rather than the call failing.
+  r <- suppressWarnings(dolbear(t=3))
+  expect_equal(nrow(r), 3)
+  expect_true(all(is.na(r$n)))
+
+  # A vector keeps the readings that are rates alongside the ones that are not.
+  r <- suppressWarnings(dolbear(t=c(25, 3)))
+  expect_equal(nrow(r), 6)
+  expect_false(anyNA(r$n[r$t == 25]))
+  expect_true(all(is.na(r$n[r$t == 3])))
+
+  expect_warning(dolbear(t=0, species=NULL), "no rate of chirping")
+})
+
+test_that("dolbear takes a missing reading as unknown rather than refusing it", {
+  # NA is an unknown reading everywhere else in the package, and a bare NA is
+  # logical, which the numeric check would otherwise refuse.
+  expect_equal(nrow(suppressWarnings(dolbear(t=NA))), 3)
+  expect_true(all(is.na(suppressWarnings(dolbear(t=NA))$n)))
+  expect_true(all(is.na(suppressWarnings(dolbear(t=NA_real_))$n)))
+  expect_true(all(is.na(suppressWarnings(dolbear(n=NA_real_))$t)))
+
+  # One missing reading in a batch does not cost the readings beside it.
+  # which() rather than a bare logical subscript: r$t holds the NA too, so
+  # r$t == 20 is NA for those rows and would select them.
+  r <- suppressWarnings(dolbear(t=c(20, NA_real_)))
+  expect_equal(nrow(r), 6)
+  expect_false(anyNA(r$n[which(r$t == 20)]))
+  expect_equal(sum(is.na(r$n)), 3)
 })
 
 test_that("dolbear names the populations it has been extrapolated for", {

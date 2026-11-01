@@ -28,6 +28,15 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
   }
   #Neither argument was checked at all, so a negative rate of chirping gave a
   #temperature as though it were a reading.
+  #A bare NA is logical, which the numeric check refuses. NA is an unknown
+  #reading rather than a non-numeric one here, as it is everywhere else in the
+  #package, so an all-NA logical is taken as the numeric it stands for.
+  if (is.logical(n) && all(is.na(n))) {
+    n <- as.numeric(n)
+  }
+  if (is.logical(t) && all(is.na(t))) {
+    t <- as.numeric(t)
+  }
   if (!is.null(n)) {
     .validateNumericRange(
       n, "Chirps per minute", min=0,
@@ -66,18 +75,28 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
   } else {
     t <- values
     n <- data$m*t + data$c
-    #Every regression in the table crosses zero between about 3.9 and 4.7
-    #degrees, so below that each returns a rate of chirping that is negative:
-    #dolbear(t=3) gave -6.85, -8.93 and -13.99 chirps per minute without a word,
-    #and dolbear(t=-40) gave -341.7.
+    #A regression returns a negative rate of chirping below the temperature at
+    #which it crosses zero, which dolbear(t=3) reported as -6.85, -8.93 and
+    #-13.99 chirps per minute without a word. Each regression crosses at its
+    #own temperature, though - for Oecanthus fultoni at 3.88, 3.97 and 4.70 -
+    #so between the lowest and the highest crossing some rows are a rate and
+    #others are not. Refusing the whole call threw away the rows that were
+    #still an answer: at 4 degrees the Iowa and Oregon series give 0.94 and
+    #0.27 chirps per minute, which are readings, while Ohio gives -5.78, which
+    #is not. The rate that cannot exist is NA and the rows beside it stand.
     negative <- !is.na(n) & n < 0
     if (any(negative)) {
-      stop(paste0(
-        "Dolbear's law gives a negative rate of chirping at ",
+      warning(paste0(
+        "Dolbear's law gives no rate of chirping at ",
         paste(unique(t[negative]), collapse=", "),
-        " degrees Celsius, below every temperature its regressions were ",
-        "fitted over."
+        " degrees Celsius for ",
+        paste(
+          unique(paste0(data$species[negative], ", ", data$location[negative])),
+          collapse="; "
+        ),
+        ", which is below where that regression reaches zero. Those rates are NA."
       ))
+      n[negative] <- NA_real_
     }
   }
 
