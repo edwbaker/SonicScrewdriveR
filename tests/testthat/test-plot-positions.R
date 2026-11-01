@@ -17,6 +17,37 @@ test_that("dielPositions rejects an unknown format", {
   expect_error(dielPositions("3hours"), "Unknown format for dielPositions")
 })
 
+test_that("yearlyPositions counts days from the start of the year", {
+  # Counting from one put day one a day clockwise of the start of the year and
+  # the last day of the year at 2*pi, which is where day one is.
+  for (year in c(2023, 2024)) {
+    d <- yearlyPositions(year, "days")
+    expect_equal(length(d), if (.isLeapYear(year)) 366 else 365)
+    expect_equal(d[1], 0)
+    expect_true(all(d < 2*pi))
+    expect_equal(diff(d), rep(2*pi/length(d), length(d)-1))
+  }
+})
+
+test_that("a day label sits on the month label of the month it begins", {
+  # Both rings are drawn on the same plot, so the first of each month has to
+  # fall on that month's label in a leap year and in a common one.
+  for (year in c(2023, 2024)) {
+    days <- yearlyPositions(year, "days")
+    firsts <- as.integer(format(as.Date(paste0(year, "-", 1:12, "-01")), "%j"))
+    expect_equal(days[firsts], yearlyPositions(year, "months"))
+  }
+})
+
+test_that("a day label sits where yearlyFraction puts that day", {
+  for (year in c(2023, 2024)) {
+    days <- yearlyPositions(year, "days")
+    dates <- as.POSIXct(paste0(year, c("-01-01", "-03-01", "-12-31")), tz="UTC")
+    expect_equal(days[as.integer(format(dates, "%j"))],
+                 yearlyFraction(dates, year=year))
+  }
+})
+
 test_that("yearlyPositions puts mid-month labels inside their month", {
   # The last month was measured against a 360 day year, so the December label sat
   # outside December.

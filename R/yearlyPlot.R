@@ -35,7 +35,13 @@ yearlyPositions <- function(year=2022, format="months") {
     YearDays <- 365
   }
   if (format=="days") {
-    ret <- 2*pi * (1:YearDays)/YearDays
+    #Counted from zero, so that 1 January is at zero as it is in every other
+    #reading of a year here: yearlyPositions("months")[1] is 0, yearlyFraction()
+    #takes the day of the year from yday, which is 0 for 1 January, and
+    #yearlyPlot() builds its own ring from 0. Counting from one put each label a
+    #day clockwise of the day it names and the last one at 2*pi, on top of the
+    #first.
+    ret <- 2*pi * (0:(YearDays-1))/YearDays
   } else {
     days <- c(0, 31, FebDays+31, FebDays+62, FebDays+92,
               FebDays+123, FebDays+153, FebDays+184, FebDays+215,
