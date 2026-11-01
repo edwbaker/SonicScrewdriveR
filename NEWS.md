@@ -1149,6 +1149,11 @@
   not read was read as midnight. wamd() now keeps such a value as text, with a
   warning, as it already did one it could not read at all, and readMetadata()
   gives no time from it.
+- readMetadata() split the time of a xeno-canto comment from its date on the
+  "h," the collection writes after a time, so a time written without it, as
+  "2:00 pm, 2019-05-01", was read as both the time and the date, and the record
+  had neither. The date is now what follows the last comma and the time what
+  comes before it.
 - readMetadata() read a date and time that stops at the minute, as
   2025-09-15T21:31, which an ID3v2.4 tag and an XMP packet both allow, as
   midnight at the start of that date in the zone of the machine, with the time

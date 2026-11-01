@@ -80,9 +80,14 @@
   # something no pattern reads ("amh", "10;45amh", "xx:xxh"). They are read
   # apart so that a time nothing can make sense of does not cost the date
   # beside it.
+  #
+  # The date is what follows the last comma, and the time what comes before
+  # it, with the h the collection writes after a time taken off. They were
+  # split on "h,", so a time written without the h, as "2:00 pm, 2019-05-01",
+  # gave the whole field as both, and the record lost its date as well.
   if (length(parts) >= 4) {
-    f$time <- .mdXcNonEmpty(sub("h,.*$", "", parts[4]))
-    f$date <- .mdXcNonEmpty(sub("^.*h,[[:space:]]*", "", parts[4]))
+    f$time <- .mdXcNonEmpty(sub("h?[[:space:]]*,[^,]*$", "", parts[4]))
+    f$date <- .mdXcNonEmpty(sub("^.*,[[:space:]]*", "", parts[4]))
   }
 
   # 5 onwards: the kind of vocalisation, then the remarks, then the other
