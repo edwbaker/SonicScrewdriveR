@@ -448,6 +448,12 @@
   fit anywhere, so that is what a reading has to beat: one byte into a `wamd`
   header whose body begins with a zero reads as `amdB` of zero bytes, and the
   chunk the pad byte was left out of is still recovered.
+- readRespeaker6() failed on a recording of a single sample frame. The six
+  channels that carry input audio are selected from the eight the array writes,
+  and a selection from a matrix of one row drops to a plain vector, which the
+  object's own slot will not take and which has no channels left to name. The
+  selection now keeps its dimensions, so a frame reads as a recording of one
+  frame in six channels.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for
