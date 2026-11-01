@@ -17,7 +17,9 @@ yearlyFraction(
 \arguments{
 \item{t}{Object to be converted to a fraction}
 
-\item{year}{Year to calculate fractions of (allows for leap years)}
+\item{year}{The year a day number belongs to, which decides whether it is
+measured against 366 days. Read for \code{input.unit="day"} only: a POSIX time
+carries the year it falls in, and is measured against that.}
 
 \item{input.unit}{The unit the date is given in, one of "POSIX", "day".}
 

@@ -30,6 +30,25 @@ deployment, a TSA name gives a collection, a taxon, an accession number and a
 hash, and a reading the name left in doubt gives \code{ambiguous} and
 \code{alternatives}. A format carrying no time, which TSA names do not, reports
 \code{datetime} as NA rather than leaving it out.
+\subsection{A name whose digits are not a date}{
+
+A format is matched on the shape of the digits, and \verb{20240230_120000}
+satisfies the shape of \code{YYYYMMDD_HHMMSS} while spelling a day that does not
+exist. Such a name reports \code{datetime} as NA, names \code{datetime} in \code{unparsed},
+and warns, with a class of \code{unparsedDatetime} and \code{unparsedField}.
+
+\code{unparsed} is what tells that apart from a format carrying no time, which
+reports NA and names nothing: the first is a date this could not read and
+the second is a name with no date in it, and before this they were the same
+answer. \code{match} is not moved, since \verb{20240230_120000} does follow the
+\code{YYYYMMDD_HHMMSS} convention — what it does not do is spell a real date.
+
+The same goes for a format the caller names that the name cannot be in, as
+\code{parseFilename("recording.wav", format="YYYYMMDD")}.
+
+\code{\link[=readMetadata]{readMetadata()}} silences this one warning, since it takes no date from such
+a name in any case and says so, and reports the rest of what the name holds.
+}
 }
 \description{
 Attempts to extract meaningful information from a filename, typically the
