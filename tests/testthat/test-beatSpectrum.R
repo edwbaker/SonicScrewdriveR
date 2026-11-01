@@ -91,3 +91,28 @@ test_that("plotting does not change the measurements", {
   wave <- rhythmWave()
   expect_equal(beatComplexity(wave, plot=TRUE), beatComplexity(wave, plot=FALSE))
 })
+
+test_that("a spectrum with no peak gives an undefined complexity, not -Inf", {
+  #A monotonic spectrum has no strict local maximum, so there is no longest
+  #repeating period to divide by the peak count. max() of nothing returned -Inf
+  #with a bare warning, and -Inf/0 was reported as the complexity.
+  local_mocked_bindings(
+    beatSpectrum = function(wave, ...) data.frame(power=1:10, period=(1:10)*0.005)
+  )
+  expect_silent(bc <- beatComplexity(NULL))
+  expect_identical(bc$num.peaks, 0L)
+  expect_identical(bc$peak.periods, numeric(0))
+  expect_identical(bc$complexity, NA_real_)
+})
+
+test_that("a spectrum too short to hold a peak gives an undefined complexity", {
+  for (power in list(5, c(1, 2))) {
+    local_mocked_bindings(
+      beatSpectrum = function(wave, ...)
+        data.frame(power=power, period=seq_along(power)*0.005)
+    )
+    expect_silent(bc <- beatComplexity(NULL))
+    expect_identical(bc$complexity, NA_real_)
+    expect_identical(bc$num.peaks, 0L)
+  }
+})
