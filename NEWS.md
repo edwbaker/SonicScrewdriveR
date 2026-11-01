@@ -396,6 +396,32 @@
   the recording is.
 
 ## Fixes
+- An AudioMoth comment in a wording this package does not know reported two
+  facts about the recording that the file never stated. `filter`, `filter.limit`
+  and `cancelled` were set FALSE and replaced only where a pattern matched, and
+  FALSE is documented to mean that no filter was applied and that the recording
+  ran to completion; `external_mic` was the same. So a comment the parser did
+  not understand came back looking like a successful reading of a recording that
+  used no filter and ran to its end, and anything branching on either took the
+  wrong branch in silence. A default is no longer presented as a reading: a
+  clause the comment carries and this could not read gives NA, and the fields it
+  holds are named in a new `unparsed`, with a warning carrying the comment so
+  that the wording can be reported. FALSE still means what it has always meant,
+  for the comment that carries no such clause at all — which is how the
+  firmware says there was no filter and no early stop, by writing nothing.
+
+  Every wording AudioMoth-Firmware-Basic has written from 1.0 onwards still
+  reads with nothing unparsed, which is the test this carries: the gain index
+  and two-decimal voltage of 1.0, the `< 3.6V` and `less than 2.5V` battery
+  forms, the 1.4.0 named gain and temperature, the 1.5.0 deployment ID, the
+  1.6.0 rewording, both filter phrasings, band-pass, both cancellation
+  phrasings and the magnetic switch, the external microphone, a `UTC+1` zone, a
+  negative temperature, and the 1.8 amplitude-threshold and frequency-trigger
+  clauses. The exposure was always a future release rather than any file that
+  exists, and gain coming back empty for every file from 1.6.0 onwards is the
+  record of it having happened before. A comment cut short, as a version 1 ID3
+  tag cuts one at 30 bytes, reports nothing unparsed: what is past the cut is
+  absent from the file rather than unread.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes
