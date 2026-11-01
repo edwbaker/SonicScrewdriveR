@@ -269,6 +269,11 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
     if (!is.numeric(clip$start_time) || !is.numeric(clip$end_time)) {
       stop("Clip ", object$clip, " in the file has no start or end time.", call.=FALSE)
     }
+    #An annotation may not end before it starts, and the annotations of a clip
+    #span it.
+    if (isTRUE(clip$start_time > clip$end_time)) {
+      stop("Clip ", object$clip, " in the file ends before it starts.", call.=FALSE)
+    }
     held <- .aoefDrop(list(uuid=clip$uuid, annotation=object$uuid, start=clip$start_time,
                            end=clip$end_time, created_on=object$created_on))
     if (length(object$tags) > 0 || length(object$notes) > 0 || length(members[[j]]) == 0) {
@@ -366,7 +371,10 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
   #The slots of one annotation are filled in rather than an annotation being
   #made with annotation() for each tag: making one checks every slot of the
   #new object, which took most of the time a large project was read in. The
-  #values are coerced as annotation() coerces them.
+  #values are coerced as annotation() coerces them, and they keep the rules
+  #the class checks: each slot holds one value, the start and low are the
+  #least of a range and the end and high the greatest, and a clip that ends
+  #before it starts is refused above.
   base <- context$blank
   base@file <- as.character(.aoefPath(path, context$audio.dir))
   base@start <- as.numeric(bounds[1])
@@ -465,7 +473,7 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
 #' Characters outside ASCII are written as escapes, so that the file reads the
 #' same whatever encoding a reader takes it to be in.
 #'
-#' @param annotations A list of `Annotation` objects, or one.
+#' @param annotations A list of `Annotation` objects, or a single one.
 #' @param file Path to the AOEF file to write.
 #' @param audio.dir The directory the paths of the recordings are to be
 #'   written relative to, which every annotated file must be in. Where it is
@@ -484,12 +492,7 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
 #' @export
 writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_set",
                       name=NULL, description=NULL) {
-  if (inherits(annotations, "Annotation")) {
-    annotations <- list(annotations)
-  }
-  if (!is.list(annotations) || !all(vapply(annotations, inherits, logical(1), "Annotation"))) {
-    stop("Input must be a list of Annotation objects.")
-  }
+  annotations <- .annotationList(annotations)
   .validateChoice(collection, c("annotation_set", "annotation_project"), msg="Unknown collection.")
   for (given in list(name, description)) {
     if (!is.null(given) && !(is.character(given) && length(given) == 1 && !is.na(given))) {

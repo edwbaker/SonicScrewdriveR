@@ -14,7 +14,7 @@ writeAOEF(
 )
 }
 \arguments{
-\item{annotations}{A list of \code{Annotation} objects, or one.}
+\item{annotations}{A list of \code{Annotation} objects, or a single one.}
 
 \item{file}{Path to the AOEF file to write.}
 

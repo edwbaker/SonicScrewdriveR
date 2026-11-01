@@ -42,6 +42,12 @@ test_that("readAOEF reads every shape soundevent has as the range holding it", {
   a <- readAOEF(aoefFixture("soundevent_annotation_project"))
   expect_length(a, 13)
   expect_true(all(vapply(a, inherits, logical(1), "Annotation")))
+  #Made by filling in slots rather than by annotation(), so checked here as
+  #annotation() checks them.
+  for (name in c("soundevent_annotation_project", "soundevent_example_evaluation_set",
+                 "soundevent_example_model_run", "soundevent_nips4b_plus_sample")) {
+    expect_silent(lapply(readAOEF(aoefFixture(name)), validObject))
+  }
   df <- AnnotationList2DataFrame(a)
   shapes <- vapply(a, function(x) {
     g <- x@metadata$aoef$geometry
@@ -236,6 +242,11 @@ test_that("readAOEF refuses a recording or a clip without what it must have", {
   timeless <- aoefMinimal(clips=list(list(uuid="00000000-0000-4000-8000-000000000002",
                                           recording="00000000-0000-4000-8000-000000000001", start_time=0)))
   expect_error(readAOEF(aoefDocument(timeless)), "has no start or end time")
+  #An annotation may not end before it starts.
+  backwards <- aoefMinimal(clips=list(list(uuid="00000000-0000-4000-8000-000000000002",
+                                           recording="00000000-0000-4000-8000-000000000001",
+                                           start_time=10, end_time=0)))
+  expect_error(readAOEF(aoefDocument(backwards)), "ends before it starts")
   #A tag without a value, which soundevent does not write, is read with an
   #empty one.
   valueless <- aoefMinimal(tags=list(list(id=0, key="species")))
@@ -409,6 +420,9 @@ test_that("writeAOEF writes an annotation project Whombat can import", {
   expect_equal(aoefJSON(out)$data$name, "Empty")
   expect_equal(readAOEF(out), list())
   expect_equal(nrow(readAOEF(out, output="data.frame")), 0)
+  #NULL, which audioblast() gives when nothing matches, is no annotations.
+  writeAOEF(NULL, out)
+  expect_equal(readAOEF(out), list())
 })
 
 test_that("writeAOEF writes every character as ASCII, so any reader decodes it", {
@@ -509,8 +523,8 @@ test_that("writeAOEF writes paths relative to audio.dir, however it is given", {
 test_that("writeAOEF refuses what it cannot write", {
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   out <- tempfile(fileext=".json")
-  expect_error(writeAOEF(list(1), out), "Input must be a list of Annotation objects.")
-  expect_error(writeAOEF("x", out), "Input must be a list of Annotation objects.")
+  expect_error(writeAOEF(list(1), out), "All items in list must be Annotation objects.")
+  expect_error(writeAOEF("x", out), "All items in list must be Annotation objects.")
   expect_error(writeAOEF(annotation(start=0, end=1), out), "must name the file")
   expect_error(writeAOEF(annotation(file=NA, start=0, end=1), out), "must name the file")
   expect_error(writeAOEF(annotation(file=f, start=0, end=1), out, collection="dataset"), "Unknown collection.")
