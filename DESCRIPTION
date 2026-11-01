@@ -17,7 +17,7 @@ Imports:
   digest,
   ggplot2,
   hms,
-  httr2 (>= 1.0.0),
+  httr2 (>= 1.0.4),
   jsonlite,
   mime,
   Rdpack,
