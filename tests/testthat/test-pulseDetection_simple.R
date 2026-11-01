@@ -19,14 +19,24 @@ test_that("every input and output of the detection is returned", {
 test_that("theta sits a fraction gamma of the way up the short-window energy", {
   wave <- pdSimpleWave()
   res <- pd_simple(wave, gamma=0.05)
-  expect_equal(res$theta, min(res$e_u) + 0.05 * (max(res$e_u) - min(res$e_u)))
+  #Taken from the samples both windows cover, not from the whole of e_u: ste()
+  #leaves the half window at each end as a zero, which is not the quietest
+  #energy in the recording but the part of it that was not measured.
+  analysed <- 241:(length(wave) - 240)
+  energy <- res$e_u[analysed]
+  expect_equal(res$theta, min(energy) + 0.05 * (max(energy) - min(energy)))
   #A larger gamma lifts the threshold.
   expect_gt(pd_simple(wave, gamma=0.5)$theta, res$theta)
 })
 
 test_that("the threshold returned is the one the pulses were found with", {
-  res <- pd_simple(pdSimpleWave())
-  expect_equal(res$pulse, res$e_u > res$F_a)
+  wave <- pdSimpleWave()
+  res <- pd_simple(wave)
+  #Nothing outside the samples both windows cover is a pulse, as the energy there
+  #is not a windowed energy of this wave.
+  analysed <- rep(FALSE, length(wave))
+  analysed[241:(length(wave) - 240)] <- TRUE
+  expect_equal(res$pulse, analysed & res$e_u > res$F_a)
   #F_1 is the lower reference threshold, so it never exceeds F_a for alpha > 1.
   expect_true(all(res$F_1 <= res$F_a))
 })
@@ -41,12 +51,19 @@ test_that("the two bursts are found, each with an onset before its offset", {
 
 test_that("the onsets found fall where the bursts begin", {
   res <- pd_simple(pdSimpleWave())
-  #The energy windows are centred, so an onset is within half a window of the
-  #first loud sample.
-  expect_true(all(abs(res$onsets - c(2001, 6001)) <= 240))
+  #The energy windows are centred, so an onset falls before the first loud
+  #sample by part of a half window. A tolerance of two whole windows was wide
+  #enough to hide both the displacement and a one sample error in the boundary
+  #convention, so the measured positions are pinned instead.
+  expect_equal(res$onsets, c(1955L, 5955L))
+  expect_equal(res$offsets, c(3047L, 7047L))
+  expect_true(all(res$onsets < c(2001, 6001)))
+  expect_true(all(c(2001, 6001) - res$onsets < 120))
 })
 
 test_that("a silent wave has no pulses rather than a threshold of NaN", {
+  #4000 samples still hold a 480 sample window, so theta is measured rather than
+  #undefined, and every energy in a silent wave is zero.
   silent <- tuneR::Wave(rep(0, 4000), samp.rate=4000, bit=16)
   res <- pd_simple(silent)
   expect_equal(res$theta, 0)

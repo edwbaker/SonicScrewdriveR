@@ -396,6 +396,98 @@
   the recording is.
 
 ## Fixes
+- The three pulse detectors used three different conventions for where a pulse
+  begins and ends, so onsets were not comparable between them and, within
+  pd_simple(), not comparable with the offsets beside them. They now share one,
+  written down at the top of R/pulseDetection.R and under pulseDetection(): an
+  onset is the first sample of a pulse and an offset the first sample after it,
+  so a pulse occupies the half-open range between them and `offset - onset` is
+  its length in samples. A sample exactly equal to the threshold is not part of
+  a pulse. onsets[i] and offsets[i] are always the two ends of the same pulse;
+  only a pulse still in progress at the last analysed sample can have an onset
+  with no offset, and it is always the last, so pulseStats() can pair by
+  position and every duration it reports is positive.
+
+  pd_simple() took its onsets from the rise in its own `pulse` vector, which is
+  the last sample *below* the threshold, and its offsets from the fall, which is
+  the last sample *above* it: the two ends of one pulse were read off two
+  different conventions, and the onset returned was not a sample `pulse` itself
+  marks as part of the pulse. The durations came out right because the two
+  errors cancelled, which is why it went unnoticed, but an onset used on its own
+  cut one sample of the preceding silence into the pulse. **Every onset and
+  every offset pd_simple() reports moves one sample later**; the durations it
+  reports do not change. For a square pulse at samples 1001 to 1400 it reported
+  954 and 1446 and now reports 955 and 1447, where pd_threshold() reports the
+  exact 1001 and 1401.
+
+- pd_threshold() lost a crossing that passed through a sample exactly equal to
+  the threshold, because `above` and `below` were both strict comparisons and
+  such a sample was on neither side of it. A pulse with a shoulder at exactly
+  half its peak returned one offset and no onset at all, so pulseStats() found
+  no pulse in a wave that plainly holds one; the threshold is a fraction of the
+  peak, so a plateau at a round fraction of the peak hits it exactly. Anything
+  not above the threshold is now outside the pulse. The same comparison made a
+  `threshold` of 0 find nothing at all, where it now finds every sample above
+  silence, and it is the reason the amplitude and the power mode disagreed about
+  how many pulses a wave holds.
+
+  For `U` greater than 1, pd_threshold() thinned the onsets and the offsets in
+  two independent passes. The spacing of the onsets is the pulse period, while
+  the spacing of the offsets is the period plus the change in duration, so the
+  two passes kept different pulses and nothing afterwards checked that onset *i*
+  and offset *i* came from the same one: three pulses of unequal length at
+  `U = 30` returned the third pulse's onset beside the second pulse's offset,
+  and a duration of -10 samples. A pulse is now kept or discarded whole.
+
+- pd_dietrich2004() discarded a pulse already in progress at the first analysed
+  sample while the scan for offsets still reported that pulse's end, so the
+  result held one more offset than onset and every later pulse was paired with
+  the previous pulse's offset. Three 400-sample pulses, the first starting at
+  sample 1, gave durations of -2505 and -1505 samples. Such a pulse is now
+  reported with its onset at the first analysed sample, as pd_threshold() has
+  always reported one in progress at the first sample of a wave, and each onset
+  is paired with the offset that closes it, so the two scans can no longer
+  disagree about how many pulses the wave holds. An energy exactly equal to a
+  threshold is no longer on both sides of it at once, which it was while both
+  scans used a non-strict comparison.
+
+  A wave of constant amplitude reported nothing at all, where pd_simple()
+  reported one pulse spanning the whole of it: the package's two readings of the
+  cited algorithm disagreed about whether such a wave holds a pulse. Both now
+  report none, because theta is the floor of the wave and nothing in it rises
+  above the floor.
+
+- The energy-based detectors read the padding ste() leaves as part of the
+  recording. ste() computes a window only for the samples that hold a whole one
+  and leaves the half window at each end as a zero, so `min(e_u)` was zero
+  whatever the recording held: theta, which is meant to sit a fraction `gamma`
+  of the way up from the noise floor, collapsed to `gamma*max(e_u)` and could
+  never rise to the floor itself. For 8000 samples of stationary noise that put
+  theta thirteen times below the real floor and reported one pulse spanning
+  samples 60 to 7940, 7880 of the 8000 samples, with both boundaries at the edge
+  of the padding rather than anywhere in the signal. The same zeroes in `e_v`
+  collapsed F_1 and F_a to theta across each end of the wave, and the boundaries
+  of a pulse near either end were the edges of the padding: a pulse occupying
+  samples 1 to 400 was reported as starting at 60.
+
+  theta is now taken from the samples both windows cover, which are the only
+  samples either detector can threshold, and nothing outside them is reported as
+  a pulse. **This moves every number the two energy detectors report for a
+  recording whose quietest windowed energy is not zero**, which is any real
+  recording: the floor rises from zero to the measured floor and the threshold
+  rises with it. It also makes both detectors blind to the longer of the two half
+  windows at each end of a wave, 240 samples at the default `V` of 480, where
+  before they reported boundaries there that were artefacts. A wave shorter than
+  the longer window now has a theta of NA rather than of 0, as there is no
+  window in it to measure.
+
+- Both energy detectors overstate a duration, because the energy rises over the
+  half window before a pulse begins and falls over the half window after it
+  ends, and merge two pulses separated by less than about `U` samples. Neither
+  is new and neither is changed here, but both are now documented under
+  pd_simple() and measured in the tests: a square pulse of exactly 400 samples
+  is reported as 492 samples by pd_simple() and 495 by pd_dietrich2004() at the
+  default `U` of 120, against the exact 400 pd_threshold() gives.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes

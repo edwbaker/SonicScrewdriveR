@@ -35,3 +35,22 @@ A list of input values plus the onset and offset times of pulses.
 \description{
 Detects pulses in a Wave.
 }
+\details{
+Onsets and offsets follow the convention described under \code{\link[=pulseDetection]{pulseDetection()}}:
+an onset is the first sample of a pulse and an offset the first sample after
+it, so \code{offset - onset} is the length of the pulse in samples.
+
+The detection thresholds a windowed energy, which rises over the half window
+before a pulse begins and falls over the half window after it ends, so each
+boundary is displaced outward by part of a half window and a duration is
+overstated by part of a whole one. For a square pulse of 400 samples at the
+default \code{U} of 120 the duration comes back as 492 rather than 400. Two pulses
+separated by less than about \code{U} samples are reported as one, because the
+energy does not fall below the threshold between them. Both effects shrink
+with \code{U}, which is the time resolution the detection is asked for.
+
+ste() computes a window only for the samples that hold a whole one, so the
+half window at each end of the wave is not analysed and a pulse there is not
+reported. Where both windows are wanted, as they are here, the longer of \code{U}
+and \code{V} sets how much of each end is unanalysed.
+}

@@ -33,15 +33,35 @@ ste <-  function(
   x <- abs(wave@left)
   n <- length(wave)
   before <- floor(U/2)
-  after <- ceiling(U/2)
 
   e <- vector(mode="numeric", length=n)
-  if (n - after < before + 1) {
+  i <- .steDefined(n, U)
+  if (length(i) == 0) {
     return(e)
   }
 
-  i <- (before + 1):(n - after)
   cs <- c(0, cumsum(x))
   e[i] <- cs[i - before + U + 1] - cs[i - before]
   return(e)
+}
+
+#' The samples for which ste() computes a windowed energy
+#'
+#' ste() centres a window of U+1 samples on each sample, so the half window at
+#' each end of a wave holds no window of its own and is left as a zero rather
+#' than as an energy. This gives the samples that do hold one, which are the only
+#' samples the energy-based pulse detectors can threshold: the zeroes are not the
+#' quietest part of the recording but the part of it that was not measured.
+#'
+#' @param n The number of samples in the wave.
+#' @param U Window length in samples.
+#' @return An increasing vector of sample positions, empty where no window fits.
+#' @noRd
+.steDefined <- function(n, U) {
+  before <- floor(U/2)
+  after <- ceiling(U/2)
+  if (n - after < before + 1) {
+    return(integer(0))
+  }
+  return((before + 1):(n - after))
 }

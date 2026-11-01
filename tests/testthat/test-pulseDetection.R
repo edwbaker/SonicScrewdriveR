@@ -1,6 +1,7 @@
-# Reference implementation: the original loop-based pd_dietrich2004(), with the one
-# change that the second loop writes to offsets rather than onsets. Retained so the
-# vectorised version can be checked against it.
+# Reference implementation: a loop over the samples one at a time, as the state
+# machine in Dietrich (2004) is described, written against the boundary
+# convention at the top of R/pulseDetection.R. Retained so the vectorised
+# version can be checked against it.
 ref_dietrich <- function(
   wave,
   U=120,
@@ -12,65 +13,68 @@ ref_dietrich <- function(
 ){
   e_u <- ste(wave, U=U)
   e_v <- ste(wave, U=V)
-  theta <- min(e_u) + gamma*(max(e_u) - min(e_u))
+  #Only the samples both windows cover can be thresholded.
+  window <- max(U, V)
+  t <- (floor(window/2) + 1):(length(wave) - ceiling(window/2))
+  theta <- min(e_u[t]) + gamma*(max(e_u[t]) - min(e_u[t]))
   F_a <- theta + alpha / scaling * e_v
   F_1 <- theta + e_v / scaling
 
-  onsets <- vector(mode="logical", length=length(wave))
-  tau <- 0
-  A <- 0
-  for (t in (U/2+1):(length(wave)-U/2)) {
-    if (e_u[t] >= F_1[t]) {
-      if (tau > 0) {
-        if (A==1) {
-          if (e_u[t] >= F_a[t]) {
-            onsets[t] <- TRUE
-            A <- 0
-          } else {
-            if (tau > psi) {
-              tau <- 0
+  #The scan for onsets starts armed, so a pulse already in progress at the first
+  #analysed sample is reported there; the scan for offsets starts disarmed, so an
+  #offset is only reported for a pulse that was seen.
+  scan <- function(side, confirm, armed) {
+    found <- vector(mode="logical", length=length(wave))
+    tau <- 0
+    A <- armed
+    for (i in t) {
+      if (side[i]) {
+        if (tau > 0) {
+          if (A == 1) {
+            if (confirm[i]) {
+              found[i] <- TRUE
+              A <- 0
             } else {
-              tau <- tau+1
+              if (tau > psi) {
+                tau <- 0
+              } else {
+                tau <- tau + 1
+              }
             }
           }
+        } else {
+          tau <- tau + 1
         }
       } else {
-        tau <- tau + 1
+        tau <- 0
+        A <- 1
       }
-    } else {
-      tau <- 0
-      A <- 1
     }
+    which(found)
   }
-  offsets <- vector(mode="logical", length=length(wave))
-  tau <- 0
-  A <- 0
-  for (t in (U/2+1):(length(wave)-U/2)) {
-    if (e_u[t] <= F_1[t]) {
-      if (tau > 0) {
-        if (A==1) {
-          if (e_u[t] <= F_a[t]) {
-            offsets[t] <- TRUE
-            A <- 0
-          } else {
-            if (tau > psi) {
-              tau <- 0
-            } else {
-              tau <- tau+1
-            }
-          }
-        }
-      } else {
-        tau <- tau + 1
-      }
-    } else {
-      tau <- 0
-      A <- 1
+
+  onsets <- scan(e_u > F_1, e_u > F_a, armed=1)
+  offsets <- scan(e_u <= F_1, e_u <= F_a, armed=0)
+
+  #A pulse runs from an onset to the first offset after it.
+  keptOnsets <- integer(0)
+  keptOffsets <- integer(0)
+  open <- 0
+  for (onset in onsets) {
+    if (onset < open) {
+      next
     }
+    closing <- offsets[offsets > onset]
+    keptOnsets <- c(keptOnsets, onset)
+    if (length(closing) == 0) {
+      break
+    }
+    keptOffsets <- c(keptOffsets, closing[1])
+    open <- closing[1]
   }
   return(list(
-    onsets = which(onsets == TRUE),
-    offsets = which(offsets == TRUE)
+    onsets = as.integer(keptOnsets),
+    offsets = as.integer(keptOffsets)
   ))
 }
 
@@ -127,7 +131,11 @@ test_that("pd_dietrich2004 returns the other documented components", {
   expect_named(r, c("theta", "F_a", "F_1", "e_u", "e_v", "onsets", "offsets", "pulse_simple"))
   expect_equal(r$e_u, ste(w, U=20))
   expect_equal(r$e_v, ste(w, U=80))
-  expect_equal(r$pulse_simple, r$e_u > r$F_1)
+  #Nothing outside the samples both windows cover is a pulse, so pulse_simple
+  #marks the same samples as pd_simple()'s pulse does.
+  analysed <- rep(FALSE, length(w))
+  analysed[41:(length(w) - 40)] <- TRUE
+  expect_equal(r$pulse_simple, analysed & r$e_u > r$F_1)
 })
 
 test_that("pd_dietrich2004 detects offsets", {
@@ -157,46 +165,47 @@ test_that("pulseDetection dispatches to the requested method", {
   expect_error(pulseDetection(w, method="pertwee"), "No valid method supplied.")
 })
 
-# Reference implementation: the original loop-based pd_threshold(), retained so the
-# vectorised version can be checked against it.
+# Reference implementation: a loop over the samples one at a time, written
+# against the boundary convention at the top of R/pulseDetection.R. Retained so
+# the vectorised version can be checked against it.
 ref_threshold <- function(wave, threshold=0.2, pd=FALSE, U=1) {
-  mag <- c(rep.int(0,U), wave@left)
   if (pd==TRUE) {
-    mag <- mag ^ 2
+    mag <- wave@left ^ 2
   } else {
-    mag <- abs(mag)
+    mag <- abs(wave@left)
+  }
+  threshold <- threshold * max(mag)
+
+  onsets <- integer(0)
+  offsets <- integer(0)
+  inPulse <- FALSE
+  for (i in seq_along(mag)) {
+    #A sample exactly equal to the threshold is not part of a pulse.
+    if (mag[i] > threshold) {
+      if (!inPulse) {
+        onsets <- c(onsets, i)
+        inPulse <- TRUE
+      }
+    } else {
+      if (inPulse) {
+        offsets <- c(offsets, i)
+        inPulse <- FALSE
+      }
+    }
   }
 
-  threshold <- threshold* max(mag)
-  onsets <- vector(length=length(mag), mode="logical")
-  onsets[1:U] <- FALSE
-  offsets <- onsets
-  for (i in (U + 1):length(mag)) {
-    if (mag[i] > threshold & mag[i-1] < threshold) {
-      previous <- onsets[(i-U):(i-1)]
-      if (length(previous[previous==TRUE]) > 0) {
-        onsets[i] <- FALSE
-      } else {
-        onsets[i] <- TRUE
-      }
-    } else {
-      onsets[i] <- FALSE
-    }
-
-    if (mag[i] < threshold & mag[i-1] > threshold) {
-      previous <- offsets[(i-U):(i-1)]
-      if (length(previous[previous==TRUE]) > 0) {
-        offsets[i] <- FALSE
-      } else {
-        offsets[i] <- TRUE
-      }
-    } else {
-      offsets[i] <- FALSE
+  #A pulse is kept or discarded whole.
+  kept <- integer(0)
+  last <- -Inf
+  for (k in seq_along(onsets)) {
+    if (onsets[k] - last > U) {
+      kept <- c(kept, k)
+      last <- onsets[k]
     }
   }
   return(list(
-    onsets = which(onsets==TRUE),
-    offsets = which(offsets==TRUE)
+    onsets = as.integer(onsets[kept]),
+    offsets = as.integer(offsets[kept[kept <= length(offsets)]])
     )
   )
 }
@@ -210,11 +219,9 @@ test_that("pd_threshold matches the reference implementation", {
     for (U in c(1, 2, 5, 10, 50)) {
       for (threshold in c(0.05, 0.2, 0.5)) {
         for (pd in c(FALSE, TRUE)) {
-          #The reference reports positions in the zero-padded magnitudes.
-          reference <- ref_threshold(wave, threshold=threshold, pd=pd, U=U)
           expect_equal(
             pd_threshold(wave, threshold=threshold, pd=pd, U=U),
-            list(onsets = reference$onsets - U, offsets = reference$offsets - U),
+            ref_threshold(wave, threshold=threshold, pd=pd, U=U),
             info = paste("U =", U, "threshold =", threshold, "pd =", pd)
           )
         }
@@ -266,15 +273,18 @@ test_that("the energy detectors cope with an empty wave", {
   }
 })
 
-test_that("the energy detectors still threshold a wave shorter than the window", {
-  # ste() returns a zero for every sample here rather than nothing at all, so
-  # theta is a real number and the empty-wave guard must not catch this case.
+test_that("the energy detectors have no threshold for a wave shorter than the window", {
+  # ste() returns a zero for every sample of such a wave rather than nothing at
+  # all, and theta was taken from those zeroes: a wave that holds no window at
+  # all was given a noise floor of zero, which is the same reading of the padding
+  # that reported stationary noise as one long pulse.
   w <- tuneR::Wave(rep.int(1, 50), samp.rate=8000, bit=16)
 
   for (detector in c("simple", "dietrich2004")) {
     expect_silent(r <- pulseDetection(w, method=detector))
-    expect_identical(r$theta, 0, info=detector)
+    expect_identical(r$theta, NA_real_, info=detector)
     expect_length(r$onsets, 0)
+    expect_length(r$offsets, 0)
   }
 })
 
