@@ -9,7 +9,9 @@
 #'   objects are passed to allChannels(), which returns the spectrum of each
 #'   channel separately.
 #' @param min_period the minimal rhythmicity period expected, in seconds
-#' @param max_period the maximal rhythmicity period expected, in seconds
+#' @param max_period the maximal rhythmicity period expected, in seconds, which
+#'   is the longest period the spectrum runs to. It must be at least twice
+#'   min_period.
 #' @param dj the frequency resolution of the cwt (in voices per octave)
 #' @param ... extra arguments passed to \code{analyze.wavelet()}
 #' @return a spectrum as a data frame.
@@ -41,6 +43,15 @@ beatSpectrum <- function(wave,
     ))
   }
 
+  #The envelope is resampled at min_period, and the shortest period the
+  #transform can resolve in it is two of those steps.
+  if (max_period < 2 * min_period) {
+    stop(
+      "max_period (", max_period, ") must be at least twice min_period (",
+      min_period, "), the shortest period the spectrum can hold."
+    )
+  }
+
   #wave_std <- orthophonia::standardiseWave(wave)
   wave_std <- wave
   scaling_ratio <- wave_std@samp.rate / (1/min_period)
@@ -52,11 +63,15 @@ beatSpectrum <- function(wave,
   signal_dsp <- approx(y=signal,t0, xout = t1)$y
   #dt_tmp <- data.table(x=signal_dsp)
   dt_tmp <- data.frame(x=signal_dsp)
-  upper_period = ceiling(1 + log2(max_period/ min_period))
+  #The longest period is max_period, in steps of the resampled envelope. It was
+  #rounded up to a power of two, so the spectrum ran to as much as three times
+  #the period asked for, and beatComplexity() could be set by a period the
+  #caller had excluded. The power at each period is computed on its own, so the
+  #periods that remain have the powers they had.
   wt <- WaveletComp::analyze.wavelet(dt_tmp,"x",
                         loess.span = 0, dj=dj,
                         lowerPeriod = 2 ^ 1,
-                        upperPeriod = 2 ^ upper_period,
+                        upperPeriod = max_period / min_period,
                         make.pval =F,
                         verbose = F,...)
   #data.table(power=wt$Power.avg, period = wt$Period * min_period)

@@ -1578,6 +1578,14 @@
   negative size, which audio_filesize() can give, had no unit at all, so -1500
   bytes was "-1500 bytes"; it is now "-1.5 kB", and -1 byte is singular. A
   size such as 1.0001 bytes, shown as 1, is "1 byte" rather than "1 bytes".
+- beatSpectrum() ran past the longest period asked for, as `max_period` was
+  rounded up to a power of two of `min_period`: the defaults gave periods to
+  81.92 s for a `max_period` of 30, and beatComplexity(), which takes the
+  longest of the peaks it finds, could be set by a period the caller had
+  excluded. The spectrum now stops at `max_period`, to within one voice of the
+  transform, and the periods it keeps have exactly the powers they had. A
+  `max_period` shorter than twice `min_period`, which the spectrum cannot
+  hold, is refused.
 - soundSpeed() with method="cramer" used the constant T, which R resolves to TRUE, in
   place of the temperature in the pressure term of Cramer's expression. Speeds were
   biased by 3.73e-8 * (1 - t) * P, which is -0.11 m/s at 30 C and standard pressure,

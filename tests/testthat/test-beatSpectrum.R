@@ -22,10 +22,31 @@ test_that("the periods are reported in seconds and run from the shortest asked f
   skip_if_not_installed("WaveletComp")
   bs <- beatSpectrum(rhythmWave(), min_period=0.005, max_period=1)
   #The transform starts at two of the shortest periods, so that is where the
-  #spectrum starts, and runs past the longest period asked for.
+  #spectrum starts, and runs to the longest period asked for.
   expect_equal(min(bs$period), 2*0.005)
-  expect_gte(max(bs$period), 1)
+  expect_lte(max(bs$period), 1)
+  expect_gt(max(bs$period), 1 / 2^(1/32))
   expect_true(all(diff(bs$period) > 0))
+})
+
+test_that("the spectrum stops at the longest period asked for", {
+  skip_if_not_installed("WaveletComp")
+  #The longest period was rounded up to a power of two of the shortest, so the
+  #spectrum ran to 81.92 s for a max_period of 30, and the complexity could be
+  #set by a period the caller had excluded.
+  for (max_period in c(3, 30)) {
+    bs <- beatSpectrum(rhythmWave(), max_period=max_period)
+    expect_lte(max(bs$period), max_period)
+    expect_gt(max(bs$period), max_period / 2^(1/32))
+  }
+  expect_true(all(beatComplexity(rhythmWave())$peak.periods <= 30))
+})
+
+test_that("a longest period shorter than the spectrum can hold is refused", {
+  expect_error(
+    beatSpectrum(rhythmWave(), min_period=0.01, max_period=0.015),
+    "max_period (0.015) must be at least twice min_period (0.01)", fixed=TRUE
+  )
 })
 
 test_that("the rhythm of the wave is the strongest period in the spectrum", {
