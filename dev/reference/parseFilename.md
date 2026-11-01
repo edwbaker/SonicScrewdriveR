@@ -43,6 +43,28 @@ number and a hash, and a reading the name left in doubt gives
 `ambiguous` and `alternatives`. A format carrying no time, which TSA
 names do not, reports `datetime` as NA rather than leaving it out.
 
+### A name whose digits are not a date
+
+A format is matched on the shape of the digits, and `20240230_120000`
+satisfies the shape of `YYYYMMDD_HHMMSS` while spelling a day that does
+not exist. Such a name reports `datetime` as NA, names `datetime` in
+`unparsed`, and warns, with a class of `unparsedDatetime` and
+`unparsedField`.
+
+`unparsed` is what tells that apart from a format carrying no time,
+which reports NA and names nothing: the first is a date this could not
+read and the second is a name with no date in it, and before this they
+were the same answer. `match` is not moved, since `20240230_120000` does
+follow the `YYYYMMDD_HHMMSS` convention — what it does not do is spell a
+real date.
+
+The same goes for a format the caller names that the name cannot be in,
+as `parseFilename("recording.wav", format="YYYYMMDD")`.
+
+[`readMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readMetadata.md)
+silences this one warning, since it takes no date from such a name in
+any case and says so, and reports the rest of what the name holds.
+
 ## Details
 
 ### Determining the format

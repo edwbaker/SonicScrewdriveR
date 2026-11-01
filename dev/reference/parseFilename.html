@@ -88,7 +88,25 @@ Wildlife Acoustics name gives a model, a prefix, a microphone and a
 deployment, a TSA name gives a collection, a taxon, an accession number and a
 hash, and a reading the name left in doubt gives <code>ambiguous</code> and
 <code>alternatives</code>. A format carrying no time, which TSA names do not, reports
-<code>datetime</code> as NA rather than leaving it out.</p>
+<code>datetime</code> as NA rather than leaving it out.</p><div class="section">
+<h3 id="a-name-whose-digits-are-not-a-date">A name whose digits are not a date<a class="anchor" aria-label="anchor" href="#a-name-whose-digits-are-not-a-date"></a></h3>
+
+
+<p>A format is matched on the shape of the digits, and <code>20240230_120000</code>
+satisfies the shape of <code>YYYYMMDD_HHMMSS</code> while spelling a day that does not
+exist. Such a name reports <code>datetime</code> as NA, names <code>datetime</code> in <code>unparsed</code>,
+and warns, with a class of <code>unparsedDatetime</code> and <code>unparsedField</code>.</p>
+<p><code>unparsed</code> is what tells that apart from a format carrying no time, which
+reports NA and names nothing: the first is a date this could not read and
+the second is a name with no date in it, and before this they were the same
+answer. <code>match</code> is not moved, since <code>20240230_120000</code> does follow the
+<code>YYYYMMDD_HHMMSS</code> convention — what it does not do is spell a real date.</p>
+<p>The same goes for a format the caller names that the name cannot be in, as
+<code>parseFilename("recording.wav", format="YYYYMMDD")</code>.</p>
+<p><code><a href="readMetadata.html">readMetadata()</a></code> silences this one warning, since it takes no date from such
+a name in any case and says so, and reports the rest of what the name holds.</p>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

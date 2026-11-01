@@ -83,6 +83,11 @@ A list of extracted parameters:
 
   Why the recording stopped early, or FALSE if it ran to completion
 
+- unparsed:
+
+  The fields the comment appeared to carry and that could not be read,
+  where there are any. Absent otherwise
+
 ## Details
 
 Deprecated in favour of
@@ -106,6 +111,34 @@ firmware writes in place of the device serial number. Such files have a
 
 Firmware before 1.4.0 wrote a gain index rather than a gain name, so
 `gain` is a number ("0" to "4") for files from those versions.
+
+## Fields that were not read
+
+A field this cannot read is NA, and is named in `unparsed`. Nothing is
+reported as a default: `filter`, `filter.limit`, `cancelled` and
+`external_mic` are FALSE only where the comment carries no clause of
+that kind at all, which is how the firmware says that no filter was
+applied, that the recording ran to completion and that the built-in
+microphone was used — by writing nothing. Where it carries such a clause
+in a wording this package does not know, the field is NA rather than
+FALSE, since FALSE would be a claim about the recording that the file
+never made.
+
+`unparsed` is therefore what tells the two apart: a field that is NA and
+is not named there has no value to be had, and one that is NA and is
+named there is a wording this package needs to learn. A warning classed
+`unparsedComment`, and `unparsedField`, carries the comment so that it
+can be reported; class it to silence this one kind of warning while
+reading a corpus that is known to hold wordings this package does not
+know.
+
+A comment cut short names nothing in `unparsed` and warns about nothing.
+Every complete comment ends in a full stop, so one that does not was cut
+— a version 1 ID3 tag allows a comment 30 bytes, which the recorder's
+own wording fills before it reaches the end of the date — and what is
+past the cut is absent from the file rather than unread. There is no
+wording to report in that case, only a shorter comment than the recorder
+wrote.
 
 ## See also
 

@@ -99,7 +99,13 @@ amplitude, if "file" then the maximum amplitude of wave.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Applied to a <code>TaggedWave</code> or <code>TaggedWaveMC</code> the call is recorded in the
+    <p>The noise added to each channel is generated separately, so the channels of a
+multi-channel wave hold independent noise. One sequence used to be added to
+every channel, which left the noise perfectly correlated between them and so
+cancelling exactly in any difference between the channels: <code><a href="tdoa.html">tdoa()</a></code>,
+<code><a href="bearing.html">bearing()</a></code> and <code><a href="corWaveMC.html">corWaveMC()</a></code> all read inter-channel differences, and noise
+identical in every channel tests none of them.</p>
+<p>Applied to a <code>TaggedWave</code> or <code>TaggedWaveMC</code> the call is recorded in the
 <code>processing</code> slot of the result, as described in <code><a href="tagApply.html">tagApply()</a></code>.</p>
     </div>
 

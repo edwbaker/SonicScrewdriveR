@@ -51,6 +51,18 @@ A list of Wave objects with the required noise added.
 
 ## Details
 
+The noise added to each channel is generated separately, so the channels
+of a multi-channel wave hold independent noise. One sequence used to be
+added to every channel, which left the noise perfectly correlated
+between them and so cancelling exactly in any difference between the
+channels:
+[`tdoa()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tdoa.md),
+[`bearing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/bearing.md)
+and
+[`corWaveMC()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/corWaveMC.md)
+all read inter-channel differences, and noise identical in every channel
+tests none of them.
+
 Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 `processing` slot of the result, as described in
 [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
