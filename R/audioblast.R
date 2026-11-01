@@ -6,6 +6,12 @@
 #' that a module does not have with an error naming it, and
 #' [audioblastFilters()] lists the filters a module has.
 #'
+#' A filter given `NULL` is a filter left out, as it is elsewhere in R. A
+#' filter given `NA`, or no values at all, is refused by name instead: such a
+#' filter is almost always a lookup that failed or a column that holds nothing,
+#' and leaving it out would search the whole module rather than the part that
+#' was asked for.
+#'
 #' A filter that audioBlast lists as taking several values can be given a
 #' vector, e.g. `id = c(10754, 11096)`, which matches a row holding any one of
 #' them. audioBlast takes at most 100 values in a request, so longer vectors are
@@ -250,6 +256,17 @@ ab_range <- function(min=NULL, max=NULL) {
   if (length(min) > 1 | length(max) > 1) {
     stop("min and max must each be a single value.")
   }
+  #Compared before this was checked, so a bound given NA failed in the
+  #comparison with "missing value where TRUE/FALSE needed", and a range given
+  #only one bound was not compared at all and sent audioBlast ">=NA"
+  if (anyNA(min) | anyNA(max)) {
+    unknown <- c("min", "max")[c(anyNA(min), anyNA(max))]
+    stop(
+      "A range needs a value at each end it is given, and ",
+      paste(unknown, collapse=" and "),
+      if (length(unknown) > 1) " are NA." else " is NA."
+    )
+  }
   if (!is.null(min) & !is.null(max)) {
     if (min > max) {
       stop("min must not be greater than max.")
@@ -409,6 +426,11 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
         flac="audio/flac", ogg="audio/ogg", mime::mimemap
       )
       ext <- vapply(d[, "mime"], function(m) {
+        # names(map)[map == NA] is a vector of NAs rather than empty, so a row
+        # whose MIME type is not known was given the extension ".NA"
+        if (is.na(m)) {
+          return("")
+        }
         e <- names(map)[map == m]
         if (length(e) == 0) "" else paste0(".", e[1])
       }, character(1))
@@ -499,8 +521,10 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
   }
   for (n in names(query)) {
     v <- query[[n]]
-    # A value with a comma in it can only be sent in the list form
-    if (length(v) > 1 && any(grepl(",", v, fixed=TRUE))) {
+    # A comma in the joined form is the separator between two values, so a value
+    # that holds one can only be sent in the list form, whether it was given on
+    # its own or alongside others
+    if (any(grepl(",", v, fixed=TRUE))) {
       q <- stats::setNames(list(v), paste0(n, "[]"))
     } else {
       q <- stats::setNames(list(paste(v, collapse=",")), n)
@@ -628,7 +652,16 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
   if (any(duplicated(nams))) {
     stop("Filter ", nams[duplicated(nams)][1], " was given more than once. Give all of its values at once, e.g. id = c(1, 2).")
   }
-  args <- args[!vapply(args, function(v) is.null(v) || all(is.na(v)), logical(1))]
+  #A filter given NULL is a filter left out, as it is elsewhere in R. A filter
+  #given NA, or no values at all, was left out in the same way, which widened
+  #the query to the whole module instead of narrowing it as the caller asked:
+  #an NA filter is almost always a lookup that failed or a column holding
+  #nothing, and a query it silently drops gives a plausible result to a
+  #question nobody asked.
+  args <- args[!vapply(args, is.null, logical(1))]
+  .audioblast_refuse(vapply(args, function(v) length(v) == 0, logical(1)),
+                     "given no values to match")
+  .audioblast_refuse(vapply(args, anyNA, logical(1)), "given NA")
   lapply(args, function(v) {
     if (inherits(v, "ab_range")) {
       return(unclass(v))
@@ -638,6 +671,27 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
     }
     as.character(v)
   })
+}
+
+#' Refuse the filters that cannot be sent, naming them
+#'
+#' @param bad Named logical, which of the filters cannot be sent.
+#' @param said What was wrong with them, as it reads after their names.
+#' @return Nothing, invisibly, where there is nothing to refuse.
+#' @keywords internal
+#' @noRd
+.audioblast_refuse <- function(bad, said) {
+  if (!any(bad)) {
+    return(invisible(NULL))
+  }
+  named <- names(bad)[bad]
+  stop(
+    if (length(named) > 1) "Filters " else "Filter ",
+    paste(named, collapse=" and "),
+    if (length(named) > 1) " were " else " was ", said,
+    ". A filter needs a value to match; leave it out, or give it NULL, to ",
+    "search without it."
+  )
 }
 
 #' Split filters with more values than audioBlast takes into batches

@@ -353,13 +353,129 @@ test_that("ab_range() makes ranges", {
 
 test_that(".audioblast_filters() prepares filters", {
   expect_equal(.audioblast_filters(list()), list())
-  f <- .audioblast_filters(list(id=c(1, 20000000), taxon="Gryllotalpa vineae", duration=ab_range(10, 20), lat=NULL, lon=NA))
+  f <- .audioblast_filters(list(id=c(1, 20000000), taxon="Gryllotalpa vineae", duration=ab_range(10, 20), lat=NULL))
   expect_equal(f$id, c("1", "20000000"))
   expect_equal(f$taxon, "Gryllotalpa vineae")
   expect_equal(f$duration, "10:20")
-  expect_false(any(c("lat", "lon") %in% names(f)))
+  expect_false("lat" %in% names(f))
   expect_error(.audioblast_filters(list("x")), "must be named")
   expect_error(.audioblast_filters(list(id=1, id=2)), "more than once")
+})
+
+test_that("a filter given NA is refused by name rather than dropped", {
+  #A filter that came out NA - from a column of a data frame, a lookup that
+  #failed, a parseFilename() result - was dropped and the query ran without
+  #it, so a search for one taxon silently became a search for the whole
+  #module: the most expensive direction for a query to fail in.
+  expect_error(
+    .audioblast_filters(list(taxon=NA, source="x")),
+    "Filter taxon was given NA"
+  )
+  expect_error(.audioblast_filters(list(id=c(1, NA))), "Filter id was given NA")
+  expect_error(
+    .audioblast_filters(list(taxon=NA, source=NA)),
+    "Filters taxon and source were given NA"
+  )
+  #The filters are read before the query is sent, so this is an error whatever
+  #on.issue says, as the other arguments of audioblast() are. A mock stands in
+  #for the API to be certain nothing is asked of it, because the behaviour
+  #under test is a request that is not sent: dropping the filter asks
+  #audioBlast for every record the module has, page after page.
+  asked <- 0
+  httr2::local_mocked_responses(function(req) {
+    asked <<- asked + 1
+    httr2::response_json(body=list(data=list(list(id="1")), last_page=1, params=list()))
+  })
+  expect_error(
+    audioblast("data", "recordings", check=FALSE, taxon=NA),
+    "Filter taxon was given NA"
+  )
+  expect_equal(asked, 0)
+})
+
+test_that("a filter given no values at all is refused by name too", {
+  #all(is.na(character(0))) is TRUE, so a filter holding nothing went the same
+  #way as one given NA.
+  expect_error(
+    .audioblast_filters(list(id=character(0))),
+    "Filter id was given no values to match"
+  )
+  expect_error(
+    .audioblast_filters(list(id=integer(0), taxon=character(0))),
+    "Filters id and taxon were given no values to match"
+  )
+})
+
+test_that("a filter given NULL is still a filter left out", {
+  f <- .audioblast_filters(list(taxon="Gryllotalpa vineae", lat=NULL))
+  expect_equal(names(f), "taxon")
+  expect_length(.audioblast_filters(list(lat=NULL)), 0)
+})
+
+test_that("ab_range() names a bound it was given as NA", {
+  #The bounds were compared before this was checked, so a range given NA
+  #failed with "missing value where TRUE/FALSE needed", which names neither
+  #bound; a range given only one bound was not compared at all, and
+  #ab_range(NA) sent audioBlast the range ">=NA".
+  expect_error(
+    ab_range(NA, 20),
+    "A range needs a value at each end it is given, and min is NA"
+  )
+  expect_error(ab_range(10, NA), "max is NA")
+  expect_error(ab_range(NA, NA), "min and max are NA")
+  expect_error(ab_range(min=NA), "min is NA")
+  expect_error(ab_range(max=NA_real_), "max is NA")
+})
+
+test_that("a file whose MIME type audioBlast does not hold keeps its extension off", {
+  #names(map)[map == NA] is a vector of NAs rather than empty, so length(e) was
+  #not zero and the file was named "xc_1.NA".
+  d <- data.frame(
+    source="xc", id="1", filename="https://xeno-canto.org/1/download",
+    mime=NA_character_, stringsAsFactors=FALSE
+  )
+  expect_equal(.audioblast_file_names(d, d$filename), "xc_1")
+  #A type that is not one of the extensions known gave no extension already
+  d$mime <- "audio/unheard-of"
+  expect_equal(.audioblast_file_names(d, d$filename), "xc_1")
+  d$mime <- "audio/mpeg"
+  expect_equal(.audioblast_file_names(d, d$filename), "xc_1.mp3")
+})
+
+test_that("a filter value holding a comma is sent as one value, not as two", {
+  #A comma in the joined form is the separator between two values, so a name
+  #holding one was sent as two names. The list form was used for a filter given
+  #several values, but not for the same comma in a single value.
+  seen <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    seen <<- c(seen, req$url)
+    httr2::response_json(body=list(data=list(list(id="1")), last_page=1, params=list()))
+  })
+  audioblast("data", "recordings", check=FALSE, quiet=TRUE,
+             taxon="Oecanthus pellucens, dubius")
+  expect_match(seen[1], "taxon%5B%5D=Oecanthus%20pellucens%2C%20dubius", fixed=TRUE)
+})
+
+test_that("a taxon name with spaces and brackets is sent as it was given", {
+  #audioBlast writes a subgenus as "Gryllus Gryllus campestris", and a name
+  #with brackets in it is routine, so both are escaped for the query rather
+  #than sent as they are.
+  seen <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    seen <<- c(seen, req$url)
+    httr2::response_json(body=list(data=list(list(id="1")), last_page=1, params=list()))
+  })
+  audioblast("data", "recordings", check=FALSE, quiet=TRUE,
+             taxon="Gryllus (Gryllus) campestris")
+  expect_match(seen[1], "taxon=Gryllus%20%28Gryllus%29%20campestris", fixed=TRUE)
+
+  seen <- character(0)
+  audioblast("data", "recordings", check=FALSE, quiet=TRUE,
+             taxon=c("Gryllus Gryllus campestris", "Oecanthus pellucens"))
+  expect_match(
+    seen[1], "taxon=Gryllus%20Gryllus%20campestris%2COecanthus%20pellucens",
+    fixed=TRUE
+  )
 })
 
 test_that(".audioblast_batches() splits long filters", {
