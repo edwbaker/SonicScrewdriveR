@@ -11,8 +11,14 @@
 or a spectrogram_maad object}
 }
 \value{
-A spectrogram_maad object
+A spectrogram_maad object holding power, with its mode slot saying so.
 }
 \description{
-Helper function to convert a Wave-like object to scikit-maad spectrogram
+A \code{spectrogram_maad} records in its \code{mode} slot which units its \code{Sxx} holds,
+and the indices that want power have to be given power whatever the caller
+built. Each mode is therefore converted rather than taken at face value: an
+amplitude spectrogram is squared, a complex one has its magnitude squared,
+and one already in dB is undone. Reading the slot is what makes the two
+converters idempotent, so that a spectrogram passed through either of them
+twice is not converted twice.
 }

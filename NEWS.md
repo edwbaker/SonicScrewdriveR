@@ -396,6 +396,16 @@
   the recording is.
 
 ## Fixes
+- A scikit-maad spectrogram already in dB was converted to dB a second time. The
+  `mode` slot records which units the matrix holds, and neither
+  `.spectrogram_maad_power()` nor `.spectrogram_maad_dB()` read it, so
+  `maad_spectral_activity()` applied `10*log10()` to values that were already
+  logarithmic. Of the 239,104 cells of the test recording's spectrogram, 39,701
+  came back as `-Inf` or `NaN`, and of the same recording normalised to the range
+  scikit-maad documents, all 239,104 did. Both helpers now read the slot, so a
+  spectrogram passed through either of them twice is converted once. An amplitude
+  or a complex spectrogram is converted as well rather than taken for power,
+  which for amplitudes is `20*log10()` and not `10*log10()` of its values.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes
