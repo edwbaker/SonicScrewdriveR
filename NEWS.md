@@ -459,6 +459,21 @@
   stacked the two would count every detection twice. A directory holding no
   results file gives a data frame of no rows, with a warning, where
   `do.call(rbind, list())` gave NULL.
+- frequencyStats() measured its spectral flatness over the whole spectrum while
+  every other statistic was measured over the band above `lowcut`, and returned
+  the two beside each other in one list as though they described the same
+  frequencies. A caller raising the cut to leave out wind or handling noise was
+  given peak, bandwidth and Q measured on the clean band and a flatness still
+  carrying the rumble: it was the same number whatever the cut, 0.392 for a
+  hand-built spectrum whose own band flatness runs 0.550, 0.484 and 0.651 as the
+  cut rises past 2, 4 and 6 kHz.
+  The flatness is now measured over the band the rest of the statistics are
+  measured over. The bins below the cut are dropped rather than zeroed, as the
+  flatness substitutes 1e-5 for a zero and a zeroed spectrum would describe a
+  band padded out with bins a hundred dB down rather than the band that was
+  asked for. For the sheep recording of the seewave package at the default cut
+  of 1000 Hz the flatness is 0.651 rather than 0.548, and `sheepFrequencyStats`
+  is stored anew with the value the function now returns.
 - dutyCycle() applied its `limit` as a proportion of the loudest sample in the
   wave rather than as the threshold the help page described, so no two
   recordings could be compared: the threshold was set by whatever the loudest
@@ -566,6 +581,15 @@
   text frame and a user-defined link were all read that way. The order of a
   value is now read from the value, and a description and a value written in
   opposite orders are both read correctly.
+- readMetadata() did not read the AudioMoth comment of a FLAC or Ogg recording,
+  so the same recording gave its recording time, make, model and serial in one
+  container and none of the four in another. A recording transcoded out of a
+  wave keeps the recorder's comment in whatever its new container holds one in,
+  which is why the comment is looked for in the tag of an MP3 as well as in
+  the list of a wave; FLAC and Ogg write it as a Vorbis comment, under
+  `COMMENT` or `DESCRIPTION` and sometimes under both, and that is where it
+  was going unread. The AUDIOMOTH.flac and AUDIOMOTH.mp3 in this package are
+  the same recording, and now give the same datetime, make, model and serial.
 - readAudio() could not read a recording over 4 GiB at all, however little of
   it was asked for. A wave file in the RF64 or BW64 form is read through the av
   package, as tuneR reads only the RIFF form, and the av package was asked for

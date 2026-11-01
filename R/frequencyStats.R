@@ -11,9 +11,10 @@
 #'   output.unit, and marks the edges of the regions measured.
 #' @param warn If TRUE provides warnings when values are not consistent
 #' @param lowcut Frequency below which values are ignored, in Hz, as every other
-#'   frequency the package takes is. This argument was in kHz in earlier
-#'   releases: the default is the same frequency as before, but a value given
-#'   explicitly needs multiplying by a thousand.
+#'   frequency the package takes is. Every statistic is measured over the band
+#'   above it, the spectral flatness included. This argument was in kHz in
+#'   earlier releases: the default is the same frequency as before, but a value
+#'   given explicitly needs multiplying by a thousand.
 #' @param output.unit Unit of the frequencies and bandwidths returned, "Hz" or
 #'   "kHz". The default is "kHz", the unit they have always been returned in,
 #'   and will become "Hz", the unit of every other frequency the package takes
@@ -23,7 +24,8 @@
 #' @importFrom graphics abline plot
 #' @importFrom seewave sfm
 #' @return A list with an entry for each of the -3dB and -10dB thresholds, and
-#'   the spectral flatness of the spectrum. Each threshold holds the frequencies
+#'   the spectral flatness of the spectrum above `lowcut`, which is the band
+#'   every other statistic is measured over. Each threshold holds the frequencies
 #'   `min`, `max`, `longest_min`, `longest_max`, `peak`, `centre`, `outer min`
 #'   and `outer max` and the bandwidths `bandwidth` and `outer bandwidth`, all
 #'   in output.unit, and the quality factor `Q`. Q and the spectral flatness are
@@ -71,8 +73,10 @@ frequencyStats <- function(
   x <- wave_spec[,1]
   y <- wave_spec[,2]
 
-  #lowcut, like every other frequency the package takes, is in Hz.
-  y[x < .convertLinear(lowcut, "Hz", "kHz", .frequencyMultipliers())] <- 0
+  #lowcut, like every other frequency the package takes, is in Hz. Every
+  #statistic is measured over the band it leaves, the flatness included.
+  band <- x >= .convertLinear(lowcut, "Hz", "kHz", .frequencyMultipliers())
+  y[!band] <- 0
 
   y<- y^2
   #With nothing above the low cut every threshold is zero, no bin exceeds it, and
@@ -103,7 +107,17 @@ frequencyStats <- function(
   data <- list(
     "-3dB" = stats_3,
     "-10dB" = stats_10,
-    "spectral flatness" = sfm(wave_spec)
+    #The flatness was taken from wave_spec, the spectrum as it arrived, so it
+    #was the one statistic that did not move when the band did: a caller raising
+    #lowcut to leave out wind or handling noise was given peak, bandwidth and Q
+    #measured on the clean band beside a flatness still carrying the rumble, and
+    #the two sat in one list as though they described the same frequencies.
+    #The bins below the cut are dropped rather than zeroed, because sfm()
+    #substitutes 1e-5 for a zero: handed the zeroed spectrum it would describe a
+    #band padded out with bins a hundred dB down rather than the band asked for.
+    #The amplitudes are what it is given, as they always were, rather than the
+    #squares the thresholds are taken from.
+    "spectral flatness" = sfm(wave_spec[band, 2])
   )
 
   if(plot) {
