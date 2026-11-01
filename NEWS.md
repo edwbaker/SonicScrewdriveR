@@ -396,6 +396,43 @@
   the recording is.
 
 ## Fixes
+- readBirdNet() could read only one of the layouts BirdNET Analyser writes. It
+  read every file as tab separated and assigned to `Begin.Time..s.` whatever
+  the file held, so a file without that column failed with `replacement has 0
+  rows, data has 1`, which says nothing about BirdNET columns. Three of the
+  four layouts are comma separated, so every one but the Raven selection table
+  failed: the `csv` layout, with `Start (s)` and `End (s)`; the `rtable`
+  layout, with `start` and `end`; and the Kaleidoscope layout, with `OFFSET`
+  and `DURATION`. The Audacity labels BirdNET also writes have no header at
+  all, so the first detection in one was read as the header.
+
+  The layout is now worked out from the file's own header, both the separator
+  and the columns, so all four read and the begin and end of a detection are
+  taken from whichever columns that layout keeps them in. Kaleidoscope writes
+  how long a detection lasts rather than when it ends, so an end read from it
+  without adding the offset would have been wrong for every detection after the
+  first. The columns of the file itself are kept, so a selection table reads
+  exactly as it did. A file in none of the layouts is refused by name, with its
+  first line and the layouts that are known, and one that looks like Audacity
+  labels says that readAudacityLabels() reads those.
+
+  A `filename_parsing` the name cannot be read by is now an error naming the
+  file and the convention asked for. Reading an AudioMoth name as a timestamp
+  gave every detection a time of NA and said only `NAs introduced by
+  coercion`; reading a name that is not an AudioMoth name as one gave
+  `subscript out of bounds`. An unknown `filename_parsing` was ignored in
+  silence and is now refused.
+
+  A directory no longer takes everything `list.files()` returns: a
+  subdirectory is passed over, as is a file in no layout this reads, with a
+  warning naming it, since a results directory holds the analysis parameters
+  BirdNET writes beside the results. A directory holding results in more than
+  one layout is refused by name rather than failing in `rbind()` with `numbers
+  of columns of arguments do not match` — a run writes a combined table beside
+  its per-file tables, holding the same detections again, so a reading that
+  stacked the two would count every detection twice. A directory holding no
+  results file gives a data frame of no rows, with a warning, where
+  `do.call(rbind, list())` gave NULL.
 - parseFilename() reported a name whose digits spell no real date the same way
   it reports a name carrying no time at all. A format is matched on the shape
   of the digits, and `20240230_120000` satisfies the shape of
