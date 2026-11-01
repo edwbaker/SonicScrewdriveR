@@ -19,6 +19,7 @@ entropyStats <- function(wave) {
     return(allChannels(wave, entropyStats, channel.param=NULL))
   }
   validateIsWave(wave)
+  .validateSpectrumLength(wave, "entropyStats")
 
   #meanspec() plots by default, so asking for four numbers opened a device and
   #drew a spectrum as a side effect. frequencyStats() already passes plot=FALSE

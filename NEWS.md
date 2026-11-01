@@ -822,6 +822,13 @@
   between the channels of a stereo wave falls to the 0.02 of two independent
   sequences. The first channel draws first, so a wave of one channel is mixed
   exactly as before and a mono result under a given seed is unchanged.
+- frequencyStats() and entropyStats() of a wave shorter than 512 samples failed
+  with "wrong sign in 'by' argument" from `seq()`, which names neither the
+  wave nor the window, as `seewave::meanspec()` takes its spectrum in windows
+  of that length. A window of windowing() shorter than 64 ms at 8 kHz was
+  enough. Such a wave is now refused with a message giving the window and the
+  length of the wave. frequencyStats() given a spectrum through `wave_spec`
+  needs no window, and is not refused.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
