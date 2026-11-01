@@ -7,13 +7,17 @@
 beatComplexity(wave, plot = FALSE)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which measures each channel separately.}
 
-\item{plot}{If TRUE a spectrogram overlaid with the peaks is plotted.}
+\item{plot}{If TRUE a spectrogram overlaid with the peaks is plotted. One
+plot is drawn per channel, so a multi-channel wave needs a layout of its
+own for all of them to be seen.}
 }
 \value{
 A list of the complexity, a vector of the peak periods, and the number of
-  peaks. The complexity is NA if the beat spectrum has no peak.
+peaks. The complexity is NA if the beat spectrum has no peak. For
+multi-channel input, one such list per channel.
 }
 \description{
 This function computes a \code{beatSpectrum} and calculates some basic

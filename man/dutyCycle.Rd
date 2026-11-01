@@ -4,17 +4,28 @@
 \alias{dutyCycle}
 \title{Calculate the duty cycle of a wave}
 \usage{
-dutyCycle(wave, limit = 0.1, output = "unit", normalise = TRUE)
+dutyCycle(wave, limit = 0.1, output = "unit", normalise = FALSE)
 }
 \arguments{
 \item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
 allChannels(), which returns a list with one duty cycle per channel.}
 
-\item{limit}{Threshold above which to consider the signal}
+\item{limit}{Threshold above which to consider the signal, as a proportion of
+the largest amplitude the wave's format can hold: the default of 0.1 is a
+tenth of full scale, whether the wave is floating point or integer. The
+threshold does not depend on the wave's own peak, so a loud transient does
+not change the duty cycle measured around it and the same sound recorded
+twice gives the same figure. In earlier releases this was a proportion of
+the loudest sample in the wave, which a value given explicitly still means
+only where that sample is at full scale.}
 
 \item{output}{If "unit" the duty cycle will be in the range 0-1. For a percentage use "percent".}
 
-\item{normalise}{If TRUE the Wave is normalised using tuneR}
+\item{normalise}{If TRUE the Wave is normalised using tuneR before the
+threshold is applied. Normalising raises the wave's loudest sample to full
+scale, which makes the threshold depend on that sample again, and
+normalize() from tuneR removes the offset as well, so silence no longer sits
+at zero. The default is FALSE and was TRUE in earlier releases.}
 }
 \value{
 A numerical value for the duty cycle between 0 and 1 (or 0 and 100\% if

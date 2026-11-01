@@ -102,3 +102,29 @@
   }
   return(matrix(wave@left, ncol=1))
 }
+
+#' One channel of a Wave-like object as a Wave of one channel
+#'
+#' A Wave holds its channels in the left and right slots, a WaveMC in the columns
+#' of a matrix. This returns one of them as a single channel Wave, so that a
+#' function given a channel by number need not know which class it was handed.
+#'
+#' @param wave A Wave or WaveMC object.
+#' @param channel The number of the channel to take.
+#' @return A Wave object holding that channel alone.
+#' @noRd
+.waveChannel <- function(wave, channel) {
+  samples <- .channelMatrix(wave)
+  if (channel < 1 || channel > ncol(samples)) {
+    stop(
+      "The recording has ", ncol(samples), " channels, so channel ", channel,
+      " is not one of them."
+    )
+  }
+  return(tuneR::Wave(
+    samples[, channel],
+    samp.rate = wave@samp.rate,
+    bit = wave@bit,
+    pcm = wave@pcm
+  ))
+}

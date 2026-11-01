@@ -204,10 +204,19 @@ fcisClip <- function(probs=c(0.02, 0.98), log=FALSE) {
 #' @param wave A Wave object
 #' @param indices Names of the indices to calculate
 #' @param wl Window length for the spectrogram
+#' @param channel The channel of the window to describe
 #' @return A named list of numeric vectors, one value per frequency bin.
 #' @importFrom seewave spectro
 #' @noRd
-.fcisWindow <- function(wave, indices, wl) {
+.fcisWindow <- function(wave, indices, wl, channel=1) {
+  #spectro() reads the first channel of whatever it is given, so a window read
+  #from a file of several channels was described by its first channel alone. A
+  #window read from a file holds every channel of the recording, so the one
+  #asked for is taken here. A wave given to fcis() has had its channel taken
+  #already, and arrives here with one.
+  if (.useAllChannels(wave)) {
+    wave <- .waveChannel(wave, channel)
+  }
   #A spectrogram in decibels contains negative values, which the indices are not
   #defined for, so the linear amplitudes are used.
   spec <- spectro(wave, f=wave@samp.rate, wl=wl, plot=FALSE, dB=NULL, norm=FALSE)
@@ -225,21 +234,48 @@ fcisClip <- function(probs=c(0.02, 0.98), log=FALSE) {
 #' @param indices Names of the indices to calculate
 #' @param wl Window length for the spectrogram
 #' @param cluster A cluster from the 'parallel' package
+#' @param channel The channel of the recording to describe
 #' @return A list with one entry per column.
 #' @noRd
-.fcisColumns <- function(x, window.length, indices, wl, cluster) {
+.fcisColumns <- function(x, window.length, indices, wl, cluster, channel=1) {
   if (is.null(window.length)) {
     wave <- if (inherits(x, "Wave")) x else readAudio(x)
-    return(list(.fcisWindow(wave, indices, wl)))
+    return(list(.fcisWindow(wave, indices, wl, channel)))
   }
   return(windowing(
     x,
     window.length = window.length,
-    FUN = function(wave, start, window.length) .fcisWindow(wave, indices, wl),
+    FUN = function(wave, start, window.length) .fcisWindow(wave, indices, wl, channel),
     window.overlap = 0,
     complete.windows = TRUE,
     cluster = cluster
   ))
+}
+
+#' Number of channels a false-colour index spectrogram has to describe
+#'
+#' A Wave or a WaveMC carries its own channel count. A filename is asked of the
+#' av package, as the sample rate already is, and a file whose channel count
+#' cannot be read is treated as holding one, which is how it was read before.
+#'
+#' @param x A Wave object, a WaveMC object, or a vector of filenames
+#' @return The number of channels.
+#' @noRd
+.fcisChannels <- function(x) {
+  if (inherits(x, "WaveMC")) {
+    return(x@dim[2])
+  }
+  if (inherits(x, "Wave")) {
+    return(if (x@stereo) 2 else 1)
+  }
+  channels <- tryCatch({
+    info <- av::av_media_info(x[1])
+    as.numeric(info$audio[, "channels"])
+  }, error = function(e) NA)
+  if (length(channels) != 1 || is.na(channels)) {
+    return(1)
+  }
+  return(channels)
 }
 
 #' Sample rate of the input to a false-colour index spectrogram
@@ -282,12 +318,17 @@ fcisClip <- function(probs=c(0.02, 0.98), log=FALSE) {
 #' @param scale NULL, a function, or a list of three functions, one per channel,
 #'   applied to an index across the whole spectrogram before it is mapped to a
 #'   colour. [fcisClip()] makes one that clips to a range of percentiles.
+#' @param channel Which channel of the recording to describe. If NULL, a
+#'   recording of more than one channel gives one spectrogram per channel, and
+#'   each records the channel it describes.
 #' @export
 #' @return An object of class "fcis", being a list of the colours as a character
 #'   matrix of one entry per frequency bin and window, the matrix of values for each
 #'   index, the frequencies of the bins in Hz, the duration of a window in seconds,
-#'   and the names of the indices used. The frequencies were in kHz, as
-#'   seewave::spectro() gives them, in earlier releases.
+#'   the names of the indices used, and the channel it describes, which is NA for
+#'   a recording of one channel. For a recording of more than one channel with no
+#'   channel asked for, a list of one such object per channel. The frequencies
+#'   were in kHz, as seewave::spectro() gives them, in earlier releases.
 #' @examples
 #' \dontrun{
 #' f <- fcis(wave, window.length=44100)
@@ -301,20 +342,69 @@ fcis <- function(
   indices = c("power", "ACI", "entropy"),
   wl = 256,
   cluster = NULL,
-  scale = NULL
+  scale = NULL,
+  channel = NULL
 ) {
   if (length(indices) != 3) {
     stop("Three indices are required, one for each of the red, green and blue channels.")
   }
   .validateChoice(indices, fcisIndexNames(), "index", "fcis", prep="for")
 
+  channels <- .fcisChannels(x)
+  if (!is.null(channel)) {
+    if (!is.numeric(channel) || length(channel) != 1 || is.na(channel) ||
+        channel != round(channel) || channel < 1 || channel > channels) {
+      stop("channel must be one of the ", channels, " channels of the recording.")
+    }
+  } else if (channels > 1) {
+    #The spectrograms read one channel, so a recording of several was described
+    #by its first channel alone, with nothing in the result or the image to say
+    #which channel that was. Each channel is given a spectrogram of its own.
+    if (inherits(x, c("Wave", "WaveMC"))) {
+      #channel.param="channel" hands the whole wave over together with the
+      #number of the channel, rather than the channel on its own: the number has
+      #to reach the result for it to record which channel it describes.
+      return(allChannels(
+        x,
+        function(w, channel) fcis(
+          w, window.length=window.length, indices=indices, wl=wl,
+          cluster=cluster, scale=scale, channel=channel
+        ),
+        channel.param = "channel"
+      ))
+    }
+    #allChannels() takes a wave, so a filename is divided here instead.
+    return(lapply(
+      seq_len(channels),
+      function(i) fcis(
+        x, window.length=window.length, indices=indices, wl=wl,
+        cluster=cluster, scale=scale, channel=i
+      )
+    ))
+  }
+  #A recording of one channel has no channel worth naming, so nothing is
+  #recorded for it and its plot is titled as it always was.
+  described <- if (is.null(channel)) NA_integer_ else as.integer(channel)
+  if (is.null(channel)) {
+    channel <- 1
+  }
+  #The channel asked for is taken here, so that what is windowed below holds one
+  #channel. windowing() takes a Wave and not a WaveMC, so this is also what lets
+  #a WaveMC be described at all.
+  if (inherits(x, "WaveMC") || (inherits(x, "Wave") && channels > 1)) {
+    x <- .waveChannel(x, channel)
+  }
+
   if (is.character(x) && length(x) > 1) {
     columns <- unlist(
-      lapply(x, .fcisColumns, window.length=window.length, indices=indices, wl=wl, cluster=cluster),
+      lapply(
+        x, .fcisColumns, window.length=window.length, indices=indices, wl=wl,
+        cluster=cluster, channel=channel
+      ),
       recursive = FALSE
     )
   } else {
-    columns <- .fcisColumns(x, window.length, indices, wl, cluster)
+    columns <- .fcisColumns(x, window.length, indices, wl, cluster, channel)
   }
   if (length(columns) == 0) {
     stop("No complete windows to analyse.")
@@ -339,7 +429,8 @@ fcis <- function(
     #seewave::spectro() gives the frequencies of its bins in kHz.
     freq = .convertLinear(columns[[1]]$freq, "kHz", "Hz", .frequencyMultipliers()),
     window.seconds = if (is.na(samp.rate) || is.null(window.length)) NA else window.length/samp.rate,
-    channels = indices
+    channels = indices,
+    channel = described
   )
   class(ret) <- "fcis"
   return(ret)
@@ -351,7 +442,8 @@ fcis <- function(
 #' @param xlab Label for the x axis
 #' @param ylab Label for the y axis, which is drawn in Hz, the unit of the
 #'   frequencies fcis() returns
-#' @param main Title for the plot
+#' @param main Title for the plot. The default names the channel described
+#'   where the recording held more than one.
 #' @param ... Additional parameters passed to plot()
 #' @export
 #' @return No return value, called for its side effect of drawing a plot.
@@ -365,9 +457,14 @@ plot.fcis <- function(
   x,
   xlab = NULL,
   ylab = "Frequency (Hz)",
-  main = "False-colour index spectrogram",
+  main = NULL,
   ...
 ) {
+  #Computed here rather than as the default of the argument, as xlab already is,
+  #so that the usage of the help page does not name an internal function.
+  if (is.null(main)) {
+    main <- .fcisTitle(x)
+  }
   bins <- nrow(x$colours)
   n <- ncol(x$colours)
 
@@ -389,4 +486,26 @@ plot.fcis <- function(
   #Rows are reversed so that low frequencies are drawn at the bottom.
   rasterImage(as.raster(x$colours[bins:1, , drop=FALSE]), 0, 0, xmax, ymax, interpolate=FALSE)
   return(invisible(NULL))
+}
+
+#' Title for a false-colour index spectrogram
+#'
+#' A spectrogram of one channel of a recording of several says which channel it
+#' describes. Only the first channel was ever drawn, and there was nothing in
+#' the image to tell one channel from another.
+#'
+#' @param x An object of class "fcis"
+#' @return A character title.
+#' @noRd
+.fcisTitle <- function(x) {
+  #An object from a release that recorded no channel has none to name. It is
+  #read with [[ rather than $, which matches a name in part: $channel on an
+  #object without one found the "channels" holding the names of the indices,
+  #and asking whether three index names were NA was an error rather than a
+  #title.
+  channel <- x[["channel"]]
+  if (is.null(channel) || is.na(channel)) {
+    return("False-colour index spectrogram")
+  }
+  return(paste0("False-colour index spectrogram (channel ", channel, ")"))
 }

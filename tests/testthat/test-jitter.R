@@ -58,3 +58,41 @@ test_that("jitter rejects incorrect input", {
     "Unknown method for jitter: sonic"
   )
 })
+
+test_that("jitter measures every channel", {
+  # A stereo wave read only its left channel, so the jitter of the right one was
+  # never reported, and a WaveMC has no left slot to read at all.
+  sr <- 8000
+  n <- 4000
+  L <- tuneR::Wave(round(sin(2*pi*250*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(sin(2*pi*1100*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+
+  left <- jitter(L)
+  right <- jitter(R)
+  expect_false(isTRUE(all.equal(left, right)))
+  expect_false(isTRUE(all.equal(jitter(tuneR::stereo(L, R)), left)))
+
+  expect_equal(jitter(tuneR::stereo(L, R)), list(list(left), list(right)))
+  expect_equal(
+    jitter(tuneR::WaveMC(cbind(L@left, R@left, L@left), samp.rate=sr, bit=16)),
+    list(list(left), list(right), list(left))
+  )
+})
+
+test_that("jitter passes its method to each channel", {
+  sr <- 8000
+  n <- 4000
+  L <- tuneR::Wave(round(sin(2*pi*250*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(sin(2*pi*1100*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  st <- tuneR::stereo(L, R)
+
+  expect_equal(
+    jitter(st, method="relative"),
+    list(list(jitter(L, method="relative")), list(jitter(R, method="relative")))
+  )
+  expect_false(isTRUE(all.equal(jitter(st, method="relative"), jitter(st, method="absolute"))))
+
+  # An unknown method is reported once, before the channels are split, rather
+  # than once per channel.
+  expect_error(jitter(st, method="not-a-method"), "Unknown method for jitter: not-a-method")
+})

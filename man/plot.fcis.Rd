@@ -4,13 +4,7 @@
 \alias{plot.fcis}
 \title{Plot a false-colour index spectrogram}
 \usage{
-\method{plot}{fcis}(
-  x,
-  xlab = NULL,
-  ylab = "Frequency (Hz)",
-  main = "False-colour index spectrogram",
-  ...
-)
+\method{plot}{fcis}(x, xlab = NULL, ylab = "Frequency (Hz)", main = NULL, ...)
 }
 \arguments{
 \item{x}{An object of class "fcis"}
@@ -20,7 +14,8 @@
 \item{ylab}{Label for the y axis, which is drawn in Hz, the unit of the
 frequencies fcis() returns}
 
-\item{main}{Title for the plot}
+\item{main}{Title for the plot. The default names the channel described
+where the recording held more than one.}
 
 \item{...}{Additional parameters passed to plot()}
 }

@@ -1,4 +1,5 @@
 ACI
+AOEF
 Acinipe
 Analyzer
 AnnotationList
@@ -60,6 +61,7 @@ ToDO
 Varotsos
 WaveFilter
 WaveMC
+Whombat
 YYYYMMDD
 acousti
 addProcess
@@ -161,6 +163,7 @@ iNaturalist
 iXML
 indexSpec
 ixml
+jsonlite
 kPa
 labelPadding
 labelReduction
@@ -184,6 +187,7 @@ overdamped
 parseFilename
 pbapply
 plotix
+psd
 pseudoWave
 pulseDetection
 pulseIntervals
@@ -191,6 +195,7 @@ pulseStats
 pythonInstall
 radialPolygon
 rainfallDetection
+readAOEF
 readAudacityLabels
 readAudio
 readBirdNet
@@ -214,6 +219,8 @@ sheepFrequencyStats
 sid
 soundSpeed
 soundecology
+soundevent
+soundevent's
 specStats
 spectro
 squarewave
@@ -244,6 +251,8 @@ wamd
 wavChunks
 wavCues
 wavInfo
+wave's
+writeAOEF
 writeAnnotationWave
 writeAudacityLabels
 writeAudio

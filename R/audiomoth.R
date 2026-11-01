@@ -106,7 +106,33 @@ audiomothField <- function(x, pattern) {
 #'     applied}
 #'   \item{cancelled}{Why the recording stopped early, or FALSE if it ran to
 #'     completion}
+#'   \item{unparsed}{The fields the comment appeared to carry and that could
+#'     not be read, where there are any. Absent otherwise}
 #' }
+#'
+#' @section Fields that were not read:
+#' A field this cannot read is NA, and is named in `unparsed`. Nothing is
+#' reported as a default: `filter`, `filter.limit`, `cancelled` and
+#' `external_mic` are FALSE only where the comment carries no clause of that
+#' kind at all, which is how the firmware says that no filter was applied, that
+#' the recording ran to completion and that the built-in microphone was used —
+#' by writing nothing. Where it carries such a clause in a wording this package
+#' does not know, the field is NA rather than FALSE, since FALSE would be a
+#' claim about the recording that the file never made.
+#'
+#' `unparsed` is therefore what tells the two apart: a field that is NA and is
+#' not named there has no value to be had, and one that is NA and is named
+#' there is a wording this package needs to learn. A warning classed
+#' `unparsedComment`, and `unparsedField`, carries the comment so that it can
+#' be reported; class it to silence this one kind of warning while reading a
+#' corpus that is known to hold wordings this package does not know.
+#'
+#' A comment cut short names nothing in `unparsed` and warns about nothing.
+#' Every complete comment ends in a full stop, so one that does not was cut —
+#' a version 1 ID3 tag allows a comment 30 bytes, which the recorder's own
+#' wording fills before it reaches the end of the date — and what is past the
+#' cut is absent from the file rather than unread. There is no wording to
+#' report in that case, only a shorter comment than the recorder wrote.
 #' @seealso [readMetadata()], which reads this alongside every other kind of
 #'   metadata a file holds, and whose `sources$audiomoth` is what this function
 #'   returns.
@@ -267,6 +293,75 @@ audiomothWave <- function(filename) {
     cancelled <- reason
   }
 
+  # Which fields the comment looks as though it carries and nothing was read
+  # from. Each test is a word that every wording of that clause has held, so a
+  # rewording is caught without knowing what the new wording is, which is the
+  # only way it can be caught before the release that writes it.
+  #
+  # The words are chosen to be the clause's alone. "external" rather than
+  # "microphone", because a recording stopped by a microphone change says
+  # "microphone" in a clause that has nothing to do with an external one.
+  # "battery" rather than "voltage", because a stop due to low voltage says
+  # "voltage". "Recording" belongs to no clause but the one reporting an early
+  # stop, the comment itself opening "Recorded at".
+  has <- function(what) grepl(what, raw, ignore.case=TRUE)
+
+  # A comment cut short carries nothing past the cut, so what is missing from
+  # it is missing rather than unread, and there is nothing for this package to
+  # learn from it. Every complete comment ends in a full stop, whichever clause
+  # it ends with, so one that does not was cut: a version 1 ID3 tag allows a
+  # comment 30 bytes, which the recorder's own wording fills before it reaches
+  # the end of the date.
+  whole <- grepl("[.][[:space:]]*$", raw)
+
+  unparsed <- if (!whole) NULL else .unparsedFields(
+    # The clauses every firmware writes unconditionally: a start time, a date,
+    # a device identifier of one of the two kinds, a gain and a battery state.
+    # There is no complete AudioMoth comment without them, so one of them
+    # unread needs no keyword to tell it is a wording this has not seen — being
+    # NA is the whole of the evidence.
+    start_time = is.na(start_time),
+    start_date = is.na(start_date),
+    serial = is.na(serial) && is.na(deployment_id),
+    # The zone is gated, although every firmware from 1.2.0 writes it: the
+    # comments this package records for the releases before that carry no zone
+    # at all, and a comment without one is not a comment whose zone went
+    # unread. Where it names a zone and the zone did not read, the way it is
+    # written has changed, which is worth reporting — #75 was an offset hour
+    # of one digit doing exactly that in a GUANO timestamp.
+    time_zone = grepl("UTC", raw, fixed=TRUE) && is.na(time_zone),
+    gain = is.na(gain),
+    voltage = is.na(voltage),
+    # Firmware before 1.4.0 wrote no temperature at all, so this one is gated
+    # on the comment mentioning one: a comment that does not is not a comment
+    # whose temperature went unread.
+    temperature = has("temperature") && is.na(temp),
+    external_mic = has("external") && !external_mic,
+    filter = has("filter") && isFALSE(filter),
+    filter.limit = has("filter") && isFALSE(filter_limit),
+    cancelled = has("Recording") && isFALSE(cancelled)
+  )
+
+  # A clause that was not read reports nothing, where a default left standing
+  # would be a positive claim about the recording. FALSE is exactly that for
+  # these three: that no filter was applied, that no external microphone was
+  # used, and that the recording ran to completion. It is the right reading
+  # where the comment carries no such clause, which is how the firmware says
+  # all three — by writing nothing — and the wrong one where it carries a
+  # clause this could not read.
+  if (is.element("external_mic", unparsed)) {
+    external_mic <- NA
+  }
+  if (is.element("filter", unparsed)) {
+    filter <- NA
+  }
+  if (is.element("filter.limit", unparsed)) {
+    filter_limit <- NA
+  }
+  if (is.element("cancelled", unparsed)) {
+    cancelled <- NA
+  }
+
   ret = list(
     "raw" = raw,
     "start_time" = start_time,
@@ -282,5 +377,19 @@ audiomothWave <- function(filename) {
     "filter.limit" = filter_limit,
     "cancelled" = cancelled
   )
+  if (!is.null(unparsed)) {
+    # Reported only where there is something to report, as the fields of a
+    # reading are throughout this package, so that a comment every field of
+    # which was read gives what it always gave.
+    ret$unparsed <- unparsed
+    .unparsedWarning(
+      "unparsedComment",
+      "This AudioMoth comment carries ", paste(unparsed, collapse=", "),
+      " in a wording this package cannot read, so ",
+      if (length(unparsed) == 1L) "it is" else "they are",
+      " not reported. Please report the wording, which a firmware release",
+      " this package has not seen writes: '", raw, "'"
+    )
+  }
   return(ret)
 }

@@ -69,3 +69,34 @@ test_that("the mean segment spans the mean direction at the mean speed", {
   expect_equal(mean.layer$data$xend, mean(c(0, pi/2)))
   expect_equal(mean.layer$data$x, -mean.layer$data$xend)
 })
+
+test_that("every direction given is drawn, not only the eastern half", {
+  # The scale ran over (-pi, pi] while a bearing converted to radians runs over
+  # [0, 2*pi), and ggplot2 drops a value outside a scale's limits without a
+  # word, so a wind rose quietly showed only half of itself.
+  p <- directionPlot(c(10, 90, 181, 270, 350), c(1, 2, 3, 4, 5))
+  x <- ggplot2::ggplot_build(p)$data[[1]]$x
+  # The five directions given, and the origin row that draws them from the
+  # centre.
+  expect_equal(length(x), 6)
+  expect_equal(sum(is.na(x)), 0)
+})
+
+test_that("a bearing is placed where that point of the compass is", {
+  p <- directionPlot(c(0, 90, 180, 270, 360), rep(1, 5))
+  expect_equal(p$data$Angles[1:5], c(0, pi/2, pi, -pi/2, 0))
+})
+
+test_that("a bearing of more than one turn is brought onto the compass", {
+  p <- directionPlot(c(-90, 400, 720), c(1, 2, 3))
+  expect_equal(p$data$Angles[1:3], c(-pi/2, 2*pi*40/360, 0))
+  expect_equal(sum(is.na(ggplot2::ggplot_build(p)$data[[1]]$x)), 0)
+})
+
+test_that("the mean segment is drawn for directions in the western half", {
+  # Its ends are placed on the same scale, so they have to be inside it too.
+  built <- ggplot2::ggplot_build(directionPlot(c(270, 350), c(1, 3)))
+  mean.layer <- built$data[[length(built$data)]]
+  expect_equal(nrow(mean.layer), 1)
+  expect_equal(sum(is.na(c(mean.layer$x, mean.layer$xend))), 0)
+})

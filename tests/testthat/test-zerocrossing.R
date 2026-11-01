@@ -35,3 +35,32 @@ test_that("zerocross finds two crossings per cycle of a sine", {
   expect_gt(length(zerocross(w)), 870)
   expect_lt(length(zerocross(w)), 890)
 })
+
+test_that("zerocross finds the crossings of every channel", {
+  # A stereo wave read only its left channel, so the crossings of the right one
+  # were never reported and the stereo answer was the mono one.
+  sr <- 8000
+  n <- 4000
+  L <- tuneR::Wave(round(sin(2*pi*250*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(sin(2*pi*1000*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+
+  # The channels must give different answers for the test to mean anything.
+  left <- zerocross(L)
+  right <- zerocross(R)
+  expect_false(isTRUE(all.equal(left, right)))
+  expect_false(isTRUE(all.equal(zerocross(tuneR::stereo(L, R)), left)))
+
+  # zerocross returns a vector, so allChannels() wraps each channel's result in
+  # a list of its own, as it does for every other single channel measure.
+  expect_equal(zerocross(tuneR::stereo(L, R)), list(list(left), list(right)))
+  expect_equal(
+    zerocross(tuneR::WaveMC(cbind(L@left, R@left, L@left), samp.rate=sr, bit=16)),
+    list(list(left), list(right), list(left))
+  )
+})
+
+test_that("zerocross still returns a vector for one channel", {
+  w <- tuneR::Wave(c(1, -1, 1), samp.rate=8000, bit=16)
+  expect_true(is.numeric(zerocross(w)))
+  expect_equal(zerocross(w), c(2, 3))
+})

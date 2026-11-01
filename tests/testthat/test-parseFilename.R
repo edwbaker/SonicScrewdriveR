@@ -312,3 +312,101 @@ test_that("parseFilename() reports when no format matches all filenames", {
 test_that("match parameter to parseFilename() detects the format of a single file", {
   expect_equal(parseFilename("20240220_162231.wav", format="match")$match, "YYYYMMDD_HHMMSS")
 })
+
+# A format is matched on the shape of the digits, so a name spelling a day that
+# does not exist matched one all the same and strptime()'s NA was reported as
+# the datetime. NA is also what a format carrying no time gives, which TSA
+# names do, so a caller could not tell a date this could not read from a name
+# with no date in it. unparsed is what tells them apart.
+
+test_that("A name whose digits are no real date names datetime unparsed", {
+  impossible <- c(
+    "20240230_120000.wav",  # 30 February
+    "20241301_120000.wav",  # month 13
+    "20240101_250000.wav",  # hour 25
+    "20240101_006100.wav",  # minute 61
+    "20240230.wav"
+  )
+  for (name in impossible) {
+    p <- suppressWarnings(parseFilename(name))
+    expect_true(is.na(p$datetime), info=name)
+    expect_equal(p$unparsed, "datetime", info=name)
+    # The format it matched is still reported: the name does follow that
+    # convention, it just does not spell a date.
+    expect_false(is.na(p$match), info=name)
+  }
+})
+
+test_that("A format carrying no time names nothing unparsed", {
+  # The documented NA of a TSA name, which is a name with no time in it rather
+  # than a time this could not read. The two were the same answer before.
+  p <- parseFilename("TSA-Porzana_parva_DIG_104_26_1-ee281ac7afd44e08.wav")
+  expect_true(is.na(p$datetime))
+  expect_null(p$unparsed)
+  expect_equal(p$taxon, "Porzana parva")
+})
+
+test_that("A format the caller names that the name cannot be in is reported", {
+  p <- suppressWarnings(parseFilename("recording.wav", format="YYYYMMDD"))
+  expect_true(is.na(p$datetime))
+  expect_equal(p$unparsed, "datetime")
+
+  # A timestamp that is not a count of seconds coerced to NA with only an
+  # "NAs introduced by coercion" warning, which names neither the file nor the
+  # format it was read as.
+  p <- suppressWarnings(parseFilename("recording.wav", format="timestamp"))
+  expect_true(is.na(p$datetime))
+  expect_equal(p$unparsed, "datetime")
+})
+
+test_that("The warning names the file and the format, and carries a class", {
+  expect_warning(parseFilename("20240230_120000.wav"), "20240230_120000.wav",
+                 fixed=TRUE)
+  expect_warning(parseFilename("20240230_120000.wav"), "YYYYMMDD_HHMMSS",
+                 fixed=TRUE)
+
+  w <- tryCatch(parseFilename("20240230_120000.wav"), warning=function(w) w)
+  expect_s3_class(w, "unparsedDatetime")
+  expect_s3_class(w, "unparsedField")
+  # Classed so that a walk over thousands of files can silence this one kind
+  # without silencing the rest, which is what makes warning here affordable.
+  expect_silent(withCallingHandlers(
+    parseFilename("20240230_120000.wav"),
+    unparsedField=function(w) invokeRestart("muffleWarning")
+  ))
+})
+
+test_that("A name that reads gives no unparsed and no warning", {
+  for (name in c("20200609_191730.wav", "20240220.wav", "5E90A4D4.wav",
+                 "1591730250.wav")) {
+    p <- parseFilename(name)
+    expect_null(p$unparsed, info=name)
+  }
+  expect_silent(parseFilename("20200609_191730.wav"))
+})
+
+test_that("A name with an impossible date keeps what else it carries", {
+  # A Wildlife Acoustics name gives a model and a prefix beside its date, and
+  # those are read from the name whether or not the digits are a real date.
+  p <- suppressWarnings(parseFilename("PREFIX_20240230_120000.wav"))
+  expect_equal(p$prefix, "PREFIX")
+  expect_true(is.na(p$datetime))
+  expect_equal(p$unparsed, "datetime")
+})
+
+test_that("readMetadata keeps a name's other fields and stays quiet", {
+  # .mdFilenameSource() catches warnings and abandons the reading, so the
+  # warning is muffled there rather than costing the model and the prefix. No
+  # date is taken from such a name in any case.
+  # The name has to be exactly this, so it is built rather than drawn from
+  # tempfile(), which appends characters of its own and leaves a name that
+  # matches no format.
+  f <- file.path(tempdir(), "PREFIX_20240230_120000.wav")
+  read <- .mdFilenameSource(f)
+  expect_false(is.null(read))
+  expect_equal(read$prefix, "PREFIX")
+  expect_silent(.mdFilenameSource(f))
+
+  # And the record itself mentions no date, as it did before.
+  expect_null(.mdNormaliseFilename(read)$datetime)
+})

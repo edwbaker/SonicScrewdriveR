@@ -4,17 +4,24 @@
 #' allowed bandwidth can be an integer multiple of the bandwidth at either -3dB
 #' or -10dB.
 #'
-#' Applied to a `TaggedWave` the call is recorded in the `processing` slot of
-#' the result, as described in [tagApply()].
+#' Every channel of a stereo `Wave` or a `WaveMC` is filtered, each around the
+#' strongest frequency of that channel, and the result has the channels the
+#' input had. The band is measured per channel rather than once for the whole
+#' recording, because the channels of a recording need not hold the same signal
+#' and measuring one of them would choose the band for all the others.
 #'
-#' @param wave A Wave object
+#' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
+#' `processing` slot of the result, as described in [tagApply()].
+#'
+#' @param wave A Wave or WaveMC object
 #' @param bw Either -3dB or -10dB. This is calculated by \code{frequencyStats}
 #' @param n.bw The number of bandwidths either side of the centre of the centre to keep
 #' @param lowcut Frequency (in Hz) below which the recording is ignored, which
 #'   must be below half the sample rate. High-pass filtering is applied here
 #'   before the centre frequency and bandwidth are calculated, and the same
 #'   frequency is the floor of that calculation, so no band below it is chosen.
-#' @return A band-pass filtered Wave object
+#' @return A band-pass filtered Wave or WaveMC object, with the channels the
+#'   input had
 #' @examples
 #' \dontrun{
 #' autoBandPass(sheep)
@@ -29,7 +36,9 @@ autoBandPass <- function(
   n.bw=1,
   lowcut=1000
 ) {
-  validateIsWave(wave)
+  #A WaveMC was refused here although the filter underneath can take one, so a
+  #multi-channel recording could not be filtered at all.
+  validateIsWaveLike(wave)
   #A whole number given as 1 rather than 1L is a double, so the value is checked
   #rather than the storage type, which rejected the default of this function.
   if (!is.numeric(n.bw) || length(n.bw) != 1 || is.na(n.bw) || n.bw != round(n.bw)) {
@@ -66,6 +75,32 @@ autoBandPass <- function(
 #' @keywords internal
 #' @noRd
 .autoBandPass <- function(wave, bw, n.bw, lowcut) {
+  #seewave reads the left slot of a Wave through inputw(), whose channel is the
+  #first one, so a stereo wave came back mono with its right channel silently
+  #discarded and a WaveMC had no left slot to read at all.
+  #.filterAllChannels() measures and filters each channel on its own and puts
+  #the channels back together, restoring the sample rate, bit depth and pcm flag
+  #that seewave does not carry through.
+  if (.useAllChannels(wave)) {
+    return(.filterAllChannels(
+      wave,
+      new(
+        "WaveFilter",
+        func = .autoBandPassChannel,
+        params = list(bw=bw, n.bw=n.bw, lowcut=lowcut)
+      )
+    ))
+  }
+  return(.autoBandPassChannel(wave, bw=bw, n.bw=n.bw, lowcut=lowcut))
+}
+
+#' Measure and apply an automatic band pass filter to one channel
+#'
+#' @param wave A single channel Wave object.
+#' @return The filtered Wave object.
+#' @keywords internal
+#' @noRd
+.autoBandPassChannel <- function(wave, bw, n.bw, lowcut) {
   wave2 <- seewave::ffilter(wave, from=lowcut, output="Wave")
   wave_spec <- seewave::meanspec(wave2, norm=FALSE, plot=FALSE)
   #The low cut was not passed on at all, which left the default of

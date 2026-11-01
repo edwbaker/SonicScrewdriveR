@@ -7,7 +7,7 @@
 autoBandPass(wave, bw = "-3dB", n.bw = 1, lowcut = 1000)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave or WaveMC object}
 
 \item{bw}{Either -3dB or -10dB. This is calculated by \code{frequencyStats}}
 
@@ -19,7 +19,8 @@ before the centre frequency and bandwidth are calculated, and the same
 frequency is the floor of that calculation, so no band below it is chosen.}
 }
 \value{
-A band-pass filtered Wave object
+A band-pass filtered Wave or WaveMC object, with the channels the
+input had
 }
 \description{
 Creates an automatic bandpass filter based on the strongest frequency. The
@@ -27,8 +28,14 @@ allowed bandwidth can be an integer multiple of the bandwidth at either -3dB
 or -10dB.
 }
 \details{
-Applied to a \code{TaggedWave} the call is recorded in the \code{processing} slot of
-the result, as described in \code{\link[=tagApply]{tagApply()}}.
+Every channel of a stereo \code{Wave} or a \code{WaveMC} is filtered, each around the
+strongest frequency of that channel, and the result has the channels the
+input had. The band is measured per channel rather than once for the whole
+recording, because the channels of a recording need not hold the same signal
+and measuring one of them would choose the band for all the others.
+
+Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}.
 }
 \examples{
 \dontrun{
