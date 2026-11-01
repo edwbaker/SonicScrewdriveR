@@ -422,6 +422,30 @@
   the recording is.
 
 ## Fixes
+- package.installed() installed packages unasked in a session with no one to
+  ask, and reported an install that had not happened as a success. askYesNo()
+  returns its default where nothing answers it, and that default is TRUE, so a
+  non-interactive session went straight past the offer and on to
+  install.packages(): `Rscript -e 'sonicscrewdriver::dielPlot(Sys.Date(), 51,
+  0)'` on a machine without plotrix wrote into the user's library as a side
+  effect of drawing a plot, and R CMD check, CI and cron runs all attempted
+  installs. Nothing is installed now where there is no one to ask. The package
+  is reported missing instead, and the caller says which package it wanted and
+  what it wanted it for, which is what the message at R/birdnetReticulate.R:25
+  is for and could not reach.
+
+  install.packages() returns nothing whether or not it installed anything, and
+  reports a failure it noticed as a warning, so TRUE was returned for an
+  install that had not happened - no network, or a library that cannot be
+  written - and the caller went on to use a package that was not there, failing
+  inside it with "there is no package called ...". What was asked for is now
+  looked for again after the install rather than taking the installer's word,
+  and that same loading check answers the question at the start, as a package a
+  library lists is not necessarily one that can be loaded.
+
+  A method other than "github" installed nothing and fell off the end of the
+  function returning NULL, which a caller testing it with if () could not use;
+  it is now refused by name.
 - pulseIntervals() returned intervals that hold a pulse rather than areas of no
   pulses. Each interval started at the preceding pulse's onset rather than at its
   offset, so the whole of that pulse fell inside the interval, an error of one
