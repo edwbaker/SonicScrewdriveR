@@ -807,6 +807,11 @@
   more than one channel, as dutyCycle() and frequencyStats() already are, and
   return one spectrum or one set of measurements per channel. With plot=TRUE
   beatComplexity() draws one plot per channel.
+- beatComplexity() missed a peak of the beat spectrum with a flat top, as it
+  looked for a rise followed at once by a fall, and across a run of equal
+  powers there is nothing between them. A run of equal powers is now taken as
+  one point, and a peak on one is put at its middle, as
+  `scipy.signal.find_peaks()` puts it.
 - generateNoise() added one sequence of noise to every channel of a
   multi-channel wave, so the noise was identical in each. Its correlation
   between the two channels of a stereo wave was exactly 1 and it cancelled
