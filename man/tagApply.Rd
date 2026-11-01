@@ -30,12 +30,49 @@ The result of \code{.fun}, with the process recorded if \code{.w} is tagged.
 }
 \description{
 Runs \code{fun(w, ...)} and, if \code{w} is a \code{TaggedWave} or \code{TaggedWaveMC}, appends a
-record of the call to the \code{processing} slot of the result. The record holds
-the function name, its arguments, the time, the duration and digests of the
-input and output. Untagged waves are processed without any record being made,
-so \code{tagApply()} can be used safely in code that handles either.
+record of the call to the \code{processing} slot of the result. Untagged waves are
+processed without any record being made, so \code{tagApply()} can be used safely
+in code that handles either.
 }
 \details{
+A record is a named list holding what is needed to say what was done, with
+what, when and to which audio:
+
+\describe{
+\item{\code{process}}{The label, which is the function's name unless one was
+given.}
+\item{\code{func}}{The function as it was called, as a name or \code{pkg::name}.}
+\item{\code{params}}{The arguments the caller supplied, under the names of the
+formals they filled rather than the names they were passed under, so an
+argument given by position or by an abbreviation is still named.}
+\item{\code{defaults}}{The arguments the caller did not supply and the function
+therefore chose, as the function defines them. A default is part of what
+happened, and three of \code{seewave::ffilter()}'s twelve change the samples
+it returns. They are deparsed rather than evaluated, because a default
+can be an expression over the other arguments whose value is known only
+inside the call; for a literal the two are the same. Absent where a
+function has no defaults left to it, as the functions of this package do
+not, passing their arguments on in full.}
+\item{\code{time}, \code{timezone}}{When it ran, and the zone the clock was keeping.
+The zone is named because a \code{POSIXct} alone is shown in the zone of
+whoever reads it, and loses the zone entirely once written out as text.}
+\item{\code{duration}}{How long the call took, in seconds.}
+\item{\code{input_hash}, \code{output_hash}, \code{hash_method}}{Digests of the samples
+going in and coming out, and which digest they are. These are what make
+the rest checkable: a history can be tested against the audio it claims
+to describe rather than taken on trust.}
+}
+
+A full digest reads every sample, about a second per minute of stereo 48 kHz
+audio, and is paid on the wave going in and the wave coming out of every
+step. Where that is too much for the length of the recordings in hand,
+\code{options(sonicscrewdriver.provenance="sketch")} digests a fixed number of
+evenly spaced blocks instead, which costs the same whatever the length. A
+sketch tells an edited recording from an unedited one but is not evidence
+that two are the same, which is why \code{hash_method} says which was used. An
+option is not carried to the workers of a \code{cl} cluster that does not inherit
+it, which use the full digest and record that they did.
+
 If \code{fun} returns a wave without tags, the \code{origin}, \code{metadata} and
 \code{processing} of \code{w} are carried over to it. The \code{spectrogram_maad_power} slot
 is not carried over, as it no longer matches the signal.
