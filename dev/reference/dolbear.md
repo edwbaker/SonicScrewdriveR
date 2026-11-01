@@ -64,6 +64,7 @@ Oecanthus rileyi species group and a new species from North America.”
 
 ``` r
 dolbear(n=6)
+#> Warning: Dolbear's law is extrapolated beyond the temperatures it was fitted over for Oecanthus fultoni, Iowa (15-25 C); Oecanthus fultoni, Oregon (9-28 C); Oecanthus fultoni, Ohio (18-31 C).
 #>             species location      m      c min max       source        t n
 #> 1 Oecanthus fultoni     Iowa 7.7879 -30.21  15  25 Fulton, 1925 4.649520 6
 #> 2 Oecanthus fultoni   Oregon 9.2007 -36.53   9  28 Fulton, 1925 4.622474 6
