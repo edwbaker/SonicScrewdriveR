@@ -5,7 +5,9 @@
 #' the envelope of a preprocessed signal, and processing
 #' the average power per frequency band.
 #'
-#' @param wave an R object or path to a wave file
+#' @param wave an R object or path to a wave file. Stereo Wave and WaveMC
+#'   objects are passed to allChannels(), which returns the spectrum of each
+#'   channel separately.
 #' @param min_period the minimal rhythmicity period expected, in seconds
 #' @param max_period the maximal rhythmicity period expected, in seconds
 #' @param dj the frequency resolution of the cwt (in voices per octave)
@@ -13,6 +15,7 @@
 #' @return a spectrum as a data frame.
 #' It contains two columns: \code{power} and \code{period}.
 #' The number of rows depend on the resolution and frequency range.
+#' For multi-channel input, one such data frame per channel.
 #' @importFrom stats approx runmed
 #' @export
 #' @author Quentin Geissmann
@@ -27,6 +30,16 @@ beatSpectrum <- function(wave,
                          dj=1/32, # 1/nvoices
                          ...
 ){
+  #Only the left slot of a Wave was read, so a stereo recording was analysed on
+  #its left channel alone and a WaveMC, which has no such slot, failed outright.
+  if (.useAllChannels(wave)) {
+    #A closure keeps the arguments away from the formals of allChannels()
+    return(allChannels(
+      wave,
+      function(w) beatSpectrum(w, min_period=min_period, max_period=max_period, dj=dj, ...),
+      channel.param = NULL
+    ))
+  }
 
   #wave_std <- orthophonia::standardiseWave(wave)
   wave_std <- wave
