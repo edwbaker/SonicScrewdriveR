@@ -84,6 +84,9 @@ to a Wave in a pipeline.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Supported filters include those from the seewave package.</p>
+<p>The result has the format of the input, with the filtered samples rounded to
+whole numbers where that is integer PCM. Every channel is filtered, and eight
+bit PCM is filtered about its midpoint of 128.</p>
 <p>Applied to a <code>TaggedWave</code> or <code>TaggedWaveMC</code> the call is recorded in the
 <code>processing</code> slot of the result, as described in <code><a href="tagApply.html">tagApply()</a></code>. The settings
 of the filter are its arguments, so two runs of the same filter at different

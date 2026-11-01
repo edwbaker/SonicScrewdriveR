@@ -35,6 +35,10 @@ list.
 
 Supported filters include those from the seewave package.
 
+The result has the format of the input, with the filtered samples
+rounded to whole numbers where that is integer PCM. Every channel is
+filtered, and eight bit PCM is filtered about its midpoint of 128.
+
 Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 `processing` slot of the result, as described in
 [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
