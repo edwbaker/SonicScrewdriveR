@@ -38,7 +38,14 @@ dielHistogram <- function(times, by="hour", col="grey", maxval=NA, presence.only
     if (data$value[i]== 0) {
       next;
     }
-    radialPolygon(data$from[i],data$to[i], 1,1+data$value[i], col=col, rot=rot)
+    #Bars rise from the inner limit, and their heights are scaled by the width
+    #of the limits above, so the fullest bar reaches the outer one. Drawn from a
+    #literal radius of 1 they kept their scaled height but not their base, and
+    #left the plot for any limits but c(1, 2): on a dielPlot() drawn with its
+    #own default of c(0, 2) the fullest bar reached a radius of 3, outside the
+    #region the plot draws at all.
+    radialPolygon(data$from[i], data$to[i], limits[1], limits[1]+data$value[i],
+                  col=col, rot=rot)
   }
   return(data)
 }

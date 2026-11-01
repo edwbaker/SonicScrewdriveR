@@ -79,3 +79,30 @@ test_that("dielRings and dielHistogram take the plot rotation", {
   expect_true("rot" %in% names(formals(dielRings)))
   expect_true("rot" %in% names(formals(dielHistogram)))
 })
+
+test_that("dielHistogram draws its bars between the limits it is given", {
+  # Bar heights were scaled to the limits while the bars were drawn from a
+  # literal radius of 1, so for any limits but c(1, 2) they left the plot: on a
+  # dielPlot() drawn with its own default of c(0, 2) the fullest reached 3.
+  drawn <- list()
+  f <- dielHistogram
+  e <- new.env(parent=environment(f))
+  assign("radialPolygon", function(a1, a2, r1, r2, ...) {
+    drawn[[length(drawn)+1]] <<- c(r1, r2); invisible(NULL)
+  }, envir=e)
+  environment(f) <- e
+
+  times <- as.POSIXct(c("2024-06-15 00:30:00", "2024-06-15 00:45:00",
+                        "2024-06-15 12:30:00"), tz="UTC")
+  for (limits in list(c(1, 2), c(0, 2), c(0, 1), c(1, 3))) {
+    drawn <- list()
+    f(times, by="hour", limits=limits, timezone="UTC")
+    radii <- do.call(rbind, drawn)
+    # Two bins hold times, each bar rising from the inner limit, and the fullest
+    # bin reaching the outer one.
+    expect_equal(nrow(radii), 2)
+    expect_true(all(radii[, 1] == limits[1]))
+    expect_true(all(radii <= limits[2] + 1e-9))
+    expect_equal(max(radii), limits[2])
+  }
+})
