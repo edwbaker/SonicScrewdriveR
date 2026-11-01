@@ -34,15 +34,29 @@ directionPlot <- function(angles,
     theme(panel.grid.major.y = element_line(color="grey")) +
     theme(axis.text.y = element_blank())
   if (plot.mean) {
-    #One segment, so it is given a row of its own. Taken from the data of the
-    #plot it was a single value against as many rows as there were directions,
-    #which ggplot2 warns about.
-    mean.x <- mean(abs(angles))
-    mean.y <- mean(speeds)
-    plot <- plot + geom_segment(
-      aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend),
-      data = data.frame(x=-mean.x, y=mean.y, xend=mean.x, yend=mean.y)
-    )
+    #The mean of a set of directions is the direction of their resultant, not
+    #the mean of their numbers: 350 and 10 degrees average to 180, due south.
+    #mean(abs(angles)) avoided that by folding west onto east, so a set of
+    #easterly directions and the matching westerly set gave the same answer, and
+    #it was drawn as an arc either side of north, which can show a distance from
+    #north but never a direction.
+    mean.cos <- mean(cos(angles))
+    mean.sin <- mean(sin(angles))
+    #Directions that cancel have no mean direction. atan2(0, 0) is 0, so the
+    #segment would be drawn pointing north on no evidence.
+    if (sqrt(mean.cos^2 + mean.sin^2) > sqrt(.Machine$double.eps)) {
+      #atan2() answers over (-pi, pi], which is the range the axis runs over, so
+      #the mean needs no wrapping of its own.
+      mean.a <- atan2(mean.sin, mean.cos)
+      #One segment, so it is given a row of its own. Taken from the data of the
+      #plot it was a single value against as many rows as there were directions,
+      #which ggplot2 warns about. It is drawn from the centre, as each direction
+      #is.
+      plot <- plot + geom_segment(
+        aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend),
+        data = data.frame(x=mean.a, y=0, xend=mean.a, yend=mean(speeds))
+      )
+    }
   }
   return(plot)
 }

@@ -98,6 +98,7 @@ cbind
 cleanTZ
 codecov
 coerceMaximum
+coerceNA
 concat
 corWaveMC
 corenv
@@ -178,6 +179,7 @@ mpeg
 naturalFrequency
 ndsi
 noClick
+normaliseSpectrum
 nsd
 ntd
 numpy
@@ -208,6 +210,7 @@ rejectDuration
 resonantFrequency
 rhythmicity
 rileyi
+roxygenise
 sDuration
 samp
 scaleRGB
@@ -240,6 +243,7 @@ typicalVolume
 tz
 uncalibrated
 unif
+unnormalised
 validateFreq
 validateFreqIsPossible
 validateRH

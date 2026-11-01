@@ -41,7 +41,9 @@ The phases of the day do not all happen everywhere. At 50 degrees north in
 midsummer the sun never reaches astronomical twilight, so there is no Night, and
 the Dusk.Astro phase runs from the end of nautical twilight through to the next
 morning; in polar day and polar night a single phase can last for months, and is
-named for the sun's altitude through it. A phase therefore need not start or end
+named for the sun's altitude through it and for which way the sun is heading, a
+twilight that brightens towards the polar sunrise being a dawn and one that
+darkens a dusk. A phase therefore need not start or end
 on the day of the recording, and the start and end given for it are the real
 ones, however far outside the recording they fall.
 

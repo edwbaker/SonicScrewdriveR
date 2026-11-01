@@ -162,11 +162,19 @@ setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   }
 )
 
+# Every multiplication below is written with a space either side of the
+# asterisk, including the ones inside a*e2 and b*e2 that used not to be. This
+# package builds its documentation with markdown, where a pair of asterisks
+# with no space after the opening one marks emphasis, so "a*e2) + b*" was read
+# as emphasis and roxygenise() wrote "(g * a\emph{e2) + b}e2" into the help
+# page. A spaced asterisk cannot open emphasis, so the arithmetic now survives
+# being regenerated.
+
 #' PseudoWave scalar manipulation
 #'
 #' A PseudoWave is applied as (samples * scale) + offset, so multiplying the
 #' whole of it by e2 multiplies the offset as well as the scale:
-#' ((g * a) + b) * e2 is (g * a*e2) + b*e2. Scaling only the scale left an
+#' ((g * a) + b) * e2 is (g * a * e2) + b * e2. Scaling only the scale left an
 #' offset already set to be added after the multiplication rather than taken
 #' into it, so the order the operators were written in was discarded.
 #' @docType methods

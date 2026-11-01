@@ -13,7 +13,9 @@
 #' midsummer the sun never reaches astronomical twilight, so there is no Night, and
 #' the Dusk.Astro phase runs from the end of nautical twilight through to the next
 #' morning; in polar day and polar night a single phase can last for months, and is
-#' named for the sun's altitude through it. A phase therefore need not start or end
+#' named for the sun's altitude through it and for which way the sun is heading, a
+#' twilight that brightens towards the polar sunrise being a dawn and one that
+#' darkens a dusk. A phase therefore need not start or end
 #' on the day of the recording, and the start and end given for it are the real
 #' ones, however far outside the recording they fall.
 #'
@@ -266,9 +268,16 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 #' polar night, and the weeks of unbroken twilight between them. dayPhase() used to
 #' return no solar phase at all for those. The sun is where it is for the whole of
 #' such a stretch, give or take the turn at either end of it, so its altitude
-#' halfway through names the phase; and the phase is named for the band of altitude
-#' as everywhere else, a sun held between 12 and 18 degrees below the horizon being
-#' in astronomical twilight, which is the Dusk.Astro phase.
+#' halfway through names the band it is in: a sun held between 12 and 18 degrees
+#' below the horizon is in astronomical twilight.
+#'
+#' Which half of the day that is cannot be had from the altitude, as the same band
+#' is crossed on the way up and on the way down, and naming it for the evening
+#' whichever way the sun was going made every polar twilight a dusk: the five weeks
+#' in which the sun climbs towards the polar sunrise at 89.9 degrees north were
+#' reported as Dusk.Astro. It is taken from the sun's altitude at the two ends of
+#' the stretch instead, so that a twilight which brightens is Dawn.Astro and one
+#' which darkens is Dusk.Astro.
 #'
 #' @param from Start of the stretch of time
 #' @param to End of the stretch of time
@@ -280,16 +289,63 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
   #An instant is an instant whatever zone it is written in, and getSunlightPosition()
   #warns about one that carries no zone of its own, so it is given UTC.
   middle <- as.numeric(from) + as.numeric(difftime(to, from, units="secs")) / 2
-  middle <- as.POSIXct(middle, tz="UTC", origin="1970-01-01")
-  altitude <- getSunlightPosition(date=middle, lat=lat, lon=lon,
+  at <- as.POSIXct(c(as.numeric(from), middle, as.numeric(to)), tz="UTC",
+                   origin="1970-01-01")
+  altitude <- getSunlightPosition(date=at, lat=lat, lon=lon,
                                   keep="altitude")$altitude * 180 / pi
-  #The altitude in degrees at which each band begins, highest first.
-  bands <- c(Day=0, Dusk.Civil=-6, Dusk.Naut=-12, Dusk.Astro=-18)
+  #Which way the sun is heading over the stretch as well as where it is in the
+  #middle of it, as the altitude alone cannot tell a dawn from a dusk: the five
+  #weeks in which the sun climbs from astronomical twilight to the polar sunrise
+  #were reported as Dusk.Astro. The two ends say which way rather than a pair of
+  #instants in the middle, because the sun's daily wobble at 89.9 degrees north is
+  #as wide as the climb of a whole day and so names the wrong half of the day at
+  #the wrong hour. A stretch that ends where it began is as much a dusk as a dawn
+  #and keeps the dusk name, which is the only name this gave before.
+  return(.phaseAtAltitude(altitude[[2]], altitude[[3]] > altitude[[1]]))
+}
+
+#' The phase a sun of a given altitude is in
+#'
+#' @param altitude The sun's altitude in degrees
+#' @param rising Whether the sun is climbing
+#' @return The name of the phase.
+#' @noRd
+.phaseAtAltitude <- function(altitude, rising) {
+  #The altitude at which each phase begins, highest first. The thresholds are the
+  #ones the events themselves are taken at, so that a phase named from the sun's
+  #altitude and a phase named from the event that began it cannot disagree: Day
+  #begins where sunriseEnd puts it, three tenths of a degree below the horizon,
+  #and not at the horizon, where a band table of its own used to begin it.
+  up <- c("sunriseEnd", "sunrise", "dawn", "nauticalDawn", "nightEnd")
+  down <- c("sunriseEnd", "sunsetStart", "sunset", "dusk", "nauticalDusk")
+  phases <- .solarEventPhases()
+  bands <- .solarEventAltitudes()[up]
+  names(bands) <- phases[if (rising) up else down]
   phase <- names(bands)[altitude >= bands]
   if (length(phase) == 0) {
-    return("Night")
+    #Below the last of them is the night, the one phase that is neither a dawn
+    #nor a dusk.
+    return(phases[["night"]])
   }
   return(phase[[1]])
+}
+
+#' The sun's altitude at each solar event
+#'
+#' In degrees, as suncalc takes them: sunrise and sunset are the moment the sun's
+#' upper edge meets the horizon and sunriseEnd and sunsetStart the moment its
+#' lower edge leaves it, which is why neither of those is zero, and the three
+#' twilights end 6, 12 and 18 degrees below it.
+#'
+#' @return A named numeric vector, suncalc event name to altitude in degrees.
+#' @noRd
+.solarEventAltitudes <- function() {
+  return(c(
+    nightEnd = -18, nauticalDawn = -12, dawn = -6,
+    sunrise = -0.833, sunriseEnd = -0.3,
+    sunsetStart = -0.3, sunset = -0.833, dusk = -6,
+    nauticalDusk = -12, night = -18
+  ))
 }
 
 #' Moonlight for a run of days
@@ -336,17 +392,71 @@ dayPhases <- function(time=as.Date(Sys.time()), lat=50.1, lon=1.83, tz="UTC") {
 
 #' The first instant of a local day
 #'
-#' as.POSIXct() of a midnight the local clock skips, as it does where daylight
-#' saving begins at midnight, is NA. Noon exists on every day, so the day is
-#' anchored there and twelve hours are taken off in real time, which lands on the
-#' first instant the clock did reach that day.
+#' Local midnight where the clock reaches it, and the moment the clock jumps where
+#' it does not: where daylight saving begins at midnight, as it does in Cuba and
+#' Chile, the first reading of the day is 01:00, and where it ends at 01:00 the
+#' clock reaches midnight twice and the first of the two is the one wanted.
+#'
+#' Twelve hours were taken off local noon, and taken in real time, but there are
+#' not twelve real hours between midnight and noon on a 23- or 25-hour day, so the
+#' result was an hour out in the direction of the transition: in London it landed
+#' at 23:00 the day before every spring and lost the first hour of the day every
+#' autumn. Zeroing the clock fields of noon instead goes wrong the other way, as
+#' the reading it names does not exist on a day whose midnight is skipped, which
+#' as.POSIXct() gives as NA where it does not refuse it outright.
+#'
+#' The day is therefore found as an instant rather than as a clock reading. Local
+#' midnight falls at one instant for each UTC offset in force around the boundary,
+#' and the first instant of the day is the earliest of those the local clock still
+#' reads as being on it.
+#'
+#' @param date A date, or a vector of dates
+#' @param tz Time-zone
+#' @return The first instant of each day, as POSIXct.
+#' @noRd
+.startOfDay <- function(date, tz) {
+  date <- as.Date(date)
+  secs <- vapply(seq_along(date), function(i) .firstInstantOfDay(date[[i]], tz),
+                 numeric(1))
+  return(as.POSIXct(secs, tz=tz, origin="1970-01-01"))
+}
+
+#' The first instant of one local day
 #'
 #' @param date A date
 #' @param tz Time-zone
-#' @return The first instant of the day, as POSIXct.
+#' @return The first instant of the day, in seconds since the epoch.
 #' @noRd
-.startOfDay <- function(date, tz) {
-  return(as.POSIXct(paste(as.Date(date), "12:00:00"), tz=tz) - 43200)
+.firstInstantOfDay <- function(date, tz) {
+  midnight <- as.numeric(as.POSIXct(paste(date, "00:00:00"), tz="UTC"))
+  #A transition moves the clock for months at a time, so every offset in force
+  #anywhere near the boundary is in force at one of these instants.
+  probes <- as.POSIXct(midnight + seq(-86400, 86400, by=43200), tz="UTC",
+                       origin="1970-01-01")
+  cand <- sort(unique(midnight - .utcOffset(probes, tz)))
+  on <- as.Date(as.POSIXct(cand, tz=tz, origin="1970-01-01"), tz=tz) == date
+  if (any(on)) {
+    return(cand[on][[1]])
+  }
+  #The clock skipped this date altogether, as Samoa's did on 30 December 2011 in
+  #crossing the date line. Nothing belongs to a day that never began, and the day
+  #after it starts where this one would have ended.
+  return(.firstInstantOfDay(date + 1, tz))
+}
+
+#' How far ahead of UTC a local clock is
+#'
+#' In seconds at each of the instants given, negative to the west of Greenwich.
+#' Read from the clock rather than from the gmtoff field of a POSIXlt, which is
+#' optional and is NA on a platform that does not supply it.
+#'
+#' @param t Instants, as POSIXct
+#' @param tz Time-zone
+#' @return The offset in seconds at each instant.
+#' @noRd
+.utcOffset <- function(t, tz) {
+  local <- format(t, tz=tz, format="%Y-%m-%d %H:%M:%S")
+  return(as.numeric(as.POSIXct(local, tz="UTC")) - as.numeric(t))
 }
 
 #' Moon rise and set times

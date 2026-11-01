@@ -154,3 +154,11 @@ test_that("an installed package is reported without asking anything", {
   )
   expect_true(package.installed("base"))
 })
+
+test_that(".canAsk() asks interactive() and nothing else", {
+  #Every test above stands in for it, so this is the one place it is read. It
+  #exists only because local_mocked_bindings() cannot stand in for a base
+  #function - it fails with "Can't find binding for `interactive`" - so what it
+  #has to be is that base function.
+  expect_identical(.canAsk(), interactive())
+})

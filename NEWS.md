@@ -423,15 +423,15 @@
 
 ## Fixes
 - package.installed() installed packages unasked in a session with no one to
-  ask, and reported an install that had not happened as a success. askYesNo()
+  ask, and reported an install that had not happened as a success. `askYesNo()`
   returns its default where nothing answers it, and that default is TRUE, so a
   non-interactive session went straight past the offer and on to
   install.packages(): `Rscript -e 'sonicscrewdriver::dielPlot(Sys.Date(), 51,
-  0)'` on a machine without plotrix wrote into the user's library as a side
+  0)'` on a machine without `plotrix` wrote into the user's library as a side
   effect of drawing a plot, and R CMD check, CI and cron runs all attempted
   installs. Nothing is installed now where there is no one to ask. The package
   is reported missing instead, and the caller says which package it wanted and
-  what it wanted it for, which is what the message at R/birdnetReticulate.R:25
+  what it wanted it for, which is what the message at `R/birdnetReticulate.R:25`
   is for and could not reach.
 
   install.packages() returns nothing whether or not it installed anything, and
@@ -443,9 +443,40 @@
   and that same loading check answers the question at the start, as a package a
   library lists is not necessarily one that can be loaded.
 
-  A method other than "github" installed nothing and fell off the end of the
+  A method other than `"github"` installed nothing and fell off the end of the
   function returning NULL, which a caller testing it with if () could not use;
   it is now refused by name.
+- upsample() left the interpolated samples fractional in a wave that went on to
+  declare the input's bit depth and pcm, so a 16 bit PCM wave came back saying
+  16 bit PCM while holding values a 16 bit PCM wave cannot hold. The validity
+  rules of tuneR check the bit and pcm combination but not whether a PCM wave's
+  samples are whole, so nothing complained: `upsample(Wave(c(0, 1000, 0,
+  -1000), samp.rate=4, bit=16), 12)` gave eight fractional samples out of
+  twelve, and the only thing that ever said so was writeWave() rounding them
+  with its generic warning. Anything reading bit to work out full scale read a
+  scale the data was not on.
+  Where the wave declares integer PCM the interpolated samples are now rounded
+  to whole numbers, which costs at most half a quantisation step, 96 dB below
+  full scale at 16 bit. Rounding cannot carry a sample outside the range the
+  input held, as linear interpolation returns convex combinations of two
+  neighbouring samples and the final sample is held rather than extrapolated,
+  so eight bit unsigned PCM stays within 0 to 255 as well. A floating point
+  wave is interpolated without rounding, its samples being the values they say
+  they are. A function given as the method is held to the format in the same
+  way.
+- dutyCycle() counted an eight bit recording's silence as signal. Eight bit PCM
+  is unsigned about a midpoint of 128, so `abs(wave@left)` read its silence as
+  128 and the threshold was compared against the sample value rather than
+  against its distance from silence. Every sample of an eight bit wave therefore
+  cleared any limit below half of full scale: a pulse train with a duty cycle of
+  0.1 measured 1 at every limit up to 0.5, and 0.1 at 0.6 only because the
+  threshold happened to land between the silence and the signal. The same train
+  at 16 bit, 24 bit and floating point measured 0.1 throughout.
+  The limit is now a proportion of the largest excursion from silence the
+  format allows, 127 either side of 128 for eight bit, and is compared against
+  each sample's distance from silence, so one recording held at several depths
+  gives one duty cycle. Nothing changes for a signed or floating point wave,
+  whose silence is zero and whose excursion is full scale.
 - pulseIntervals() returned intervals that hold a pulse rather than areas of no
   pulses. Each interval started at the preceding pulse's onset rather than at its
   offset, so the whole of that pulse fell inside the interval, an error of one
@@ -824,6 +855,65 @@
   record of it having happened before. A comment cut short, as a version 1 ID3
   tag cuts one at 30 bytes, reports nothing unparsed: what is past the cut is
   absent from the file rather than unread.
+- Normalising something that is entirely zero gave NaN without a word.
+  ntd(normalise=TRUE) divides its outputs by their total and
+  normaliseSpectrum() divides the amplitudes by the largest of them, and
+  neither total can be anything but zero when its input is nothing, so digital
+  silence, a function returning zero for every interval, or a zero-valued
+  spectrum gave NaN throughout in place of the probability density and the
+  normalised spectrum they document. Both now return their input unnormalised
+  and warn, a silent window inside a long recording being ordinary rather than
+  a reason to abandon a batch. The ntd guard tests the total rather than the
+  outputs, so outputs of opposite sign that cancel to zero are caught too,
+  where they gave Inf rather than NaN. A total that is NA is still divided: an
+  output a function could not measure is a different matter from a total of
+  nothing.
+- validateSpectrum() tested amplitudes with is.na(), which is TRUE of NaN as
+  well as NA, so every NaN was replaced with zero under the rule that an
+  unknown amplitude can stand as zero, whatever coerceNA was set to, and a
+  failed calculation reached the caller as a measurement: addSpectra() of two
+  spectra of NaN returned a silent spectrum as though it were their sum. NaN is
+  a calculation that produced no number rather than an unknown value, and there
+  is nothing for it to stand in for, so it is now reported. This surfaces one
+  real case rather than swallowing it: seewave::spec() divides by its own
+  largest amplitude, so the spectrum of a silent recording is NaN throughout,
+  and a recording that measured nothing was indistinguishable from one that
+  measured silence.
+- ntd() cut each interval inclusive of both its ends, so an interval of n
+  samples was cut as n+1 and every boundary sample was measured in the interval
+  before it as well as the one after. On a wave of 1:21 with events at 1, 11 and
+  21 the interval sums came to 242 where the samples between the first and last
+  event come to 210. The intervals are now half open, running from one event up
+  to the sample before the next, which is the convention windowing() cuts its
+  windows with, so they partition the signal; the sample at the last event falls
+  outside them all, being the onset of the interval that follows the ones
+  measured. Every number ntd() returned for a length- or energy-like function
+  moves with this, an interval being one sample shorter, which for the pulse
+  trains the function exists to measure, where an interval may be a few tens of
+  samples, is a few percent. Events that do not increase are now an error:
+  out of order they gave the samples between two events as an interval that
+  overlapped its neighbours, and two events at the same sample gave a one-sample
+  interval that bounds nothing.
+- defaultCluster() gave its workers no random number stream, so each one seeded
+  itself from its own entropy: a windowed analysis using randomness gave
+  different numbers on every run and set.seed() in the session could not reach
+  them. Windowing a 400 sample wave into four windows and summing ten samples
+  drawn from each gave `63892 32186 39956 -11508` under seed 42 and
+  `4574 -130702 143999 13175` under the same seed on the next run. A result
+  that cannot be reproduced cannot be published, and generateNoise() and
+  generateTimeMask(method="random") are what a window is likely to be asked
+  for. The workers are now given parallel random number streams, drawn from
+  the session's own random number state where no seed is given, so set.seed()
+  before the call fixes them, and that state and the session's generator are
+  left as they were found. A `seed` argument seeds the streams directly,
+  without touching the session's.
+
+  The streams are one per worker, so which worker computes a window decides
+  which numbers it draws: reproducing a result needs a cluster of the same size
+  as well as the same seed, and the four windows above gave
+  `47159 -14504 52112 -929` on two workers and `47159 52112 10857 103662` on
+  four. windowing() without a cluster draws from the session's own stream,
+  which set.seed() already fixed, and so gives numbers of its own again.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes
@@ -1216,6 +1306,23 @@
   the two disagree they returned the phases of the wrong day. A recording made at
   08:00 in Sydney, which is 21:00 the day before in UTC, was given the previous
   day's phases.
+- dayPhases() filed a solar event near local midnight under the wrong date on
+  every daylight-saving transition. The first instant of the day, which bounds
+  the window deciding which events belong to it, was found by taking twelve hours
+  off local noon, and taking them in real time: there are not twelve real hours
+  between midnight and noon on a 23- or 25-hour day, so the window opened at
+  23:00 the evening before every spring and an hour into the day every autumn. At
+  20 degrees north and 100 east, where the sun rises at a quarter past six by its
+  own local time, the sunrise of 30 March 2024 reads 23:15 in London and was
+  reported as the sunrise of 31 March, a day on which no sunrise falls in London
+  time at all; five degrees further east the sunrise of 27 October, which reads
+  00:00 that morning, was reported as not happening. The day now begins at the
+  instant the local clock first reads as being on it, which is midnight where the
+  clock reaches it and the moment the clock jumps where it does not: in Cuba and
+  Chile, where daylight saving begins at midnight, the day's first reading is
+  01:00, and where the clock reaches midnight twice the first of the two is taken.
+  A date the clock skipped altogether, as Samoa's did in crossing the date line,
+  holds no part of the run of time rather than being read as NA.
 - dayPhase() dropped every phase bounded by a solar event that does not occur at
   the latitude and date asked for, so a recording made during such a phase was
   reported as belonging to no phase at all and nothing said so. At the default
@@ -1232,6 +1339,25 @@
   that event left it: the midnight sun begins with the sun's disc touching the
   horizon, which is the Sunset phase, and then climbs away from it for weeks, and
   is reported as Day.
+- dayPhase() named every phase it took from the sun's altitude for the evening,
+  so a polar twilight was a dusk however the sun was heading. At 89.9 degrees
+  north the sun climbs from 18 degrees below the horizon on 29 January 2024 to 6
+  below on 5 March without crossing a threshold in between, and those five weeks
+  of brightening twilight, which is a dawn five weeks long, were reported as
+  Dusk.Astro; anything sorting recordings into dawns and dusks had the whole of
+  it in the wrong half of the day. Five of the ten names a day has could not be
+  returned that way at all. The direction the sun is heading is now taken from
+  its altitude at the two ends of the stretch and the dawn names are used where
+  it is climbing. A stretch that ends where it began is as much one as the other
+  and keeps the dusk name.
+  The altitudes the bands begin at are now the ones the events themselves are
+  taken at, so that the two ways of naming a phase agree. Day begins where
+  `sunriseEnd` puts it, three tenths of a degree below the horizon, where the band
+  table began it at the horizon and so called a sun at two tenths below
+  Dusk.Civil although the event path called it Day; and Sunrise and Sunset, which
+  the band table could not return either, are the names for a sun between three
+  tenths and five sixths of a degree below the horizon, which is the time its
+  disc is crossing it.
 - dayPhase() and dayPhases() dropped the moon's interval wherever the moon did not
   set on the day it rose or the day after, which at high latitudes it does not for
   days on end, and dayPhase() also missed moonlight that began before the days it
@@ -1766,6 +1892,19 @@
   `output`, and its example called it by a name it does not have.
 
 ## Internal
+- roxygenise() corrupted the help page for `*` on a PseudoWave, so
+  regenerating the documentation committed a wrong formula. The package
+  builds its documentation with markdown, where a pair of asterisks with no
+  space after the opening one marks emphasis, and the arithmetic was written
+  as `(g * a*e2) + b*e2`: the `a*e2) + b*` in the middle of it was read as
+  emphasis and the page was written as `(g * a\emph{e2) + b}e2`. The
+  committed page was correct, so this appeared only in the diff of whoever
+  next regenerated it, as a change to a file they had not meant to touch.
+  Every multiplication in that paragraph is now written with a space either
+  side, which cannot open emphasis and matches how the same sentence already
+  wrote the others. No help page in the package drifts on regeneration now,
+  so a second roxygenise() writes nothing and man/ is reproducible from
+  source.
 - directionPlot() named its columns with aes_string(), deprecated since ggplot2
   3.0.0, and drew the mean direction against the whole of the plot's data, which
   ggplot2 warned about on every call. Both are now written as the rest of the

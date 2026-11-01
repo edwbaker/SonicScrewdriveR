@@ -14,7 +14,7 @@ upsample(wave, upsample.rate, method = "basic")
 \item{method}{"basic" for linear, or a function to interpolate NAs in a vector}
 }
 \value{
-A resampled Wave object
+A resampled Wave object of the same format as the input
 }
 \description{
 Used to upsample a Wave object. The upsampled sample rate must be an natural multiple
@@ -23,6 +23,10 @@ of the current sample rate.
 \details{
 Applied to a \code{TaggedWave} the call is recorded in the \code{processing} slot of
 the result, as described in \code{\link[=tagApply]{tagApply()}}.
+
+Interpolation between two samples lands between them, so where the wave
+declares integer PCM the interpolated samples are rounded to whole numbers.
+A floating point wave is interpolated without rounding.
 }
 \examples{
 wave <- tuneR::sine(4000, samp.rate=44100)

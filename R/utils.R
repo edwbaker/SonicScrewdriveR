@@ -71,6 +71,10 @@
 #' between -1 and 1 whatever its bit slot says. Reading the bit slot alone gives
 #' 2^32 for the floating point waves that tuneR creates for bit=1.
 #'
+#' This is the largest sample value, not the largest excursion from silence, and
+#' the two differ for eight bit PCM. A level expressed as a proportion wants
+#' `.waveFullExcursion()` below.
+#'
 #' @param w A Wave or WaveMC object.
 #' @return The largest positive sample value the format allows.
 #' @noRd
@@ -82,6 +86,44 @@
     return(1)
   }
   return(2^(w@bit - 1) - 1)
+}
+
+#' Sample value a wave of a given format holds where there is silence
+#'
+#' Eight bit PCM is unsigned about a midpoint of 128. Every other format the
+#' package handles is signed about zero, so this is zero for all of them.
+#' normalize() from tuneR keeps an eight bit wave about that midpoint, so the
+#' centre is the same before and after normalising.
+#'
+#' @param w A Wave or WaveMC object.
+#' @return The sample value that stands for silence.
+#' @noRd
+.waveCentre <- function(w) {
+  if (w@pcm && w@bit == 8) {
+    return(128)
+  }
+  return(0)
+}
+
+#' Largest excursion from silence a wave of a given format may hold
+#'
+#' `.waveFullScale()` gives the largest sample value, which for eight bit PCM is
+#' the whole unsigned span rather than the distance from its midpoint to either
+#' end. Reading a level as a proportion of the span rather than of the excursion
+#' halves every amplitude and so quarters every power, and compares a threshold
+#' against samples that never fall below 128.
+#'
+#' @param w A Wave or WaveMC object.
+#' @return The largest excursion from `.waveCentre()` the format allows.
+#' @noRd
+.waveFullExcursion <- function(w) {
+  if (w@pcm && w@bit == 8) {
+    #Eight bit reaches 128 below its midpoint but only 127 above it, so the peak
+    #either side is 127: the value generateNoise() scales noise to, and the one
+    #.bandPSD() divides a centred eight bit wave by.
+    return(127)
+  }
+  return(.waveFullScale(w))
 }
 
 #' Samples of a Wave-like object as a matrix

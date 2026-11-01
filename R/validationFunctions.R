@@ -276,6 +276,15 @@ validateSpectrum <- function(s, coerceNegative=FALSE, coerceNA = TRUE) {
   if (nrow(s) < 1) {
     stop("Spectrum must have one or more rows.")
   }
+  #is.na() is TRUE of NaN as well as NA, so the rule below for an unknown
+  #amplitude took in NaN too and replaced it with zero. NaN is not an unknown
+  #value but a calculation that produced no number - dividing by a total or a
+  #largest bin of zero, say - and there is nothing for it to stand in for.
+  #Coercing it presented a failed calculation to the caller as a measurement,
+  #so it is reported however coerceNA is set.
+  if (any(is.nan(s))) {
+    stop("No NaN values allowed in spectra.")
+  }
   na <- is.na(s)
   if (any(na)) {
     if (!coerceNA) {
