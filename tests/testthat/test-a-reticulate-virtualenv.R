@@ -64,6 +64,49 @@ test_that("an environment is not created behind the user's back", {
   )
 })
 
+test_that("only a yes to the prompt installs the environment", {
+  skip_if_not_installed("reticulate")
+  #askYesNo() returns NA where the prompt is cancelled, which aborted with R's
+  #own message, and its default where nothing answers, which was TRUE.
+  required <- "The `sonicscrewdriver` environment is required to use maad functions in sonicscrewdriver."
+  answers <- list(FALSE, NA)
+  for (answer in answers) {
+    local_mocked_bindings(
+      package.installed = function(name, ...) TRUE,
+      .canAsk = function() TRUE,
+      askYesNo = function(msg, ...) answer
+    )
+    expect_error(pythonInstall(), required, fixed=TRUE)
+  }
+
+  default <- NULL
+  local_mocked_bindings(
+    package.installed = function(name, ...) TRUE,
+    .canAsk = function() TRUE,
+    askYesNo = function(msg, default=TRUE, ...) {
+      default <<- default
+      NA
+    }
+  )
+  expect_error(pythonInstall(), required, fixed=TRUE)
+  expect_false(default)
+
+  #A yes goes on to the environment, which is reported here rather than
+  #installed into.
+  local_mocked_bindings(
+    package.installed = function(name, ...) TRUE,
+    .canAsk = function() TRUE,
+    askYesNo = function(msg, ...) TRUE
+  )
+  testthat::local_mocked_bindings(
+    virtualenv_exists=function(...) TRUE,
+    virtualenv_python=function(...) file.path(tempdir(), "no-such-python"),
+    virtualenv_install=function(...) stop("the install was reached"),
+    .package="reticulate"
+  )
+  expect_error(pythonInstall(), "pip in the `sonicscrewdriver` environment cannot be imported")
+})
+
 test_that("a locale is only set where the environment names none", {
   withr::with_envvar(c(LC_ALL=NA, LC_CTYPE=NA, LANG="en_GB.UTF-8"), {
     #A locale the user has chosen is left alone.

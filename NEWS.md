@@ -1290,6 +1290,11 @@
   reached makeCluster() and failed there with "numeric 'names' must be >= 1",
   naming neither the function nor the cores. Such a machine now gets a cluster
   of one.
+- pythonInstall() failed with "missing value where TRUE/FALSE needed" when its
+  prompt was cancelled, as `askYesNo()` returns NA for that, and went ahead
+  with the install where the prompt was put but nothing answered it, as
+  `askYesNo()` then returns its default of yes. A cancelled or unanswered
+  prompt now declines, with the message a no gives.
 - pythonInstall() stopped with "the condition has length > 1", which names
   neither Python nor pip, where the pip of an existing `sonicscrewdriver`
   environment could not be imported. reticulate asks pip for its version before

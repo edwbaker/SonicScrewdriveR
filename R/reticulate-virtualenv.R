@@ -16,8 +16,13 @@ pythonInstall <- function(unattended=FALSE) {
     stop("The reticulate package is required to create the `sonicscrewdriver` environment.")
   }
 
-  if (!unattended & interactive()) {
-    if (!utils::askYesNo("Do you want to install the sonicscrewdriver environment?")) {
+  if (!unattended & .canAsk()) {
+    #askYesNo() returns NA where the prompt is cancelled, and if () of it
+    #aborted with R's own "missing value where TRUE/FALSE needed". A cancelled
+    #prompt is not consent, and nor is one nothing answers, where askYesNo()
+    #returns its default: that was TRUE, so the install went ahead.
+    answer <- askYesNo("Do you want to install the sonicscrewdriver environment?", default=FALSE)
+    if (!isTRUE(answer)) {
       stop("The `sonicscrewdriver` environment is required to use maad functions in sonicscrewdriver.")
     }
   } else {
