@@ -82,6 +82,23 @@ test_that("The time is read as written, including a 12-hour clock", {
   expect_equal(format(n("06:10:00 AMh, 1991-02-04")), "1991-02-04 06:10:00")
 })
 
+test_that("A time written without the h after it keeps its date", {
+  # The field was split on "h,", so without the h both the time and the date
+  # were the whole field, and the record had no datetime.
+  pm <- xc(when = "2:00 pm, 2019-05-01")
+  expect_equal(pm$time, "2:00 pm")
+  expect_equal(pm$date, "2019-05-01")
+  expect_equal(
+    format(sonicscrewdriver:::.mdNormaliseXenoCanto(pm)$datetime),
+    "2019-05-01 14:00:00"
+  )
+  expect_equal(xc(when = "06:30, 2019-05-01")$time, "06:30")
+
+  # With the h, the time is read as it always was.
+  expect_equal(xc(when = "2:00 pmh, 2012-04-01")$time, "2:00 pm")
+  expect_equal(xc(when = "07:00 h, 2006-05-05")$time, "07:00")
+})
+
 test_that("A time the recordist left unsaid gives no datetime, and keeps the date", {
   for (when in c("?h, 1995-03-25", "?:?h, 2003-12-30", "xx:xxh, 2004-01-02",
                  "amh, 2009-04-14", "10;45amh, 2008-09-15")) {
