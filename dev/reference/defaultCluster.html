@@ -58,7 +58,7 @@ Hence, the fork parameter has no effect on Windows.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">defaultCluster</span><span class="op">(</span>fork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">defaultCluster</span><span class="op">(</span>fork <span class="op">=</span> <span class="cn">TRUE</span>, seed <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,10 +68,29 @@ Hence, the fork parameter has no effect on Windows.</p>
 <dl><dt id="arg-fork">fork<a class="anchor" aria-label="anchor" href="#arg-fork"></a></dt>
 <dd><p>If TRUE uses forking to create the cluster (Unix like systems only)</p></dd>
 
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>An integer to seed the workers' random number streams with, or
+NULL (default) to take them from the session's own random number state.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A cluster object for parallel processing</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The workers are given parallel random number streams, so that a windowed
+analysis that uses randomness can be run again and give the same numbers.
+Without them each worker seeds itself from its own entropy and <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code>
+in the session cannot reach it, so the analysis gives different numbers on
+every run. Where <code>seed</code> is NULL the streams are drawn from the session's own
+random number state, so <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the call fixes them, and that
+state and the session's generator are left as they were found.</p>
+<p>The streams are one per worker, so which worker computes a window decides
+which numbers it draws: reproducing a result needs a cluster of the same
+size as well as the same seed, and the same result cannot be expected of
+<code><a href="windowing.html">windowing()</a></code> without a cluster, which draws from the session's own stream.</p>
     </div>
 
     <div class="section level2">
@@ -80,6 +99,14 @@ Hence, the fork parameter has no effect on Windows.</p>
 <span class="r-in"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">defaultCluster</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">stopCluster</span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">defaultCluster</span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">stopCluster</span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The same numbers on every run, from the session's seed or from the</span></span></span>
+<span class="r-in"><span><span class="co"># cluster's own.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">defaultCluster</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">stopCluster</span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">defaultCluster</span><span class="op">(</span>seed<span class="op">=</span><span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">stopCluster</span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
