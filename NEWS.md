@@ -1969,6 +1969,12 @@
   3.0.0, and drew the mean direction against the whole of the plot's data, which
   ggplot2 warned about on every call. Both are now written as the rest of the
   package writes them, and the plot is drawn without warnings.
+- cleanTZ() turned a UTC offset into the `Etc/GMT` zone of the opposite sign:
+  "UTC+1" became `Etc/GMT+1`, which is an hour behind UTC rather than ahead of
+  it, so a time read in it was two hours out, and one read for "UTC-5" ten. The
+  `Etc/GMT` zones take the sign of a POSIX TZ string, the reverse of the offset
+  they look like, and the sign is now reversed to match. Nothing in the package
+  calls cleanTZ() yet.
 - Tests were added for the parts of the package that had none: readBirdNet(),
   gs_transcribe() and the Google Speech wrappers, labelPadding() and
   labelReduction(), directionPlot(), beatSpectrum() and beatComplexity(),
