@@ -25,13 +25,17 @@ upsample(wave, upsample.rate, method = "basic")
 
 ## Value
 
-A resampled Wave object
+A resampled Wave object of the same format as the input
 
 ## Details
 
 Applied to a `TaggedWave` the call is recorded in the `processing` slot
 of the result, as described in
 [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
+
+Interpolation between two samples lands between them, so where the wave
+declares integer PCM the interpolated samples are rounded to whole
+numbers. A floating point wave is interpolated without rounding.
 
 ## Examples
 
