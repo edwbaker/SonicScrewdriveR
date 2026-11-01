@@ -1,12 +1,15 @@
 #Band-limited noise rather than a tone: a tone occupies a single spectrum bin, so
 #it has no measurable bandwidth for the filter to be built from. The strong band
 #is the one the filter should choose, the weak band the one it should discard.
+#seewave's ffilter() returns what it passes at one part in its window length of
+#the level it had, so the bands are scaled back by that length. Left at a few
+#units, a band filtered again and rounded to 16 bit came back as mostly zeros.
 bandWave <- function(samp.rate=8000, seconds=1, strong=c(1800, 2200), weak=c(3200, 3600)) {
   set.seed(42)
   noise <- tuneR::Wave(round(10000*rnorm(samp.rate*seconds)), samp.rate=samp.rate, bit=16)
   loud <- seewave::ffilter(noise, from=strong[1], to=strong[2], output="Wave")
   quiet <- seewave::ffilter(noise, from=weak[1], to=weak[2], output="Wave")
-  tuneR::Wave(round(loud@left + 0.1*quiet@left), samp.rate=samp.rate, bit=16)
+  tuneR::Wave(round(1024*(loud@left + 0.1*quiet@left)), samp.rate=samp.rate, bit=16)
 }
 
 #A pure tone, which falls in a single bin of the spectrum and so has no
@@ -224,7 +227,7 @@ otherBandWave <- function(samp.rate=8000, seconds=1, strong=c(3200, 3600)) {
   set.seed(7)
   noise <- tuneR::Wave(round(10000*rnorm(samp.rate*seconds)), samp.rate=samp.rate, bit=16)
   loud <- seewave::ffilter(noise, from=strong[1], to=strong[2], output="Wave")
-  tuneR::Wave(round(loud@left), samp.rate=samp.rate, bit=16)
+  tuneR::Wave(round(1024*loud@left), samp.rate=samp.rate, bit=16)
 }
 
 test_that("a stereo wave keeps both of its channels", {
@@ -314,4 +317,27 @@ test_that("the tagged classes keep their channels and their record", {
   expect_s4_class(taggedMC, "TaggedWaveMC")
   expect_equal(ncol(taggedMC@.Data), 2)
   expect_equal(length(taggedMC@processing), 1)
+})
+
+test_that("the band kept keeps the level it had", {
+  # seewave's ffilter() returns what it passes at one part in its window length
+  # of the level it had, so the band came back 60 dB down and, rounded to 16
+  # bit PCM, as little more than zeros.
+  # The band kept runs from about 1.98 to 2.14 kHz, so this is inside it.
+  wave <- bandWave()
+  filtered <- autoBandPass(wave)
+  expect_equal(bandEnergy(filtered, 2.0, 2.12) / bandEnergy(wave, 2.0, 2.12), 1, tolerance=0.1)
+})
+
+test_that("a mono wave comes back in the format it was given", {
+  # seewave returns 16 bit PCM whatever it is given, and a mono wave was
+  # returned as seewave left it.
+  wave <- bandWave()
+  deep <- autoBandPass(tuneR::Wave(wave@left * 256, samp.rate=wave@samp.rate, bit=24))
+  expect_equal(deep@bit, 24)
+  expect_true(all(deep@left == round(deep@left)))
+
+  float <- autoBandPass(tuneR::Wave(wave@left / 32768, samp.rate=wave@samp.rate, bit=32, pcm=FALSE))
+  expect_equal(float@bit, 32)
+  expect_false(float@pcm)
 })

@@ -33,6 +33,10 @@ setClass(
 #'
 #' Supported filters include those from the seewave package.
 #'
+#' The result has the format of the input, with the filtered samples rounded to
+#' whole numbers where that is integer PCM. Every channel is filtered, and eight
+#' bit PCM is filtered about its midpoint of 128.
+#'
 #' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 #' `processing` slot of the result, as described in [tagApply()]. The settings
 #' of the filter are its arguments, so two runs of the same filter at different
@@ -80,10 +84,7 @@ filterWave <- function(w, filt, cl=NULL) {
 #' @noRd
 .applyFilter <- function(filt) {
   function(.wave, ...) {
-    if (.useAllChannels(.wave)) {
-      return(.filterAllChannels(.wave, filt))
-    }
-    return(do.call(match.fun(filt@func), c(list(.wave), list(...))))
+    return(.filterAllChannels(.wave, filt))
   }
 }
 
@@ -109,6 +110,10 @@ filterWave <- function(w, filt, cl=NULL) {
 #' This is a simple wrapper function to the seewave ffilter function allowing its
 #' use with filterw and pipes.
 #'
+#' The frequencies the filter passes keep the level they had. ffilter returns
+#' its output at one part in `wl` of the input's level, 1024 by default, unless
+#' asked to rescale it, so the output is scaled back by `wl`.
+#'
 #' @param from Bottom of bandpass frequency (Hz).
 #' @param to Top of bandpass frequency (Hz).
 #' @param ... Further arguments to pass to ffilter.
@@ -125,42 +130,69 @@ bandpass <- function( from, to, ...) {
   if (!package.installed("seewave")) {
     stop("seewave package is required for the bandpass WaveFilter.")
   }
-  filt <- new("WaveFilter", func=seewave::ffilter, params=list(from=from,to=to,output="Wave",...))
+  filt <- new("WaveFilter", func=.ffilterUnityGain, params=list(from=from,to=to,...))
   return(filt)
 }
 
-#' Apply a filter to every channel of a multi-channel wave
+#' seewave's ffilter() with the level of the frequencies it passes kept
+#'
+#' ffilter() takes its short-term Fourier transform scaled by the window length
+#' and inverts it unscaled, so what it passes comes back at one part in `wl` of
+#' its level: a full scale 16 bit tone filtered to a peak of 32. Rounded to the
+#' format of the input, a recording peaking at -30 dBFS filtered to zeros in
+#' 99.98% of its samples, and eight bit audio to zeros throughout. The output is scaled back by the
+#' window length, unless ffilter was asked to rescale it to the range of the
+#' input itself. A Wave is always asked for, as the level is put back on its
+#' samples.
+#'
+#' @param wave A Wave object.
+#' @param ... Further arguments to ffilter(), other than its output.
+#' @param wl,rescale As for ffilter(), whose defaults they repeat so that the
+#'   output is scaled by the window length it was filtered with.
+#' @return The filtered Wave object.
+#' @noRd
+.ffilterUnityGain <- function(wave, ..., wl=1024, rescale=FALSE) {
+  filtered <- seewave::ffilter(wave, ..., wl=wl, rescale=rescale, output="Wave")
+  if (!rescale) {
+    filtered@left <- filtered@left * wl
+  }
+  return(filtered)
+}
+
+#' Apply a filter to every channel of a wave
 #'
 #' The filters read the left slot of a Wave, so passing a stereo Wave or a WaveMC
 #' straight to one returned only its first channel, silently discarding the rest.
 #' Each channel is filtered separately and the results put back together.
 #'
-#' @param w A stereo Wave or a WaveMC object.
+#' A filter returns a wave of its own format, which for seewave is 16 bit PCM
+#' whatever it was given, and samples that are not whole. The result is put back
+#' in the format of the input, rounded where that is integer PCM, by
+#' `.rebuildWave()`. A mono wave is filtered here too, so that it is returned in
+#' the format it came in rather than in seewave's.
+#'
+#' Eight bit PCM is unsigned about a midpoint of 128. A filter passing nothing at
+#' 0 Hz removes that offset with the rest of the lowest frequencies, which left
+#' the filtered samples either side of zero in a format running from 0 to 255.
+#' The excursion from the midpoint is filtered instead, and the midpoint put
+#' back afterwards.
+#'
+#' @param w A Wave or WaveMC object.
 #' @param filt A WaveFilter object.
-#' @return A wave of the same class and channel count as the input.
+#' @return A wave of the same class, format and channel count as the input.
 #' @noRd
 .filterAllChannels <- function(w, filt) {
+  centre <- .waveCentre(w)
   filtered <- allChannels(
     w,
-    function(channel) do.call(match.fun(filt@func), c(list(channel), filt@params)),
+    function(channel) {
+      channel@left <- channel@left - centre
+      do.call(match.fun(filt@func), c(list(channel), filt@params))
+    },
     channel.param = NULL
   )
   #allChannels() wraps a result that is not a list in one.
   filtered <- lapply(filtered, function(x) if (is.list(x)) x[[1]] else x)
 
-  if (inherits(w, "WaveMC")) {
-    return(tuneR::WaveMC(
-      do.call(cbind, lapply(filtered, function(x) x@left)),
-      samp.rate = w@samp.rate,
-      bit = w@bit,
-      pcm = w@pcm
-    ))
-  }
-  return(tuneR::Wave(
-    left = filtered[[1]]@left,
-    right = filtered[[2]]@left,
-    samp.rate = w@samp.rate,
-    bit = w@bit,
-    pcm = w@pcm
-  ))
+  return(.rebuildWave(do.call(cbind, lapply(filtered, function(x) x@left)) + centre, w))
 }

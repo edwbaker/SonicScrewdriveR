@@ -22,6 +22,10 @@ Creates a band pass WaveFilter between values specified to a Wave object.
 \details{
 This is a simple wrapper function to the seewave ffilter function allowing its
 use with filterw and pipes.
+
+The frequencies the filter passes keep the level they had. ffilter returns
+its output at one part in \code{wl} of the input's level, 1024 by default, unless
+asked to rescale it, so the output is scaled back by \code{wl}.
 }
 \examples{
 \dontrun{

@@ -500,6 +500,30 @@
   wave is interpolated without rounding, its samples being the values they say
   they are. A function given as the method is held to the format in the same
   way.
+- filterWave() and autoBandPass() returned what they passed at one part in
+  1024 of the level it had, in samples that were not whole, in a wave that
+  still declared the input's integer PCM format. ffilter() from seewave takes
+  its short-term Fourier transform scaled by the window length and inverts it
+  unscaled, so a full scale 16 bit tone came back with a peak of 32, and
+  writeWave() rounded the result with only its generic warning: a 16 bit
+  recording peaking at -30 dB full scale, passed between 1 and 8 kHz, was
+  written as zeros in 99.98% of its samples. The output of bandpass() is now
+  scaled back by the window length it was filtered with, unless ffilter() was
+  asked to rescale it, so a tone in the band keeps its level to within 1% at
+  the default settings, and it is rounded to whole numbers where the input is
+  integer PCM; the same recording now has 0.7% of its samples at zero.
+  Filtered audio is therefore about 60 dB louder than it was. A filter can ring
+  past the level it was given: a full scale square wave low passed at 1 kHz
+  peaks at 38545, beyond what 16 bit can hold, and writeWave() refuses such a
+  wave with its advice to see `?normalize`, as it does any other.
+
+  A mono wave came back in the format seewave gives, 16 bit PCM whatever it was
+  given, so a floating point wave declared integer PCM and a 24 bit wave
+  declared 16 bit. It is now returned in the format it came in, as a stereo
+  Wave and a WaveMC already were. Eight bit PCM, which is unsigned about a midpoint of
+  128, is filtered about that midpoint: a band pass removed the offset with the
+  rest of the lowest frequencies, and left the samples either side of zero in a
+  format running from 0 to 255.
 - dutyCycle() counted an eight bit recording's silence as signal. Eight bit PCM
   is unsigned about a midpoint of 128, so `abs(wave@left)` read its silence as
   128 and the threshold was compared against the sample value rather than
