@@ -9,7 +9,7 @@ of automated identification algorithms to noise.
 generateNoise(
   wave,
   noise = c("white"),
-  noise.add = FALSE,
+  noise.add = TRUE,
   noise.ratio = 0.5,
   noise.ref = "file",
   output = "list"
@@ -29,8 +29,9 @@ generateNoise(
 
 - noise.add:
 
-  If TRUE all noise sources are added to wave. If FALSE separate outputs
-  are created for each noise source.
+  If TRUE, the default, the noise sources are summed and the sum added
+  to the wave. If FALSE each source is added to the wave on its own, and
+  a list of waves is returned, one for each source.
 
 - noise.ratio:
 
@@ -47,7 +48,9 @@ generateNoise(
 
 ## Value
 
-A list of Wave objects with the required noise added.
+The wave with the noise added, or a list of waves: one for each noise
+source where `noise.add` is FALSE and there is more than one, and one
+for each wave where a list of waves is given.
 
 ## Details
 
