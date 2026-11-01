@@ -16,19 +16,22 @@
 #' @param wave Object to add noise to (`Wave`, `WaveMC`, or Tagged versions), or
 #'   a list of such objects.
 #' @param noise Vector of noise to add (unif, gaussian, white, pink, power, red)
-#' @param noise.add If TRUE all noise sources are added to wave. If FALSE
-#'   separate outputs are created for each noise source.
+#' @param noise.add If TRUE, the default, the noise sources are summed and the
+#'   sum added to the wave. If FALSE each source is added to the wave on its own,
+#'   and a list of waves is returned, one for each source.
 #' @param noise.ratio Ratio of maximum noise amplitude to the maximum amplitude in wave.
 #' @param noise.ref Reference maximum for noise.ratio. If "max" then the maximum
 #'   amplitude, if "file" then the maximum amplitude of wave.
 #' @param output TODO: Is this implemented?
-#' @return A list of Wave objects with the required noise added.
+#' @return The wave with the noise added, or a list of waves: one for each noise
+#'   source where `noise.add` is FALSE and there is more than one, and one for
+#'   each wave where a list of waves is given.
 #' @export
 #'
 generateNoise <- function(
   wave,
   noise = c("white"),
-  noise.add = FALSE,
+  noise.add = TRUE,
   noise.ratio=0.5,
   noise.ref="file",
   output = "list"
@@ -42,6 +45,13 @@ generateNoise <- function(
     } else {
       stop("wave must be a Wave like object, or a list of such objects.")
     }
+  }
+  #noise.add was never read, so several sources were always summed, while the
+  #documented default of FALSE promised an output for each. The default is now
+  #TRUE, which is what every call already got, and FALSE gives what it promised:
+  #each source added on its own, and recorded as a call of its own.
+  if (!noise.add && length(noise) > 1) {
+    return(lapply(noise, function(n) generateNoise(wave, n, TRUE, noise.ratio, noise.ref, output)))
   }
   return(.tagApplyOne(
     wave, .generateNoise, "generateNoise", NULL, FALSE,

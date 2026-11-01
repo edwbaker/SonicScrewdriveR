@@ -1362,6 +1362,14 @@
   came back as NaN. They are now read as zero, with a warning saying how many.
   Infinite samples read through the av package were already turned into zeroes
   but are now reported as well.
+- generateNoise() never read `noise.add`, so several noise sources were always
+  summed into one wave, although the documented default of FALSE promised an
+  output for each source. The default is now TRUE, which is what every call
+  already got, so nothing changes unless `noise.add=FALSE` is given. With FALSE
+  and more than one source, a list is returned of the wave with each source
+  added on its own, each recorded as a call of its own on a tagged wave. A call
+  that passed FALSE and relied on the sum, as four tests here did, now gets a
+  list: pass TRUE, or leave it out, for the sum.
 - generateNoise() could send samples outside the range the format holds. The
   noise was scaled by its largest positive sample rather than by its largest
   either way, so noise with a deeper trough than peak went past the level asked
