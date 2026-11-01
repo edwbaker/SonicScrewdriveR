@@ -27,7 +27,9 @@ test_that("Handles Inf correctly", {
 
 test_that("cutws returns a WaveMC object for WaveMC input", {
   w <- tuneR::sine(1000, duration=100, samp.rate=8000)
-  mc <- tuneR::WaveMC(cbind(w@left, w@left, w@left), samp.rate=8000, bit=16)
+  #A sine from tuneR is floating point, and declared as 16 bit PCM its samples
+  #would be rounded to whole numbers by the cut.
+  mc <- tuneR::WaveMC(cbind(w@left, w@left, w@left), samp.rate=8000, bit=32, pcm=FALSE)
   colnames(mc@.Data) <- c("A", "B", "C")
 
   cut <- cutws(mc, from=51, to=60)

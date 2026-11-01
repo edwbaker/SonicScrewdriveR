@@ -37,16 +37,11 @@ ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {
    #included, so an interval of n samples was cut as n+1 and every boundary
    #sample was measured in the interval before it as well as the one after.
    #
-   #pcm is carried over with bit. Left to tuneR's default of TRUE, a float wave
-   #reached FUN declaring itself integer PCM, so anything reading the format
-   #worked from a full scale 2^31 times too large, and a 64 bit float wave
-   #failed tuneR's validity rule outright.
-   wave_event <- tuneR::Wave(
-     wave@left[events[i]:(events[i+1]-1)],
-     samp.rate=wave@samp.rate,
-     bit=wave@bit,
-     pcm=wave@pcm
-   )
+   #pcm is carried over with bit, by .rebuildWave(). Left to tuneR's default of
+   #TRUE, a float wave reached FUN declaring itself integer PCM, so anything
+   #reading the format worked from a full scale 2^31 times too large, and a 64
+   #bit float wave failed tuneR's validity rule outright.
+   wave_event <- .rebuildWave(wave@left[events[i]:(events[i+1]-1)], wave)
    if (argument=="wave") {
      Fk[i] <- do.call(FUN, c(list(wave=wave_event),...))
    }

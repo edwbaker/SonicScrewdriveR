@@ -25,6 +25,10 @@ to a Wave in a pipeline.
 \details{
 Supported filters include those from the seewave package.
 
+The result has the format of the input, with the filtered samples rounded to
+whole numbers where that is integer PCM. Every channel is filtered, and eight
+bit PCM is filtered about its midpoint of 128.
+
 Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
 \code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The settings
 of the filter are its arguments, so two runs of the same filter at different

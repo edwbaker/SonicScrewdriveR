@@ -34,6 +34,10 @@ input had. The band is measured per channel rather than once for the whole
 recording, because the channels of a recording need not hold the same signal
 and measuring one of them would choose the band for all the others.
 
+The band kept has the level it had in the input, and the result has the
+format of the input, with samples rounded to whole numbers where that is
+integer PCM.
+
 Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
 \code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}.
 }

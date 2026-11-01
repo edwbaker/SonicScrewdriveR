@@ -98,7 +98,7 @@ generateTimeShift <- function(
       ncol=ncol(wave@.Data),
       dimnames=list(NULL, colnames(wave@.Data))
     )
-    return(tuneR::WaveMC(data, samp.rate=wave@samp.rate, bit=wave@bit, pcm=wave@pcm))
+    return(.rebuildWave(data, wave))
   }
   return(tuneR::silence(
     duration = samples,

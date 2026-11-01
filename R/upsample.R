@@ -37,47 +37,18 @@ upsample <- function(wave, upsample.rate, method="basic") {
 #' @noRd
 .upsample <- function(wave, upsample.rate, method) {
   sf <- upsample.rate / wave@samp.rate
-  newleft <- .roundForPcm(.upsampleChannel(wave@left, sf, method), wave)
-
+  samples <- .upsampleChannel(wave@left, sf, method)
   if (wave@stereo) {
-    newright <- .roundForPcm(.upsampleChannel(wave@right, sf, method), wave)
-    return(stereo(
-      Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm),
-      Wave(newright, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm)))
+    samples <- cbind(samples, .upsampleChannel(wave@right, sf, method))
   }
-
-  return(Wave(newleft, samp.rate=upsample.rate, bit=wave@bit, pcm=wave@pcm))
-}
-
-#' Hold interpolated samples to the format the wave declares
-#'
-#' Interpolating between two samples of an integer PCM wave lands between them,
-#' and the result was rebuilt with the input's bit and pcm, so the wave declared
-#' a format its own samples could not be held in. tuneR's validity rules check
-#' the bit and pcm combination but not whether a PCM wave's samples are whole,
-#' so nothing complained: writeWave() rounded them with only its generic
-#' warning to show for it, and anything reading bit to work out full scale read
-#' a scale the data was not on.
-#'
-#' Rounding cannot carry a sample outside the range the input held. Linear
-#' interpolation returns convex combinations of two neighbouring samples, and
-#' the final sample is held rather than extrapolated, so every value already
-#' lies between two values the input held - including eight bit, where PCM is
-#' unsigned and runs from 0 to 255 rather than either side of zero.
-#'
-#' A floating point wave is left alone. Its samples are the values they say
-#' they are, and rounding them to whole numbers would leave -1, 0 and 1.
-#'
-#' @param channel The upsampled samples of one channel.
-#' @param wave The wave being upsampled, for the format it declares.
-#' @return The samples, whole where the wave declares integer PCM.
-#' @keywords internal
-#' @noRd
-.roundForPcm <- function(channel, wave) {
-  if (!wave@pcm) {
-    return(channel)
-  }
-  return(round(channel))
+  #Interpolating between two samples of an integer PCM wave lands between them,
+  #so .rebuildWave() rounds them to the format the wave declares. Rounding cannot
+  #carry a sample outside the range the input held. Linear interpolation returns
+  #convex combinations of two neighbouring samples, and the final sample is held
+  #rather than extrapolated, so every value already lies between two values the
+  #input held - including eight bit, where PCM is unsigned and runs from 0 to
+  #255 rather than either side of zero.
+  return(.rebuildWave(samples, wave, samp.rate=upsample.rate))
 }
 
 .upsampleChannel <- function(channel, sf, method) {

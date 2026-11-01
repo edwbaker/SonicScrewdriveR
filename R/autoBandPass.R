@@ -10,6 +10,10 @@
 #' recording, because the channels of a recording need not hold the same signal
 #' and measuring one of them would choose the band for all the others.
 #'
+#' The band kept has the level it had in the input, and the result has the
+#' format of the input, with samples rounded to whole numbers where that is
+#' integer PCM.
+#'
 #' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 #' `processing` slot of the result, as described in [tagApply()].
 #'
@@ -80,18 +84,16 @@ autoBandPass <- function(
   #discarded and a WaveMC had no left slot to read at all.
   #.filterAllChannels() measures and filters each channel on its own and puts
   #the channels back together, restoring the sample rate, bit depth and pcm flag
-  #that seewave does not carry through.
-  if (.useAllChannels(wave)) {
-    return(.filterAllChannels(
-      wave,
-      new(
-        "WaveFilter",
-        func = .autoBandPassChannel,
-        params = list(bw=bw, n.bw=n.bw, lowcut=lowcut)
-      )
-    ))
-  }
-  return(.autoBandPassChannel(wave, bw=bw, n.bw=n.bw, lowcut=lowcut))
+  #that seewave does not carry through. A mono wave goes the same way, as seewave
+  #returns 16 bit PCM whatever it was given.
+  return(.filterAllChannels(
+    wave,
+    new(
+      "WaveFilter",
+      func = .autoBandPassChannel,
+      params = list(bw=bw, n.bw=n.bw, lowcut=lowcut)
+    )
+  ))
 }
 
 #' Measure and apply an automatic band pass filter to one channel
@@ -130,11 +132,12 @@ autoBandPass <- function(
   #The band is kept as far as the recording goes rather than beyond it. A wide
   #band around a low centre frequency puts the lower edge below zero, which
   #seewave reports as an error about subscripts rather than as a filter.
-  wave <- seewave::ffilter(
+  #The high-pass above is only measured, and the measures are relative to the
+  #strongest frequency, so its level does not matter. This one is returned.
+  wave <- .ffilterUnityGain(
     wave,
     from=max(0, centre-n.bw*bandwidth),
-    to=min(centre+n.bw*bandwidth, wave@samp.rate/2),
-    output="Wave"
+    to=min(centre+n.bw*bandwidth, wave@samp.rate/2)
   )
   return(wave)
 }

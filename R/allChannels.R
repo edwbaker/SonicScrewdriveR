@@ -43,12 +43,7 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
       }
     } else if (is(w, "WaveMC")) {
       #Extract as a Wave, as single channel functions expect the left slot
-      w <- tuneR::Wave(
-        w@.Data[,channel],
-        samp.rate = w@samp.rate,
-        bit = w@bit,
-        pcm = w@pcm
-      )
+      w <- .waveChannel(w, channel)
     }
   }
   l <- list(FUN, w, ...)
