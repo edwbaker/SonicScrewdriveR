@@ -396,6 +396,21 @@
   the recording is.
 
 ## Fixes
+- ntd() cut each interval inclusive of both its ends, so an interval of n
+  samples was cut as n+1 and every boundary sample was measured in the interval
+  before it as well as the one after. On a wave of 1:21 with events at 1, 11 and
+  21 the interval sums came to 242 where the samples between the first and last
+  event come to 210. The intervals are now half open, running from one event up
+  to the sample before the next, which is the convention windowing() cuts its
+  windows with, so they partition the signal; the sample at the last event falls
+  outside them all, being the onset of the interval that follows the ones
+  measured. Every number ntd() returned for a length- or energy-like function
+  moves with this, an interval being one sample shorter, which for the pulse
+  trains the function exists to measure, where an interval may be a few tens of
+  samples, is a few percent. Events that do not increase are now an error:
+  out of order they gave the samples between two events as an interval that
+  overlapped its neighbours, and two events at the same sample gave a one-sample
+  interval that bounds nothing.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes

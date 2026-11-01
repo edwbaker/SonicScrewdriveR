@@ -9,7 +9,10 @@ ntd(wave, events, FUN, normalise = FALSE, argument = "wave", ...)
 \arguments{
 \item{wave}{A Wave object containing pulses}
 
-\item{events}{Onset of detected events, e.g. from pulseDetection()}
+\item{events}{Onset of detected events, e.g. from pulseDetection(). The
+events must be in increasing order. Each interval runs from one event up to
+the sample before the next, so the final event bounds the last interval
+without belonging to it.}
 
 \item{FUN}{The function to run}
 
