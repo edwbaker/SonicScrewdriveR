@@ -184,6 +184,7 @@ overdamped
 parseFilename
 pbapply
 plotix
+psd
 pseudoWave
 pulseDetection
 pulseIntervals
