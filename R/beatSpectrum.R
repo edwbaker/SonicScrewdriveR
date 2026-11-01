@@ -52,6 +52,20 @@ beatSpectrum <- function(wave,
     )
   }
 
+  #The envelope is smoothed over min_period and resampled at it, so a wave
+  #shorter than the shortest period in the spectrum left an envelope of one or
+  #two points. runmed() only warned that its window was longer than the wave,
+  #and the transform failed with "missing value where TRUE/FALSE needed".
+  #The tolerance keeps 441 samples at 44.1 kHz, which is twice the default
+  #min_period, from being refused for the rounding of the product.
+  if (length(wave@left) < 2 * min_period * wave@samp.rate - 1e-6) {
+    stop(
+      "The wave lasts ", signif(length(wave@left) / wave@samp.rate, 3), " s, ",
+      "shorter than twice min_period (", 2 * min_period, " s), the shortest ",
+      "period the spectrum can hold."
+    )
+  }
+
   #wave_std <- orthophonia::standardiseWave(wave)
   wave_std <- wave
   scaling_ratio <- wave_std@samp.rate / (1/min_period)
