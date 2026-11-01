@@ -187,6 +187,32 @@
   written as any other annotation: a labelled region runs from its position
   for its length, and any other point starts and ends where it is. The data
   frame is given with `output="data.frame"`.
+- readAOEF() and writeAOEF() read and write the Acoustic Objects Exchange
+  Format (AOEF), the JSON format of the soundevent Python package, in which
+  the Whombat annotation tool exports its projects and imports them. A sound
+  event in AOEF has a shape, which is a stretch of time, a box of time and
+  frequency, a single moment, a single point, or lines and polygons drawn on
+  the spectrogram, and any number of tags, each a key and a value. It is read
+  as one `Annotation` for each of its tags, spanning the smallest range of time
+  and frequency that holds the shape, with who made it, when, its notes and the
+  features measured of it in its metadata. The tags of a clip, a part of a
+  recording annotated as a whole, are read as annotations spanning the clip,
+  and a clip annotated as holding nothing is read as an annotation with no
+  value, so that the absence is kept. The predictions of a model run are read
+  in the same way, with their scores.
+
+  Annotations that were read are written back as they were. soundevent's own
+  example evaluation set, read and written again, loads in soundevent with
+  every sound event, tag, shape, note, identifier and recording the same, and
+  every time and frequency the same to the last digit, which writing numbers
+  with jsonlite, to fifteen significant digits, did not give. Annotations made
+  here, such as those birdNetAnalyse() gives, are written with the duration,
+  channels and sample rate AOEF needs of each recording, read from its file,
+  and put in a clip spanning the recording, as soundevent reads no annotation
+  outside a clip. soundevent on Windows writes and reads in the encoding of
+  the locale rather than in UTF-8, so a file that is not UTF-8 is read as
+  Windows-1252, and every character outside ASCII is written as an escape,
+  which every reader decodes alike.
 - wavChunks() lists the chunks a wave file holds: every one of them, in the
   order the file holds them, with where its body begins, how large it is,
   whether it was cut short, and, for a list, which kind of list it is. The
