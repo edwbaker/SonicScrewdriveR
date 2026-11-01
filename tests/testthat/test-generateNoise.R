@@ -18,6 +18,27 @@ test_that("generateNoise rejects unknown input to wave", {
   expect_error(generateNoise(w, "white", FALSE, 0.5, output="list"), "wave must be a Wave like object, or a list of such objects.")
 })
 
+test_that("noise sources are summed by default, and kept apart on request", {
+  # noise.add was never read: several sources were always summed, although the
+  # documented default promised an output for each.
+  w <- tuneR::Wave(round(sin(2*pi*(0:999)/50)*10000), samp.rate=8000, bit=16)
+  expect_s4_class(generateNoise(w, noise=c("white", "pink")), "Wave")
+
+  apart <- generateNoise(w, noise=c("white", "pink"), noise.add=FALSE)
+  expect_type(apart, "list")
+  expect_length(apart, 2)
+  expect_s4_class(apart[[1]], "Wave")
+  expect_equal(length(apart[[2]]), length(w))
+  # One source is one wave either way.
+  expect_s4_class(generateNoise(w, noise="white", noise.add=FALSE), "Wave")
+
+  # Each output is a call of its own, recorded with the source it added.
+  tagged <- generateNoise(tagWave(w), noise=c("white", "pink"), noise.add=FALSE)
+  expect_s4_class(tagged[[2]], "TaggedWave")
+  expect_length(tagged[[2]]@processing, 1)
+  expect_equal(tagged[[2]]@processing[[1]]$params$noise, "pink")
+})
+
 test_that("generateNoise outputs something Wave-like", {
   w <- tuneR::sine(440, duration=44100, samp.rate=44100)
   expect_s4_class(generateNoise(w, "white", FALSE, 0.5, output="list"), "Wave")
@@ -68,13 +89,13 @@ test_that("noise amplitude is correct on TaggedWave", {
   expect_gt(mean(abs(n@left[2:length(n@left)])), 0.02)
 
   w <- pulse("dirac", leading=0, output="TaggedWave")
-  n <- generateNoise(w, c("white", "white"), FALSE, 0.25, output="list")
+  n <- generateNoise(w, c("white", "white"), TRUE, 0.25, output="list")
   expect_equal(length(w@left), length(n@left))
   expect_equal(which(n@left > max(abs(n@left))/2), 1)
   expect_gt(mean(abs(n@left[2:length(n@left)])), 0.02)
 
   w <- pulse("dirac", leading=0, output="TaggedWave", stereo=TRUE)
-  n <- generateNoise(w, c("white", "white"), FALSE, 0.25, output="list")
+  n <- generateNoise(w, c("white", "white"), TRUE, 0.25, output="list")
   expect_equal(length(w@left), length(n@right))
   expect_equal(length(w@left), length(n@left))
   expect_equal(length(w@right), length(n@right))
@@ -112,13 +133,13 @@ test_that("noise amplitude is correct on TaggedWaveMC", {
   expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.02)
 
   w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave")))
-  n <- generateNoise(w, c("white", "white"), FALSE, 0.25, output="list")
+  n <- generateNoise(w, c("white", "white"), TRUE, 0.25, output="list")
   expect_equal(nrow(w@.Data), nrow(n@.Data))
   expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
   expect_gt(mean(abs(n@.Data[2:nrow(w@.Data), 1])), 0.02)
 
   w <- tagWave(tuneR::WaveMC(pulse("dirac", leading=0, output="Wave", stereo=TRUE)))
-  n <- generateNoise(w, c("white", "white"), FALSE, 0.25, output="list")
+  n <- generateNoise(w, c("white", "white"), TRUE, 0.25, output="list")
   expect_equal(nrow(w@.Data), nrow(n@.Data))
   expect_equal(which(n@.Data[,1] > max(abs(n@.Data[,1]))/2), 1)
   expect_equal(which(n@.Data[,2] > max(abs(n@.Data[,2]))/2), 1)
