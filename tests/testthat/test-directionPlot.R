@@ -61,13 +61,42 @@ test_that("the plot is drawn without a deprecation or aesthetic warning", {
   expect_no_warning(ggplot2::ggplot_build(directionPlot(c(0, 90), c(1, 2), plot.mean=FALSE)))
 })
 
-test_that("the mean segment spans the mean direction at the mean speed", {
+test_that("the mean segment points at the mean direction, at the mean speed", {
   p <- directionPlot(c(0, 90), c(1, 3), plot.mean=TRUE)
   mean.layer <- p$layers[[length(p$layers)]]
   expect_equal(nrow(mean.layer$data), 1)
-  expect_equal(mean.layer$data$y, 2)
-  expect_equal(mean.layer$data$xend, mean(c(0, pi/2)))
-  expect_equal(mean.layer$data$x, -mean.layer$data$xend)
+  # A spoke from the centre, as each direction is drawn, rather than an arc
+  # either side of north.
+  expect_equal(mean.layer$data$y, 0)
+  expect_equal(mean.layer$data$yend, 2)
+  expect_equal(mean.layer$data$x, pi/4)
+  expect_equal(mean.layer$data$xend, mean.layer$data$x)
+})
+
+test_that("the mean of a set of directions is the direction of its resultant", {
+  # mean(abs(angles)) was the mean distance from north, drawn either side of it,
+  # so a set of easterly directions and the matching westerly set gave the same
+  # answer and neither pointed where the directions were.
+  meanOf <- function(d) {
+    p <- directionPlot(d, rep(1, length(d)), plot.mean=TRUE)
+    p$layers[[length(p$layers)]]$data$x
+  }
+  expect_equal(meanOf(c(80, 100)), pi/2)
+  expect_equal(meanOf(c(260, 280)), -pi/2)
+  # The arithmetic mean of 350 and 10 is 180, due south.
+  expect_equal(meanOf(c(350, 10)), 0)
+  expect_equal(meanOf(c(270, 350)), convert2radians(310) - 2*pi)
+})
+
+test_that("directions that cancel have no mean direction to draw", {
+  # The resultant has no direction, and atan2(0, 0) is 0, so the segment would
+  # have been drawn pointing north on no evidence.
+  without <- directionPlot(c(0, 180), c(1, 1), plot.mean=FALSE)
+  for (d in list(c(0, 180), c(90, 270))) {
+    p <- directionPlot(d, c(1, 1), plot.mean=TRUE)
+    expect_equal(length(p$layers), length(without$layers))
+    expect_no_error(ggplot2::ggplot_build(p))
+  }
 })
 
 test_that("every direction given is drawn, not only the eastern half", {
