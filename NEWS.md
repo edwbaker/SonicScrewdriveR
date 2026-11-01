@@ -1799,6 +1799,19 @@
   `output`, and its example called it by a name it does not have.
 
 ## Internal
+- roxygenise() corrupted the help page for `*` on a PseudoWave, so
+  regenerating the documentation committed a wrong formula. The package
+  builds its documentation with markdown, where a pair of asterisks with no
+  space after the opening one marks emphasis, and the arithmetic was written
+  as `(g * a*e2) + b*e2`: the `a*e2) + b*` in the middle of it was read as
+  emphasis and the page was written as `(g * a\emph{e2) + b}e2`. The
+  committed page was correct, so this appeared only in the diff of whoever
+  next regenerated it, as a change to a file they had not meant to touch.
+  Every multiplication in that paragraph is now written with a space either
+  side, which cannot open emphasis and matches how the same sentence already
+  wrote the others. No help page in the package drifts on regeneration now,
+  so a second roxygenise() writes nothing and man/ is reproducible from
+  source.
 - directionPlot() named its columns with aes_string(), deprecated since ggplot2
   3.0.0, and drew the mean direction against the whole of the plot's data, which
   ggplot2 warned about on every call. Both are now written as the rest of the
