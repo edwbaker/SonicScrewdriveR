@@ -3,6 +3,13 @@
 #' Adding noise to a Wave like object allows for testing of the robustness of
 #' automated identification algorithms to noise.
 #'
+#' The noise added to each channel is generated separately, so the channels of a
+#' multi-channel wave hold independent noise. One sequence used to be added to
+#' every channel, which left the noise perfectly correlated between them and so
+#' cancelling exactly in any difference between the channels: [tdoa()],
+#' [bearing()] and [corWaveMC()] all read inter-channel differences, and noise
+#' identical in every channel tests none of them.
+#'
 #' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 #' `processing` slot of the result, as described in [tagApply()].
 #'
@@ -54,20 +61,6 @@ generateNoise <- function(
   #Only the samples of the noise are used, and they are scaled to the wave
   #below, so its resolution does not reach the result.
   noise.bit <- 32
-  if (length(noise) == 1) {
-    n <- tuneR::noise(
-      noise,
-      duration=duration,
-      samp.rate=wave@samp.rate,
-      bit=noise.bit
-    )
-  } else {
-    n <- tuneR::silence(duration=duration, samp.rate=wave@samp.rate, bit=noise.bit, pcm=FALSE)
-    for (i in 1:length(noise)) {
-      nw <- tuneR::noise(noise[i], duration=duration, samp.rate=wave@samp.rate, bit=noise.bit)
-      n@left <- n@left + nw@left
-    }
-  }
   wave.offset <- if (wave@bit == 8) 128 else 0
   #The reference is a peak either side of that centre. .waveFullScale() gives
   #the span of the format, which for 8 bit is the whole unsigned 0 to 255 rather
@@ -93,11 +86,14 @@ generateNoise <- function(
     noise.max <- wave.amplitude
   }
   noise.level <- noise.max
-  # Scale n by noise.level, by the largest sample either way rather than the
-  # largest positive one. Noise whose deepest trough is lower than its highest
-  # peak was scaled so that the trough went past the level asked for, and with
-  # the level now being full scale that is far enough to leave the format.
-  n@left <- n@left * noise.level / max(abs(n@left))
+  #The reference is taken over the whole wave, so every channel is given noise
+  #at the same level, but each channel is given a sequence of its own. One
+  #sequence was generated and added to every channel, which left the noise
+  #identical between them: it cancelled exactly in any difference between
+  #channels, and tdoa(), bearing() and corWaveMC() all read those differences.
+  channelNoise <- function() {
+    .noiseSamples(noise, duration, wave@samp.rate, noise.bit, noise.level)
+  }
   #The mix is written as a weighted sum of signal and noise rather than through
   #noise.frac = 1/(1/noise.ratio - 1). The two are identical for every ratio
   #below one - with f the fraction, (x + f*n)/(1 + f) is (1-r)*x + r*n - but
@@ -107,15 +103,50 @@ generateNoise <- function(
   signal.weight <- 1 - noise.ratio
 
   if (inherits(wave, c("Wave"))) {
-    wave@left <- signal.weight * (wave@left - wave.offset) + noise.ratio * n@left + wave.offset
+    wave@left <- signal.weight * (wave@left - wave.offset) + noise.ratio * channelNoise() + wave.offset
     if (wave@stereo) {
-      wave@right <- signal.weight * (wave@right - wave.offset) + noise.ratio * n@left + wave.offset
+      wave@right <- signal.weight * (wave@right - wave.offset) + noise.ratio * channelNoise() + wave.offset
     }
   }
   if (inherits(wave, c("WaveMC"))) {
     for (i in 1:ncol(wave@.Data)) {
-      wave@.Data[,i] <- signal.weight * (wave@.Data[,i] - wave.offset) + noise.ratio * n@left + wave.offset
+      wave@.Data[,i] <- signal.weight * (wave@.Data[,i] - wave.offset) + noise.ratio * channelNoise() + wave.offset
     }
   }
   return(wave)
+}
+
+#' One channel's worth of noise, scaled to a level
+#'
+#' The noise sources asked for are summed and the sum scaled so that its
+#' deepest sample either way sits at `level`. Each channel of a wave calls this
+#' separately, so each is given noise of its own.
+#'
+#' @param noise Vector of noise types to sum.
+#' @param duration Length in samples.
+#' @param samp.rate Sample rate of the wave the noise is for.
+#' @param bit Resolution to generate the noise at.
+#' @param level The amplitude the noise is scaled to.
+#' @return A numeric vector of samples.
+#' @noRd
+.noiseSamples <- function(noise, duration, samp.rate, bit, level) {
+  if (length(noise) == 1) {
+    n <- tuneR::noise(
+      noise,
+      duration=duration,
+      samp.rate=samp.rate,
+      bit=bit
+    )
+  } else {
+    n <- tuneR::silence(duration=duration, samp.rate=samp.rate, bit=bit, pcm=FALSE)
+    for (i in 1:length(noise)) {
+      nw <- tuneR::noise(noise[i], duration=duration, samp.rate=samp.rate, bit=bit)
+      n@left <- n@left + nw@left
+    }
+  }
+  # Scale by the largest sample either way rather than the largest positive one.
+  # Noise whose deepest trough is lower than its highest peak was scaled so that
+  # the trough went past the level asked for, and with the level now being full
+  # scale that is far enough to leave the format.
+  return(n@left * level / max(abs(n@left)))
 }

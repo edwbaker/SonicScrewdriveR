@@ -123,6 +123,46 @@ test_that("The record of a FLAC recording is read from its comments", {
   expect_identical(m$fields$licence, "CC BY-NC-SA 4.0")
 })
 
+# A recording transcoded out of a wave keeps the recorder's comment in whatever
+# its new container holds one in. It was read from an MP3's tag and from a
+# wave's list, but not from a Vorbis comment, so the same recording gave its
+# datetime, make, model and serial as an MP3 and none of the four as a FLAC.
+
+test_that("The AudioMoth comment of a FLAC recording is read", {
+  comment <- paste(
+    "Recorded at 23:32:00 01/05/2021 (UTC) by AudioMoth 240435055C7B17DB at",
+    "medium gain setting while battery state was 4.1V and temperature was 5.8C."
+  )
+  f <- mdFile(mdFlac(mdVorbisBlock("libFLAC", c(
+    "ARTIST=AudioMoth 240435055C7B17DB", paste0("COMMENT=", comment)
+  ))), ".flac")
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_identical(names(m$sources), c("audiomoth", "vorbisComment"))
+  expect_identical(m$fields$make, "Open Acoustic Devices")
+  expect_identical(m$fields$model, "AudioMoth")
+  expect_identical(m$fields$serial, "240435055C7B17DB")
+  expect_identical(
+    format(m$fields$datetime, "%Y-%m-%d %H:%M:%S", tz="UTC"),
+    "2021-05-01 23:32:00"
+  )
+  expect_identical(m$sources$audiomoth$gain, "medium")
+})
+
+test_that("The AudioMoth comment is read where it is written as a description", {
+  # Some encoders write it under DESCRIPTION rather than COMMENT, and some
+  # under both.
+  comment <- "Recorded at 06:00:00 04/06/2019 (UTC) by AudioMoth 24F3190361DC3B0C at low gain while battery was 4.5V and temperature was 11.2C."
+  f <- mdFile(mdFlac(mdVorbisBlock("libFLAC", paste0("DESCRIPTION=", comment))), ".flac")
+  m <- readMetadata(f, filename=FALSE)
+
+  expect_identical(m$fields$serial, "24F3190361DC3B0C")
+  expect_identical(
+    format(m$fields$datetime, "%Y-%m-%d %H:%M:%S", tz="UTC"),
+    "2019-06-04 06:00:00"
+  )
+})
+
 # The file is identified by its bytes, not by its name. The collections this
 # was written against hold MP3 and Ogg files under a .wav extension.
 test_that("A file is read as what it is, not as what it is named", {

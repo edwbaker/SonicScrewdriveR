@@ -268,3 +268,73 @@ test_that("sheepFrequencyStats is what frequencyStats() returns for sheep, in Hz
   data(sheep, package="seewave", envir=environment())
   expect_equal(sonicscrewdriver::sheepFrequencyStats, frequencyStats(sheep, output.unit="Hz"))
 })
+
+# A spectrum of amplitudes with no zero bin, so the flatness of any band of it
+# is the band's geometric mean over its arithmetic mean with nothing substituted
+# for a zero, and can be written out here rather than taken from seewave. The
+# frequencies are in kHz, as a spectrum from seewave has them.
+flatnessSpectrum <- cbind(
+  seq(0, 10, length.out=11),
+  c(9, 9, 1, 2, 3, 2, 1, 0.5, 0.25, 0.125, 0.0625)
+)
+bandFlatness <- function(amplitude) {
+  return(exp(mean(log(amplitude))) / mean(amplitude))
+}
+
+test_that("the spectral flatness is measured over the band above lowcut", {
+  # The flatness came from wave_spec, the spectrum as it arrived, so it was the
+  # same number at every low cut while peak, bandwidth and Q moved with the band.
+  for (lowcut in c(0, 2000, 4000, 6000)) {
+    r <- frequencyStats(
+      knownWave, wave_spec=flatnessSpectrum, lowcut=lowcut, warn=FALSE, output.unit="Hz"
+    )
+    band <- flatnessSpectrum[,1] >= lowcut/1000
+    expect_equal(
+      r$`spectral flatness`, bandFlatness(flatnessSpectrum[band, 2]),
+      info=paste("lowcut", lowcut)
+    )
+  }
+})
+
+test_that("the spectral flatness moves with lowcut as the other statistics do", {
+  measure <- function(lowcut) {
+    return(frequencyStats(
+      knownWave, wave_spec=flatnessSpectrum, lowcut=lowcut, warn=FALSE, output.unit="Hz"
+    ))
+  }
+  whole <- measure(0)
+  band <- measure(4000)
+
+  # The statistics that always followed the cut, and the one that did not. Which
+  # way the flatness moves is the spectrum's business - leaving out bins that
+  # held most of the energy makes what is left flatter, and leaving out bins
+  # that were level with each other makes it less flat - so what is asserted is
+  # that it moves at all, the exact value being pinned above.
+  expect_equal(whole$`-3dB`$peak, 0)
+  expect_equal(band$`-3dB`$peak, 4000)
+  expect_false(isTRUE(all.equal(
+    band$`spectral flatness`, whole$`spectral flatness`
+  )))
+
+  # A cut of zero leaves the whole spectrum, which is what every cut used to
+  # return, so a result from before is reproduced by asking for no cut.
+  expect_equal(whole$`spectral flatness`, bandFlatness(flatnessSpectrum[,2]))
+})
+
+test_that("the spectral flatness of a band is not dragged down by the bins below it", {
+  # The bins below the cut are dropped rather than zeroed. sfm() substitutes
+  # 1e-5 for a zero, so a zeroed spectrum measures a band padded out with bins a
+  # hundred dB down: the flatness would be lower than the band's own, and lower
+  # the more of the spectrum was cut away, which is an artefact of the padding
+  # rather than anything about the recording.
+  lowcut <- 4000
+  band <- flatnessSpectrum[,1] >= lowcut/1000
+  zeroed <- flatnessSpectrum[,2]
+  zeroed[!band] <- 0
+
+  r <- frequencyStats(
+    knownWave, wave_spec=flatnessSpectrum, lowcut=lowcut, warn=FALSE, output.unit="Hz"
+  )
+  expect_equal(r$`spectral flatness`, seewave::sfm(flatnessSpectrum[band, 2]))
+  expect_gt(r$`spectral flatness`, seewave::sfm(zeroed))
+})
