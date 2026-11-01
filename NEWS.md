@@ -1506,6 +1506,12 @@
   the rank correlation it uses by default can report no offset at all for a recording
   that is quiet between its events. Its `temp` argument, which it has never used for
   anything, has been removed.
+- beatSpectrum() of a wave shorter than twice `min_period`, 10 ms by default,
+  failed inside the wavelet transform with "missing value where TRUE/FALSE
+  needed", after `runmed()` had only warned that its window was longer than
+  the wave: the envelope the transform is given is resampled at `min_period`,
+  and held one or two points. Such a wave is now refused with a message giving
+  its length and the shortest it may be.
 - jitter() returned NULL invisibly when given a method it did not recognise, rather
   than reporting the mistake. It now raises an error naming the method.
 - dielPlot() drew the nadir marker without applying the plot's rotation, so it was

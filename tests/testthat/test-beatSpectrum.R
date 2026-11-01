@@ -42,6 +42,20 @@ test_that("the spectrum stops at the longest period asked for", {
   expect_true(all(beatComplexity(rhythmWave())$peak.periods <= 30))
 })
 
+test_that("a wave shorter than the shortest period is refused, naming the cause", {
+  skip_if_not_installed("WaveletComp")
+  #The envelope of such a wave is one or two points. runmed() only warned that
+  #its window was longer than the wave, and the transform failed with "missing
+  #value where TRUE/FALSE needed".
+  tone <- function(n) tuneR::Wave(round(10000*sin(2*pi*50*(0:(n-1))/44100)), samp.rate=44100, bit=16)
+  expect_error(
+    beatSpectrum(tone(100), max_period=1),
+    "The wave lasts 0.00227 s, shorter than twice min_period (0.01 s)", fixed=TRUE
+  )
+  expect_error(beatSpectrum(tone(440), max_period=1), "shorter than twice min_period")
+  expect_s3_class(beatSpectrum(tone(441), max_period=1), "data.frame")
+})
+
 test_that("a longest period shorter than the spectrum can hold is refused", {
   expect_error(
     beatSpectrum(rhythmWave(), min_period=0.01, max_period=0.015),
