@@ -582,6 +582,27 @@
   the label field even where the label is empty, leaving a trailing tab, so
   such a file is not one of its label files and is now refused by name, with
   the count of columns it has.
+- audioblast() given a filter that came out NA searched the whole module
+  instead of refusing the filter. A filter whose values were all NA was
+  dropped alongside one given NULL, so a search whose taxon came from a column
+  that holds nothing, or from a lookup that failed, silently became a search
+  for everything the module holds, which is the most expensive direction for a
+  query to fail in. A filter given no values at all went the same way, as
+  `all(is.na(character(0)))` is TRUE. Both are now refused by name. A filter
+  given NULL is still a filter left out, as it is elsewhere in R.
+- ab_range() given NA as one of its bounds failed with "missing value where
+  TRUE/FALSE needed", from the comparison of the two bounds, which names
+  neither of them; given only one bound it was not compared at all, so
+  ab_range(NA) sent audioBlast the range ">=NA". The bound that is NA is now
+  named.
+- audioblastDownload() named a file whose MIME type audioBlast does not hold
+  "xeno-canto_1.NA", because `names(map)[map == NA]` is a vector of NAs rather
+  than empty and so was not read as nothing found. A type that is not known
+  now gives no extension, as an unrecognised one already did.
+- audioblast() sent a filter value holding a comma in the form that reads a
+  comma as the separator between two values, so a name holding one was sent as
+  two names. Such a value is now sent in the list form whatever number of
+  values the filter was given, as it already was when it was given several.
 - A chunk of an odd size padded with a byte other than zero lost every chunk
   behind it. The byte where the pad belongs is read to tell a writer that
   left the pad out from one that wrote it, and a byte that was not zero was
