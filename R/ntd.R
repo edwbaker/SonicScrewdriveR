@@ -55,7 +55,19 @@ ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {
    }
  }
  if (normalise) {
-   Fk <- Fk/sum(Fk)
+   #There is no density to normalise to where the outputs sum to zero, which is
+   #what digital silence, or any FUN returning zero for every interval, gives.
+   #Dividing by it gave NaN throughout, and Inf where outputs of opposite sign
+   #cancelled, in place of the probability density this argument documents. The
+   #outputs are returned as they came back from FUN instead, and the caller is
+   #told. An NA total is left to divide as before: a missing output is a
+   #different matter from a total of nothing.
+   total <- sum(Fk)
+   if (!is.na(total) && total == 0) {
+     warning("ntd outputs sum to zero, so they cannot be normalised to a probability density and are returned unnormalised.")
+   } else {
+     Fk <- Fk/total
+   }
  }
  return(cbind(k,Fk))
 }

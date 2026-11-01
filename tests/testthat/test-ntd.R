@@ -127,3 +127,46 @@ test_that("events that do not increase are an error rather than a reversed inter
   expect_error(ntd(wave, c(1, 11, 11, 21), function(wave) length(wave)), "increasing order")
   expect_error(ntd(wave, c(1, 201, 101), function(wave) length(wave)), "increasing order")
 })
+
+test_that("outputs that sum to zero are returned unnormalised with a warning", {
+  #Fk/sum(Fk) is NaN throughout where the total is zero, which digital silence
+  #and any FUN returning zero for every interval both give, in place of the
+  #probability density normalise=TRUE documents.
+  wave <- ntdWave()
+  expect_warning(dens <- ntd(wave, c(1, 101, 201), function(wave) 0, normalise=TRUE), "sum to zero")
+  expect_equal(unname(dens[, "Fk"]), c(0, 0))
+  expect_false(any(is.nan(dens[, "Fk"])))
+
+  #A silent recording measured with a FUN that reads its samples reaches the
+  #same case.
+  silence <- tuneR::Wave(rep(0, 300), samp.rate=1000, bit=16, pcm=TRUE)
+  expect_warning(
+    dens <- ntd(silence, c(1, 101, 201), function(wave) sum(abs(wave@left)), normalise=TRUE),
+    "sum to zero"
+  )
+  expect_equal(unname(dens[, "Fk"]), c(0, 0))
+
+  #Outputs of opposite sign that cancel gave Inf and -Inf rather than NaN, and
+  #have no density either. Nothing is lost by returning them as they are.
+  expect_warning(
+    out <- ntd(wave, c(1, 101, 201), function(wave) if (length(wave) > 0) 1 else 0, normalise=TRUE),
+    NA
+  )
+  expect_equal(unname(out[, "Fk"]), c(0.5, 0.5))
+  signs <- c(1, -1)
+  i <- 0
+  expect_warning(
+    out <- ntd(wave, c(1, 101, 201), function(wave) {i <<- i + 1; signs[i]}, normalise=TRUE),
+    "sum to zero"
+  )
+  expect_equal(unname(out[, "Fk"]), c(1, -1))
+  expect_false(any(is.infinite(out[, "Fk"])))
+})
+
+test_that("a total that is missing rather than zero is left to divide as before", {
+  #An output FUN could not measure is a different matter from a total of
+  #nothing, and is not what this guard is for.
+  wave <- ntdWave()
+  expect_silent(out <- ntd(wave, c(1, 101, 201), function(wave) NA_real_, normalise=TRUE))
+  expect_true(all(is.na(out[, "Fk"])))
+})
