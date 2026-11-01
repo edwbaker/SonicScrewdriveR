@@ -422,6 +422,21 @@
   the recording is.
 
 ## Fixes
+- zerocross(), jitter(), shimmer() and ste() read only the left channel of a
+  stereo Wave, so the stereo answer was the mono one and the second channel was
+  never reported. A wave whose left channel is a 500 Hz tone and whose right is
+  3 kHz gave 1,000 zero crossings where the two channels hold 1,000 and 6,000,
+  a jitter of 0.3996 where the right channel's is 0.5997, and a shimmer of
+  0.0017 where the right channel's is 0.0270. A WaveMC, which has no left slot
+  at all, failed with a message naming that slot. Each measure is now passed to
+  allChannels() when it is given more than one channel, as dutyCycle() and
+  frequencyStats() already are, and returns one result per channel in the same
+  shape they do. A wave of one channel is measured and returned exactly as
+  before.
+
+  ste() checked nothing about its argument, so anything that was not a wave
+  reached the left slot and failed there, naming a slot rather than the
+  argument. It now refuses by name, as the rest of the package does.
 - rainfall_bedoya2017(), behind rainfallDetection(method="bedoya2017"), compared
   its `Tmean` threshold against a quantity with no fixed scale, so the first of
   the two criteria the cited method applies decided nothing, and the answer

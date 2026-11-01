@@ -7,7 +7,8 @@
 ste(wave, method = "dietrich2004", U = 120, ...)
 }
 \arguments{
-\item{wave}{A Wave object}
+\item{wave}{A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which returns the energy of each channel separately.}
 
 \item{method}{Which method used to calculate the short term energy,
 by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.}
@@ -17,7 +18,8 @@ by default "dietrich2004" to use \insertCite{dietrich2004}{sonicscrewdriver}.}
 \item{...}{Other arguments to pass to ste method.}
 }
 \value{
-A vector of short term energy values
+A vector of short term energy values. For multi-channel input, one
+such vector per channel.
 }
 \description{
 Computes the short term energy of a Wave.
