@@ -10,7 +10,8 @@ maad_spectrogram(wave, mode = "power", ..., maad = NULL)
 \item{wave}{A Wave object}
 
 \item{mode}{The type of spectrogram to compute. Options are "power", "amplitude" "complex".
-Default is "power".}
+Default is "power". A "complex" spectrogram holds complex numbers, and the
+indices built on it take its magnitude.}
 
 \item{...}{Additional arguments to pass to \code{maad.sound.spectrogram}.}
 

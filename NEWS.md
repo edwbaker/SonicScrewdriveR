@@ -422,6 +422,16 @@
   the recording is.
 
 ## Fixes
+- `maad_spectrogram()` computed a power spectrogram whatever mode it was asked
+  for, and labelled it with the mode it was asked for. `mode` was read only to
+  write the slot and never reached scikit-maad, so "amplitude" and "complex"
+  both gave the default power spectrogram: of the test recording all three
+  returned the same 6.76, 65.22, 639.63, where an amplitude spectrogram holds
+  2.60, 8.08, 25.29 and a complex one carries a phase as well. It is now passed
+  on, under the name scikit-maad knows it by, as scikit-maad calls a power
+  spectrogram "psd". A mode scikit-maad does not know is refused by name, which
+  its own `spectrogram()` answers with an error about an unassigned local
+  variable that names neither the argument at fault nor the values it takes.
 - A scikit-maad spectrogram already in dB was converted to dB a second time. The
   `mode` slot records which units the matrix holds, and neither
   `.spectrogram_maad_power()` nor `.spectrogram_maad_dB()` read it, so
