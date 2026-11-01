@@ -66,6 +66,15 @@ rainfall_bedoya2017 <- function(wave, Tmean=0.9e-6, Tsnr=3.5) {
     return(NULL)
   }
   mean_a <- mean(a)
+  #Across the band's bins of a spectrum already averaged over the recording,
+  #which makes this rise with the recording's length as the averaging shrinks the
+  #standard deviation: the same noise gives 4.0 over 0.05 s and 49 over 60 s, so
+  #Tsnr holds for a clip length rather than absolutely. Taking the ratio within
+  #each window instead and pooling, which is length-independent and is what the
+  #hardRain package does, was measured on labelled recordings and discriminates
+  #nothing: rain 1.12 to 1.17, quiet 1.01 to 1.06, noise 1.21, all on top of each
+  #other, where this measure gives rain 11 to 27 against 1.4 to 5.8. It is kept
+  #for that reason and not by oversight.
   std_a <- stats::sd(a)
   c <- mean_a/std_a
   if (mean_a > Tmean && c >Tsnr) {
