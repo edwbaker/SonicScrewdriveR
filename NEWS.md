@@ -422,6 +422,25 @@
   the recording is.
 
 ## Fixes
+- dutyCycle() applied its `limit` as a proportion of the loudest sample in the
+  wave rather than as the threshold the help page described, so no two
+  recordings could be compared: the threshold was set by whatever the loudest
+  moment of each happened to be. A pulse train with a tenth of its samples at a
+  quarter of full scale, over a floor at a sixteenth of it, measured 1, the
+  floor having cleared a threshold a tenth of the way to the train's own peak.
+  One sample added at full scale raised that threshold past the floor and the
+  same wave measured 0.1, so a single transient moved the figure tenfold
+  without any of the signal changing.
+  `limit` is now a proportion of the largest amplitude the wave's format can
+  hold, a tenth of full scale by default, whether the wave is floating point or
+  integer. The threshold is the same for every recording and no sample in the
+  wave sets it, so the train above measures 0.1 with the transient and without
+  it. A limit outside 0 to 1 is refused by name rather than measured: an
+  amplitude, which is what the help page described, would otherwise have given
+  a duty cycle of zero. `normalise` now defaults to FALSE, as normalising
+  raises the loudest sample to full scale and so hands the threshold back to
+  it, and removes the offset as well, which lifts silence off zero: a wave nine
+  tenths of which is silent measured 1 rather than 0.1.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes

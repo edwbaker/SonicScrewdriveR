@@ -4,9 +4,20 @@
 #'
 #' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
 #'   allChannels(), which returns a list with one duty cycle per channel.
-#' @param limit Threshold above which to consider the signal
+#' @param limit Threshold above which to consider the signal, as a proportion of
+#'   the largest amplitude the wave's format can hold: the default of 0.1 is a
+#'   tenth of full scale, whether the wave is floating point or integer. The
+#'   threshold does not depend on the wave's own peak, so a loud transient does
+#'   not change the duty cycle measured around it and the same sound recorded
+#'   twice gives the same figure. In earlier releases this was a proportion of
+#'   the loudest sample in the wave, which a value given explicitly still means
+#'   only where that sample is at full scale.
 #' @param output If "unit" the duty cycle will be in the range 0-1. For a percentage use "percent".
-#' @param normalise If TRUE the Wave is normalised using tuneR
+#' @param normalise If TRUE the Wave is normalised using tuneR before the
+#'   threshold is applied. Normalising raises the wave's loudest sample to full
+#'   scale, which makes the threshold depend on that sample again, and
+#'   normalize() from tuneR removes the offset as well, so silence no longer sits
+#'   at zero. The default is FALSE and was TRUE in earlier releases.
 #' @return A numerical value for the duty cycle between 0 and 1 (or 0 and 100% if
 #'   percentage output). For multi-channel input, a list of such values.
 #' @examples
@@ -19,9 +30,19 @@ dutyCycle <- function(
   wave,
   limit=0.1,
   output="unit",
-  normalise = TRUE
+  normalise = FALSE
 ) {
   .validateChoice(output, c("unit", "percent"), msg="output format not recognised.")
+  #limit is a proportion of full scale, so a caller reading the help page as it
+  #was and passing an amplitude - 3000 for a 16 bit recording - would be given a
+  #duty cycle of zero rather than told the value is not a proportion.
+  if (!is.numeric(limit) || length(limit) != 1) {
+    stop("limit must be a single proportion of full scale, between 0 and 1.")
+  }
+  .validateNumericRange(
+    limit, "limit", min=0, max=1,
+    range.msg="limit must be a proportion of full scale, between 0 and 1."
+  )
   if (.useAllChannels(wave)) {
     #A closure keeps the arguments away from the formals of allChannels()
     return(allChannels(
@@ -42,7 +63,12 @@ dutyCycle <- function(
   }
   w <- abs(wave@left)
   l <- length(w)
-  c <- sum(w > limit*max(w))
+  #The threshold is a proportion of what the wave's format can hold rather than
+  #of the loudest sample it holds. Taken from that sample, one transient set the
+  #threshold for everything around it: a signal 40 dB down with a true duty
+  #cycle of 0.1 measured 0.2503, and 0.0001 once a single sample reached full
+  #scale, so no two recordings of one sound could be compared.
+  c <- sum(w > limit * .waveFullScale(wave))
   if (output == "unit") {
     return(validateDutyCycle(c/l))
   }
