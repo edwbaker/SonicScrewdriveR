@@ -160,7 +160,33 @@ test_that("a zone that cannot be named is recorded as the clock's abbreviation",
 
 test_that("a record says which digest its hashes are", {
   tw <- tagWave(.recWave())
-  expect_equal(tagApply(tw, tuneR::normalize, unit="1")@processing[[1]]$hash_method, "full")
+  # The sketch is the default: a full digest of an hour-long recording would be
+  # minutes of hashing per step, which is enough to make a record not worth
+  # keeping.
+  expect_equal(
+    tagApply(tw, tuneR::normalize, unit="1")@processing[[1]]$hash_method,
+    "sketch"
+  )
+
+  withr::local_options(sonicscrewdriver.provenance="full")
+  expect_equal(
+    tagApply(tw, tuneR::normalize, unit="1")@processing[[1]]$hash_method,
+    "full"
+  )
+})
+
+test_that("a sketch of a short recording still reads every sample", {
+  # What makes the sketch defensible as the default: the blocks cover anything
+  # short whole, so for a recording of up to some seconds it is as strong as
+  # the full digest and a change to any sample changes it.
+  w <- .recWave(4410)
+  sketch <- .waveHash(w, "sketch")
+  expect_equal(length(.waveSketch(w@left)), length(w@left))
+  for (i in c(1, 2205, 4410)) {
+    edited <- w
+    edited@left[i] <- edited@left[i] + 1
+    expect_false(identical(.waveHash(edited, "sketch"), sketch))
+  }
 })
 
 test_that("the sketch digest costs the same whatever the recording's length", {
@@ -188,10 +214,16 @@ test_that("the sketch digest costs the same whatever the recording's length", {
   expect_equal(.waveHash(between, "sketch"), sketch)
   expect_false(identical(.waveHash(between, "full"), full))
 
-  withr::local_options(sonicscrewdriver.provenance="sketch")
+  # The sketch is what a record holds unless it is asked otherwise.
   rec <- tagApply(tagWave(w), tuneR::normalize, unit="1")@processing[[1]]
   expect_equal(rec$hash_method, "sketch")
   expect_equal(rec$input_hash, sketch)
+
+  # And the full digest is there for a history that has to be evidence.
+  withr::local_options(sonicscrewdriver.provenance="full")
+  rec <- tagApply(tagWave(w), tuneR::normalize, unit="1")@processing[[1]]
+  expect_equal(rec$hash_method, "full")
+  expect_equal(rec$input_hash, full)
 })
 
 test_that("a sketch of a vector the blocks would cover is all of it", {
@@ -204,13 +236,13 @@ test_that("a sketch of a vector the blocks would cover is all of it", {
   expect_equal(sketched[length(sketched)], 50000)
 })
 
-test_that("an unknown provenance option warns and the full digest is used", {
+test_that("an unknown provenance option warns and the default is used", {
   withr::local_options(sonicscrewdriver.provenance="cheap")
-  expect_warning(method <- .hashMethod(), "must be 'full' or 'sketch'")
-  expect_equal(method, "full")
+  expect_warning(method <- .hashMethod(), "must be 'sketch' or 'full'")
+  expect_equal(method, "sketch")
 
   withr::local_options(sonicscrewdriver.provenance=c("full", "sketch"))
-  expect_warning(expect_equal(.hashMethod(), "full"))
+  expect_warning(expect_equal(.hashMethod(), "sketch"))
 })
 
 test_that("a chain of operations reads as one history", {
@@ -243,7 +275,7 @@ test_that("a chain of operations reads as one history", {
   for (rec in tw@processing) {
     expect_true(length(rec$params) > 0)
     expect_true(nzchar(rec$timezone))
-    expect_equal(rec$hash_method, "full")
+    expect_equal(rec$hash_method, "sketch")
   }
 })
 

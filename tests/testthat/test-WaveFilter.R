@@ -41,7 +41,8 @@ test_that("output is the same when filter is nothing (TaggedWave)", {
   # what, when and to which audio.
   expect_named(
     filtered[[1]]@processing[[1]],
-    c("process", "output", "func", "params", "time", "duration", "input_hash", "output_hash")
+    c("process", "output", "func", "params", "time", "timezone", "duration",
+      "hash_method", "input_hash", "output_hash")
   )
 })
 
@@ -105,7 +106,8 @@ test_that("filterWave() works with cluster", {
   # what, when and to which audio.
   expect_named(
     filtered[[1]]@processing[[1]],
-    c("process", "output", "func", "params", "time", "duration", "input_hash", "output_hash")
+    c("process", "output", "func", "params", "time", "timezone", "duration",
+      "hash_method", "input_hash", "output_hash")
   )
 
   parallel::stopCluster(cl)

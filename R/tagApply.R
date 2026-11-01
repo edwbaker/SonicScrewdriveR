@@ -46,23 +46,29 @@
 
 #' Which digest a process record should use
 #'
-#' A full digest reads every sample, about a second per minute of stereo 48 kHz
-#' audio, and it is paid twice per operation: once on the wave going in and once
-#' on the wave coming out. An hour-long recording is therefore minutes of
-#' hashing per step, so which digest is worth its cost is the user's to choose
-#' through `options(sonicscrewdriver.provenance=)`.
-#' @return "full" or "sketch".
+#' The default is the sketch, because a full digest reads every sample - about a
+#' second per minute of stereo 48 kHz audio - and is paid twice per operation,
+#' on the wave going in and the wave coming out. An hour-long recording would
+#' therefore be minutes of hashing per step, which is enough to make a record
+#' not worth keeping; a sketch costs the same whatever the length.
+#'
+#' What that gives up is stated plainly in [tagApply()] and recorded in every
+#' record: a sketch of a recording too long to read whole tells an edited one
+#' from an unedited one, but is not evidence that two recordings are the same.
+#' `options(sonicscrewdriver.provenance="full")` buys that evidence back at the
+#' cost above.
+#' @return "sketch" or "full".
 #' @keywords internal
 #' @noRd
 .hashMethod <- function() {
-  method <- getOption("sonicscrewdriver.provenance", "full")
+  method <- getOption("sonicscrewdriver.provenance", "sketch")
   if (length(method) != 1 || !is.character(method) ||
       !method %in% c("full", "sketch")) {
     warning(
-      "sonicscrewdriver.provenance must be 'full' or 'sketch'; using 'full'.",
+      "sonicscrewdriver.provenance must be 'sketch' or 'full'; using 'sketch'.",
       call.=FALSE
     )
-    return("full")
+    return("sketch")
   }
   return(method)
 }
@@ -127,11 +133,13 @@
 #' itself, which is gigabytes for an hour of stereo audio, and the digest of a
 #' five minute stereo recording could fail for want of memory.
 #'
-#' `method="sketch"` digests the length of each part and a fixed number of
-#' evenly spaced blocks of it rather than all of it, which takes the same time
-#' whatever the recording's length. It tells an edited recording from an
-#' unedited one, but unlike the full digest it is not evidence that two
-#' recordings are the same, so a record says which was used.
+#' `method="sketch"`, the default, digests the length of each part and a fixed
+#' number of evenly spaced blocks of it rather than all of it, which takes the
+#' same time whatever the recording's length. A part short enough that the
+#' blocks cover it is still digested whole, so for a recording of up to some
+#' seconds a sketch reads every sample and is as strong as a full digest. Past
+#' that it tells an edited recording from an unedited one, but is not evidence
+#' that two recordings are the same, so a record says which was used.
 #' @param w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object.
 #' @param method "full" or "sketch".
 #' @return A SHA-256 hex string.
@@ -393,15 +401,25 @@
 #'     to describe rather than taken on trust.}
 #' }
 #'
-#' A full digest reads every sample, about a second per minute of stereo 48 kHz
-#' audio, and is paid on the wave going in and the wave coming out of every
-#' step. Where that is too much for the length of the recordings in hand,
-#' `options(sonicscrewdriver.provenance="sketch")` digests a fixed number of
-#' evenly spaced blocks instead, which costs the same whatever the length. A
-#' sketch tells an edited recording from an unedited one but is not evidence
-#' that two are the same, which is why `hash_method` says which was used. An
-#' option is not carried to the workers of a `cl` cluster that does not inherit
-#' it, which use the full digest and record that they did.
+#' @section How much the digests prove:
+#' A full digest reads every sample, which is about a second per minute of
+#' stereo 48 kHz audio and is paid on the wave going in and the wave coming out
+#' of every step. An hour-long recording would be minutes of hashing per step,
+#' so the default is `"sketch"`: the length of each channel and a fixed number
+#' of evenly spaced blocks of it, at the same cost whatever the length.
+#'
+#' A channel short enough that the blocks cover it is digested whole, so for a
+#' recording of up to some seconds a sketch reads every sample. Past that it
+#' does not, and the difference matters: a sketch will tell an edited recording
+#' from an unedited one, but two recordings that agree on a sketch are not
+#' thereby shown to be the same, as a change between the blocks is not read. If
+#' a history has to be evidence rather than a good indication, set
+#' `options(sonicscrewdriver.provenance="full")` and pay for it.
+#'
+#' Either way `hash_method` records which was used, so a digest is never taken
+#' for more than it is worth. An option is not carried to the workers of a `cl`
+#' cluster that does not inherit it, which use the default and record that they
+#' did.
 #'
 #' If `fun` returns a wave without tags, the `origin`, `metadata` and
 #' `processing` of `w` are carried over to it. The `spectrogram_maad_power` slot

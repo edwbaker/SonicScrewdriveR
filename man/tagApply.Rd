@@ -62,16 +62,27 @@ going in and coming out, and which digest they are. These are what make
 the rest checkable: a history can be tested against the audio it claims
 to describe rather than taken on trust.}
 }
+}
+\section{How much the digests prove}{
 
-A full digest reads every sample, about a second per minute of stereo 48 kHz
-audio, and is paid on the wave going in and the wave coming out of every
-step. Where that is too much for the length of the recordings in hand,
-\code{options(sonicscrewdriver.provenance="sketch")} digests a fixed number of
-evenly spaced blocks instead, which costs the same whatever the length. A
-sketch tells an edited recording from an unedited one but is not evidence
-that two are the same, which is why \code{hash_method} says which was used. An
-option is not carried to the workers of a \code{cl} cluster that does not inherit
-it, which use the full digest and record that they did.
+A full digest reads every sample, which is about a second per minute of
+stereo 48 kHz audio and is paid on the wave going in and the wave coming out
+of every step. An hour-long recording would be minutes of hashing per step,
+so the default is \code{"sketch"}: the length of each channel and a fixed number
+of evenly spaced blocks of it, at the same cost whatever the length.
+
+A channel short enough that the blocks cover it is digested whole, so for a
+recording of up to some seconds a sketch reads every sample. Past that it
+does not, and the difference matters: a sketch will tell an edited recording
+from an unedited one, but two recordings that agree on a sketch are not
+thereby shown to be the same, as a change between the blocks is not read. If
+a history has to be evidence rather than a good indication, set
+\code{options(sonicscrewdriver.provenance="full")} and pay for it.
+
+Either way \code{hash_method} records which was used, so a digest is never taken
+for more than it is worth. An option is not carried to the workers of a \code{cl}
+cluster that does not inherit it, which use the default and record that they
+did.
 
 If \code{fun} returns a wave without tags, the \code{origin}, \code{metadata} and
 \code{processing} of \code{w} are carried over to it. The \code{spectrogram_maad_power} slot
@@ -102,6 +113,7 @@ function is for. \code{label}, \code{untag} and \code{cl} come after \code{...} 
 named in full, which leaves only a function with an argument of one of those
 three names beyond reach.
 }
+
 \examples{
 tw <- tagWave(tuneR::sine(440, duration = 44100, samp.rate = 44100))
 tw <- tagApply(tw, tuneR::normalize, unit = "16")

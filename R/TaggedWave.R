@@ -50,10 +50,13 @@ setClass(
                            timezone=NULL, input_hash=NULL, output_hash=NULL,
                            hash_method=NULL) {
   entry <- list("process" = process, "output" = output)
+  #hash_method comes before the digests it describes, so that a record whose
+  #output_hash is only known once the process has run - and so is added to the
+  #record after it is built - still reads with the two digests side by side.
   optional <- list(
     func = func, params = params, defaults = defaults, time = time,
-    timezone = timezone, duration = duration, input_hash = input_hash,
-    output_hash = output_hash, hash_method = hash_method
+    timezone = timezone, duration = duration, hash_method = hash_method,
+    input_hash = input_hash, output_hash = output_hash
   )
   return(c(entry, optional[!vapply(optional, is.null, logical(1))]))
 }

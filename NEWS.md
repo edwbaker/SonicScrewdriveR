@@ -189,12 +189,19 @@
   recording is built to get it; concatenating the bytes cost some 16 bytes per
   sample on top of the wave, gigabytes for an hour of stereo audio, and the
   digest of a five minute stereo recording could fail for want of memory.
-  Reading every sample still costs about a second per minute of stereo 48 kHz
-  audio, paid on the wave going in and the wave coming out of every step, so
-  `options(sonicscrewdriver.provenance="sketch")` digests a fixed number of
-  evenly spaced blocks instead, at the same cost whatever the length. A sketch
-  tells an edited recording from an unedited one but is not evidence that two
-  are the same, so `hash_method` says which a record holds.
+  Reading every sample costs about a second per minute of stereo 48 kHz audio,
+  though, paid on the wave going in and the wave coming out of every step, and
+  an hour-long recording would be minutes of hashing per step - enough to make
+  a record not worth keeping. The default is therefore a sketch: the length of
+  each channel and a fixed number of evenly spaced blocks of it, at the same
+  cost whatever the length. A channel short enough that the blocks cover it is
+  digested whole, so for a recording of up to some seconds a sketch reads every
+  sample and is as strong as a full digest. Past that it will tell an edited
+  recording from an unedited one, but two recordings agreeing on a sketch are
+  not thereby shown to be the same, as a change between the blocks is not read.
+  `options(sonicscrewdriver.provenance="full")` buys that back at the cost
+  above, and `hash_method` records which a record holds so that a digest is
+  never taken for more than it is worth.
 - wavCues() reads the cue points of a wave file together with the labels that
   name them. The two halves of an annotation are written in different chunks:
   a cue chunk holds positions and nothing else, and the text naming them is in
