@@ -26,6 +26,31 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
   if (is.null(n) & is.null(t)) {
     stop("Dolbear's law calculation requires either n or t to be specified.")
   }
+  #Neither argument was checked at all, so a negative rate of chirping gave a
+  #temperature as though it were a reading.
+  #A bare NA is logical, which the numeric check refuses. NA is an unknown
+  #reading rather than a non-numeric one here, as it is everywhere else in the
+  #package, so an all-NA logical is taken as the numeric it stands for.
+  if (is.logical(n) && all(is.na(n))) {
+    n <- as.numeric(n)
+  }
+  if (is.logical(t) && all(is.na(t))) {
+    t <- as.numeric(t)
+  }
+  if (!is.null(n)) {
+    .validateNumericRange(
+      n, "Chirps per minute", min=0,
+      range.msg="Chirps per minute must not be negative.",
+      type.msg="Chirps per minute must be numeric."
+    )
+  }
+  if (!is.null(t)) {
+    .validateNumericRange(
+      t, "Temperature", min=-273.15,
+      range.msg="Temperature must be above absolute zero.",
+      type.msg="Temperature must be numeric."
+    )
+  }
 
   data <- dolbear.data()
 
@@ -50,6 +75,48 @@ dolbear <- function(n=NULL, t=NULL, species="Oecanthus fultoni") {
   } else {
     t <- values
     n <- data$m*t + data$c
+    #A regression returns a negative rate of chirping below the temperature at
+    #which it crosses zero, which dolbear(t=3) reported as -6.85, -8.93 and
+    #-13.99 chirps per minute without a word. Each regression crosses at its
+    #own temperature, though - for Oecanthus fultoni at 3.88, 3.97 and 4.70 -
+    #so between the lowest and the highest crossing some rows are a rate and
+    #others are not. Refusing the whole call threw away the rows that were
+    #still an answer: at 4 degrees the Iowa and Oregon series give 0.94 and
+    #0.27 chirps per minute, which are readings, while Ohio gives -5.78, which
+    #is not. The rate that cannot exist is NA and the rows beside it stand.
+    negative <- !is.na(n) & n < 0
+    if (any(negative)) {
+      warning(paste0(
+        "Dolbear's law gives no rate of chirping at ",
+        paste(unique(t[negative]), collapse=", "),
+        " degrees Celsius for ",
+        paste(
+          unique(paste0(data$species[negative], ", ", data$location[negative])),
+          collapse="; "
+        ),
+        ", which is below where that regression reaches zero. Those rates are NA."
+      ))
+      n[negative] <- NA_real_
+    }
+  }
+
+  #The table carries the range of temperature each regression was fitted over,
+  #and nothing read it. The answer outside that range is still given, since it
+  #is a line that can be extended, but the extrapolation is no longer silent.
+  outside <- !is.na(t) & (t < data$min | t > data$max)
+  if (any(outside)) {
+    warning(paste0(
+      "Dolbear's law is extrapolated beyond the temperatures it was fitted ",
+      "over for ",
+      paste(
+        unique(paste0(
+          data$species[outside], ", ", data$location[outside],
+          " (", data$min[outside], "-", data$max[outside], " C)"
+        )),
+        collapse="; "
+      ),
+      "."
+    ))
   }
 
   return(cbind(data,t,n))
