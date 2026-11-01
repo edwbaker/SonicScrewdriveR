@@ -24,7 +24,7 @@ beatComplexity(wave, plot = FALSE)
 ## Value
 
 A list of the complexity, a vector of the peak periods, and the number
-of peaks.
+of peaks. The complexity is NA if the beat spectrum has no peak.
 
 ## Examples
 
