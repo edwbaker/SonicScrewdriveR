@@ -97,6 +97,13 @@ test_that(".maadSamples puts the bit depths of one recording on one scale", {
   expect_true(all(abs(.maadSamples(w16)) <= 1))
 })
 
+test_that("maad_wave passes on nothing for an object that is not a wave", {
+  #Needs no Python: .maadSamples() gives NULL before reticulate is reached.
+  expect_null(maad_wave("not a wave"))
+  expect_null(maad_wave(NULL))
+  expect_null(maad_wave(list(left=1:10)))
+})
+
 test_that("maad_wave hands Python what scikit-maad's own reader would", {
   skip_if_no_maad()
   maad <- getMaad()
