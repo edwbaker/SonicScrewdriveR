@@ -1902,6 +1902,10 @@
   bandwidths frequencyStats() returns can now be had in Hz as well, as described
   under Deprecations, and both help pages give the unit of every frequency they
   take or return.
+- fcis() with a window.length shorter than `wl` failed with "wrong sign in 'by'
+  argument" from `seq()`, which names neither argument: a window holding fewer
+  samples than `wl` leaves seewave no spectrogram window to take in it. It is
+  now refused with a message giving both. The defaults were never affected.
 - fcis() returns the frequencies of its bins in Hz, where it returned them in kHz
   as seewave::spectro() gives them, and its plot labels the frequency axis in Hz
   to match. Unlike frequencyStats() it has no argument for the former unit, so

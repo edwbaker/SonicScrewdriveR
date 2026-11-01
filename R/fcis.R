@@ -307,8 +307,8 @@ fcisClip <- function(probs=c(0.02, 0.98), log=FALSE) {
 #'
 #' @param x A Wave object, or a vector of filenames which are treated as consecutive
 #'   parts of one recording.
-#' @param window.length Length of each column of the image in samples. If NULL, each
-#'   file gives a single column.
+#' @param window.length Length of each column of the image in samples, which must be
+#'   at least `wl`. If NULL, each file gives a single column.
 #' @param indices The three indices to map to the red, green and blue channels.
 #' @param wl Window length used for the spectrograms.
 #' @param cluster A cluster from the 'parallel' package for multi-core computation.
@@ -349,6 +349,16 @@ fcis <- function(
     stop("Three indices are required, one for each of the red, green and blue channels.")
   }
   .validateChoice(indices, fcisIndexNames(), "index", "fcis", prep="for")
+  #A window holding fewer samples than wl leaves seewave no spectrogram window
+  #to take, and it failed with "wrong sign in 'by' argument" from seq(), which
+  #names neither argument.
+  if (!is.null(window.length) && window.length < wl) {
+    stop(
+      "window.length (", window.length, ") must be at least wl (", wl, "), as ",
+      "each column of the image is a spectrogram of window.length samples ",
+      "taken in windows of wl."
+    )
+  }
 
   channels <- .fcisChannels(x)
   if (!is.null(channel)) {
