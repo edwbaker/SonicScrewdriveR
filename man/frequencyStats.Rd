@@ -23,9 +23,10 @@ generated), with its frequencies in kHz as seewave::meanspec() returns them.}
 \item{warn}{If TRUE provides warnings when values are not consistent}
 
 \item{lowcut}{Frequency below which values are ignored, in Hz, as every other
-frequency the package takes is. This argument was in kHz in earlier
-releases: the default is the same frequency as before, but a value given
-explicitly needs multiplying by a thousand.}
+frequency the package takes is. Every statistic is measured over the band
+above it, the spectral flatness included. This argument was in kHz in
+earlier releases: the default is the same frequency as before, but a value
+given explicitly needs multiplying by a thousand.}
 
 \item{plot}{If TRUE plots the spectrum, with its frequency axis in
 output.unit, and marks the edges of the regions measured.}
@@ -39,7 +40,8 @@ before and after that change.}
 }
 \value{
 A list with an entry for each of the -3dB and -10dB thresholds, and
-the spectral flatness of the spectrum. Each threshold holds the frequencies
+the spectral flatness of the spectrum above \code{lowcut}, which is the band
+every other statistic is measured over. Each threshold holds the frequencies
 \code{min}, \code{max}, \code{longest_min}, \code{longest_max}, \code{peak}, \code{centre}, \verb{outer min}
 and \verb{outer max} and the bandwidths \code{bandwidth} and \verb{outer bandwidth}, all
 in output.unit, and the quality factor \code{Q}. Q and the spectral flatness are

@@ -422,6 +422,21 @@
   the recording is.
 
 ## Fixes
+- frequencyStats() measured its spectral flatness over the whole spectrum while
+  every other statistic was measured over the band above `lowcut`, and returned
+  the two beside each other in one list as though they described the same
+  frequencies. A caller raising the cut to leave out wind or handling noise was
+  given peak, bandwidth and Q measured on the clean band and a flatness still
+  carrying the rumble: it was the same number whatever the cut, 0.392 for a
+  hand-built spectrum whose own band flatness runs 0.550, 0.484 and 0.651 as the
+  cut rises past 2, 4 and 6 kHz.
+  The flatness is now measured over the band the rest of the statistics are
+  measured over. The bins below the cut are dropped rather than zeroed, as the
+  flatness substitutes 1e-5 for a zero and a zeroed spectrum would describe a
+  band padded out with bins a hundred dB down rather than the band that was
+  asked for. For the sheep recording of the seewave package at the default cut
+  of 1000 Hz the flatness is 0.651 rather than 0.548, and `sheepFrequencyStats`
+  is stored anew with the value the function now returns.
 - dutyCycle() applied its `limit` as a proportion of the loudest sample in the
   wave rather than as the threshold the help page described, so no two
   recordings could be compared: the threshold was set by whatever the loudest
