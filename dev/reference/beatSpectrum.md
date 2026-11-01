@@ -25,7 +25,9 @@ beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 
 - max_period:
 
-  the maximal rhythmicity period expected, in seconds
+  the maximal rhythmicity period expected, in seconds, which is the
+  longest period the spectrum runs to. It must be at least twice
+  min_period.
 
 - dj:
 
