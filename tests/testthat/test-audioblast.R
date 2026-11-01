@@ -288,6 +288,132 @@ test_that("a query matching nothing gives nothing rather than an error", {
   expect_null(audioblast("data", "recordings", check=FALSE, quiet=TRUE))
 })
 
+#The shapes below are kept as the JSON audioBlast sends rather than built from
+#R lists as the mocks above are, because a list cannot hold a null: a field a
+#response carries with nothing in it is one of the shapes under test, and
+#jsonlite leaves a NULL element out of what it writes altogether. They are
+#responses constructed to carry one shape each, not recordings of the API, so
+#they are kept apart from the saved responses alongside them.
+shapeApi <- function(..., env=parent.frame()) {
+  bodies <- vapply(c(...), function(n) {
+    path <- test_path("fixtures", "audioblast", "shapes", paste0(n, ".json"))
+    paste(readLines(path, warn=FALSE), collapse="\n")
+  }, character(1))
+  asked <- new.env(parent=emptyenv())
+  asked$urls <- character(0)
+  httr2::local_mocked_responses(function(req) {
+    asked$urls <- c(asked$urls, req$url)
+    httr2::response(
+      status_code=200,
+      headers=list("Content-Type"="application/json"),
+      body=charToRaw(bodies[[min(length(asked$urls), length(bodies))]])
+    )
+  }, env=env)
+  return(asked)
+}
+
+test_that("pages that do not carry the same fields are joined on all of them", {
+  #rbind() needs the same columns in each of its arguments, so a search whose
+  #pages differed in them failed with "numbers of columns of arguments do not
+  #match" once both pages had been fetched, losing the records of both.
+  api <- shapeApi("pages-differ-1", "pages-differ-2")
+  expect_message(
+    res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE),
+    "audioBlast gave 1 field for only some of the records.*\\(deployment\\)"
+  )
+  expect_length(api$urls, 2)
+  expect_s3_class(res, "data.frame")
+  expect_equal(colnames(res), c("source", "id", "taxon", "deployment"))
+  expect_equal(res$id, c("1", "2"))
+  #The field is NA for the page that came without it, and keeps the type of
+  #the page that carried it rather than becoming a logical column
+  expect_equal(res$deployment, c(NA, "hedge"))
+  expect_type(res$deployment, "character")
+})
+
+test_that("a field the first page carried and a later one did not is kept", {
+  api <- shapeApi("pages-differ-1", "page-fewer-fields")
+  expect_message(
+    res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE),
+    "\\(taxon\\)"
+  )
+  expect_equal(colnames(res), c("source", "id", "taxon"))
+  expect_equal(res$taxon, c("Gryllotalpa vineae", NA))
+})
+
+test_that("the batches of a long filter are joined on all their fields too", {
+  #The batches of a filter given more than a hundred values are by
+  #construction different records, and so the likelier of the two joins to
+  #meet records from sources that do not hold the same fields.
+  api <- shapeApi("batch-differ-1", "batch-differ-2")
+  expect_message(
+    res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE, id=as.character(1:150)),
+    "\\(deployment\\)"
+  )
+  expect_length(api$urls, 2)
+  expect_equal(res$id, c("1", "101"))
+  expect_equal(res$deployment, c(NA, "hedge"))
+})
+
+test_that("pages that do carry the same fields are joined without a word", {
+  api <- shapeApi("pages-differ-1", "pages-differ-1")
+  expect_silent(res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE))
+  expect_length(api$urls, 2)
+  expect_equal(nrow(res), 2)
+})
+
+test_that("a page audioBlast sends as a single record is read as one row", {
+  #The record itself rather than an array holding it, which jsonlite reads as
+  #a list of its fields: rbind() of a list of fields gives a matrix of them,
+  #so the search returned a matrix where a data frame was documented.
+  shapeApi("page-one-record-object")
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE)
+  expect_s3_class(res, "data.frame")
+  expect_equal(nrow(res), 1)
+  expect_equal(res$taxon, "Gryllotalpa vineae")
+})
+
+test_that("a field a page carries with nothing in it is NA rather than absent", {
+  shapeApi("page-null-field")
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE)
+  expect_true("deployment" %in% colnames(res))
+  expect_true(is.na(res$deployment))
+})
+
+test_that("a page carrying no records is passed over rather than joined", {
+  #An empty page joined to a page of records failed in rbind() as a page of
+  #different fields did.
+  api <- shapeApi("pages-differ-1", "page-no-records")
+  res <- audioblast("data", "recordings", check=FALSE, quiet=TRUE)
+  expect_length(api$urls, 2)
+  expect_equal(nrow(res), 1)
+  expect_equal(res$id, "1")
+})
+
+test_that(".audioblast_bind() joins what it is given, or gives nothing", {
+  expect_null(.audioblast_bind(list()))
+  expect_null(.audioblast_bind(list(NULL, list())))
+  d <- data.frame(id="1", stringsAsFactors=FALSE)
+  expect_identical(.audioblast_bind(list(d, NULL)), d)
+})
+
+test_that(".audioblast_bind() keeps a field that holds a record of its own", {
+  #jsonlite reads such a field as a data frame within the data frame, which a
+  #logical NA in the rows that came without it would mangle.
+  one <- data.frame(id="1", stringsAsFactors=FALSE)
+  two <- data.frame(id="2", stringsAsFactors=FALSE)
+  two$position <- data.frame(lat=51.5, lon=-0.1)
+  expect_message(joined <- .audioblast_bind(list(one, two)), "\\(position\\)")
+  expect_s3_class(joined$position, "data.frame")
+  expect_equal(joined$position$lat, c(NA, 51.5))
+})
+
+test_that(".audioblast_rows() reads a field of several values as it came", {
+  rows <- .audioblast_rows(list(id="1", counts=c(1, 2, 3)))
+  expect_equal(nrow(rows), 1)
+  expect_equal(rows$counts[[1]], c(1, 2, 3))
+})
+
 # ---------------------------------------------------------- the requests ---
 
 test_that("audioblast() requests are built correctly", {

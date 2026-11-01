@@ -441,6 +441,23 @@
   raises the loudest sample to full scale and so hands the threshold back to
   it, and removes the offset as well, which lifts silence off zero: a wave nine
   tenths of which is silent measured 1 rather than 0.1.
+- audioblast() lost every record of a search whose responses did not carry the
+  same fields, failing with "numbers of columns of arguments do not match"
+  after fetching them all. The responses of a search were joined with
+  `rbind()`, which needs the same columns in each of its arguments, and
+  audioBlast gives the fields its records carry rather than every field a
+  module has: two pages of one search can differ in them, and so can the
+  batches that a filter of more than a hundred values is sent in, which are by
+  construction different records. The responses are now joined on all the
+  fields any of them carried, with `NA` where a response came without one,
+  which is what the `jsonlite` package already does for a field that one
+  record of a response does not carry. Such an `NA` is what audioBlast did not
+  give rather than what the source does not hold, so the fields that only some
+  responses carried are named in a message.
+  A response carrying a single record has come back as the record itself
+  rather than as an array holding it, which `rbind()` made a matrix of rather
+  than the data frame audioblast() is documented to return; that shape is now
+  read as one row, in audioblast() and in audioblastRecord() alike.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes

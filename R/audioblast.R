@@ -18,6 +18,14 @@
 #' Columns that audioBlast describes as numeric are returned as numbers, and
 #' all others as character strings.
 #'
+#' audioBlast gives the fields its records carry rather than every field the
+#' module has, and the records of one search can come from sources that do not
+#' hold the same fields, so the responses of a search can differ in them. The
+#' results are joined on all the fields any response carried, and a record that
+#' came without a field has `NA` there. The fields that only some responses
+#' carried are named in a message, as such an `NA` says that audioBlast did not
+#' give the field for that record rather than that its source holds nothing.
+#'
 #' @param type One of data, analysis, standalone.
 #' @param name Name of data or analysis source.
 #' @param endpoint Optionally specify endpoint of an audioBlast module.
@@ -131,11 +139,11 @@ audioblast <- function(
     if (output %in% c("JSON-LD", "Turtle")) {
       return(unlist(rets))
     }
-    rets <- rets[!vapply(rets, is.null, logical(1))]
-    if (length(rets) == 0) {
+    ret <- .audioblast_bind(rets)
+    if (is.null(ret)) {
       return(NULL)
     }
-    ret <- .audioblast_convert(do.call(rbind, rets), info)
+    ret <- .audioblast_convert(ret, info)
 
     if (output=="Annotation") {
       ret <- .audioblast_annotations(ret)
@@ -184,8 +192,8 @@ audioblastRecord <- function(type, source, id, output="data.frame") {
   if (output != "data.frame") {
     return(httr2::resp_body_string(resp))
   }
-  ret <- .audioblast_json(resp)$data
-  if (length(ret) == 0) {
+  ret <- .audioblast_rows(.audioblast_json(resp)$data)
+  if (nrow(ret) == 0) {
     return(NULL)
   }
   module <- names(.audioblast_record_types)[.audioblast_record_types == type]
@@ -608,7 +616,111 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
       setTxtProgressBar(pb, query$page)
     }
   }
-  do.call(rbind, rets)
+  .audioblast_bind(rets)
+}
+
+#' The records of one response, as a data frame
+#'
+#' A search of a module gives its records as an array, which jsonlite reads as
+#' a data frame, filling in with NA a field that one record of the array does
+#' not carry: one response is always rectangular. A response carrying a single
+#' record has come back as the record itself rather than as an array holding
+#' it, which jsonlite reads as a list of its fields, and a list of fields went
+#' through rbind() to a matrix of them rather than to a data frame.
+#'
+#' @param d The `data` field of a response.
+#' @return A data frame of the records the response holds, with no rows and no
+#'   columns where it holds none.
+#' @keywords internal
+#' @noRd
+.audioblast_rows <- function(d) {
+  if (is.data.frame(d)) {
+    return(d)
+  }
+  # A field holding a record of its own, rather than one value, is kept as it
+  # came, in a column of one element
+  fields <- lapply(d, function(v) if (length(v) == 1 && !is.list(v)) v else I(list(v)))
+  as.data.frame(fields, stringsAsFactors=FALSE, optional=TRUE)
+}
+
+#' Join the responses of a search into one data frame
+#'
+#' The responses of a search were joined with rbind(), which needs the same
+#' columns in each of its arguments, so a search whose responses did not carry
+#' the same fields failed with "numbers of columns of arguments do not match"
+#' and threw away every record already fetched. Responses of one search do
+#' differ in their fields, both between the pages of a search and between the
+#' batches that a filter of more than a hundred values is sent in, because
+#' audioBlast gives the fields its records carry rather than every field the
+#' module has, and indexes sources that do not hold the same fields.
+#'
+#' The responses are joined on all the fields any of them carried, with NA
+#' where a response came without one, which is what jsonlite already does for a
+#' field that one record of a response does not carry. Such an NA is not a
+#' value audioBlast gave, so the fields that only some responses carried are
+#' named in a message; a warning would be routed to the `on.issue` of
+#' [audioblast()], which is `stop` by default and would again discard the
+#' records the warning is about.
+#'
+#' @param rets The `data` field of each response, in the order fetched.
+#' @return A data frame of every record, or NULL where there are none.
+#' @keywords internal
+#' @noRd
+.audioblast_bind <- function(rets) {
+  rows <- lapply(rets, .audioblast_rows)
+  rows <- rows[vapply(rows, nrow, integer(1)) > 0]
+  if (length(rows) == 0) {
+    return(NULL)
+  }
+  if (length(rows) == 1) {
+    return(rows[[1]])
+  }
+  # One NA of each field, taken from the first response that carried it, which
+  # also puts the fields in the order they were first seen
+  absent <- list()
+  for (d in rows) {
+    for (col in setdiff(colnames(d), names(absent))) {
+      absent[[col]] <- .audioblast_na(d[[col]], 1L)
+    }
+  }
+  cols <- names(absent)
+  partial <- setdiff(cols, Reduce(intersect, lapply(rows, colnames)))
+  if (length(partial) > 0) {
+    message(
+      "audioBlast gave ", length(partial), " field", if (length(partial) > 1) "s",
+      " for only some of the records of this search (", paste(partial, collapse=", "),
+      "). A record that came without ", if (length(partial) > 1) "them" else "it",
+      " has NA there, which says that audioBlast did not give the field for that ",
+      "record rather than that its source holds nothing."
+    )
+  }
+  rows <- lapply(rows, function(d) {
+    for (col in setdiff(cols, colnames(d))) {
+      d[[col]] <- .audioblast_na(absent[[col]], nrow(d))
+    }
+    d[, cols, drop=FALSE]
+  })
+  do.call(rbind, rows)
+}
+
+#' As many NAs as a column needs, of the type that column holds
+#'
+#' Indexing a column with NA gives NAs of its own type, which a logical NA is
+#' not: a field holding a record of its own is a data frame within the data
+#' frame, and a logical NA in its place is recycled across that frame with a
+#' warning and leaves the record mangled.
+#'
+#' @param x The column, as the response that carried the field holds it.
+#' @param n How many NAs are wanted.
+#' @return n NAs of the type of x.
+#' @keywords internal
+#' @noRd
+.audioblast_na <- function(x, n) {
+  i <- rep(NA_integer_, n)
+  if (is.data.frame(x)) {
+    return(x[i, , drop=FALSE])
+  }
+  x[i]
 }
 
 #' Prepare filters for sending to audioBlast
