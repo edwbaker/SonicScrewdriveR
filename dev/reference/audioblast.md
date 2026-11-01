@@ -99,6 +99,15 @@ e.g. `duration = ab_range(10, 20)`.
 Columns that audioBlast describes as numeric are returned as numbers,
 and all others as character strings.
 
+audioBlast gives the fields its records carry rather than every field
+the module has, and the records of one search can come from sources that
+do not hold the same fields, so the responses of a search can differ in
+them. The results are joined on all the fields any response carried, and
+a record that came without a field has `NA` there. The fields that only
+some responses carried are named in a message, as such an `NA` says that
+audioBlast did not give the field for that record rather than that its
+source holds nothing.
+
 ## See also
 
 [`audioblastFilters()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audioblastFilters.md)

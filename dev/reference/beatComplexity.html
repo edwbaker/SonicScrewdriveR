@@ -66,17 +66,21 @@ peaks.</p>
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>A Wave object</p></dd>
+<dd><p>A Wave object. Stereo Wave and WaveMC objects are passed to
+allChannels(), which measures each channel separately.</p></dd>
 
 
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
-<dd><p>If TRUE a spectrogram overlaid with the peaks is plotted.</p></dd>
+<dd><p>If TRUE a spectrogram overlaid with the peaks is plotted. One
+plot is drawn per channel, so a multi-channel wave needs a layout of its
+own for all of them to be seen.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list of the complexity, a vector of the peak periods, and the number of
-  peaks. The complexity is NA if the beat spectrum has no peak.</p>
+peaks. The complexity is NA if the beat spectrum has no peak. For
+multi-channel input, one such list per channel.</p>
     </div>
 
     <div class="section level2">

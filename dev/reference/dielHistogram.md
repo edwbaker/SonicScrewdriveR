@@ -59,3 +59,10 @@ dielHistogram(
 ## Value
 
 A data frame of start and end points of bins.
+
+## Details
+
+Each bin is closed at its start and open at its end, as the data frame
+returned labels it, so a time falling exactly on a boundary is counted
+in the bin that begins there: a recording made at 01:00 is in the 01:00
+bin and not in the midnight one.

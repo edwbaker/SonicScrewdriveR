@@ -66,7 +66,9 @@ the average power per frequency band.</p>
 
 
 <dl><dt id="arg-wave">wave<a class="anchor" aria-label="anchor" href="#arg-wave"></a></dt>
-<dd><p>an R object or path to a wave file</p></dd>
+<dd><p>an R object or path to a wave file. Stereo Wave and WaveMC
+objects are passed to allChannels(), which returns the spectrum of each
+channel separately.</p></dd>
 
 
 <dt id="arg-min-period">min_period<a class="anchor" aria-label="anchor" href="#arg-min-period"></a></dt>
@@ -89,7 +91,8 @@ the average power per frequency band.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>a spectrum as a data frame.
 It contains two columns: <code>power</code> and <code>period</code>.
-The number of rows depend on the resolution and frequency range.</p>
+The number of rows depend on the resolution and frequency range.
+For multi-channel input, one such data frame per channel.</p>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>

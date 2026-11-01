@@ -103,6 +103,13 @@ carry, and UTC for times that carry none.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame of start and end points of bins.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Each bin is closed at its start and open at its end, as the data frame
+returned labels it, so a time falling exactly on a boundary is counted in the
+bin that begins there: a recording made at 01:00 is in the 01:00 bin and not
+in the midnight one.</p>
+    </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

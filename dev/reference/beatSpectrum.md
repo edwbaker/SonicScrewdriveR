@@ -15,7 +15,9 @@ beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 
 - wave:
 
-  an R object or path to a wave file
+  an R object or path to a wave file. Stereo Wave and WaveMC objects are
+  passed to allChannels(), which returns the spectrum of each channel
+  separately.
 
 - min_period:
 
@@ -37,7 +39,7 @@ beatSpectrum(wave, min_period = 0.005, max_period = 30, dj = 1/32, ...)
 
 a spectrum as a data frame. It contains two columns: `power` and
 `period`. The number of rows depend on the resolution and frequency
-range.
+range. For multi-channel input, one such data frame per channel.
 
 ## Author
 
