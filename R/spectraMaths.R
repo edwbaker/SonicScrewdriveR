@@ -66,9 +66,24 @@ zeroSpectrum <- function(s1) {
   return(s1)
 }
 
+#' Scale a spectrum so that its largest amplitude is one
+#'
+#' @param s1 Spectrum to normalise.
+#' @return The spectrum with its amplitudes divided by the largest of them.
+#' @keywords internal
+#' @noRd
 normaliseSpectrum <- function(s1) {
   s1<- validateSpectrum(s1, coerceNegative = TRUE)
   m <- max(s1[,2])
+  #Negative amplitudes have been coerced to zero above, so a largest amplitude
+  #of zero means every one of them is zero. There is nothing to normalise
+  #against: dividing gave a spectrum of NaN, which validateSpectrum() then
+  #turned into a silent spectrum without a word, so a caller was handed zeros
+  #as though they were the measurement.
+  if (m == 0) {
+    warning("Spectrum amplitudes are all zero, so the spectrum cannot be normalised and is returned unnormalised.")
+    return(s1)
+  }
   s1[,2] <- s1[,2]/m
   return(s1)
 }

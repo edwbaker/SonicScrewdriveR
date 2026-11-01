@@ -396,6 +396,30 @@
   the recording is.
 
 ## Fixes
+- Normalising something that is entirely zero gave NaN without a word.
+  ntd(normalise=TRUE) divides its outputs by their total and
+  normaliseSpectrum() divides the amplitudes by the largest of them, and
+  neither total can be anything but zero when its input is nothing, so digital
+  silence, a function returning zero for every interval, or a zero-valued
+  spectrum gave NaN throughout in place of the probability density and the
+  normalised spectrum they document. Both now return their input unnormalised
+  and warn, a silent window inside a long recording being ordinary rather than
+  a reason to abandon a batch. The ntd guard tests the total rather than the
+  outputs, so outputs of opposite sign that cancel to zero are caught too,
+  where they gave Inf rather than NaN. A total that is NA is still divided: an
+  output a function could not measure is a different matter from a total of
+  nothing.
+- validateSpectrum() tested amplitudes with is.na(), which is TRUE of NaN as
+  well as NA, so every NaN was replaced with zero under the rule that an
+  unknown amplitude can stand as zero, whatever coerceNA was set to, and a
+  failed calculation reached the caller as a measurement: addSpectra() of two
+  spectra of NaN returned a silent spectrum as though it were their sum. NaN is
+  a calculation that produced no number rather than an unknown value, and there
+  is nothing for it to stand in for, so it is now reported. This surfaces one
+  real case rather than swallowing it: seewave::spec() divides by its own
+  largest amplitude, so the spectrum of a silent recording is NaN throughout,
+  and a recording that measured nothing was indistinguishable from one that
+  measured silence.
 - ntd() cut each interval inclusive of both its ends, so an interval of n
   samples was cut as n+1 and every boundary sample was measured in the interval
   before it as well as the one after. On a wave of 1:21 with events at 1, 11 and
