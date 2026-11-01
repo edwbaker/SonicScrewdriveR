@@ -235,6 +235,27 @@ test_that("dayPhase accounts for the whole of the documented example", {
   expect_true("Dusk.Astro" %in% sub("[0-9]+$", "", rownames(r)))
 })
 
+test_that("dayPhase accounts for a recording that starts in a repeated hour", {
+  # The London clock reads 01:00 to 02:00 twice on 27 October 2024. A POSIXct is
+  # an instant and so names one of the two without ambiguity, but both of them
+  # fall in that day and the hour from either has to be accounted for.
+  starts <- as.POSIXct(c("2024-10-27 00:30:00", "2024-10-27 01:30:00"), tz="UTC")
+  for (i in seq_along(starts)) {
+    expect_equal(format(starts[i], "%H:%M", tz="Europe/London"), "01:30")
+    r <- dayPhase(time=starts[i], duration=3600, lat=51.5, lon=-0.1,
+                  tz="Europe/London")
+    expect_equal(solarCoverage(r), 3600, info=format(starts[i], usetz=TRUE))
+    expect_equal(sub("[0-9]+$", "", rownames(r))[1], "Night")
+  }
+
+  # And the first hour of a day whose midnight the clock skipped: Havana went
+  # from 23:59 on 9 March 2024 to 01:00 on the 10th.
+  r <- dayPhase(time=as.POSIXct("2024-03-10 01:30:00", tz="America/Havana"),
+                duration=3600, lat=23.1, lon=-82.4, tz="America/Havana")
+  expect_equal(solarCoverage(r), 3600)
+  expect_equal(sub("[0-9]+$", "", rownames(r))[1], "Night")
+})
+
 test_that("dayPhase gives the phase of a summer night in southern Scandinavia", {
   # At 58 N on this night nauticalDusk and nauticalDawn do not occur either, and the
   # recording, which is in nautical twilight throughout, came back with the moon and
