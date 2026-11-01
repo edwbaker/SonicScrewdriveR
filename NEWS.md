@@ -187,6 +187,32 @@
   written as any other annotation: a labelled region runs from its position
   for its length, and any other point starts and ends where it is. The data
   frame is given with `output="data.frame"`.
+- readAOEF() and writeAOEF() read and write the Acoustic Objects Exchange
+  Format (AOEF), the JSON format of the soundevent Python package, in which
+  the Whombat annotation tool exports its projects and imports them. A sound
+  event in AOEF has a shape, which is a stretch of time, a box of time and
+  frequency, a single moment, a single point, or lines and polygons drawn on
+  the spectrogram, and any number of tags, each a key and a value. It is read
+  as one `Annotation` for each of its tags, spanning the smallest range of time
+  and frequency that holds the shape, with who made it, when, its notes and the
+  features measured of it in its metadata. The tags of a clip, a part of a
+  recording annotated as a whole, are read as annotations spanning the clip,
+  and a clip annotated as holding nothing is read as an annotation with no
+  value, so that the absence is kept. The predictions of a model run are read
+  in the same way, with their scores.
+
+  Annotations that were read are written back as they were. soundevent's own
+  example evaluation set, read and written again, loads in soundevent with
+  every sound event, tag, shape, note, identifier and recording the same, and
+  every time and frequency the same to the last digit, which writing numbers
+  with jsonlite, to fifteen significant digits, did not give. Annotations made
+  here, such as those birdNetAnalyse() gives, are written with the duration,
+  channels and sample rate AOEF needs of each recording, read from its file,
+  and put in a clip spanning the recording, as soundevent reads no annotation
+  outside a clip. soundevent on Windows writes and reads in the encoding of
+  the locale rather than in UTF-8, so a file that is not UTF-8 is read as
+  Windows-1252, and every character outside ASCII is written as an escape,
+  which every reader decodes alike.
 - wavChunks() lists the chunks a wave file holds: every one of them, in the
   order the file holds them, with where its body begins, how large it is,
   whether it was cut short, and, for a list, which kind of list it is. The
@@ -411,6 +437,25 @@
   asked for. For the sheep recording of the seewave package at the default cut
   of 1000 Hz the flatness is 0.651 rather than 0.548, and `sheepFrequencyStats`
   is stored anew with the value the function now returns.
+- dutyCycle() applied its `limit` as a proportion of the loudest sample in the
+  wave rather than as the threshold the help page described, so no two
+  recordings could be compared: the threshold was set by whatever the loudest
+  moment of each happened to be. A pulse train with a tenth of its samples at a
+  quarter of full scale, over a floor at a sixteenth of it, measured 1, the
+  floor having cleared a threshold a tenth of the way to the train's own peak.
+  One sample added at full scale raised that threshold past the floor and the
+  same wave measured 0.1, so a single transient moved the figure tenfold
+  without any of the signal changing.
+  `limit` is now a proportion of the largest amplitude the wave's format can
+  hold, a tenth of full scale by default, whether the wave is floating point or
+  integer. The threshold is the same for every recording and no sample in the
+  wave sets it, so the train above measures 0.1 with the transient and without
+  it. A limit outside 0 to 1 is refused by name rather than measured: an
+  amplitude, which is what the help page described, would otherwise have given
+  a duty cycle of zero. `normalise` now defaults to FALSE, as normalising
+  raises the loudest sample to full scale and so hands the threshold back to
+  it, and removes the offset as well, which lifts silence off zero: a wave nine
+  tenths of which is silent measured 1 rather than 0.1.
 - readAudacityLabels() given a label file of fewer than three columns failed
   with "'names' attribute [3] must be the same length as the vector [2]", which
   names an internal operation and says nothing about the file. Audacity writes
