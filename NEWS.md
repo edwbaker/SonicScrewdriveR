@@ -422,6 +422,38 @@
   the recording is.
 
 ## Fixes
+- rainfall_bedoya2017(), behind rainfallDetection(method="bedoya2017"), compared
+  its `Tmean` threshold against a quantity with no fixed scale, so the first of
+  the two criteria the cited method applies decided nothing, and the answer
+  depended on the format the recording happened to be held in.
+  `meanspec(PSD=TRUE, norm=FALSE)` leaves its result in the sample units of the
+  wave, so one second of the same noise gave 0.37 at 8 bit, 6.1e+03 at 16 bit,
+  2.6e+13 at 32 bit PCM and 5.7e-06 as 32 bit floating point, against the
+  threshold of 0.9e-6 that Bedoya et al. (2017) publish. Over 200 draws of quiet
+  noise at 16 bit the mean never once failed its threshold, so the rule was the
+  signal-to-noise criterion alone and noise of any level read as rainfall; for a
+  floating point wave the same threshold did bite, at a level standing for
+  nothing physical. Of ten labelled rain recordings, two were rainfall at 16 bit
+  and not rainfall as 32 bit floating point.
+  The band's power spectral density is now taken from samples divided by the
+  largest value the format holds, as the mean power of each bin over the windows
+  divided by the width of a bin, so it is power per Hz relative to full scale:
+  the same number at any bit depth, unchanged by the window length, and on the
+  scale the published threshold is in. Summed over the spectrum it recovers the
+  variance of the samples, which is the check that the scaling is right rather
+  than merely consistent. Eight bit PCM is centred first, being the one depth
+  that is unsigned, where the largest sample is not the largest excursion from
+  silence and dividing by it alone left the wave four times low.
+  `meanspec(PSD=TRUE)` also squared the mean amplitude instead of averaging the
+  power, which this reading corrects on the way past.
+  The value rainfallDetection() returns is therefore comparable between
+  recordings, and `Tmean` now defaults to the 0.9e-6 of the paper rather than
+  1e-6; both the value and the class of a recording change.
+  Putting the threshold into physical units does not make 0.9e-6 universal. The
+  level of a band is set by recorder gain, and across ten labelled rain
+  recordings the density runs from 2.1e-08 to 1.7e-05, so `Tmean` is a figure to
+  calibrate for a recorder, as the hardRain package and the authors of the
+  method themselves now do.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
