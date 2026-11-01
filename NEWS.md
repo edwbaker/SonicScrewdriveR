@@ -396,6 +396,45 @@
   the recording is.
 
 ## Fixes
+- pulseIntervals() returned intervals that hold a pulse rather than areas of no
+  pulses. Each interval started at the preceding pulse's onset rather than at its
+  offset, so the whole of that pulse fell inside the interval, an error of one
+  pulse duration; `pulses$offsets` was handed in and never read at all. Thirteen
+  pulses of 50 samples with one long gap reported 1000 to 5000, where the pulse
+  at 1000 runs to 1049 and the silence begins at 1050. The outlier test was also
+  two-sided, so a gap that is unusually *short* was reported as an area of no
+  pulses: one pulse train returned the interval 16000 to 16010, which lay
+  entirely inside the pulse occupying 16000 to 16050.
+
+  An interval now runs from the offset of one pulse to the onset of the next,
+  following the same convention as the detectors, so it holds exactly the samples
+  that are not part of a pulse. The gaps the outlier test is computed on are
+  those same gaps rather than the distances between onsets, and the test is
+  one-sided. **Every interval pulseIntervals() has reported is shortened by the
+  duration of the pulse at its start, and an unusually short gap is no longer
+  reported at all.** The offsets are now required, as a gap cannot be measured
+  without them.
+
+- pulseIntervals() with the default `nsd` of 2 returned nothing at all for six or
+  fewer gaps, however extreme the gap, and said nothing about why. An interval is
+  kept only when a gap is more than `nsd` standard deviations above the mean, but
+  the gap is one of the values the mean and the standard deviation are taken from
+  and so lifts the cut-off it has to clear: the most any one gap of k can reach is
+  (k-1)/sqrt(k), which is 1.789 for five gaps and does not pass 2 until there are
+  six. A call that cannot report anything whatever the gaps are now says so, and
+  the ceiling is documented. The criterion itself is unchanged.
+
+- pulseStats() turned misaligned detector output into negative pulse durations.
+  It pairs onsets and offsets by position, which is right for every detector in
+  the package, but nothing checked that the offset follows the onset beside it:
+  `list(onsets=c(500, 1500), offsets=c(100, 900, 1900))` returned durations of
+  -400 and -600. That input was not hand-built, but what two of the detectors
+  returned for a recording beginning part way through a pulse and for pulses of
+  unequal length. A duration is a length of time and cannot be negative, and the
+  package validates that values are physically possible wherever it can, so this
+  is now refused by name. Pulses that overlap are refused the same way, as the
+  distance between them would be negative. Both guards are unreachable from the
+  detectors themselves, which is what the boundary convention is for.
 - The three pulse detectors used three different conventions for where a pulse
   begins and ends, so onsets were not comparable between them and, within
   pd_simple(), not comparable with the offsets beside them. They now share one,
