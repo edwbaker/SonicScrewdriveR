@@ -396,6 +396,27 @@
   the recording is.
 
 ## Fixes
+- parseFilename() reported a name whose digits spell no real date the same way
+  it reports a name carrying no time at all. A format is matched on the shape
+  of the digits, and `20240230_120000` satisfies the shape of
+  `YYYYMMDD_HHMMSS` while naming a day that does not exist, so `strptime()`
+  gave NA and that NA was returned beside a confident `match` with no warning.
+  NA is also the documented reading of a format carrying no time, which TSA
+  names are, so a caller could not tell "this name has no date in it" from
+  "this name has a date I could not read". The second now names `datetime` in
+  `unparsed` and warns, naming the file and the format it matched; the first
+  reports NA and names nothing, as before. A format the caller names that the
+  name cannot be in, as `parseFilename("recording.wav", format="YYYYMMDD")`,
+  reads the same way, and a `timestamp` that is not a count of seconds no
+  longer reports only R's own "NAs introduced by coercion", which names
+  neither the file nor the format.
+
+  `match` is unchanged. It reports which convention a name follows, and
+  `20240230_120000` does follow that one; what it does not do is spell a real
+  date, which is what `unparsed` says. readMetadata() silences this one
+  warning, since it takes no date from such a name in any case and says so,
+  and it keeps the model, prefix, species and collection the same name may
+  carry.
 - An AudioMoth comment in a wording this package does not know reported two
   facts about the recording that the file never stated. `filter`, `filter.limit`
   and `cancelled` were set FALSE and replaced only where a pattern matched, and
