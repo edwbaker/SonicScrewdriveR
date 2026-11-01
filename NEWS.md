@@ -1882,6 +1882,11 @@
   calculated for every population.
 - birdNetAnalyse() read NA for the year, month and day when given a list of dates,
   and grew its results one detection at a time.
+- The scikit-maad wrappers analyse the first channel of a recording and
+  discarded the rest without a word, so a stereo Wave or a WaveMC was reported
+  on as though its first channel were the whole of it. They still analyse the
+  first channel, as `maad.sound.load()` does, and return what they returned,
+  but now warn that the other channels were not analysed.
 - maad_frequency_entropy() accepted a maad object and then replaced it, unlike every
   other index in the file.
 - maad_spectral_entropy() had documentation and a help page but was not exported, so
