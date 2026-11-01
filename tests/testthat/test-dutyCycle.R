@@ -127,3 +127,84 @@ test_that("a wave holding NA samples is refused by name", {
   expect_error(dutyCycle(w, normalise=TRUE), "NA samples")
   expect_error(dutyCycle(w, output="percent", normalise=FALSE), "NA samples")
 })
+
+# The same pulse train as pulseTrain() above, a duty cycle of exactly 0.1, in
+# each format the package handles. Eight bit PCM is unsigned about a midpoint of
+# 128, so its silence is 128 and its bursts are a quarter of full scale either
+# side of that; every other format is signed about zero.
+formatTrain <- function(bit, pcm=TRUE) {
+  centre <- if (pcm && bit == 8) 128 else 0
+  peak <- if (pcm && bit == 8) 127 else if (!pcm) 1 else 2^(bit - 1) - 1
+  # Only an integer format wants rounding: round(0.25) is 0, which made the
+  # floating point train silent and so measured a duty cycle of zero.
+  on <- centre + if (pcm) round(0.25 * peak) else 0.25 * peak
+  x <- rep.int(c(rep.int(on, 100), rep.int(centre, 900)), 10)
+  return(tuneR::Wave(x, samp.rate=8000, bit=bit, pcm=pcm))
+}
+
+test_that("an eight bit wave's silence is its midpoint rather than zero", {
+  # Eight bit PCM holds 0 to 255 about 128, so abs(wave@left) read its silence
+  # as 128 and every sample cleared any threshold below half of full scale. A
+  # train with a duty cycle of 0.1 measured 1 at every limit up to 0.5, and 0.1
+  # at 0.6 only because the threshold happened to land between the two levels.
+  w <- formatTrain(8)
+  expect_equal(min(w@left), 128)
+  expect_equal(dutyCycle(w, limit=0.1), 0.1)
+  expect_equal(dutyCycle(w, limit=0.1, output="percent"), 10)
+
+  # The bursts are a quarter of full scale, so a limit either side of that puts
+  # everything or nothing above the threshold - which is what a limit should do,
+  # rather than the 1 that every one of these gave.
+  expect_equal(dutyCycle(w, limit=0.05), 0.1)
+  expect_equal(dutyCycle(w, limit=0.3), 0)
+  expect_equal(dutyCycle(w, limit=0.5), 0)
+})
+
+test_that("the same train measures the same duty cycle in every format", {
+  # The point of a limit that is a proportion of full scale: one recording at
+  # several depths is one duty cycle. Eight bit was the odd one out at 1.
+  for (limit in c(0.05, 0.1, 0.3)) {
+    measured <- c(
+      "8" = dutyCycle(formatTrain(8), limit=limit),
+      "16" = dutyCycle(formatTrain(16), limit=limit),
+      "24" = dutyCycle(formatTrain(24), limit=limit),
+      "32f" = dutyCycle(formatTrain(32, pcm=FALSE), limit=limit)
+    )
+    expect_equal(
+      measured, c("8"=measured[["16"]], "16"=measured[["16"]],
+                  "24"=measured[["16"]], "32f"=measured[["16"]]),
+      info=paste("limit", limit)
+    )
+  }
+})
+
+test_that("an eight bit wave stays about its midpoint through normalise", {
+  # normalize() from tuneR keeps an unsigned wave within 0 to 255 about its
+  # midpoint, so the centring is right on this path too and not only on the raw
+  # samples.
+  n <- normalise(formatTrain(8))
+  expect_gt(min(n@left), 0)
+  expect_lt(min(n@left), 128)
+  expect_lte(max(n@left), 255)
+
+  # normalise=TRUE then measures 1 for this train, because normalize() removes
+  # the offset and a wave that is nine tenths silent has one: the silence moves
+  # off the centre and clears the threshold. That is what @param normalise warns
+  # of and why it defaults to FALSE, and it is not a property of eight bit - the
+  # signed depths do the same, which is what is asserted here.
+  normalised <- vapply(
+    list(formatTrain(8), formatTrain(16), formatTrain(32, pcm=FALSE)),
+    function(w) dutyCycle(w, normalise=TRUE, limit=0.1),
+    numeric(1)
+  )
+  expect_equal(normalised, c(1, 1, 1))
+})
+
+test_that("a limit above full scale counts nothing in any format", {
+  # abs() of an eight bit wave's silence is 128, so limit=1 counted every
+  # sample of one where it counts none of anything else.
+  for (bit in c(8, 16, 24)) {
+    expect_equal(dutyCycle(formatTrain(bit), limit=1), 0, info=paste("bit", bit))
+  }
+  expect_equal(dutyCycle(formatTrain(32, pcm=FALSE), limit=1), 0)
+})
