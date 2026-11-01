@@ -406,3 +406,174 @@ test_that("A version 1 tag gives what its 30-byte comment leaves", {
   expect_true(is.na(m$sources$audiomoth$serial))
   expect_null(m$fields$datetime)
 })
+
+# A wording the parser does not know used to be reported as two facts about the
+# recording: filter and cancelled were initialised FALSE and replaced only on a
+# match, and FALSE is documented to mean that no filter was applied and that
+# the recording ran to completion. A default presented as a reading is worse
+# than no reading, so a clause that was there and went unread now reports NA
+# and names itself in unparsed.
+
+test_that("Every wording the firmware writes reports nothing unparsed", {
+  # The regression check for the whole of this: a field named in unparsed is a
+  # claim that this package failed to read something, so every wording that
+  # exists has to come back clean or the warning is noise.
+  clauses <- list(
+    "nothing appended" = "",
+    "low-pass" = list(
+      "1.5.0" = " Low-pass filter applied with cut-off frequency of 5.0kHz.",
+      "1.6.0" = " Low-pass filter with frequency of 5.0kHz applied."
+    ),
+    "band-pass" = list(
+      "1.5.0" = paste0(
+        " Band-pass filter applied with cut-off frequencies of 1.0kHz and ",
+        "5.0kHz."
+      ),
+      "1.6.0" = " Band-pass filter with frequencies of 1.0kHz and 5.0kHz applied."
+    ),
+    "a stop" = list(
+      "1.5.0" = " Recording cancelled before completion due to low voltage.",
+      "1.6.0" = " Recording stopped due to switch position change."
+    ),
+    "the magnetic switch" = " Recording stopped by magnetic switch.",
+    # The reason that says "microphone", which is not the external microphone
+    # clause and must not be read as a rewording of it.
+    "a microphone change" = " Recording stopped due to microphone change.",
+    "an amplitude threshold" =
+      " Amplitude threshold was 1000 with 2s minimum trigger duration.",
+    "a frequency trigger" = paste0(
+      " Frequency trigger (24.0kHz and window length of 16 samples) threshold ",
+      "was 10% with 2s minimum trigger duration."
+    )
+  )
+  for (name in names(clauses)) {
+    clause <- clauses[[name]]
+    if (!is.list(clause)) {
+      clause <- list("1.5.0"=clause, "1.6.0"=clause)
+    }
+    for (d in audiomothEras(clause)) {
+      expect_null(d$unparsed, info=name)
+    }
+  }
+})
+
+test_that("The gain index and voltage of firmware 1.0 report nothing unparsed", {
+  # Before 1.4.0 the gain was an index and no temperature was written at all,
+  # so a comment without one is not a comment whose temperature went unread.
+  d <- .audiomothComment(paste0(
+    "Recorded at 23:32:00 01/05/2021 (UTC) by AudioMoth 240435055C7B17DB at ",
+    "gain setting 2 while battery state was 4.50V."
+  ))
+  expect_equal(d$gain, "2")
+  expect_equal(d$voltage, "4.50")
+  expect_true(is.na(d$temperature))
+  expect_null(d$unparsed)
+})
+
+test_that("An unrecognised wording reports NA and names the fields", {
+  # Everything the firmware writes today is read, so this stands in for the
+  # next release's rewording rather than quoting a real device.
+  reworded <- paste(
+    "Recorded at 19:22:00 06/04/2019 (UTC) by AudioMoth 24F3190361DC3B0C",
+    "with gain set to medium, battery at 4.5V, temperature 11.2 degrees C."
+  )
+  d <- suppressWarnings(.audiomothComment(reworded))
+
+  expect_equal(d$unparsed, c("gain", "voltage", "temperature"))
+  expect_true(is.na(d$gain))
+  expect_true(is.na(d$voltage))
+  expect_true(is.na(d$temperature))
+  # What the recorder did write is still read, which is why this is worth
+  # reporting rather than refusing.
+  expect_equal(d$start_time, "19:22:00")
+  expect_equal(d$serial, "24F3190361DC3B0C")
+})
+
+test_that("An unread filter clause is NA rather than no filter", {
+  d <- suppressWarnings(.audiomothComment(paste0(
+    preambles[["1.6.0"]], " Lowpass filtering at 5000 Hz was enabled."
+  )))
+  # FALSE here would say the recording used no filter, which this comment
+  # plainly contradicts.
+  expect_true(is.na(d$filter))
+  expect_true(is.na(d$filter.limit))
+  expect_equal(d$unparsed, c("filter", "filter.limit"))
+  expect_false(d$cancelled)
+})
+
+test_that("An unread stop clause is NA rather than ran to completion", {
+  d <- suppressWarnings(.audiomothComment(paste0(
+    preambles[["1.6.0"]], " Recording halted early, SD card full."
+  )))
+  expect_true(is.na(d$cancelled))
+  expect_equal(d$unparsed, "cancelled")
+  expect_false(d$filter)
+})
+
+test_that("An unread microphone clause is NA rather than no external mic", {
+  d <- suppressWarnings(.audiomothComment(paste0(
+    "Recorded at 23:32:00 01/05/2021 (UTC) by AudioMoth 240435055C7B17DB ",
+    "using external mic at medium gain while battery was 4.1V and ",
+    "temperature was 5.8C."
+  )))
+  expect_true(is.na(d$external_mic))
+  expect_equal(d$unparsed, "external_mic")
+})
+
+test_that("The warning carries the comment and a class of its own", {
+  reworded <- paste(
+    "Recorded at 19:22:00 06/04/2019 (UTC) by AudioMoth 24F3190361DC3B0C",
+    "with gain set to medium, battery at 4.5V, temperature 11.2 degrees C."
+  )
+  expect_warning(.audiomothComment(reworded), "gain, voltage, temperature")
+  # The comment itself is in the message, so that a user can report the
+  # wording that this package could not read.
+  expect_warning(.audiomothComment(reworded), "with gain set to medium",
+                 fixed=TRUE)
+
+  w <- tryCatch(.audiomothComment(reworded), warning=function(w) w)
+  expect_s3_class(w, "unparsedComment")
+  expect_s3_class(w, "unparsedField")
+  # Classed so that a walk over a corpus known to hold wordings this package
+  # does not know can silence this one kind and still hear the rest.
+  expect_silent(withCallingHandlers(
+    .audiomothComment(reworded),
+    unparsedField=function(w) invokeRestart("muffleWarning")
+  ))
+})
+
+test_that("A comment cut short is absent rather than unread", {
+  # A version 1 ID3 tag allows a comment 30 bytes, so the rest of it is not in
+  # the file. Nothing there is a wording to report.
+  d <- .audiomothComment("Recorded at 03:00:00 03/06/202")
+  expect_equal(d$start_time, "03:00:00")
+  expect_true(is.na(d$start_date))
+  expect_true(is.na(d$gain))
+  expect_null(d$unparsed)
+})
+
+test_that("A complete comment that reads in full warns about nothing", {
+  for (preamble in preambles) {
+    expect_silent(.audiomothComment(preamble))
+  }
+})
+
+test_that("A comment carrying no zone is absent rather than unread", {
+  # The comments recorded here for the releases before 1.2.0 carry no zone, so
+  # one that names none is not one whose zone went unread.
+  d <- .audiomothComment(paste0(
+    "Recorded at 23:32:00 01/05/2018 by AudioMoth 240435055C7B17DB at gain ",
+    "setting 2 while battery state was 4.1V."
+  ))
+  expect_true(is.na(d$time_zone))
+  expect_null(d$unparsed)
+})
+
+test_that("A zone written in a way this cannot read is named unparsed", {
+  d <- suppressWarnings(.audiomothComment(paste0(
+    "Recorded at 23:32:00 01/05/2021 [UTC] by AudioMoth 240435055C7B17DB at ",
+    "medium gain while battery was 4.1V and temperature was 5.8C."
+  )))
+  expect_true(is.na(d$time_zone))
+  expect_equal(d$unparsed, "time_zone")
+})
