@@ -9,11 +9,13 @@
 #' sample. A tone whose period is not a whole number of samples will report a small
 #' amount of jitter for this reason.
 #'
-#' @param wave A Wave object
+#' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
+#'   allChannels(), which returns the jitter of each channel separately.
 #' @param method One of "absolute" or "relative"
 #' @export
 #' @return The jitter, in samples for method "absolute" and as a proportion of the
-#'   mean period for method "relative"
+#'   mean period for method "relative". For multi-channel input, one such value per
+#'   channel.
 #' @examples
 #' \dontrun{
 #' jitter(sheep, method="absolute")
@@ -21,7 +23,15 @@
 #' }
 jitter <- function(wave, method="absolute") {
   #Without this an unknown method fell off the end and returned NULL invisibly.
+  #It is checked before the channels are split so that a bad method is reported
+  #once rather than once per channel.
   .validateChoice(method, c("absolute", "relative"), "method", "jitter", prep="for")
+  #A stereo Wave read only its left channel, so the jitter of the right one was
+  #never reported, and a WaveMC has no left slot to read at all.
+  if (.useAllChannels(wave)) {
+    #A closure keeps the arguments away from the formals of allChannels()
+    return(allChannels(wave, function(w) jitter(w, method=method), channel.param=NULL))
+  }
   if (method=="absolute") {
     return(jitter_abs(wave))
   }
@@ -49,5 +59,4 @@ jitter_rel <- function(wave) {
   }
   return(j / mean(diff(.periodBoundaries(wave))))
 }
-
 

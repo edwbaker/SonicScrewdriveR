@@ -3,15 +3,22 @@
 #' Returns a vector of the position (in samples) of zero crossings in
 #' a Wave object
 #'
-#' @param wave A Wave object
+#' @param wave A Wave object. Stereo Wave and WaveMC objects are passed to
+#'   allChannels(), which returns the crossings of each channel separately.
 #' @export
-#' @return A vector of zero crossing locations
+#' @return A vector of zero crossing locations. For multi-channel input, one
+#'   such vector per channel.
 #' @examples
 #' \dontrun{
 #' zerocross(sheep)
 #' }
 
 zerocross <- function(wave) {
+  #A stereo Wave read only its left channel, so the crossings of the right one
+  #were never reported, and a WaveMC has no left slot to read at all.
+  if (.useAllChannels(wave)) {
+    return(allChannels(wave, zerocross, channel.param=NULL))
+  }
   validateIsWave(wave)
   #A sample that is exactly zero is only a crossing if the signal changes sign
   #across it. Every zero used to be reported as one, so a run of them gave a
@@ -48,7 +55,11 @@ zerocross <- function(wave) {
 #' the two halves of an asymmetric waveform differ even when its period is perfectly
 #' constant.
 #'
-#' @param wave A Wave object
+#' This takes one channel, as zerocross() gives a list of vectors rather than a
+#' vector for anything with more than one. Its callers send each channel here
+#' separately, so a wave of several channels never reaches it.
+#'
+#' @param wave A single channel Wave object
 #' @return A vector of period boundary locations
 #' @noRd
 .periodBoundaries <- function(wave) {

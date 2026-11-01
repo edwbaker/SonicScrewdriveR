@@ -37,6 +37,13 @@ Adding noise to a Wave like object allows for testing of the robustness of
 automated identification algorithms to noise.
 }
 \details{
+The noise added to each channel is generated separately, so the channels of a
+multi-channel wave hold independent noise. One sequence used to be added to
+every channel, which left the noise perfectly correlated between them and so
+cancelling exactly in any difference between the channels: \code{\link[=tdoa]{tdoa()}},
+\code{\link[=bearing]{bearing()}} and \code{\link[=corWaveMC]{corWaveMC()}} all read inter-channel differences, and noise
+identical in every channel tests none of them.
+
 Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
 \code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}.
 }

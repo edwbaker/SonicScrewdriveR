@@ -436,6 +436,109 @@
   because the channels of a recording need not hold the same signal. Something
   that is not a wave is now refused as "Expecting a Wave or WaveMC object",
   naming both of the classes that are taken.
+- zerocross(), jitter(), shimmer() and ste() read only the left channel of a
+  stereo Wave, so the stereo answer was the mono one and the second channel was
+  never reported. A wave whose left channel is a 500 Hz tone and whose right is
+  3 kHz gave 1,000 zero crossings where the two channels hold 1,000 and 6,000,
+  a jitter of 0.3996 where the right channel's is 0.5997, and a shimmer of
+  0.0017 where the right channel's is 0.0270. A WaveMC, which has no left slot
+  at all, failed with a message naming that slot. Each measure is now passed to
+  allChannels() when it is given more than one channel, as dutyCycle() and
+  frequencyStats() already are, and returns one result per channel in the same
+  shape they do. A wave of one channel is measured and returned exactly as
+  before.
+
+  ste() checked nothing about its argument, so anything that was not a wave
+  reached the left slot and failed there, naming a slot rather than the
+  argument. It now refuses by name, as the rest of the package does.
+- rainfall_bedoya2017(), behind rainfallDetection(method="bedoya2017"), compared
+  its `Tmean` threshold against a quantity with no fixed scale, so the first of
+  the two criteria the cited method applies decided nothing, and the answer
+  depended on the format the recording happened to be held in.
+  `meanspec(PSD=TRUE, norm=FALSE)` leaves its result in the sample units of the
+  wave, so one second of the same noise gave 0.37 at 8 bit, 6.1e+03 at 16 bit,
+  2.6e+13 at 32 bit PCM and 5.7e-06 as 32 bit floating point, against the
+  threshold of 0.9e-6 that Bedoya et al. (2017) publish. Over 200 draws of quiet
+  noise at 16 bit the mean never once failed its threshold, so the rule was the
+  signal-to-noise criterion alone and noise of any level read as rainfall; for a
+  floating point wave the same threshold did bite, at a level standing for
+  nothing physical. Of ten labelled rain recordings, two were rainfall at 16 bit
+  and not rainfall as 32 bit floating point.
+  The band's power spectral density is now taken from samples divided by the
+  largest value the format holds, as the mean power of each bin over the windows
+  divided by the width of a bin, so it is power per Hz relative to full scale:
+  the same number at any bit depth, unchanged by the window length, and on the
+  scale the published threshold is in. Summed over the spectrum it recovers the
+  variance of the samples, which is the check that the scaling is right rather
+  than merely consistent. Eight bit PCM is centred first, being the one depth
+  that is unsigned, where the largest sample is not the largest excursion from
+  silence and dividing by it alone left the wave four times low.
+  `meanspec(PSD=TRUE)` also squared the mean amplitude instead of averaging the
+  power, which this reading corrects on the way past.
+  The value rainfallDetection() returns is therefore comparable between
+  recordings, and `Tmean` now defaults to the 0.9e-6 of the paper rather than
+  1e-6; both the value and the class of a recording change.
+  Putting the threshold into physical units does not make 0.9e-6 universal. The
+  level of a band is set by recorder gain, and across ten labelled rain
+  recordings the density runs from 2.1e-08 to 1.7e-05, so `Tmean` is a figure to
+  calibrate for a recorder, as the hardRain package and the authors of the
+  method themselves now do.
+- readBirdNet() could read only one of the layouts BirdNET Analyser writes. It
+  read every file as tab separated and assigned to `Begin.Time..s.` whatever
+  the file held, so a file without that column failed with `replacement has 0
+  rows, data has 1`, which says nothing about BirdNET columns. Three of the
+  four layouts are comma separated, so every one but the Raven selection table
+  failed: the `csv` layout, with `Start (s)` and `End (s)`; the `rtable`
+  layout, with `start` and `end`; and the Kaleidoscope layout, with `OFFSET`
+  and `DURATION`. The Audacity labels BirdNET also writes have no header at
+  all, so the first detection in one was read as the header.
+
+  The layout is now worked out from the file's own header, both the separator
+  and the columns, so all four read and the begin and end of a detection are
+  taken from whichever columns that layout keeps them in. Kaleidoscope writes
+  how long a detection lasts rather than when it ends, so an end read from it
+  without adding the offset would have been wrong for every detection after the
+  first. The columns of the file itself are kept, so a selection table reads
+  exactly as it did. A file in none of the layouts is refused by name, with its
+  first line and the layouts that are known, and one that looks like Audacity
+  labels says that readAudacityLabels() reads those.
+
+  A `filename_parsing` the name cannot be read by is now an error naming the
+  file and the convention asked for. Reading an AudioMoth name as a timestamp
+  gave every detection a time of NA and said only `NAs introduced by
+  coercion`; reading a name that is not an AudioMoth name as one gave
+  `subscript out of bounds`. An unknown `filename_parsing` was ignored in
+  silence and is now refused.
+
+  A directory no longer takes everything `list.files()` returns: a
+  subdirectory is passed over, as is a file in no layout this reads, with a
+  warning naming it, since a results directory holds the analysis parameters
+  BirdNET writes beside the results. A directory holding results in more than
+  one layout is refused by name rather than failing in `rbind()` with `numbers
+  of columns of arguments do not match` — a run writes a combined table beside
+  its per-file tables, holding the same detections again, so a reading that
+  stacked the two would count every detection twice. A directory holding no
+  results file gives a data frame of no rows, with a warning, where
+  `do.call(rbind, list())` gave NULL.
+- beatSpectrum() and beatComplexity() read only the left channel of a stereo
+  Wave, so the rhythm of the second channel was never reported: a wave whose
+  left channel pulses every 0.1 s and whose right pulses every 0.2 s gave one
+  spectrum, peaking at 0.1 s, with nothing to say the other channel had been
+  dropped. A WaveMC, which has no left slot at all, failed with a message
+  naming that slot. Both are now passed to allChannels() when they are given
+  more than one channel, as dutyCycle() and frequencyStats() already are, and
+  return one spectrum or one set of measurements per channel. With plot=TRUE
+  beatComplexity() draws one plot per channel.
+- generateNoise() added one sequence of noise to every channel of a
+  multi-channel wave, so the noise was identical in each. Its correlation
+  between the two channels of a stereo wave was exactly 1 and it cancelled
+  completely in any difference between them, which left the noise invisible to
+  tdoa(), bearing() and corWaveMC(): all three read inter-channel differences,
+  so a wave given noise this way tested none of them. Each channel is now given
+  a sequence of its own, at the same level as the rest, and the correlation
+  between the channels of a stereo wave falls to the 0.02 of two independent
+  sequences. The first channel draws first, so a wave of one channel is mixed
+  exactly as before and a mono result under a given seed is unchanged.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same
@@ -470,6 +573,23 @@
   raises the loudest sample to full scale and so hands the threshold back to
   it, and removes the offset as well, which lifts silence off zero: a wave nine
   tenths of which is silent measured 1 rather than 0.1.
+- audioblast() lost every record of a search whose responses did not carry the
+  same fields, failing with "numbers of columns of arguments do not match"
+  after fetching them all. The responses of a search were joined with
+  `rbind()`, which needs the same columns in each of its arguments, and
+  audioBlast gives the fields its records carry rather than every field a
+  module has: two pages of one search can differ in them, and so can the
+  batches that a filter of more than a hundred values is sent in, which are by
+  construction different records. The responses are now joined on all the
+  fields any of them carried, with `NA` where a response came without one,
+  which is what the `jsonlite` package already does for a field that one
+  record of a response does not carry. Such an `NA` is what audioBlast did not
+  give rather than what the source does not hold, so the fields that only some
+  responses carried are named in a message.
+  A response carrying a single record has come back as the record itself
+  rather than as an array holding it, which `rbind()` made a matrix of rather
+  than the data frame audioblast() is documented to return; that shape is now
+  read as one row, in audioblast() and in audioblastRecord() alike.
 - parseFilename() reported a name whose digits spell no real date the same way
   it reports a name carrying no time at all. A format is matched on the shape
   of the digits, and `20240230_120000` satisfies the shape of
@@ -523,6 +643,27 @@
   the label field even where the label is empty, leaving a trailing tab, so
   such a file is not one of its label files and is now refused by name, with
   the count of columns it has.
+- audioblast() given a filter that came out NA searched the whole module
+  instead of refusing the filter. A filter whose values were all NA was
+  dropped alongside one given NULL, so a search whose taxon came from a column
+  that holds nothing, or from a lookup that failed, silently became a search
+  for everything the module holds, which is the most expensive direction for a
+  query to fail in. A filter given no values at all went the same way, as
+  `all(is.na(character(0)))` is TRUE. Both are now refused by name. A filter
+  given NULL is still a filter left out, as it is elsewhere in R.
+- ab_range() given NA as one of its bounds failed with "missing value where
+  TRUE/FALSE needed", from the comparison of the two bounds, which names
+  neither of them; given only one bound it was not compared at all, so
+  ab_range(NA) sent audioBlast the range ">=NA". The bound that is NA is now
+  named.
+- audioblastDownload() named a file whose MIME type audioBlast does not hold
+  "xeno-canto_1.NA", because `names(map)[map == NA]` is a vector of NAs rather
+  than empty and so was not read as nothing found. A type that is not known
+  now gives no extension, as an unrecognised one already did.
+- audioblast() sent a filter value holding a comma in the form that reads a
+  comma as the separator between two values, so a name holding one was sent as
+  two names. Such a value is now sent in the list form whatever number of
+  values the filter was given, as it already was when it was given several.
 - A chunk of an odd size padded with a byte other than zero lost every chunk
   behind it. The byte where the pad belongs is read to tell a writer that
   left the pad out from one that wrote it, and a byte that was not zero was
