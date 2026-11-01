@@ -64,13 +64,57 @@ maad_spectrogram <- function(wave, mode="power", ..., maad=NULL) {
   return(modes[[mode]])
 }
 
-maad_wave <- function(wave) {
- #ToDo: Process wave to be expected as maad.
+#' Samples of a wave as scikit-maad expects them
+#'
+#' scikit-maad reads a file with `maad.sound.load()`, which hands on floating
+#' point samples between -1 and 1, and that is the range its documented
+#' defaults and every one of its examples are written against. A `tuneR` wave
+#' holds whatever its format holds instead: integers to plus or minus 32768 at
+#' 16 bit, unsigned integers from 0 to 255 at 8 bit, and floating point samples
+#' already in range. Handing those on untouched made every scale-dependent
+#' index a function of the container as much as of the recording, one recording
+#' giving `maad_temporal_median()` 382.5 read at 16 bit, 129 at 8 bit and
+#' 0.0117 as floating point.
+#'
+#' What `maad.sound.load()` does is reproduced rather than approximated, so
+#' that this package and scikit-maad called directly agree on the same file. It
+#' divides by `2^(bit-1)` for signed integer samples and by `2^bit` for the
+#' unsigned eight bit ones, leaves floating point samples as they are, and then
+#' subtracts the mean. That last step is what centres an eight bit wave, which
+#' sits on 128 rather than on zero: scaling it alone would leave it between 0
+#' and 1 with a constant half on it, which is not what scikit-maad is given
+#' either.
+#'
+#' Its first channel is taken, as `maad.sound.load()` also takes one channel of
+#' a stereo file and discards the rest.
+#'
+#' @param wave A Wave or WaveMC object (or Tagged equivalent).
+#' @return The first channel's samples between -1 and 1, or NULL if the object
+#'   is not a wave.
+#' @noRd
+.maadSamples <- function(wave) {
   if (inherits(wave, c("WaveMC", "TaggedWaveMC"))) {
-    return(reticulate::np_array(wave@`.Data`[,1]))
+    samples <- as.numeric(wave@`.Data`[,1])
   } else if (inherits(wave, c("Wave", "TaggedWave"))) {
-    return(reticulate::np_array(wave@left))
+    samples <- as.numeric(wave@left)
+  } else {
+    return(NULL)
   }
+  if (wave@pcm) {
+    #Eight bit PCM is the unsigned one, and is the only depth scikit-maad
+    #divides by the whole of its range rather than by half of it.
+    divisor <- if (wave@bit == 8) 2^wave@bit else 2^(wave@bit - 1)
+    samples <- samples/divisor
+  }
+  return(samples - mean(samples))
+}
+
+maad_wave <- function(wave) {
+  samples <- .maadSamples(wave)
+  if (is.null(samples)) {
+    return(NULL)
+  }
+  return(reticulate::np_array(samples))
 }
 
 #' Compute a spectrum of a sound wave using scikit-maad
