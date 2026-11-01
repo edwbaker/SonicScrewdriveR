@@ -82,3 +82,53 @@ test_that("the rainfall mean threshold decides something", {
   # ...and it is the level that rejects it, not the signal-to-noise ratio.
   expect_gt(rainfallDetection(w, Tmean=1e-9), 0)
 })
+
+test_that("plain broadband noise is not rainfall", {
+  sr <- 22050
+  # A detector that fires on any broadband noise is not detecting rain. Over 200
+  # draws of each of these the function used to report rainfall every time for
+  # white noise and 170 times out of 200 for pink, at any level down to a few
+  # least significant bits, because its level criterion could not fail.
+  for (seed in 1:5) {
+    set.seed(seed)
+    white <- tuneR::Wave(round(rnorm(2*sr, sd=0.05) * 32767),
+                         samp.rate=sr, bit=16, pcm=TRUE)
+    expect_equal(rainfallDetection(white), 0)
+  }
+  for (seed in 6:10) {
+    set.seed(seed)
+    # Pink noise: a falling spectrum, so more of its power sits in the band than
+    # white noise puts there, and it was the harder of the two to reject.
+    n <- 2*sr
+    nk <- n %/% 2 + 1
+    f <- pmax((0:(nk-1)) * sr / n, sr/n)
+    x <- complex(modulus=1/sqrt(f), argument=stats::runif(nk, 0, 2*pi))
+    y <- Re(stats::fft(c(x, Conj(rev(x[2:(nk-1)]))), inverse=TRUE))
+    pink <- tuneR::Wave(round(y / stats::sd(y) * 0.05 * 32767),
+                        samp.rate=sr, bit=16, pcm=TRUE)
+    expect_equal(rainfallDetection(pink), 0)
+  }
+  # Near silence is not rain either: noise of a few least significant bits used
+  # to clear both thresholds.
+  set.seed(11)
+  faint <- tuneR::Wave(round(rnorm(2*sr, sd=1e-4) * 32767),
+                       samp.rate=sr, bit=16, pcm=TRUE)
+  expect_equal(rainfallDetection(faint), 0)
+})
+
+test_that("rainfall is still detected", {
+  sr <- 22050
+  set.seed(12)
+  # Rain is loud broadband noise in this band, so noise at a level rain reaches
+  # has to be reported: rejecting quiet noise must not come from rejecting
+  # everything. -14 dBFS is about where the published threshold starts to pass
+  # broadband noise.
+  loud <- tuneR::Wave(round(rnorm(2*sr, sd=0.3) * 32767),
+                      samp.rate=sr, bit=16, pcm=TRUE)
+  expect_gt(rainfallDetection(loud), 0)
+  # A tone is not rain whatever its level, because the band is not flat.
+  t <- (1:(2*sr))/sr
+  tone <- tuneR::Wave(round(sin(2*pi*800*t) * 0.8 * 32767),
+                      samp.rate=sr, bit=16, pcm=TRUE)
+  expect_equal(rainfallDetection(tone), 0)
+})

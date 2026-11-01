@@ -1,12 +1,35 @@
 #' Rainfall detection
 #'
-#' Detects rainfall in a Wave. An uncalibrated version of Bedoya et al (2017) <doi:10.1016/j.ecolind.2016.12.018> is available in this package. The hardRain
-#' package can also be accessed via this wrapper.
+#' Detects rainfall in a Wave. The "bedoya2017" method follows
+#' \insertCite{bedoya2017}{sonicscrewdriver}: the mean power spectral density of
+#' the 600-1200 Hz band, where rain falling on vegetation is loudest, together
+#' with the ratio of that mean to its standard deviation across the band, both of
+#' which must clear a threshold. One band is what the paper specifies; the two
+#' bands of the hardRain package are that package's own addition rather than part
+#' of the method cited here.
+#'
+#' Two things here are not the paper's. `Tsnr` defaults to 3.5 where the paper
+#' reports 1.8, and the ratio is taken across the band's bins of a spectrum
+#' already averaged over the recording, which makes it rise with the recording's
+#' length: the same noise gives 4.0 over 0.05 s and 49 over 60 s. On labelled
+#' recordings that measure still separates rain (11 to 27) from everything else
+#' (1.4 to 5.8) far more cleanly than the alternatives, which is why it is kept,
+#' but `Tsnr` is a figure for a fixed clip length rather than an absolute one.
+#'
+#' `Tmean` is in power per Hz relative to full scale and defaults to the paper's
+#' 0.9e-6, which is a calibration rather than a constant: the level of a band
+#' depends on recorder gain, and across ten labelled rain recordings from one
+#' site it ran from 2.1e-08 to 1.7e-05. Estimate it from recordings of your own
+#' recorder, as the hardRain package and the authors of the method both do.
+#'
+#' The hardRain package can also be accessed via this wrapper.
 #'
 #' @param wave A Wave object to detect rainfall in. Stereo Wave and WaveMC
 #'   objects are passed to allChannels(), which returns one value per channel.
 #' @param method Which rainfall detection method to use ("bedoya2017")
 #' @param ... Other arguments to pass to rain detection function
+#' @references
+#'  \insertAllCited{}
 #' @export
 #' @return Numeric value from the rainfall detection algorithm chosen, or zero
 #'   where the recording is not rainfall. For "bedoya2017" the value is the mean

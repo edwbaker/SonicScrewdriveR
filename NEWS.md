@@ -1434,6 +1434,29 @@
   their place.
 
 ## Documentation
+- rainfallDetection() cited Bedoya et al. (2017) as a bare link in a sentence,
+  and the method was not in `inst/REFERENCES.bib` at all, so there was nothing to
+  check the implementation against and no reference in the manual page. The paper
+  is now an entry in the bibliography and cited through it, and the page says
+  which parts of the method are the paper's and which are not.
+  Of the three departures reported against it, one was not a departure. The
+  600-1200 Hz band is what the paper specifies, and the second band of
+  4.4-5.6 kHz belongs to the hardRain package rather than to the cited method, so
+  testing one band is fidelity to the cited method; the page now says so, to
+  save the next reader correcting it. The squared mean amplitude was a real
+  departure and is fixed above. The third, that the ratio of mean to standard
+  deviation is taken across the band of a spectrum already averaged over the
+  recording, is real but is kept deliberately. Taking it within each window and
+  pooling instead, which is independent of the recording's length, was measured
+  on fifteen labelled recordings and separates nothing: rain 1.12 to 1.17, quiet
+  1.01 to 1.06, broadband noise 1.21. The measure as written gives rain 11 to 27
+  against 1.4 to 5.8 for everything else. What it costs is that the figure rises
+  with the length of the recording, from 4.0 over 0.05 s to 49 over 60 s, so
+  `Tsnr` holds for a clip length rather than absolutely, and that `Tsnr` defaults
+  to 3.5 where the paper reports 1.8. Both are now written down.
+  Tests cover the behaviour the report turned on: that plain broadband noise, of
+  either colour and down to a few least significant bits, is not rainfall, and
+  that noise at the level rain reaches still is.
 - readMetadata() says what its order of precedence does not promise. The order
   decides which format to believe where two of them say the same thing; it
   cannot tell which copy the writer got right. A file carrying the same string
