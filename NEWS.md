@@ -422,6 +422,18 @@
   the recording is.
 
 ## Fixes
+- fcis() of a recording of more than one channel described its first channel
+  alone, and nothing in the result or in the image said which channel that was.
+  The spectrograms the indices are taken from read one channel, so a stereo
+  recording gave a single image identical to the one its left channel gives on
+  its own. A WaveMC could not be described at all, as the windows are cut as a
+  Wave and the spectrograms read a left slot a WaveMC does not have.
+  A recording of more than one channel now gives one spectrogram per channel,
+  from a Wave, a WaveMC or a filename alike, and each result records the channel
+  it describes, which plot() names in its title. A channel argument asks for one
+  channel on its own instead. A recording of one channel is described exactly as
+  before, with no channel recorded for it, and its plot is titled as it always
+  was.
 - frequencyStats() measured its spectral flatness over the whole spectrum while
   every other statistic was measured over the band above `lowcut`, and returned
   the two beside each other in one list as though they described the same

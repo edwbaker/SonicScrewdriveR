@@ -10,7 +10,8 @@ fcis(
   indices = c("power", "ACI", "entropy"),
   wl = 256,
   cluster = NULL,
-  scale = NULL
+  scale = NULL,
+  channel = NULL
 )
 }
 \arguments{
@@ -32,13 +33,19 @@ of it to every worker, which takes longer than the calculation itself.}
 \item{scale}{NULL, a function, or a list of three functions, one per channel,
 applied to an index across the whole spectrogram before it is mapped to a
 colour. \code{\link[=fcisClip]{fcisClip()}} makes one that clips to a range of percentiles.}
+
+\item{channel}{Which channel of the recording to describe. If NULL, a
+recording of more than one channel gives one spectrogram per channel, and
+each records the channel it describes.}
 }
 \value{
 An object of class "fcis", being a list of the colours as a character
 matrix of one entry per frequency bin and window, the matrix of values for each
 index, the frequencies of the bins in Hz, the duration of a window in seconds,
-and the names of the indices used. The frequencies were in kHz, as
-seewave::spectro() gives them, in earlier releases.
+the names of the indices used, and the channel it describes, which is NA for
+a recording of one channel. For a recording of more than one channel with no
+channel asked for, a list of one such object per channel. The frequencies
+were in kHz, as seewave::spectro() gives them, in earlier releases.
 }
 \description{
 Calculates a false-colour index spectrogram, in which three acoustic indices are
