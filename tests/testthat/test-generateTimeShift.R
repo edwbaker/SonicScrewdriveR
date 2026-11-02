@@ -87,6 +87,28 @@ test_that("inserting silence into a WaveMC silences every channel", {
   expect_equal(shifted@.Data[1001:3000, 1], mc@.Data[1:2000, 1])
 })
 
+test_that("silence is the midpoint of the format, in every class", {
+  # A WaveMC was filled with zero, the most negative sample eight bit PCM
+  # holds, and a Wave with tuneR's 127.
+  mc8 <- tuneR::WaveMC(cbind(A=rep(150, 100), B=rep(100, 100)), samp.rate=1000, bit=8, pcm=TRUE)
+  s <- generateTimeShift(mc8, type="silent", amount=0.02)[[1]]
+  expect_equal(unique(as.vector(s@.Data[1:20, ])), 128)
+  expect_equal(colnames(s@.Data), c("A", "B"))
+  expect_equal(s@bit, 8)
+
+  w8 <- tuneR::Wave(rep(150, 100), right=rep(100, 100), samp.rate=1000, bit=8, pcm=TRUE)
+  s <- generateTimeShift(w8, type="silent", amount=0.02)[[1]]
+  expect_true(s@stereo)
+  expect_equal(unique(c(s@left[1:20], s@right[1:20])), 128)
+
+  # Every other format is silent at zero, as it was.
+  w16 <- tuneR::Wave(rep(1000, 100), samp.rate=1000, bit=16)
+  s <- generateTimeShift(w16, type="silent", amount=0.02)[[1]]
+  expect_false(s@stereo)
+  expect_equal(unique(s@left[1:20]), 0)
+  expect_equal(s@left[21:100], w16@left[1:80])
+})
+
 test_that("a shift that rounds to no samples returns the wave unchanged", {
   # tuneR::silence() refuses a duration of zero, so a shift shorter than half a
   # sample aborted for a Wave while a WaveMC, whose silence is built as a

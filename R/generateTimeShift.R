@@ -89,22 +89,20 @@ generateTimeShift <- function(
 }
 
 #' Silence of the same class, sample rate and channels as a wave
+#'
+#' Silence is the midpoint of the format, which for eight bit PCM is 128 rather
+#' than zero. A WaveMC was filled with zero whatever its format, the most
+#' negative sample eight bit PCM holds, so the silence inserted into one was a
+#' step to full scale. A Wave was given the 127 of tuneR::silence(). Both are
+#' now given the midpoint the rest of the package reads silence at.
 #' @noRd
 .silence <- function(wave, samples) {
-  if (inherits(wave, "WaveMC")) {
-    data <- matrix(
-      0,
-      nrow=samples,
-      ncol=ncol(wave@.Data),
-      dimnames=list(NULL, colnames(wave@.Data))
-    )
-    return(.rebuildWave(data, wave))
-  }
-  return(tuneR::silence(
-    duration = samples,
-    samp.rate = wave@samp.rate,
-    bit = wave@bit,
-    stereo = wave@stereo,
-    pcm = wave@pcm
-  ))
+  multi <- inherits(wave, "WaveMC")
+  data <- matrix(
+    .waveCentre(wave),
+    nrow=samples,
+    ncol=if (multi) ncol(wave@.Data) else 1 + wave@stereo,
+    dimnames=list(NULL, if (multi) colnames(wave@.Data))
+  )
+  return(.rebuildWave(data, wave))
 }
