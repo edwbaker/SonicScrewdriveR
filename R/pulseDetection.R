@@ -14,6 +14,13 @@
 # pulse, so every sample is on exactly one side of the threshold and no crossing
 # can fall between two tests and be lost.
 #
+# pd_dietrich2004() is the exception, and the only one. Dietrich (2004) writes
+# its comparisons as "at least", and that function follows the paper, so a
+# sample exactly equal to a threshold is inside a pulse there. It only shows on
+# a wave that holds such a sample at all: a silent or constant amplitude wave,
+# whose every energy is exactly equal to every threshold, is one pulse to
+# pd_dietrich2004() and no pulse to the other two.
+#
 # onsets[i] and offsets[i] are always the two ends of the same pulse. The two
 # vectors hold the same number of positions, except that a pulse still in
 # progress at the last analysed sample has an onset and no offset, so onsets can
@@ -50,6 +57,10 @@
 #' offset, so there can be one more onset than offset, and in that case the
 #' unmatched onset is the last. A pulse already in progress at the first
 #' analysed sample is reported with its onset at that sample.
+#'
+#' [pd_dietrich2004()] is the one exception to the rule about a sample equal to
+#' the threshold, as the comparisons of the paper it implements are not strict
+#' ones. It is described there.
 #'
 #' @param wave A Wave object containing pulses
 #' @param method Which method to use for pulse detection
