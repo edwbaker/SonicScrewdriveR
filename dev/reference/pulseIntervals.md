@@ -37,10 +37,10 @@ reported for fewer than two. A pulse the recording ends part way through
 has an onset and no offset, and no gap follows it.
 
 A gap is reported if it is more than `nsd` standard deviations above the
-mean gap. The test is one-sided, as an unusually short gap is not an
-area of no pulses. Each gap is itself one of the values the mean and the
-standard deviation are taken from, so it lifts the cut-off it has to
-clear, and the most any one gap of k can reach is (k - 1)/sqrt(k): with
-the default `nsd` of 2 nothing can be reported until there are 6 gaps,
-which is 7 pulses. A call that cannot report anything whatever the gaps
-are says so.
+mean of the other gaps. The test is one-sided, as an unusually short gap
+is not an area of no pulses. Each gap is left out of the mean and the
+standard deviation it is compared with, so that a long gap does not lift
+the cut-off it has to clear. Where the other gaps are all the same
+length their standard deviation is zero, and any gap longer than them is
+reported. At least three gaps, which is four pulses, are needed, and a
+call with fewer says so.
