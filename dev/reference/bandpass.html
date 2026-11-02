@@ -76,9 +76,10 @@
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This is a simple wrapper function to the seewave ffilter function allowing its
 use with filterw and pipes.</p>
-<p>The frequencies the filter passes keep the level they had. ffilter returns
-its output at one part in <code>wl</code> of the input's level, 1024 by default, unless
-asked to rescale it, so the output is scaled back by <code>wl</code>.</p>
+<p>ffilter returns its output at one part in <code>wl</code> of the input's level, 1024 by
+default, unless asked to rescale it. <code><a href="filterWave.html">filterWave()</a></code> normalises the result to
+the peak of the wave it was given, so it comes back at the level of the input
+whatever window it was filtered with.</p>
     </div>
 
     <div class="section level2">

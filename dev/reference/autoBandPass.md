@@ -47,9 +47,11 @@ whole recording, because the channels of a recording need not hold the
 same signal and measuring one of them would choose the band for all the
 others.
 
-The band kept has the level it had in the input, and the result has the
-format of the input, with samples rounded to whole numbers where that is
-integer PCM.
+The result is normalised to the peak of the input, as for
+[`filterWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/filterWave.md),
+so the band kept is raised to the peak the whole recording had. It has
+the format of the input, with samples rounded to whole numbers where
+that is integer PCM.
 
 Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 `processing` slot of the result, as described in
