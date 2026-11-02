@@ -84,7 +84,24 @@ test_that(".maadSamples normalises as maad.sound.load() does", {
 
   #A WaveMC is read from its first column, as a Wave is from its left channel.
   mc <- tuneR::WaveMC(data=cbind(signed, rep(0, 3)), samp.rate=44100, bit=16)
-  expect_equal(.maadSamples(mc), .maadSamples(w))
+  expect_warning(samples <- .maadSamples(mc), "only the first of the 2 channels")
+  expect_equal(samples, .maadSamples(w))
+})
+
+test_that("the channels scikit-maad does not analyse are not dropped silently", {
+  #The first channel was taken and the rest discarded without a word, so a
+  #wrapper reported on one channel of a recording as though it were all of it.
+  signed <- c(-32768, 0, 16384)
+  st <- tuneR::Wave(left=signed, right=rev(signed), samp.rate=44100, bit=16, pcm=TRUE)
+  expect_warning(samples <- .maadSamples(st), "only the first of the 2 channels")
+  expect_equal(samples, signed/32768 - mean(signed/32768))
+  mc <- tuneR::WaveMC(data=cbind(signed, signed, signed), samp.rate=44100, bit=16)
+  expect_warning(.maadSamples(mc), "only the first of the 3 channels")
+  expect_warning(.maadSamples(tagWave(st)), "only the first of the 2 channels")
+
+  #A recording of one channel loses nothing, so nothing is said.
+  expect_silent(.maadSamples(tuneR::Wave(left=signed, samp.rate=44100, bit=16)))
+  expect_silent(.maadSamples(tuneR::WaveMC(data=cbind(signed), samp.rate=44100, bit=16)))
 })
 
 test_that(".maadSamples puts the bit depths of one recording on one scale", {

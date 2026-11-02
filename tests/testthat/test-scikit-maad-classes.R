@@ -9,11 +9,12 @@ test_that(".spectrogram_maad_power works as expected", {
   spec <- .spectrogram_maad_power(tagWave(w))
   expect_s4_class(spec, "spectrogram_maad")
 
+  #Only the first channel of a WaveMC is analysed, and the caller is told.
   w <- tuneR::WaveMC(tuneR::stereo(w,w))
-  spec <- .spectrogram_maad_power(w)
+  expect_warning(spec <- .spectrogram_maad_power(w), "only the first of the 2 channels")
   expect_s4_class(spec, "spectrogram_maad")
 
-  spec <- .spectrogram_maad_power(maad_spectrogram(w))
+  expect_warning(spec <- .spectrogram_maad_power(maad_spectrogram(w)), "only the first")
   expect_s4_class(spec, "spectrogram_maad")
 })
 

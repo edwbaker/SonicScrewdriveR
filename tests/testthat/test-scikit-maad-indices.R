@@ -201,7 +201,10 @@ test_that("maad_frequency_entropy works as expected", {
   expect_true(is.numeric(ret[[1]]))
   expect_true(is.numeric(ret[[2]]))
 
-  ret <- maad_frequency_entropy(tuneR::WaveMC(tuneR::stereo(w,w)), maad=maad)
+  expect_warning(
+    ret <- maad_frequency_entropy(tuneR::WaveMC(tuneR::stereo(w,w)), maad=maad),
+    "only the first of the 2 channels"
+  )
   expect_equal(length(ret), 2)
   expect_equal(names(ret), c("Hf", "Ht_per_bin"))
   expect_true(is.numeric(ret[[1]]))

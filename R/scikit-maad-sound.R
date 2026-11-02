@@ -86,7 +86,9 @@ maad_spectrogram <- function(wave, mode="power", ..., maad=NULL) {
 #' either.
 #'
 #' Its first channel is taken, as `maad.sound.load()` also takes one channel of
-#' a stereo file and discards the rest.
+#' a stereo file and discards the rest. The rest were discarded without a word,
+#' so a wrapper reported on one channel of a recording as though it were the
+#' whole of it, and the caller is now warned. What is returned is unchanged.
 #'
 #' @param wave A Wave or WaveMC object (or Tagged equivalent).
 #' @return The first channel's samples between -1 and 1, or NULL if the object
@@ -95,10 +97,20 @@ maad_spectrogram <- function(wave, mode="power", ..., maad=NULL) {
 .maadSamples <- function(wave) {
   if (inherits(wave, c("WaveMC", "TaggedWaveMC"))) {
     samples <- as.numeric(wave@`.Data`[,1])
+    channels <- ncol(wave@`.Data`)
   } else if (inherits(wave, c("Wave", "TaggedWave"))) {
     samples <- as.numeric(wave@left)
+    channels <- 1 + wave@stereo
   } else {
     return(NULL)
+  }
+  if (channels > 1) {
+    warning(
+      "The scikit-maad functions analyse one channel, so only the first of the ",
+      channels, " channels of the recording is analysed. Take another with ",
+      "tuneR::channel() or as a column of a WaveMC to analyse it.",
+      call.=FALSE
+    )
   }
   if (wave@pcm) {
     #Eight bit PCM is the unsigned one, and is the only depth scikit-maad
