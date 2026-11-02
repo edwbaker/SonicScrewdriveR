@@ -40,3 +40,8 @@ A pulse still in progress at the last analysed sample has an onset and
 no offset, so there can be one more onset than offset, and in that case
 the unmatched onset is the last. A pulse already in progress at the
 first analysed sample is reported with its onset at that sample.
+
+[`pd_dietrich2004()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pd_dietrich2004.md)
+is the one exception to the rule about a sample equal to the threshold,
+as the comparisons of the paper it implements are not strict ones. It is
+described there.

@@ -56,7 +56,11 @@
 <span>  alpha <span class="op">=</span> <span class="fl">1.4</span>,</span>
 <span>  scaling <span class="op">=</span> <span class="fl">32</span>,</span>
 <span>  V <span class="op">=</span> <span class="fl">480</span>,</span>
-<span>  psi <span class="op">=</span> <span class="fl">1</span></span>
+<span>  psi <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  dt <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  filter <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  delta <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>  band <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2000</span>, <span class="fl">11000</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -69,27 +73,60 @@
 
 
 <dt id="arg-u">U<a class="anchor" aria-label="anchor" href="#arg-u"></a></dt>
-<dd><p>Window length</p></dd>
+<dd><p>Length in samples of the short window the pulse energy is computed
+over.</p></dd>
 
 
 <dt id="arg-gamma">gamma<a class="anchor" aria-label="anchor" href="#arg-gamma"></a></dt>
-<dd><p>Gamma</p></dd>
+<dd><p>Where <code>theta</code> sits between the smallest and the largest pulse
+energy, between 0 and 1.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Alpha</p></dd>
+<dd><p>Multiplier giving the upper threshold <code>F_a</code> from the lower
+threshold <code>F_1</code>. Values above one put <code>F_a</code> above <code>F_1</code>.</p></dd>
 
 
 <dt id="arg-scaling">scaling<a class="anchor" aria-label="anchor" href="#arg-scaling"></a></dt>
-<dd><p>Scaling</p></dd>
+<dd><p>Divisor applied to the long window energy before it is added
+to <code>theta</code>.</p></dd>
 
 
 <dt id="arg-v">V<a class="anchor" aria-label="anchor" href="#arg-v"></a></dt>
-<dd><p>V Window length</p></dd>
+<dd><p>Length in samples of the long window the reference level is computed
+over. Expected to be longer than <code>U</code>.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>Psi</p></dd>
+<dd><p>Number of samples after the <code>F_1</code> crossing within which the energy
+must also cross <code>F_a</code> for a pulse to be reported. The paper names this
+parameter but never gives it a value.</p></dd>
+
+
+<dt id="arg-dt">dt<a class="anchor" aria-label="anchor" href="#arg-dt"></a></dt>
+<dd><p>The step the state machine takes through the wave, in samples. A
+boundary can only be reported on this grid. The paper names this parameter
+but never gives it a value either; see the details.</p></dd>
+
+
+<dt id="arg-filter">filter<a class="anchor" aria-label="anchor" href="#arg-filter"></a></dt>
+<dd><p>Whether to normalise and bandpass filter the wave first, which
+is the first step of the method. <code>FALSE</code> computes the energy from the wave
+as supplied.</p></dd>
+
+
+<dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
+<dd><p>Half the width of the passband, in Hz. The paper gives no value
+for this, only that the filter is a highly selective one.</p></dd>
+
+
+<dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
+<dd><p>The frequency range the weighting <code>W</code> of equation 2 is defined
+over, as a pair in Hz, or <code>NULL</code> to search the whole spectrum for the
+loudest frequency. The default is the frequency range of cricket song,
+which section 1 of the paper gives as 2 to 11 kHz and which is what the
+paper's own <code>W</code> is a density over. A wave of some other animal needs its
+range given here.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -98,9 +135,60 @@
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Onsets and offsets follow the convention described under <code><a href="pulseDetection.html">pulseDetection()</a></code>,
+    <p>The short term energy is computed over a window of <code>U</code> samples (equation 5 of
+the paper) and over a longer window of <code>V</code> samples, which gives a local
+reference level. Two thresholds are derived from the long window energy
+(equation 7), <code>F_1 = theta + e_v/scaling</code> and
+<code>F_a = theta + alpha*e_v/scaling</code>, where <code>theta</code> is the lower energy bound of
+equation 8. As <code>alpha</code> is greater than one, <code>F_a</code> is the upper of the two.</p>
+<p>Algorithm 1 of the paper then walks the wave a sample at a time. A candidate
+pulse opens at the sample where the energy first rises above <code>F_1</code>, and is
+confirmed only if the energy also rises above <code>F_a</code> within <code>psi</code> samples of
+that crossing. The sample reported is the <code>F_1</code> crossing that opened the
+candidate, not the <code>F_a</code> crossing that confirmed it. Where <code>F_a</code> is not
+reached in time the candidate is abandoned and the next sample above <code>F_1</code>
+opens a new one, so a larger <code>psi</code> lets a slow attack be reported from
+further back. Once a pulse has been reported, no further pulse is reported
+until the energy falls below <code>F_1</code> again.</p>
+<p>The paper says only that a similar algorithm estimates the offsets. Here the
+same scan is run over the wave in reverse, so an offset closes a run above
+<code>F_1</code> that <code>F_a</code> confirmed within <code>psi</code> samples of its end. Both boundaries
+are therefore measured at <code>F_1</code> and a pulse length is its width at <code>F_1</code>.</p>
+<p>Section 2 is two steps, and the segmentation above is the second. The first,
+done here unless <code>filter</code> is <code>FALSE</code>, divides the wave by its maximum norm
+(equation 1), finds the frequency <code>omega</code> carrying the most energy, weighted
+by a density <code>W</code> over the frequencies the sound can occupy (equation 2), and
+removes everything further than <code>delta</code> from it (equations 3 and 4). This is
+what frees the energy of the sounds of the environment before any of it is
+thresholded. The energies and thresholds returned are then in the units of
+the normalised signal rather than of the wave as supplied. Normalisation on
+its own changes no boundary, as <code>theta</code>, <code>F_1</code> and <code>F_a</code> are all linear in
+the amplitude of the wave.</p>
+<p><code>band</code> is what keeps that first step useful, and it is worth setting for the
+animal in hand. It gives the support of <code>W</code>, and so the range equation 2 is
+allowed to choose from. Left to the whole spectrum, the loudest frequency of
+a field recording is usually wind or handling noise well below the song, and
+the filter then keeps that and discards the song: on a wave of 5 kHz pulses
+over a 300 Hz drone, searching the whole spectrum reported 593 pulses, one
+for each half cycle of the drone, where the cricket range reported the 5 that
+are there.</p>
+<p>Three of the method's parameters have no value anywhere in the paper, and
+their defaults here are this package's rather than Dietrich's: <code>psi</code>, which
+is named only in the prose and in Algorithm 1; <code>delta</code>, described only as
+making a highly selective filter; and <code>dt</code>, the step of Algorithm 1. The one
+candidate for <code>dt</code> is a row of Table 1 reading <code>beta = U/4</code> among the
+segmentation parameters, under a symbol Algorithm 1 does not use and which is
+the sonogram overlap everywhere else in the paper, so <code>U/4</code> is offered rather
+than assumed and the default is one sample.</p>
+<p>Onsets and offsets follow the convention described under <code><a href="pulseDetection.html">pulseDetection()</a></code>,
 and the windowed energy displaces each boundary outward in the way described
-under <code><a href="pd_simple.html">pd_simple()</a></code>.</p>
+under <code><a href="pd_simple.html">pd_simple()</a></code>. The one point on which this function parts company with
+that convention, and with <code><a href="pd_simple.html">pd_simple()</a></code> and <code>pd_threshold()</code>, is a sample
+whose energy is exactly equal to a threshold. The paper's comparisons are not
+strict, so such a sample is part of a pulse, and a silent or constant
+amplitude wave, whose every energy is exactly equal to both thresholds, is
+reported as one pulse spanning the analysed range. The other two detectors
+report no pulse in it.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
