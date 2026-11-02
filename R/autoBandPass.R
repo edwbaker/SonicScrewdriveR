@@ -10,7 +10,8 @@
 #' recording, because the channels of a recording need not hold the same signal
 #' and measuring one of them would choose the band for all the others.
 #'
-#' The band kept has the level it had in the input, and the result has the
+#' The result is normalised to the peak of the input, as for [filterWave()], so
+#' the band kept is raised to the peak the whole recording had. It has the
 #' format of the input, with samples rounded to whole numbers where that is
 #' integer PCM.
 #'
@@ -134,7 +135,7 @@ autoBandPass <- function(
   #seewave reports as an error about subscripts rather than as a filter.
   #The high-pass above is only measured, and the measures are relative to the
   #strongest frequency, so its level does not matter. This one is returned.
-  wave <- .ffilterUnityGain(
+  wave <- .ffilterWave(
     wave,
     from=max(0, centre-n.bw*bandwidth),
     to=min(centre+n.bw*bandwidth, wave@samp.rate/2)

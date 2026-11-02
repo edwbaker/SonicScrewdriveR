@@ -95,12 +95,13 @@ test_that("bandpass keeps the level of what it passes", {
   filtered <- filterWave(tone, bandpass(from=500, to=2000))
   expect_equal(max(abs(filtered@left[middle])), 20000, tolerance=0.01)
 
-  # The output is scaled back by the window length it was filtered with.
+  # The output is normalised to the peak of the input whatever window it was
+  # filtered with.
   short <- filterWave(tone, bandpass(from=500, to=2000, wl=256))
   expect_equal(max(abs(short@left[middle])), 20000, tolerance=0.01)
 
   # Asked to rescale, ffilter puts its output in the range of the input itself,
-  # and it is not scaled again.
+  # which normalising to the peak of the input leaves as it is.
   rescaled <- filterWave(tone, bandpass(from=500, to=2000, rescale=TRUE))
   expect_equal(range(rescaled@left), range(tone@left))
 
@@ -141,6 +142,87 @@ test_that("a filtered WaveMC keeps the names of its channels", {
   # A WaveMC whose channels have no names still has none.
   unnamed <- tuneR::WaveMC(unname(mc@.Data), samp.rate=8000, bit=16)
   expect_null(colnames(filterWave(unnamed, bandpass(from=500, to=2000))@.Data))
+})
+
+test_that("a filtered wave is normalised to the peak of the input", {
+  # A filter can ring past the level it was given, and a full scale square wave
+  # low passed at 1 kHz came back peaking at 38545, which writeWave() refuses.
+  square <- rep(c(rep(32767, 20), rep(-32767, 20)), 400)
+  sq <- tuneR::Wave(square, samp.rate=8000, bit=16)
+  expect_no_warning(f <- filterWave(sq, bandpass(from=0, to=1000)))
+  expect_equal(max(abs(f@left)), 32767)
+  path <- withr::local_tempfile(fileext=".wav")
+  expect_no_error(tuneR::writeWave(f, path))
+
+  # Normalised rather than clipped: every sample is scaled by the same factor.
+  raw <- seewave::ffilter(sq, from=0, to=1000, output="Wave")@left
+  expect_equal(f@left, round(raw / max(abs(raw)) * 32767))
+
+  # A quieter input comes back at its own peak.
+  half <- tuneR::Wave(round(square / 2), samp.rate=8000, bit=16)
+  expect_equal(max(abs(filterWave(half, bandpass(from=0, to=1000))@left)), max(abs(half@left)))
+
+  # What a band pass keeps is raised to the peak of the whole recording, so a
+  # quiet tone in the band takes the peak of a loud one outside it.
+  times <- seq_len(16000) / 8000
+  mixed <- tuneR::Wave(
+    round(1000 * sin(2 * pi * 1500 * times) + 20000 * sin(2 * pi * 200 * times)),
+    samp.rate=8000, bit=16
+  )
+  expect_equal(max(abs(filterWave(mixed, bandpass(from=1000, to=2000))@left)), max(abs(mixed@left)))
+
+  # Every channel is scaled by the same factor, so they keep their balance.
+  st <- tuneR::Wave(square, right=round(square / 2), samp.rate=8000, bit=16)
+  s <- filterWave(st, bandpass(from=0, to=1000))
+  expect_equal(max(abs(s@left)), 32767)
+  expect_equal(max(abs(s@right)) / max(abs(s@left)), 0.5, tolerance=1e-3)
+  mc <- tuneR::WaveMC(matrix(c(square, round(square / 2)), ncol=2), samp.rate=8000, bit=16)
+  expect_equal(filterWave(mc, bandpass(from=0, to=1000))@.Data, cbind(s@left, s@right))
+})
+
+test_that("a filtered wave fits the format it came in", {
+  square <- rep(c(rep(1, 20), rep(-1, 20)), 400)
+  path <- withr::local_tempfile(fileext=".wav")
+
+  # Eight bit PCM runs from 0 to 255 about a midpoint of 128.
+  e <- tuneR::Wave(128 + 127 * square, samp.rate=8000, bit=8)
+  fe <- filterWave(e, bandpass(from=0, to=1000))
+  expect_equal(range(fe@left), c(1, 255))
+  expect_equal(mean(fe@left), 128, tolerance=0.01)
+
+  # A floating point wave holds values between -1 and 1.
+  fl <- tuneR::Wave(square, samp.rate=8000, bit=32, pcm=FALSE)
+  ff <- filterWave(fl, bandpass(from=0, to=1000))
+  expect_equal(max(abs(ff@left)), 1)
+  expect_no_error(tuneR::writeWave(ff, path))
+
+  # Integer PCM reaches one step further below its centre than above it, so a
+  # wave at both ends of its format is left as it is by a filter that changes
+  # nothing.
+  edge <- tuneR::Wave(c(-32768, 32767, 0, 1), samp.rate=8000, bit=16)
+  expect_equal(filterWave(edge, new("WaveFilter"))@left, edge@left)
+  wide <- tuneR::Wave(c(-8388608, 8388607, 0, 1), samp.rate=8000, bit=24)
+  expect_equal(filterWave(wide, new("WaveFilter"))@left, wide@left)
+
+  # Where the bottom of the format becomes a peak above the centre, the peak is
+  # put at the top of the format rather than one step past it.
+  invert <- new("WaveFilter", func=function(x) {x@left <- -x@left; x})
+  flipped <- filterWave(tuneR::Wave(c(-32768, 0, 100), samp.rate=8000, bit=16), invert)
+  expect_equal(flipped@left, c(32767, 0, -100))
+  expect_no_error(tuneR::writeWave(flipped, path))
+
+  # A filter that passes nothing leaves silence rather than dividing by zero.
+  nothing <- new("WaveFilter", func=function(x) {x@left <- 0 * x@left; x})
+  expect_equal(filterWave(tuneR::Wave(c(100, -200, 300), samp.rate=8000, bit=16), nothing)@left, c(0, 0, 0))
+  expect_equal(filterWave(tuneR::Wave(c(100, 200, 50), samp.rate=8000, bit=8), nothing)@left, c(128, 128, 128))
+})
+
+test_that("autoBandPass normalises the band it keeps to the peak of the input", {
+  # The fundamental of a square wave is 4/pi of its level, so the band around it
+  # alone would peak beyond what the format holds.
+  sq <- tuneR::Wave(rep(c(rep(32767, 20), rep(-32767, 20)), 400), samp.rate=8000, bit=16)
+  expect_warning(a <- autoBandPass(sq, lowcut=100), "no measurable bandwidth")
+  expect_equal(max(abs(a@left)), 32767)
 })
 
 test_that("filterWave carries the tags across", {
