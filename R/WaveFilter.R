@@ -194,5 +194,10 @@ bandpass <- function( from, to, ...) {
   #allChannels() wraps a result that is not a list in one.
   filtered <- lapply(filtered, function(x) if (is.list(x)) x[[1]] else x)
 
-  return(.rebuildWave(do.call(cbind, lapply(filtered, function(x) x@left)) + centre, w))
+  samples <- do.call(cbind, lapply(filtered, function(x) x@left))
+  #The channels of a WaveMC are named, and writeWave() builds the channel mask
+  #of the file from the names. The filtered channels were bound without them,
+  #so a filtered recording was written without the speaker positions it had.
+  colnames(samples) <- if (inherits(w, "WaveMC")) colnames(w@.Data)
+  return(.rebuildWave(samples + centre, w))
 }
