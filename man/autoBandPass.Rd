@@ -34,7 +34,8 @@ input had. The band is measured per channel rather than once for the whole
 recording, because the channels of a recording need not hold the same signal
 and measuring one of them would choose the band for all the others.
 
-The band kept has the level it had in the input, and the result has the
+The result is normalised to the peak of the input, as for \code{\link[=filterWave]{filterWave()}}, so
+the band kept is raised to the peak the whole recording had. It has the
 format of the input, with samples rounded to whole numbers where that is
 integer PCM.
 

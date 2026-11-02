@@ -37,6 +37,15 @@ setClass(
 #' whole numbers where that is integer PCM. Every channel is filtered, and eight
 #' bit PCM is filtered about its midpoint of 128.
 #'
+#' The result is normalised to the peak of the wave it was given, every channel
+#' by the same factor so that they keep their balance. A filter returns its
+#' output at whatever level it gives it, and can ring past the level it was
+#' given: a full scale square wave low passed at 1 kHz would otherwise peak
+#' beyond what 16 bit holds, which [tuneR::writeWave()] refuses. Normalised, a
+#' filtered wave fits the format it came in. A filter keeping only part of a
+#' recording raises what it keeps to the peak the whole recording had, so the
+#' level a band had in the input is not kept.
+#'
 #' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 #' `processing` slot of the result, as described in [tagApply()]. The settings
 #' of the filter are its arguments, so two runs of the same filter at different
@@ -110,9 +119,10 @@ filterWave <- function(w, filt, cl=NULL) {
 #' This is a simple wrapper function to the seewave ffilter function allowing its
 #' use with filterw and pipes.
 #'
-#' The frequencies the filter passes keep the level they had. ffilter returns
-#' its output at one part in `wl` of the input's level, 1024 by default, unless
-#' asked to rescale it, so the output is scaled back by `wl`.
+#' ffilter returns its output at one part in `wl` of the input's level, 1024 by
+#' default, unless asked to rescale it. [filterWave()] normalises the result to
+#' the peak of the wave it was given, so it comes back at the level of the input
+#' whatever window it was filtered with.
 #'
 #' @param from Bottom of bandpass frequency (Hz).
 #' @param to Top of bandpass frequency (Hz).
@@ -130,33 +140,25 @@ bandpass <- function( from, to, ...) {
   if (!package.installed("seewave")) {
     stop("seewave package is required for the bandpass WaveFilter.")
   }
-  filt <- new("WaveFilter", func=.ffilterUnityGain, params=list(from=from,to=to,...))
+  filt <- new("WaveFilter", func=.ffilterWave, params=list(from=from,to=to,...))
   return(filt)
 }
 
-#' seewave's ffilter() with the level of the frequencies it passes kept
+#' seewave's ffilter() returning a Wave
 #'
-#' ffilter() takes its short-term Fourier transform scaled by the window length
-#' and inverts it unscaled, so what it passes comes back at one part in `wl` of
-#' its level: a full scale 16 bit tone filtered to a peak of 32. Rounded to the
-#' format of the input, a recording peaking at -30 dBFS filtered to zeros in
-#' 99.98% of its samples, and eight bit audio to zeros throughout. The output is scaled back by the
-#' window length, unless ffilter was asked to rescale it to the range of the
-#' input itself. A Wave is always asked for, as the level is put back on its
-#' samples.
+#' ffilter() returns a matrix of samples unless asked for a Wave, and the filters
+#' put what they return back in a wave of the input's format, so a Wave is always
+#' asked for. ffilter() takes its short-term Fourier transform scaled by the
+#' window length and inverts it unscaled, so what it passes comes back at one
+#' part in `wl` of its level: a full scale 16 bit tone filtered to a peak of 32.
+#' `.filterAllChannels()` normalises it to the peak of the input.
 #'
 #' @param wave A Wave object.
 #' @param ... Further arguments to ffilter(), other than its output.
-#' @param wl,rescale As for ffilter(), whose defaults they repeat so that the
-#'   output is scaled by the window length it was filtered with.
 #' @return The filtered Wave object.
 #' @noRd
-.ffilterUnityGain <- function(wave, ..., wl=1024, rescale=FALSE) {
-  filtered <- seewave::ffilter(wave, ..., wl=wl, rescale=rescale, output="Wave")
-  if (!rescale) {
-    filtered@left <- filtered@left * wl
-  }
-  return(filtered)
+.ffilterWave <- function(wave, ...) {
+  return(seewave::ffilter(wave, ..., output="Wave"))
 }
 
 #' Apply a filter to every channel of a wave
@@ -199,5 +201,42 @@ bandpass <- function( from, to, ...) {
   #of the file from the names. The filtered channels were bound without them,
   #so a filtered recording was written without the speaker positions it had.
   colnames(samples) <- if (inherits(w, "WaveMC")) colnames(w@.Data)
-  return(.rebuildWave(samples + centre, w))
+  return(.rebuildWave(.normaliseToPeak(samples, w) + centre, w))
+}
+
+#' Filtered samples normalised to the peak of the wave they came from
+#'
+#' A filter returns its output at whatever level it gives it. ffilter() from
+#' seewave returns what it passes at one part in its window length of the level
+#' it had, and a filter can ring past the level it was given: a full scale 16 bit
+#' square wave low passed at 1 kHz peaks at 38545, which writeWave() refuses. The
+#' filtered samples are scaled so that their peak is the peak of the input, every
+#' channel by the same factor so that they keep their balance, and so a filtered
+#' wave fits the format it came in. Samples that are all zero, from a filter
+#' that passed nothing, are left as they are.
+#'
+#' Integer PCM reaches one step further below its centre than above it, so an
+#' input reaching the bottom of its format has a peak one more than a sample can
+#' be above the centre. Where that would put the filtered peak beyond the top of
+#' the format, the samples are scaled to the top instead.
+#'
+#' @param samples The filtered excursions from `.waveCentre()`, a matrix with one
+#'   column per channel.
+#' @param w The wave that was filtered, whose peak and format the samples take.
+#' @return The samples, normalised to the peak of `w`.
+#' @noRd
+.normaliseToPeak <- function(samples, w) {
+  peak <- max(abs(samples), na.rm=TRUE)
+  target <- max(abs(.channelMatrix(w) - .waveCentre(w)), na.rm=TRUE)
+  #Dividing by the peak first leaves the peak at exactly that of the input,
+  #where multiplying by target/peak can leave it a rounding error beyond.
+  if (peak > 0 && peak != target) {
+    samples <- samples / peak * target
+  }
+  limit <- .waveFullExcursion(w)
+  top <- max(samples, na.rm=TRUE)
+  if (w@pcm && top > limit) {
+    samples <- samples / top * limit
+  }
+  return(samples)
 }

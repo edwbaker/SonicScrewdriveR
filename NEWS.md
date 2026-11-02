@@ -507,15 +507,16 @@
   unscaled, so a full scale 16 bit tone came back with a peak of 32, and
   writeWave() rounded the result with only its generic warning: a 16 bit
   recording peaking at -30 dB full scale, passed between 1 and 8 kHz, was
-  written as zeros in 99.98% of its samples. The output of bandpass() is now
-  scaled back by the window length it was filtered with, unless ffilter() was
-  asked to rescale it, so a tone in the band keeps its level to within 1% at
-  the default settings, and it is rounded to whole numbers where the input is
-  integer PCM; the same recording now has 0.7% of its samples at zero.
-  Filtered audio is therefore about 60 dB louder than it was. A filter can ring
-  past the level it was given: a full scale square wave low passed at 1 kHz
-  peaks at 38545, beyond what 16 bit can hold, and writeWave() refuses such a
-  wave with its advice to see `?normalize`, as it does any other.
+  written as zeros in 99.98% of its samples. What either returns is now
+  normalised to the peak of the wave it was given, every channel by the same
+  factor so that they keep their balance, and rounded to whole numbers where
+  the input is integer PCM, so a tone alone in the band comes back at its own
+  level. A filter can also ring past the level it was given: a full scale
+  square wave low passed at 1 kHz would peak at 38545, beyond what 16 bit can
+  hold and so refused by writeWave(). Normalised, a filtered wave fits the
+  format it came in. A filter keeping only part of a recording raises what it
+  keeps to the peak the whole recording had, so the level a band had in the
+  input is not kept.
 
   A mono wave came back in the format seewave gives, 16 bit PCM whatever it was
   given, so a floating point wave declared integer PCM and a 24 bit wave

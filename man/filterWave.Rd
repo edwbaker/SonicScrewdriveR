@@ -29,6 +29,15 @@ The result has the format of the input, with the filtered samples rounded to
 whole numbers where that is integer PCM. Every channel is filtered, and eight
 bit PCM is filtered about its midpoint of 128.
 
+The result is normalised to the peak of the wave it was given, every channel
+by the same factor so that they keep their balance. A filter returns its
+output at whatever level it gives it, and can ring past the level it was
+given: a full scale square wave low passed at 1 kHz would otherwise peak
+beyond what 16 bit holds, which \code{\link[tuneR:writeWave]{tuneR::writeWave()}} refuses. Normalised, a
+filtered wave fits the format it came in. A filter keeping only part of a
+recording raises what it keeps to the peak the whole recording had, so the
+level a band had in the input is not kept.
+
 Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
 \code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The settings
 of the filter are its arguments, so two runs of the same filter at different

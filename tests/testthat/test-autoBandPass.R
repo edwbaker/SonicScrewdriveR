@@ -109,7 +109,9 @@ test_that("more bandwidths either side keep more of the recording", {
   wave <- bandWave()
   narrow <- autoBandPass(wave, n.bw=1)
   wide <- autoBandPass(wave, n.bw=3)
-  expect_gt(sum(abs(wide@left)), sum(abs(narrow@left)))
+  # Both are normalised to the peak of the input, so what each keeps is measured
+  # by how closely it follows the input rather than by its level.
+  expect_gt(stats::cor(wide@left, wave@left), stats::cor(narrow@left, wave@left))
 })
 
 test_that("the two bandwidths measured give different bands", {
@@ -117,7 +119,7 @@ test_that("the two bandwidths measured give different bands", {
   #-10dB is measured across a wider part of the peak than -3dB, so it keeps more.
   narrow <- autoBandPass(wave, bw="-3dB")
   wide <- autoBandPass(wave, bw="-10dB")
-  expect_gt(sum(abs(wide@left)), sum(abs(narrow@left)))
+  expect_gt(stats::cor(wide@left, wave@left), stats::cor(narrow@left, wave@left))
 })
 
 test_that("the low cut is applied before the centre frequency is measured", {
@@ -258,9 +260,11 @@ test_that("each channel is filtered around its own strongest frequency", {
   expect_gt(peakFrequency(tuneR::channel(filtered, "right")), 3200)
   expect_lt(peakFrequency(tuneR::channel(filtered, "right")), 3600)
 
-  # Each channel is what filtering that channel alone gives.
-  expect_equal(filtered@left, autoBandPass(L)@left)
-  expect_equal(filtered@right, autoBandPass(R)@left)
+  # Each channel is what filtering that channel alone gives, up to the one
+  # factor that normalises both channels to the peak of the recording.
+  expect_equal(stats::cor(filtered@left, autoBandPass(L)@left), 1, tolerance=1e-6)
+  expect_equal(stats::cor(filtered@right, autoBandPass(R)@left), 1, tolerance=1e-6)
+  expect_equal(max(abs(c(filtered@left, filtered@right))), max(abs(c(L@left, R@left))))
 })
 
 test_that("a WaveMC keeps all of its channels", {
@@ -319,14 +323,13 @@ test_that("the tagged classes keep their channels and their record", {
   expect_equal(length(taggedMC@processing), 1)
 })
 
-test_that("the band kept keeps the level it had", {
+test_that("the band kept is normalised to the peak of the input", {
   # seewave's ffilter() returns what it passes at one part in its window length
   # of the level it had, so the band came back 60 dB down and, rounded to 16
   # bit PCM, as little more than zeros.
-  # The band kept runs from about 1.98 to 2.14 kHz, so this is inside it.
   wave <- bandWave()
   filtered <- autoBandPass(wave)
-  expect_equal(bandEnergy(filtered, 2.0, 2.12) / bandEnergy(wave, 2.0, 2.12), 1, tolerance=0.1)
+  expect_equal(max(abs(filtered@left)), max(abs(wave@left)))
 })
 
 test_that("a mono wave comes back in the format it was given", {
