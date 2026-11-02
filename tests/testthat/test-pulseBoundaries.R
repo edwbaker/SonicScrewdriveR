@@ -86,11 +86,15 @@ test_that("the three detectors no longer disagree by one sample about one pulse"
   f <- pulseFixtures()[["one pulse"]]
   expect_equal(pd_threshold(f$wave, threshold=0.5)$onsets, 1001L)
   expect_equal(pd_simple(f$wave)$onsets, 955L)
-  expect_equal(pd_dietrich2004(f$wave)$onsets, 955L)
-  #The offsets differ by the three samples the two state machines differ by,
-  #rather than by the one sample the two conventions used to differ by.
+  expect_equal(pd_dietrich2004(f$wave, filter=FALSE)$onsets, 953L)
+  #What the two still differ by is the threshold each reports a boundary at,
+  #rather than the one sample the two conventions used to differ by. pd_simple()
+  #thresholds against F_a, while pd_dietrich2004() reports the F_1 crossing that
+  #opened the pulse and uses F_a only to confirm it, so its boundaries sit two
+  #samples further out at each end: F_1 is below F_a and so is crossed earlier
+  #on the way up and later on the way down.
   expect_equal(pd_simple(f$wave)$offsets, 1447L)
-  expect_equal(pd_dietrich2004(f$wave)$offsets, 1450L)
+  expect_equal(pd_dietrich2004(f$wave, filter=FALSE)$offsets, 1449L)
 })
 
 test_that("a sample exactly equal to the threshold does not lose a crossing", {
@@ -158,9 +162,11 @@ test_that("pd_dietrich2004 reports a pulse already in progress at the first anal
   x[5001:5400] <- 1
   w <- tuneR::Wave(x, samp.rate=44100, bit=32, pcm=FALSE)
 
-  r <- pd_dietrich2004(w)
-  expect_equal(r$onsets, c(242L, 2955L, 4955L))
-  expect_equal(r$offsets, c(450L, 3450L, 5450L))
+  r <- pd_dietrich2004(w, filter=FALSE)
+  #241 is the first analysed sample, which is where a pulse already in progress
+  #there is reported.
+  expect_equal(r$onsets, c(241L, 2953L, 4953L))
+  expect_equal(r$offsets, c(449L, 3449L, 5449L))
   expect_true(all(pulseStats(r)$durations > 0))
 })
 
@@ -173,17 +179,30 @@ test_that("the two readings of Dietrich (2004) agree about a wave of constant am
   w <- tuneR::Wave(rep(1, 8000), samp.rate=44100, bit=32, pcm=FALSE)
 
   simple <- pd_simple(w)
-  dietrich <- pd_dietrich2004(w)
+  dietrich <- pd_dietrich2004(w, filter=FALSE)
   expect_length(simple$onsets, 0)
   expect_length(simple$offsets, 0)
   expect_length(dietrich$onsets, 0)
   expect_length(dietrich$offsets, 0)
   expect_false(any(simple$pulse))
-  #A silent wave is the same case, with every energy exactly equal to every
-  #threshold rather than merely below it.
+})
+
+test_that("a silent wave is one pulse to pd_dietrich2004 and none to the others", {
+  # Where the two readings part company. The comparisons of Algorithm 1 are not
+  # strict, and every energy of a silent wave is exactly equal to both
+  # thresholds, so the paper's own test puts the whole analysed range inside a
+  # pulse. The convention at the top of R/pulseDetection.R has a sample equal to
+  # the threshold outside the pulse, which is what the other two detectors do,
+  # so this is the one case in which the three disagree by more than a sample.
   silent <- tuneR::Wave(numeric(8000), samp.rate=44100, bit=32, pcm=FALSE)
-  expect_length(pd_dietrich2004(silent)$onsets, 0)
-  expect_length(pd_dietrich2004(silent)$offsets, 0)
+
+  dietrich <- pd_dietrich2004(silent, filter=FALSE)
+  #241 is the first analysed sample. The pulse is still open at the last one, so
+  #it has an onset and no offset, which the convention allows.
+  expect_equal(dietrich$onsets, 241L)
+  expect_length(dietrich$offsets, 0)
+  expect_length(pd_simple(silent)$onsets, 0)
+  expect_length(pd_threshold(silent, threshold=0.5)$onsets, 0)
 })
 
 test_that("theta is taken from the energy ste() measured, not from the padding it leaves", {
@@ -233,7 +252,9 @@ test_that("the energy detectors overstate a duration by part of a window", {
   # is displaced outward and the duration is overstated. Pinned here because the
   # bias depends on gamma, alpha and the amplitude as well as on U, so it is not
   # the whole window it might be taken for: at U=120 it is 92 samples for
-  # pd_simple() and 95 for pd_dietrich2004(), against a pulse of exactly 400.
+  # pd_simple() and 96 for pd_dietrich2004(), against a pulse of exactly 400.
+  # pd_dietrich2004() overstates by the more of the two because it reports the
+  # F_1 crossing at each end, and F_1 is the lower of its two thresholds.
   f <- pulseFixtures()[["one pulse"]]
   truth <- 400
 
@@ -241,8 +262,8 @@ test_that("the energy detectors overstate a duration by part of a window", {
   expect_equal(exact$offsets - exact$onsets, truth)
   simple <- pd_simple(f$wave)
   expect_equal(simple$offsets - simple$onsets, truth + 92)
-  dietrich <- pd_dietrich2004(f$wave)
-  expect_equal(dietrich$offsets - dietrich$onsets, truth + 95)
+  dietrich <- pd_dietrich2004(f$wave, filter=FALSE)
+  expect_equal(dietrich$offsets - dietrich$onsets, truth + 96)
   #The bias shrinks with the window, which is the time resolution asked for.
   narrow <- pd_simple(f$wave, U=20, V=80)
   expect_lt(narrow$offsets - narrow$onsets - truth, 92)

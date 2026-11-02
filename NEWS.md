@@ -457,7 +457,77 @@
   1.9GB, and now takes no more memory than changing it in a short one, whatever
   the recording is.
 
+## New functionality
+- pd_dietrich2004() now performs the whole of section 2 of Dietrich et al
+  (2004), rather than its second step alone. The first step normalises the wave
+  by its maximum norm (equation 1), finds the frequency carrying the most
+  energy within the range the weighting W is defined over (equation 2), and
+  removes everything further than `delta` from it (equations 3 and 4), so that
+  the short term energy is measured on the song rather than on whatever else
+  the recording holds. `filter=FALSE` keeps the old behaviour of thresholding
+  the wave as supplied.
+
+  This is most of the method's value and its absence was not visible in a test:
+  on a wave of 5 kHz pulses over a 300 Hz drone, the unfiltered detector
+  followed the drone and reported 593 pulses, one for each half cycle of it,
+  where the filtered one reports the 5 that are there.
+
+  `band` gives the range equation 2 may choose from, and is worth setting for
+  the animal in hand. It defaults to 2 to 11 kHz, the frequency range of cricket
+  song that section 1 of the paper gives and that the paper's own W is a density
+  over. Searching the whole spectrum instead, with `band=NULL`, is what produces
+  the 593 pulses above: in a field recording the loudest frequency is usually
+  wind or handling noise below the song, and the filter then keeps that and
+  discards the song. A wave that cannot carry the band at all, such as one
+  sampled at 4 kHz, is now refused with a message naming the band and the
+  highest frequency the wave reaches, rather than filtered to silence and
+  reported as holding no pulses.
+
+  `dt`, the step Algorithm 1 takes through the wave, is also a parameter now. A
+  boundary can only be reported on that grid. It defaults to one sample: the
+  paper never gives it a value, and the one candidate is a row of Table 1
+  reading `beta = U/4` among the segmentation parameters, under a symbol
+  Algorithm 1 does not use and which is the sonogram overlap everywhere else in
+  the paper, so `U/4` is offered rather than assumed.
+
 ## Fixes
+- pd_dietrich2004() compares an energy against a threshold as the paper does,
+  with "at least" rather than "greater than". This is the one place the package
+  lets a detector depart from the convention at the top of `R/pulseDetection.R`,
+  under which a sample exactly equal to a threshold is outside the pulse. It
+  shows only on a wave that holds such a sample: a silent or constant amplitude
+  wave, whose every energy is exactly equal to every threshold, is now one pulse
+  to pd_dietrich2004() and no pulse to pd_simple() and pd_threshold(). Both the
+  convention and the function's help page say so.
+- pd_dietrich2004() reported each pulse boundary at the wrong threshold, which
+  left two of its parameters unable to change the result at all. Algorithm 1 of
+  Dietrich et al (2004) opens a candidate pulse where the energy first rises
+  above the lower threshold F_1, confirms it only if the energy also reaches the
+  upper threshold F_a within psi samples of that crossing, and reports the F_1
+  crossing that opened the candidate. The scan reported the F_a crossing that
+  confirmed it instead. The two differ by however long the energy took to climb
+  between the thresholds, which is the one thing psi bounds, so psi was inert:
+  every value from 1 to 400 gave the same answer on the same wave, and a
+  documented parameter spanning three orders of magnitude did nothing.
+
+  The scan for offsets could not use its thresholds either. It ran forwards over
+  the runs below F_1 and confirmed them against F_a, but F_a is above F_1 and so
+  an energy below F_1 is below F_a as well: the confirming test held at every
+  sample of every run, and neither alpha nor psi could move an offset. The paper
+  gives the state machine for onsets alone and says only that a similar
+  algorithm estimates the offsets, so an offset is now taken as an onset of the
+  time reversed wave. Both boundaries are measured at F_1 and confirmed at F_a,
+  and a pulse length is its width at F_1.
+
+  Boundaries move by a few samples as a result, outward at both ends, because
+  F_1 is the lower of the two thresholds and so is crossed earlier on the way up
+  and later on the way down. A 400 sample square pulse at the default U of 120
+  is now reported 96 samples long rather than 95. The windowed energy is what
+  overstates it, and that is unchanged and described under pd_simple().
+
+  The function also documents what it does now: every parameter had been
+  documented with its own name, `psi` as "Psi" and `gamma` as "Gamma", so none
+  of the above was checkable from the help page.
 - package.installed() installed packages unasked in a session with no one to
   ask, and reported an install that had not happened as a success. `askYesNo()`
   returns its default where nothing answers it, and that default is TRUE, so a

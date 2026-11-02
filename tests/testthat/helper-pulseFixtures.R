@@ -57,10 +57,18 @@ pulseFixtureNA <- function(at=500) {
 # Each detector, called so that all three are looking for the same pulses: the
 # fixtures are square pulses at full scale, so half the peak magnitude puts
 # pd_threshold() on the same pulses the energy detectors find.
+#
+# pd_dietrich2004() is called with filter=FALSE so that it is looking at the
+# same signal as the other two. Its first step bandpass filters the wave at the
+# loudest frequency within band, and the energy of a square pulse is at zero
+# frequency rather than anywhere in the range of cricket song, so the filtered
+# fixture is the ringing of a passband the pulse barely reaches and the three
+# detectors would no longer be comparable. The filter has tests of its own in
+# test-pulseDetection.R, on waves that hold the sort of sound it is for.
 pulseDetectors <- function() {
   list(
     "pd_simple" = function(w) pd_simple(w),
-    "pd_dietrich2004" = function(w) pd_dietrich2004(w),
+    "pd_dietrich2004" = function(w) pd_dietrich2004(w, filter=FALSE),
     "pd_threshold" = function(w) pd_threshold(w, threshold=0.5)
   )
 }
