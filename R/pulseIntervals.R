@@ -12,12 +12,12 @@
 #' offset, and no gap follows it.
 #'
 #' A gap is reported if it is more than `nsd` standard deviations above the mean
-#' gap. The test is one-sided, as an unusually short gap is not an area of no
-#' pulses. Each gap is itself one of the values the mean and the standard
-#' deviation are taken from, so it lifts the cut-off it has to clear, and the
-#' most any one gap of k can reach is (k - 1)/sqrt(k): with the default `nsd` of
-#' 2 nothing can be reported until there are 6 gaps, which is 7 pulses. A call
-#' that cannot report anything whatever the gaps are says so.
+#' of the other gaps. The test is one-sided, as an unusually short gap is not an
+#' area of no pulses. Each gap is left out of the mean and the standard
+#' deviation it is compared with, so that a long gap does not lift the cut-off
+#' it has to clear. Where the other gaps are all the same length their standard
+#' deviation is zero, and any gap longer than them is reported. At least three
+#' gaps, which is four pulses, are needed, and a call with fewer says so.
 #'
 #' @param pulses The result of a pulseDetection(), holding onsets and offsets.
 #' @param nsd The number of standard deviations above the mean gap that a gap
@@ -48,34 +48,28 @@ pulseIntervals <- function(
   ends <- pulses$onsets[seq_len(paired) + 1]
   gaps <- ends - starts
 
-  m <- mean(gaps)
-  s <- stats::sd(gaps)
-  #The most standard deviations from the mean that one gap of k can reach is
-  #(k-1)/sqrt(k), because the gap is one of the values the mean and the standard
-  #deviation are taken from and so lifts the cut-off it has to clear. Below that
-  #no gap can be reported however long it is, which the function used to do
-  #without a word: with the default nsd of 2, six or fewer gaps always gave an
-  #empty result, however obvious the gap.
-  reach <- (paired - 1)/sqrt(paired)
-  if (nsd >= reach) {
+  #Each gap is compared with the mean and standard deviation of the other gaps.
+  #Compared with a set that held it, a gap lifted the cut-off it had to clear,
+  #and the most standard deviations one gap of k could reach was (k-1)/sqrt(k):
+  #with the default nsd of 2, six or fewer gaps always gave an empty result,
+  #however obvious the gap. The others need a standard deviation, so at least
+  #three gaps are needed.
+  if (paired < 3) {
     warning(paste0(
       "No gap can be reported from ", paired,
-      if (paired == 1) " gap " else " gaps ",
-      "with nsd=", nsd, ": the most standard deviations from the mean that one ",
-      "gap of ", paired, " can reach is ", signif(reach, 4),
-      ", as the gap is one of the values the mean and the standard deviation are ",
-      "taken from. A smaller nsd, or more pulses, is needed."
+      if (paired == 1) " gap" else " gaps",
+      ": each gap is compared with the mean and standard deviation of the ",
+      "others, which needs at least three gaps, that is four pulses."
     ))
-  }
-  #A single gap has no standard deviation, and cannot be an outlier of a set of
-  #one.
-  if (is.na(s)) {
     odds <- rep(FALSE, paired)
   } else {
     #One-sided: a gap that is unusually short is the opposite of an area of no
     #pulses. The other arm of the test reported a gap of 10 samples between
     #pulses 2000 samples apart, an interval that lay inside a pulse.
-    odds <- gaps > m + nsd*s
+    odds <- vapply(seq_len(paired), function(i) {
+      others <- gaps[-i]
+      gaps[i] > mean(others) + nsd * stats::sd(others)
+    }, logical(1))
   }
 
   found <- which(odds)

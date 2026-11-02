@@ -557,13 +557,17 @@
   without them.
 
 - pulseIntervals() with the default `nsd` of 2 returned nothing at all for six or
-  fewer gaps, however extreme the gap, and said nothing about why. An interval is
-  kept only when a gap is more than `nsd` standard deviations above the mean, but
-  the gap is one of the values the mean and the standard deviation are taken from
-  and so lifts the cut-off it has to clear: the most any one gap of k can reach is
-  (k-1)/sqrt(k), which is 1.789 for five gaps and does not pass 2 until there are
-  six. A call that cannot report anything whatever the gaps are now says so, and
-  the ceiling is documented. The criterion itself is unchanged.
+  fewer gaps, however extreme the gap, and said nothing about why. An interval
+  was kept only when a gap was more than `nsd` standard deviations above the
+  mean, but the gap was one of the values the mean and the standard deviation
+  were taken from and so lifted the cut-off it had to clear: the most any one
+  gap of k could reach was (k-1)/sqrt(k), which is 1.789 for five gaps and does
+  not pass 2 until there are six. Each gap is now compared with the mean and
+  standard deviation of the other gaps, so six pulses with one gap thirteen
+  times the rest report it. Three gaps, four pulses, are needed for the others
+  to have a standard deviation, and a call with fewer says so. Where the other
+  gaps are all one length their standard deviation is zero, and any longer gap
+  is reported, whatever `nsd` is.
 
 - pulseStats() turned misaligned detector output into negative pulse durations.
   It pairs onsets and offsets by position, which is right for every detector in
