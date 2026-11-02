@@ -64,6 +64,7 @@ frequencyStats <- function(
   }
   validateIsWave(wave)
   if (is.null(wave_spec)) {
+    .validateSpectrumLength(wave, "frequencyStats")
     wave_spec <- seewave::meanspec(wave, norm=FALSE, plot=FALSE)
   }
 

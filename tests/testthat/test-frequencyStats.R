@@ -338,3 +338,18 @@ test_that("the spectral flatness of a band is not dragged down by the bins below
   expect_equal(r$`spectral flatness`, seewave::sfm(flatnessSpectrum[band, 2]))
   expect_gt(r$`spectral flatness`, seewave::sfm(zeroed))
 })
+
+test_that("a wave shorter than the spectrum's window is refused, naming both", {
+  # meanspec() failed with "wrong sign in 'by' argument" from seq(), so a window
+  # of windowing() shorter than 512 samples gave a message naming neither.
+  w <- tuneR::Wave(round(10000*sin(2*pi*500*(0:8191)/8000)), samp.rate=8000, bit=16)
+  expect_error(
+    frequencyStats(cutws(w, 1, 256), warn=FALSE, output.unit="Hz"),
+    "frequencyStats() takes its spectrum in windows of 512 samples, and the wave holds 256.",
+    fixed=TRUE
+  )
+  expect_type(frequencyStats(cutws(w, 1, 512), warn=FALSE, output.unit="Hz"), "list")
+  # A spectrum given to it needs no window.
+  spec <- seewave::meanspec(w, norm=FALSE, plot=FALSE)
+  expect_type(frequencyStats(cutws(w, 1, 256), wave_spec=spec, warn=FALSE, output.unit="Hz"), "list")
+})

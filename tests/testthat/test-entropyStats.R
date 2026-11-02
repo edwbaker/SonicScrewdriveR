@@ -20,6 +20,22 @@ test_that("entropyStats rejects things that are not waves", {
   expect_error(entropyStats("string"), "Expecting a Wave object")
 })
 
+test_that("a wave shorter than the spectrum's window is refused, naming both", {
+  # meanspec() failed with "wrong sign in 'by' argument" from seq(), so a window
+  # of windowing() shorter than 512 samples gave a message naming neither.
+  w <- tuneR::Wave(round(10000*sin(2*pi*500*(0:8191)/8000)), samp.rate=8000, bit=16)
+  expect_error(
+    entropyStats(cutws(w, 1, 256)),
+    "entropyStats() takes its spectrum in windows of 512 samples, and the wave holds 256.",
+    fixed=TRUE
+  )
+  expect_error(
+    windowing(w, window.length=256, FUN=function(x, ...) entropyStats(x)),
+    "windows of 512 samples", fixed=TRUE
+  )
+  expect_type(entropyStats(cutws(w, 1, 512)), "list")
+})
+
 test_that("entropyStats asks meanspec not to plot", {
   # meanspec() plots by default, so asking for four numbers drew a spectrum as a
   # side effect: under Rscript that silently wrote Rplots.pdf, and inside

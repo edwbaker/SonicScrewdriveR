@@ -126,6 +126,28 @@
   return(.waveFullScale(w))
 }
 
+#' Check a wave holds the window seewave's meanspec() takes its spectrum in
+#'
+#' meanspec() takes windows of 512 samples by default, and on a wave holding
+#' fewer it failed with "wrong sign in 'by' argument" from seq(), which names
+#' neither the wave nor the window. A short window of windowing() is the usual
+#' way to reach it.
+#'
+#' @param wave A mono Wave object.
+#' @param fn The name of the function asking, for the message.
+#' @param wl The window length the spectrum is taken in.
+#' @return The wave unchanged. An error is raised if it is too short.
+#' @noRd
+.validateSpectrumLength <- function(wave, fn, wl=512) {
+  if (length(wave@left) < wl) {
+    stop(
+      fn, "() takes its spectrum in windows of ", wl, " samples, and the wave ",
+      "holds ", length(wave@left), ". Give it a longer wave or window."
+    )
+  }
+  return(wave)
+}
+
 #' Samples of a Wave-like object as a matrix
 #'
 #' A Wave holds its channels in the left and right slots, a WaveMC in the columns
