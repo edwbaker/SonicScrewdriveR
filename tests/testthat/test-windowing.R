@@ -441,3 +441,56 @@ test_that("an overlap at or above the window length is refused by name", {
   # extreme but possible, and is still allowed.
   expect_silent(windowing(w, window.length=10, window.overlap=9, FUN=function(...) 1))
 })
+
+test_that("a window's length and overlap can be given in time", {
+  old <- options(pboptions = list(type = "none"))
+  on.exit(options(old))
+  w <- tuneR::noise("white", duration = 5 * 8000, samp.rate = 8000)
+  positions <- function(...) {
+    unlist(windowing(..., FUN = function(section, start, len) c(start, len, length(section))))
+  }
+
+  # Samples stay the default, so a call written before is unchanged.
+  expect_equal(positions(w, window.length = 16000), c(1, 16000, 16000, 16001, 16000, 16000))
+  # The same windows in seconds, minutes and hours, and FUN is given samples.
+  expect_equal(positions(w, window.length = 2, time.unit = "seconds"),
+               positions(w, window.length = 16000))
+  expect_equal(positions(w, window.length = 2 / 60, time.unit = "minutes"),
+               positions(w, window.length = 16000))
+  expect_equal(positions(w, window.length = 2 / 3600, time.unit = "hours"),
+               positions(w, window.length = 16000))
+  # The overlap is in the same unit, and a negative one leaves a gap.
+  expect_equal(positions(w, window.length = 2, window.overlap = 1, time.unit = "seconds"),
+               positions(w, window.length = 16000, window.overlap = 8000))
+  expect_equal(positions(w, window.length = 1, window.overlap = -1, time.unit = "seconds"),
+               c(1, 8000, 8000, 16001, 8000, 8000, 32001, 8000, 8000))
+  # A length that is not a whole number of samples is rounded to the nearest.
+  expect_equal(positions(w, window.length = 1.00006, time.unit = "seconds")[2], 8000)
+
+  # A file is windowed in time at its own sample rate.
+  f <- system.file("extdata", "AUDIOMOTH.WAV", package = "sonicscrewdriver")
+  expect_equal(
+    unlist(windowing(f, 1, FUN = function(section, start, len) length(section),
+                     time.unit = "seconds")),
+    rep(48000, 5)
+  )
+  # A file windowed in samples is not read for its sample rate, only in time.
+  local_mocked_bindings(
+    readAudio = function(...) stop("read for its sample rate"),
+    .windowingSamples = function(file) 0
+  )
+  expect_equal(windowing(f, 48000, FUN = function(...) 1), list())
+  expect_error(windowing(f, 1, FUN = function(...) 1, time.unit = "seconds"),
+               "read for its sample rate")
+})
+
+test_that("a window has to be a sample long, in a unit windowing knows", {
+  w <- tuneR::noise("white", duration = 8000, samp.rate = 8000)
+  expect_error(windowing(w, 0.00001, FUN = function(...) 1, time.unit = "seconds"),
+               "a window must be at least one sample long")
+  expect_error(windowing(w, 1, FUN = function(...) 1, time.unit = "days"),
+               "time.unit must be one of samples, seconds, minutes, hours")
+  # time.unit comes after the arguments meant for FUN, so one of theirs
+  # beginning with t is not taken for it.
+  expect_equal(windowing(w, 4000, FUN = function(section, start, len, t) t, t = 7)[[1]], 7)
+})

@@ -1,8 +1,9 @@
 #' Warn that an argument has been renamed
 #'
 #' The unit arguments were named input, unit or units depending on which function
-#' they belonged to. They are now input.unit for the unit a value is supplied in
-#' and output.unit for the unit a result is returned in. The former names are
+#' they belonged to. They are now input.unit for the unit a value is supplied in,
+#' output.unit for the unit a result is returned in, and time.unit for the unit
+#' that positions and lengths in time are measured in. The former names are
 #' still accepted, by `.withRenamedArgs()`.
 #'
 #' @param old The deprecated argument name.

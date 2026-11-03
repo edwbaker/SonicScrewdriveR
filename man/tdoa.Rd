@@ -9,7 +9,7 @@ tdoa(
   ref = 1,
   from = NULL,
   to = NULL,
-  input.unit = "seconds",
+  time.unit = "seconds",
   method = "phat",
   max.delay = NULL,
   interpolate = TRUE,
@@ -25,7 +25,7 @@ tdoa(
 
 \item{to}{Optionally, the end of the region to correlate.}
 
-\item{input.unit}{Unit in which \code{from} and \code{to} are given, one of "samples",
+\item{time.unit}{Unit in which \code{from} and \code{to} are given, one of "samples",
 "seconds" (the default), "minutes", or "hours".}
 
 \item{method}{Correlation method, one of "phat" (the default), "cc", or
@@ -39,7 +39,7 @@ being returned.}
 \item{interpolate}{If TRUE (the default) the delay is interpolated to a
 fraction of a sample (see Details).}
 
-\item{units}{Deprecated, use input.unit instead.}
+\item{units}{Deprecated, use time.unit instead.}
 }
 \value{
 A data frame with one row per channel, holding the channel number, the

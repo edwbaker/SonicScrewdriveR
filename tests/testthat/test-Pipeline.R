@@ -101,6 +101,33 @@ test_that("pipelines join, and a pipeline is a step", {
   expect_error(pipeline(c(p1, p2)), "is a list")
 })
 
+test_that("a windowing in a pipeline takes then= as its FUN", {
+  p <- pipeline(windowing(60, time.unit = "seconds", then = pipeline(dutyCycle(), length())))
+  expect_equal(.pipeCalls(p), 'windowing(60, time.unit = "seconds")')
+  expect_equal(.pipeCalls(p$steps[[1]]$then), c("dutyCycle()", "length()"))
+  expect_equal(.pipeCalls(task(windowing, 60, time.unit = "seconds", then = dutyCycle())),
+               'windowing(60, time.unit = "seconds")')
+  # Given a FUN of its own and no then=, it is an analysis like any other.
+  expect_silent(pipeline(windowing(60, FUN = function(w, ...) 1)))
+
+  expect_error(pipeline(windowing(60, FUN = length, then = dutyCycle())),
+               "windowing\\(\\) is given both FUN and then=")
+  expect_error(pipeline(windowing(60, length, then = dutyCycle())),
+               "windowing\\(\\) is given both FUN and then=")
+  expect_error(pipeline(windowing(60)), "windowing\\(\\) in a pipeline needs then=")
+  expect_error(task(windowing, 60), "windowing\\(\\) in a pipeline needs then=")
+
+  # time.unit comes after ..., so a misspelt or shortened one would be handed to
+  # FUN, which then= leaves nothing to take, and the windows would be measured
+  # in samples. It is refused instead.
+  expect_error(pipeline(windowing(60, time.units = "seconds", then = dutyCycle())),
+               "windowing\\(\\) is given time.units, which is none of its arguments")
+  expect_error(pipeline(windowing(60, time.u = "seconds", tu = 1, then = dutyCycle())),
+               "windowing\\(\\) is given time.u, tu, which are none of its arguments")
+  # Without then=, they are FUN's, as they always were.
+  expect_silent(pipeline(windowing(60, FUN = function(w, s, l, k) k, k = 1)))
+})
+
 test_that("anything else given to pipeline() is an error that says what it was", {
   expect_error(pipeline(normalise), "`normalise` is a function.*`normalise\\(\\)`")
   expect_error(pipeline(dutyCycle(), ), "Step 2 of pipeline\\(\\) is empty")

@@ -26,7 +26,7 @@ setClass(
     unit = "samples"
   ),
   #Without a validity method new("TimeRegion", ...) accepted anything the slot
-  #types allowed, and region() checked only its input.unit. A region running
+  #types allowed, and region() checked only its time.unit. A region running
   #backwards survived until `[` reported "Time region begins after the end of
   #the wave.", which is false and points at the wave rather than at the region;
   #an unknown unit survived until .timeRegion2samples() reached its stop().
@@ -64,25 +64,25 @@ setClass(
 #' Specify a region with a file to analyse
 #'
 #' Specifies a time-bounded region to analyse.
-#' @param input.unit Unit the from and to values are given in (one of samples,
+#' @param time.unit Unit the from and to values are given in (one of samples,
 #'   seconds, minutes, hours)
 #' @param from Start time
 #' @param to End time
-#' @param unit Deprecated, use input.unit instead.
+#' @param unit Deprecated, use time.unit instead.
 #' @return A TimeRegion object.
 #' @export
-region <- function(input.unit, from=0, to=Inf, unit) {
+region <- function(time.unit, from=0, to=Inf, unit) {
   redone <- .withRenamedArgs(
-    sys.call(), parent.frame(), c(unit="input.unit"), "region"
+    sys.call(), parent.frame(), c(unit="time.unit"), "region"
   )
   if (!is.null(redone)) {
     return(redone[[1]])
   }
   .validateChoice(
-    input.unit, .timeRegionUnits(),
+    time.unit, .timeRegionUnits(),
     msg="Unit must be one of samples, seconds, minutes, hours"
   )
-  return(new("TimeRegion", from=from, to=to, unit=input.unit))
+  return(new("TimeRegion", from=from, to=to, unit=time.unit))
 }
 
 .timeRegion2samples <- function(t, samp.rate) {

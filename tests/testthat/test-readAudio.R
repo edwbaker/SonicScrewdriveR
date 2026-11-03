@@ -7,7 +7,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), input.unit="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), time.unit="samples")
   expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -23,7 +23,7 @@ test_that("Reading files works", {
   expect_equal
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, time.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -31,7 +31,7 @@ test_that("Reading files works", {
   expect_equal(length(w@left), w@samp.rate)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from = 1, to = 2, input.unit= "seconds")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver"), from = 1, to = 2, time.unit= "seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -48,7 +48,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), input.unit="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), time.unit="samples")
   expect_equal(length(w@left), 241920)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -64,7 +64,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), mime="audio/mpeg", from = 1, to = 2, input.unit= "seconds")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), mime="audio/mpeg", from = 1, to = 2, time.unit= "seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
@@ -80,14 +80,14 @@ test_that("Reading files works", {
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), input.unit="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), time.unit="samples")
   expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
   expect_equal(w@stereo, FALSE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=48001, to=48000*2, time.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -95,7 +95,7 @@ test_that("Reading files works", {
   expect_equal(length(w@left), w@samp.rate)
   rm(w)
 
-  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=1, to=2, input.unit="seconds")
+  w <- readAudio(system.file("extdata/AUDIOMOTH.flac", package="sonicscrewdriver"), from=1, to=2, time.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -112,7 +112,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=1, to=2, input.unit="seconds")
+  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=1, to=2, time.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
@@ -121,7 +121,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
+  w <- readAudio(system.file("extdata/STEREO.WAV", package="sonicscrewdriver"), from=48001, to=48000*2, time.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -138,7 +138,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=1, to=2, input.unit="seconds")
+  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=1, to=2, time.unit="seconds")
   expect_equal(length(w@left), 48000)
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
@@ -147,7 +147,7 @@ test_that("Reading files works", {
   expect_equal(w@stereo, TRUE)
   rm(w)
 
-  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=48001, to=48000*2, input.unit="samples")
+  w <- readAudio(system.file("extdata/STEREO.flac", package="sonicscrewdriver"), from=48001, to=48000*2, time.unit="samples")
   expect_equal(length(w@left), 48000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@pcm, TRUE)
@@ -170,11 +170,11 @@ test_that("readAudio reads to the end of the file given a start and no end", {
     whole <- readAudio(path)
     expect_equal(length(readAudio(path, from=1)@left), length(whole) - whole@samp.rate)
     expect_equal(
-      length(readAudio(path, from=1/60, input.unit="minutes")@left),
+      length(readAudio(path, from=1/60, time.unit="minutes")@left),
       length(whole) - whole@samp.rate
     )
     expect_equal(
-      length(readAudio(path, from=whole@samp.rate+1, input.unit="samples")@left),
+      length(readAudio(path, from=whole@samp.rate+1, time.unit="samples")@left),
       length(whole) - whole@samp.rate
     )
   }
@@ -192,7 +192,7 @@ test_that("readAudio reads to the end of the file given an end beyond it", {
     expect_equal(length(w@left), length(whole) - whole@samp.rate)
     expect_false(anyNA(w@left))
 
-    w <- readAudio(path, from=whole@samp.rate+1, to=length(whole)*2, input.unit="samples")
+    w <- readAudio(path, from=whole@samp.rate+1, to=length(whole)*2, time.unit="samples")
     expect_equal(length(w@left), length(whole) - whole@samp.rate)
     expect_false(anyNA(w@left))
   }
@@ -216,8 +216,8 @@ test_that("readAudio keeps every channel however the cut was asked for", {
     expect_true(readAudio(path)@stereo, label=file)
     expect_true(readAudio(path, from=1)@stereo, label=file)
     expect_true(readAudio(path, from=1, to=2)@stereo, label=file)
-    expect_true(readAudio(path, from=1/60, input.unit="minutes")@stereo, label=file)
-    expect_true(readAudio(path, from=48001, input.unit="samples")@stereo, label=file)
+    expect_true(readAudio(path, from=1/60, time.unit="minutes")@stereo, label=file)
+    expect_true(readAudio(path, from=48001, time.unit="samples")@stereo, label=file)
 
     #The right channel has to be the right channel, not a copy of the left.
     whole <- readAudio(path)
@@ -364,7 +364,7 @@ test_that("readAudio keeps every channel of a multichannel file when cutting", {
   for (f in c(wav, flac)) {
     sr <- w@samp.rate
     #In samples.
-    r <- readAudio(f, from=101, to=200, input.unit="samples")
+    r <- readAudio(f, from=101, to=200, time.unit="samples")
     expect_equal(ncol(r@.Data), 4)
     expect_equal(length(r), 100)
     expect_equal(unname(r@.Data), unname(w@.Data[101:200, ]))
@@ -374,7 +374,7 @@ test_that("readAudio keeps every channel of a multichannel file when cutting", {
     expect_equal(ncol(r@.Data), 4)
     expect_equal(length(r), sr / 2)
     expect_equal(unname(r@.Data), unname(w@.Data[(sr / 2 + 1):sr, ]))
-    expect_equal(readAudio(f, from=0.5 / 60, to=1 / 60, input.unit="minutes")@.Data, r@.Data)
+    expect_equal(readAudio(f, from=0.5 / 60, to=1 / 60, time.unit="minutes")@.Data, r@.Data)
 
     #A start with no end reads to the end of the file.
     r <- readAudio(f, from=0.5)
@@ -382,7 +382,7 @@ test_that("readAudio keeps every channel of a multichannel file when cutting", {
     expect_equal(length(r), length(w) - sr / 2)
     expect_false(anyNA(r@.Data))
     expect_equal(unname(r@.Data), unname(w@.Data[(sr / 2 + 1):length(w), ]))
-    expect_equal(length(readAudio(f, from=sr / 2 + 1, input.unit="samples")), length(w) - sr / 2)
+    expect_equal(length(readAudio(f, from=sr / 2 + 1, time.unit="samples")), length(w) - sr / 2)
 
     #As does an end point beyond it.
     expect_equal(length(readAudio(f, from=0.5, to=3600)), length(w) - sr / 2)
@@ -422,7 +422,7 @@ test_that("readAudio returns a Wave for mono and stereo files", {
     path <- system.file("extdata", file, package="sonicscrewdriver")
     for (w in list(readAudio(path), readAudio(path, from=0.5),
                    readAudio(path, from=0.5, to=1),
-                   readAudio(path, from=101, to=200, input.unit="samples"))) {
+                   readAudio(path, from=101, to=200, time.unit="samples"))) {
       expect_s4_class(w, "Wave")
       expect_false(inherits(w, "WaveMC"))
       expect_equal(w@stereo, startsWith(file, "STEREO"), label=file)
@@ -501,7 +501,7 @@ test_that("A file whose audio size was never written is read to the end of the f
 
   # Part of such a file can still be asked for.
   expect_warning(
-    p <- readAudio(f, from=1, to=2400, input.unit="samples"),
+    p <- readAudio(f, from=1, to=2400, time.unit="samples"),
     "was never written"
   )
   expect_equal(length(p@left), 2400)
@@ -1065,7 +1065,7 @@ test_that("A recording that was cut short is read as far as it goes, with a warn
 
   # It is said whatever part of the recording is asked for, as the file is the
   # same file whichever part of it is read.
-  part <- rateWarnings(readAudio(f, from=1, to=100, input.unit="samples"))
+  part <- rateWarnings(readAudio(f, from=1, to=100, time.unit="samples"))
   expect_true("truncatedAudio" %in% part$classes)
   expect_equal(part$value@left, cutStereo@left[1:100])
 
@@ -1206,7 +1206,7 @@ test_that("A recording cut short is read through the av package with the same wa
   # beyond it is refused only then, and the cut has been said before that.
   expect_warning(
     expect_error(
-      readAudio(mulaw, from=200, input.unit="samples"), "which holds 150 samples",
+      readAudio(mulaw, from=200, time.unit="samples"), "which holds 150 samples",
       class="startPastEnd"
     ),
     class="truncatedAudio"
@@ -1352,17 +1352,17 @@ test_that("A start at or beyond the end is refused for every format, in every un
     expect_error(readAudio(path, from=end + 1), class="startPastEnd", info=file)
     expect_error(readAudio(path, from=end + 1, to=end + 2), class="startPastEnd", info=file)
     expect_error(
-      readAudio(path, from=(end + 1) / 60, input.unit="minutes"),
+      readAudio(path, from=(end + 1) / 60, time.unit="minutes"),
       class="startPastEnd", info=file
     )
-    expect_error(readAudio(path, from=n + 1, input.unit="samples"), class="startPastEnd", info=file)
+    expect_error(readAudio(path, from=n + 1, time.unit="samples"), class="startPastEnd", info=file)
     expect_error(
-      readAudio(path, from=n + 1000, to=n + 2000, input.unit="samples"),
+      readAudio(path, from=n + 1000, to=n + 2000, time.unit="samples"),
       class="startPastEnd", info=file
     )
 
     # The last sample is still within the recording, however it is asked for.
-    expect_equal(length(readAudio(path, from=n, input.unit="samples")), 1, info=file)
+    expect_equal(length(readAudio(path, from=n, time.unit="samples")), 1, info=file)
     expect_equal(length(readAudio(path, from=(n - 1) / sr)), 1, info=file)
   }
 })
@@ -1381,9 +1381,9 @@ test_that("A start past the end says how long the recording is", {
       info=f
     )
     # A start in another unit of time is said in seconds, as the length is.
-    expect_error(readAudio(f, from=2 / 60, input.unit="minutes"), "2 seconds, is at or beyond", info=f)
+    expect_error(readAudio(f, from=2 / 60, time.unit="minutes"), "2 seconds, is at or beyond", info=f)
     expect_error(
-      readAudio(f, from=5000, to=6000, input.unit="samples"),
+      readAudio(f, from=5000, to=6000, time.unit="samples"),
       "^The start point asked for, sample 5000, is beyond the end of '.*', which holds 4000 samples\\.$",
       info=f
     )
@@ -1398,7 +1398,7 @@ test_that("A start past the end says how long the recording is", {
   tuneR::writeWave(tuneR::Wave(left=rep(100L, 8000), samp.rate=8000, bit=16), one)
   expect_error(readAudio(one, from=2), "which is 1 second long")
   tuneR::writeWave(tuneR::Wave(left=100L, samp.rate=8000, bit=16), one)
-  expect_error(readAudio(one, from=2, input.unit="samples"), "which holds 1 sample\\.")
+  expect_error(readAudio(one, from=2, time.unit="samples"), "which holds 1 sample\\.")
 })
 
 test_that("A start past the end of a multichannel file is refused", {
@@ -1412,10 +1412,10 @@ test_that("A start past the end of a multichannel file is refused", {
   for (f in c(wav, flac)) {
     expect_error(readAudio(f, from=2), "which is 2 seconds long", class="startPastEnd", info=f)
     expect_error(
-      readAudio(f, from=length(w) + 1, input.unit="samples"),
+      readAudio(f, from=length(w) + 1, time.unit="samples"),
       "which holds 16000 samples", class="startPastEnd", info=f
     )
-    expect_equal(length(readAudio(f, from=length(w), input.unit="samples")), 1, info=f)
+    expect_equal(length(readAudio(f, from=length(w), time.unit="samples")), 1, info=f)
   }
 })
 
@@ -1427,11 +1427,11 @@ test_that("A start past the end of a recovered recording is held against what wa
   on.exit(unlink(f))
 
   expect_error(
-    readAudio(f, from=4801, input.unit="samples"), "which holds 4800 samples",
+    readAudio(f, from=4801, time.unit="samples"), "which holds 4800 samples",
     class="startPastEnd"
   )
   expect_warning(
-    w <- readAudio(f, from=4800, input.unit="samples"), "was never written"
+    w <- readAudio(f, from=4800, time.unit="samples"), "was never written"
   )
   expect_equal(length(w), 1)
 })
@@ -1455,13 +1455,13 @@ test_that("A start past the end of a file cut short is held against the audio it
   )
   expect_warning(
     expect_error(
-      readAudio(short, from=4001, input.unit="samples"),
+      readAudio(short, from=4001, time.unit="samples"),
       "which holds 4000 samples", class="startPastEnd"
     ),
     class="truncatedAudio"
   )
   expect_warning(
-    w <- readAudio(short, from=4000, input.unit="samples"), class="truncatedAudio"
+    w <- readAudio(short, from=4000, time.unit="samples"), class="truncatedAudio"
   )
   expect_equal(length(w), 1)
 })
@@ -1472,7 +1472,7 @@ test_that("A start past the end of an RF64 recording is refused", {
   # ds64 chunk says how much audio there is.
   f <- mdFile(mdRf64Wav(rf64Samples))
   expect_error(readAudio(f, from=0.1), "which is 0.1 seconds long", class="startPastEnd")
-  expect_equal(length(readAudio(f, from=4800, input.unit="samples")), 1)
+  expect_equal(length(readAudio(f, from=4800, time.unit="samples")), 1)
 
   # One whose ds64 chunk cannot be believed is counted by the av package as it
   # reads it instead.
@@ -1514,11 +1514,11 @@ test_that("An empty recording is still read from its start", {
   on.exit(unlink(f))
 
   expect_equal(length(suppressWarnings(readAudio(f, from=0, to=1))), 0)
-  expect_equal(length(suppressWarnings(readAudio(f, input.unit="samples"))), 0)
-  expect_equal(length(suppressWarnings(readAudio(f, from=1, input.unit="samples"))), 0)
+  expect_equal(length(suppressWarnings(readAudio(f, time.unit="samples"))), 0)
+  expect_equal(length(suppressWarnings(readAudio(f, from=1, time.unit="samples"))), 0)
   # Anything after its start is past its end.
   expect_error(readAudio(f, from=0.5), "which is 0 seconds long", class="startPastEnd")
-  expect_error(readAudio(f, from=2, input.unit="samples"), "which holds 0 samples", class="startPastEnd")
+  expect_error(readAudio(f, from=2, time.unit="samples"), "which holds 0 samples", class="startPastEnd")
 })
 
 test_that(".countText writes a count with its unit", {
@@ -1548,15 +1548,15 @@ test_that("An end that leaves no audio is refused for every format, in every uni
     # An end before the start.
     expect_error(readAudio(path, from=0.3, to=0.2), class="endBeforeStart", info=file)
     expect_error(
-      readAudio(path, from=0.3 / 60, to=0.2 / 60, input.unit="minutes"),
+      readAudio(path, from=0.3 / 60, to=0.2 / 60, time.unit="minutes"),
       class="endBeforeStart", info=file
     )
     expect_error(
-      readAudio(path, from=300, to=200, input.unit="samples"),
+      readAudio(path, from=300, to=200, time.unit="samples"),
       class="endBeforeStart", info=file
     )
     expect_error(
-      readAudio(path, from=300, to=299, input.unit="samples"),
+      readAudio(path, from=300, to=299, time.unit="samples"),
       class="endBeforeStart", info=file
     )
 
@@ -1564,7 +1564,7 @@ test_that("An end that leaves no audio is refused for every format, in every uni
     expect_error(readAudio(path, from=0.3, to=0.3), class="endBeforeStart", info=file)
     expect_error(readAudio(path, from=0, to=0), class="endBeforeStart", info=file)
     expect_error(
-      readAudio(path, from=0.3 / 60, to=0.3 / 60, input.unit="minutes"),
+      readAudio(path, from=0.3 / 60, to=0.3 / 60, time.unit="minutes"),
       class="endBeforeStart", info=file
     )
     # Nor does a part whose end is nearer the boundary its start is at than the
@@ -1576,25 +1576,25 @@ test_that("An end that leaves no audio is refused for every format, in every uni
     # In samples a start of zero is the first sample, and the end is the last
     # sample returned, so sample zero is before it.
     expect_error(
-      readAudio(path, from=0, to=0, input.unit="samples"),
+      readAudio(path, from=0, to=0, time.unit="samples"),
       class="endBeforeStart", info=file
     )
     expect_error(
-      readAudio(path, from=1, to=0, input.unit="samples"),
+      readAudio(path, from=1, to=0, time.unit="samples"),
       class="endBeforeStart", info=file
     )
     # -Inf is no end of the recording, and used to read the whole of it. It is
     # refused as negative, as a negative point is in every unit.
     expect_error(
-      readAudio(path, from=0, to=-Inf, input.unit="samples"),
+      readAudio(path, from=0, to=-Inf, time.unit="samples"),
       class="invalidPoint", info=file
     )
     # A negative time is still refused as one.
     expect_error(readAudio(path, from=1, to=-2), "cannot be negative", info=file)
 
     # The shortest parts that hold audio still give it.
-    expect_equal(length(readAudio(path, from=300, to=300, input.unit="samples")), 1, info=file)
-    expect_equal(length(readAudio(path, from=0, to=1, input.unit="samples")), 1, info=file)
+    expect_equal(length(readAudio(path, from=300, to=300, time.unit="samples")), 1, info=file)
+    expect_equal(length(readAudio(path, from=0, to=1, time.unit="samples")), 1, info=file)
     expect_equal(length(readAudio(path, from=0.3, to=0.3 + 1 / sr)), 1, info=file)
     expect_equal(length(readAudio(path, from=0, to=1 / sr)), 1, info=file)
   }
@@ -1613,8 +1613,8 @@ test_that("Every format cuts a part at the same samples, however it is asked for
     for (t in c(0.3, 2.5 / sr, 1.5 / sr)) {
       for (unit in c("seconds", "minutes")) {
         at <- if (unit == "minutes") t / 60 else t
-        a <- readAudio(path, from=0, to=at, input.unit=unit)
-        b <- readAudio(path, from=at, input.unit=unit)
+        a <- readAudio(path, from=0, to=at, time.unit=unit)
+        b <- readAudio(path, from=at, time.unit=unit)
         expect_equal(c(a@left, b@left), whole@left, info=paste(file, t, unit))
         if (whole@stereo) {
           expect_equal(c(a@right, b@right), whole@right, info=paste(file, t, unit))
@@ -1655,7 +1655,7 @@ test_that("An end that leaves no audio says what was asked for", {
     )
     # Times in another unit are said in seconds.
     expect_error(
-      readAudio(f, from=0.3 / 60, to=0.2 / 60, input.unit="minutes"),
+      readAudio(f, from=0.3 / 60, to=0.2 / 60, time.unit="minutes"),
       "0.2 seconds, is before the start point, 0.3 seconds", info=f
     )
     expect_error(
@@ -1664,19 +1664,20 @@ test_that("An end that leaves no audio says what was asked for", {
       info=f
     )
     expect_error(
-      readAudio(f, from=300, to=200, input.unit="samples"),
+      readAudio(f, from=300, to=200, time.unit="samples"),
       "^The end point asked for, sample 200, is before the start point, sample 300, so no audio of '.*' was asked for\\.$",
       info=f
     )
     expect_error(
-      readAudio(f, from=0, to=0, input.unit="samples"),
+      readAudio(f, from=0, to=0, time.unit="samples"),
       "^The end point asked for, sample 0, is before the first sample, so no audio of '.*' was asked for\\.$",
       info=f
     )
 
     # However the arguments arrive.
     expect_error(readAudio(f, "auto", 300, 200, "samples"), class="endBeforeStart", info=f)
-    expect_error(readAudio(f, fr=0.3, t=0.2), class="endBeforeStart", info=f)
+    # t would abbreviate time.unit as well as to, so to is given in full.
+    expect_error(readAudio(f, fr=0.3, to=0.2), class="endBeforeStart", info=f)
     expect_error(
       do.call(readAudio, list(f, from=0.3, to=0.3)), class="endBeforeStart", info=f
     )
@@ -1689,7 +1690,7 @@ test_that("An end that leaves no audio says what was asked for", {
     # short for it.
     expect_error(readAudio(f, from=1, to=0.6), class="startPastEnd", info=f)
     expect_error(
-      readAudio(f, from=5000, to=4500, input.unit="samples"), class="startPastEnd", info=f
+      readAudio(f, from=5000, to=4500, time.unit="samples"), class="startPastEnd", info=f
     )
   }
 })
@@ -1706,7 +1707,7 @@ test_that("An end that leaves no audio of a multichannel file is refused", {
     expect_error(readAudio(f, from=0.3, to=0.2), class="endBeforeStart", info=f)
     expect_error(readAudio(f, from=0.3, to=0.3), class="endBeforeStart", info=f)
     expect_error(
-      readAudio(f, from=300, to=299, input.unit="samples"), class="endBeforeStart", info=f
+      readAudio(f, from=300, to=299, time.unit="samples"), class="endBeforeStart", info=f
     )
     part <- readAudio(f, from=2.5 / 8000, to=3.4 / 8000)
     expect_equal(length(part), 1, info=f)
@@ -1734,7 +1735,7 @@ test_that("An empty recording holds no audio for a part that ends at its start",
   on.exit(unlink(f))
 
   expect_error(readAudio(f, from=0, to=0), class="endBeforeStart")
-  expect_error(readAudio(f, from=0, to=0, input.unit="samples"), class="endBeforeStart")
+  expect_error(readAudio(f, from=0, to=0, time.unit="samples"), class="endBeforeStart")
   # A part that would hold audio, had the recording any, is read as empty.
   expect_equal(length(suppressWarnings(readAudio(f, from=0, to=1))), 0)
 })
@@ -1769,33 +1770,33 @@ test_that("A point that is no point of a recording is refused for every format, 
 
     # A fraction of a sample, as a start, an end, or both.
     expect_error(
-      readAudio(path, from=2.5, to=10, input.unit="samples"), class="invalidPoint", info=file
+      readAudio(path, from=2.5, to=10, time.unit="samples"), class="invalidPoint", info=file
     )
     expect_error(
-      readAudio(path, from=1, to=10.5, input.unit="samples"), class="invalidPoint", info=file
+      readAudio(path, from=1, to=10.5, time.unit="samples"), class="invalidPoint", info=file
     )
-    expect_error(readAudio(path, from=2.5, input.unit="samples"), class="invalidPoint", info=file)
+    expect_error(readAudio(path, from=2.5, time.unit="samples"), class="invalidPoint", info=file)
     expect_error(
-      readAudio(path, from=0.5, to=1.5, input.unit="samples"), class="invalidPoint", info=file
+      readAudio(path, from=0.5, to=1.5, time.unit="samples"), class="invalidPoint", info=file
     )
     # An end of half a sample was refused as before the first sample, which it
     # is not, being no sample at all.
     expect_error(
-      readAudio(path, from=0, to=0.5, input.unit="samples"), class="invalidPoint", info=file
+      readAudio(path, from=0, to=0.5, time.unit="samples"), class="invalidPoint", info=file
     )
 
     # A negative point, in samples as in time.
     expect_error(
-      readAudio(path, from=-1, to=10, input.unit="samples"), class="invalidPoint", info=file
+      readAudio(path, from=-1, to=10, time.unit="samples"), class="invalidPoint", info=file
     )
     expect_error(readAudio(path, from=-1), class="invalidPoint", info=file)
     expect_error(readAudio(path, from=1, to=-2), class="invalidPoint", info=file)
     expect_error(
-      readAudio(path, from=-1 / 60, input.unit="minutes"), class="invalidPoint", info=file
+      readAudio(path, from=-1 / 60, time.unit="minutes"), class="invalidPoint", info=file
     )
     expect_error(readAudio(path, from=-Inf), class="invalidPoint", info=file)
     expect_error(
-      readAudio(path, from=-Inf, input.unit="samples"), class="invalidPoint", info=file
+      readAudio(path, from=-Inf, time.unit="samples"), class="invalidPoint", info=file
     )
 
     # No number at all, as a start and as an end, in either kind of unit.
@@ -1805,19 +1806,19 @@ test_that("A point that is no point of a recording is refused for every format, 
                        list(1))) {
         info <- paste(c(file, unit, deparse(bad)), collapse=" ")
         expect_error(
-          readAudio(path, from=bad, input.unit=unit), class="invalidPoint", info=info
+          readAudio(path, from=bad, time.unit=unit), class="invalidPoint", info=info
         )
-        expect_error(readAudio(path, to=bad, input.unit=unit), class="invalidPoint", info=info)
+        expect_error(readAudio(path, to=bad, time.unit=unit), class="invalidPoint", info=info)
       }
     }
 
     # A start of Inf is still a start past the end, and an end of Inf the end.
     expect_error(readAudio(path, from=Inf), class="startPastEnd", info=file)
     expect_error(
-      readAudio(path, from=Inf, input.unit="samples"), class="startPastEnd", info=file
+      readAudio(path, from=Inf, time.unit="samples"), class="startPastEnd", info=file
     )
     expect_equal(
-      length(readAudio(path, from=0, to=Inf, input.unit="samples")),
+      length(readAudio(path, from=0, to=Inf, time.unit="samples")),
       length(readAudio(path)), info=file
     )
   }
@@ -1836,20 +1837,20 @@ test_that("A number of samples a double misses by its last bits is read as the w
     path <- system.file("extdata", file, package="sonicscrewdriver")
     whole <- readAudio(path)
     expect_equal(
-      readAudio(path, from=below, to=below + 4, input.unit="samples")@left,
+      readAudio(path, from=below, to=below + 4, time.unit="samples")@left,
       whole@left[432:436], info=file
     )
     expect_equal(
-      readAudio(path, from=above, to=above + 4, input.unit="samples")@left,
+      readAudio(path, from=above, to=above + 4, time.unit="samples")@left,
       whole@left[816:820], info=file
     )
     # An end that misses the whole number below it is the same end.
     expect_equal(
-      length(readAudio(path, from=1, to=below, input.unit="samples")), 432, info=file
+      length(readAudio(path, from=1, to=below, time.unit="samples")), 432, info=file
     )
     # Integers are whole numbers, of whatever type.
     expect_equal(
-      readAudio(path, from=432L, to=436L, input.unit="samples")@left,
+      readAudio(path, from=432L, to=436L, time.unit="samples")@left,
       whole@left[432:436], info=file
     )
   }
@@ -1857,15 +1858,15 @@ test_that("A number of samples a double misses by its last bits is read as the w
   # Within a millionth of a sample of a whole number, and no further.
   f <- malformedWav(1:4000, rate=8000)
   on.exit(unlink(f))
-  expect_equal(readAudio(f, from=10 - 1e-7, to=12 + 1e-7, input.unit="samples")@left, 10:12)
-  expect_error(readAudio(f, from=10 - 1e-5, input.unit="samples"), class="invalidPoint")
+  expect_equal(readAudio(f, from=10 - 1e-7, to=12 + 1e-7, time.unit="samples")@left, 10:12)
+  expect_error(readAudio(f, from=10 - 1e-5, time.unit="samples"), class="invalidPoint")
   # An end that close to zero is an end of zero, before the first sample.
-  expect_error(readAudio(f, from=0, to=1e-7, input.unit="samples"), class="endBeforeStart")
+  expect_error(readAudio(f, from=0, to=1e-7, time.unit="samples"), class="endBeforeStart")
   # A start of zero a hair below it is the start, not a negative sample.
   zero <- (0.3 - 0.1 - 0.2) * 48000
   expect_lt(zero, 0)
-  expect_equal(readAudio(f, from=zero, to=3, input.unit="samples")@left, 1:3)
-  expect_error(readAudio(f, from=-1e-5, input.unit="samples"), class="invalidPoint")
+  expect_equal(readAudio(f, from=zero, to=3, time.unit="samples")@left, 1:3)
+  expect_error(readAudio(f, from=-1e-5, time.unit="samples"), class="invalidPoint")
 })
 
 test_that("A point that is no point of a recording says what was asked for", {
@@ -1877,12 +1878,12 @@ test_that("A point that is no point of a recording says what was asked for", {
 
   for (f in c(wav, flac)) {
     expect_error(
-      readAudio(f, from=2.5, to=10, input.unit="samples"),
+      readAudio(f, from=2.5, to=10, time.unit="samples"),
       "^The start point asked for, sample 2.5, is not a whole number of samples, so no part of '.*' was read\\.$",
       info=f
     )
     expect_error(
-      readAudio(f, from=1, to=10.5, input.unit="samples"),
+      readAudio(f, from=1, to=10.5, time.unit="samples"),
       "^The end point asked for, sample 10.5, is not a whole number of samples", info=f
     )
     expect_error(
@@ -1891,15 +1892,15 @@ test_that("A point that is no point of a recording says what was asked for", {
       info=f
     )
     expect_error(
-      readAudio(f, from=-0.5, input.unit="minutes"),
+      readAudio(f, from=-0.5, time.unit="minutes"),
       "The start point asked for, -0.5 minutes, cannot be negative", info=f
     )
     expect_error(
-      readAudio(f, from=-1, input.unit="samples"),
+      readAudio(f, from=-1, time.unit="samples"),
       "The start point asked for, sample -1, cannot be negative", info=f
     )
     expect_error(
-      readAudio(f, from="9", input.unit="samples"),
+      readAudio(f, from="9", time.unit="samples"),
       "The start point asked for, \"9\", is not a number", info=f
     )
     expect_error(readAudio(f, to=NA), "The end point asked for, NA, is not a number", info=f)
@@ -1914,14 +1915,14 @@ test_that("A point that is no point of a recording says what was asked for", {
     )
     # The fraction of a sample refused is shown, however far in it is.
     expect_error(
-      readAudio(f, from=123456789.5, input.unit="samples"), "sample 123456789.5,", info=f
+      readAudio(f, from=123456789.5, time.unit="samples"), "sample 123456789.5,", info=f
     )
 
     # However the arguments arrive.
     expect_error(readAudio(f, "auto", 2.5, 10, "samples"), class="invalidPoint", info=f)
     expect_error(readAudio(f, fr=NA), class="invalidPoint", info=f)
     expect_error(
-      do.call(readAudio, list(f, from=2.5, input.unit="samples")), class="invalidPoint", info=f
+      do.call(readAudio, list(f, from=2.5, time.unit="samples")), class="invalidPoint", info=f
     )
     expect_error(
       suppressWarnings(readAudio(f, from=2.5, units="samples")), class="invalidPoint", info=f
@@ -1931,7 +1932,7 @@ test_that("A point that is no point of a recording says what was asked for", {
   # Nothing is read before the points are held up, so a file that is not there
   # is not what is reported.
   expect_error(
-    readAudio(file.path(tempdir(), "no such file.wav"), from=2.5, input.unit="samples"),
+    readAudio(file.path(tempdir(), "no such file.wav"), from=2.5, time.unit="samples"),
     class="invalidPoint"
   )
 })
@@ -1942,9 +1943,9 @@ test_that("A WAVE file is not read from part-way into a sample", {
   # start of sample -1 the size of the data chunk.
   f <- malformedWav(1:4000, rate=8000)
   on.exit(unlink(f))
-  expect_error(readAudio(f, from=2.5, to=10, input.unit="samples"), class="invalidPoint")
-  expect_error(readAudio(f, from=-1, to=10, input.unit="samples"), class="invalidPoint")
-  expect_equal(readAudio(f, from=3, to=10, input.unit="samples")@left, 3:10)
+  expect_error(readAudio(f, from=2.5, to=10, time.unit="samples"), class="invalidPoint")
+  expect_error(readAudio(f, from=-1, to=10, time.unit="samples"), class="invalidPoint")
+  expect_equal(readAudio(f, from=3, to=10, time.unit="samples")@left, 3:10)
 })
 
 test_that("A point that is no point of a multichannel recording is refused", {
@@ -1956,10 +1957,10 @@ test_that("A point that is no point of a multichannel recording is refused", {
   writeAudio(w, flac)
 
   for (f in c(wav, flac)) {
-    expect_error(readAudio(f, from=2.5, input.unit="samples"), class="invalidPoint", info=f)
-    expect_error(readAudio(f, from=-1, input.unit="samples"), class="invalidPoint", info=f)
+    expect_error(readAudio(f, from=2.5, time.unit="samples"), class="invalidPoint", info=f)
+    expect_error(readAudio(f, from=-1, time.unit="samples"), class="invalidPoint", info=f)
     expect_error(readAudio(f, to=NA), class="invalidPoint", info=f)
-    part <- readAudio(f, from=0.009 * 48000, to=433, input.unit="samples")
+    part <- readAudio(f, from=0.009 * 48000, to=433, time.unit="samples")
     expect_equal(unname(part@.Data), unname(w@.Data[432:433, ]), info=f)
   }
 })
@@ -2066,7 +2067,7 @@ test_that("Bounding the decode does not change the audio that comes back", {
   expect_identical(readAudio(f, from=0, to=1)@left, whole@left[1:48000])
   expect_identical(readAudio(f, from=1, to=2)@left, whole@left[48001:96000])
   expect_identical(
-    readAudio(f, from=48001, to=96000, input.unit="samples")@left,
+    readAudio(f, from=48001, to=96000, time.unit="samples")@left,
     whole@left[48001:96000]
   )
   # An end past the end of the recording gives the recording, not an error.

@@ -456,6 +456,32 @@
   its id, its steps as an outline numbered so that a table of results can be
   found in it, and the code it was identified by. Running a pipeline over a set
   of recordings follows separately.
+- windowing() is a step of a pipeline. `then=` fills its `FUN`, so the steps
+  it gives run on each window, as
+  `windowing(60, time.unit = "seconds", then = pipeline(dutyCycle(), seewave::M()))`.
+  Each window is a tagged wave whose history is that of the wave it was cut
+  from followed by the cut, so a result from a window traces back to where in
+  the recording it was measured. The table of each step has a row for each
+  window, keyed by `window_start`, `window_end` and `window_length` in seconds
+  from the start of the recording, and a windowing inside another adds columns
+  of its own, as `window_start_2`. A step of cutws() or seewave's `cutw()` is
+  placed in the recording too: rows measured on what it cuts have `cut_start`
+  and `cut_end`, and the windows inside it are counted from the start of the
+  recording rather than of the cut. A cut made by any other function is not
+  recognised. A wave shorter than one window is an error naming
+  the step, rather than a table with no rows that could not be told from a
+  detector finding nothing. A windowing in a pipeline needs `then=`, and is
+  refused both `then=` and `FUN`.
+- windowing() takes `time.unit`, the unit of `window.length` and
+  `window.overlap`: "samples", as before and still the default, "seconds",
+  "minutes" or "hours". A set of recordings mixes sample rates, and a window in
+  samples is a different length of time in each of them. A length in time is
+  rounded to the nearest sample, and `FUN` is still given the start and length
+  of its window in samples. `time.unit` comes after `...`, so an argument meant
+  for `FUN` is not taken for it. The help of windowing() and filterWave() says
+  plainly that filtering then windowing and windowing then filtering give
+  different numbers, as filterWave() scales what it gives back to the peak of
+  the wave it is given.
 
 ## Deprecations
 - audioblast() asks for annotations with `output="Annotation"`, as
@@ -470,15 +496,21 @@
   it has already walked instead of sending a second reader back to the file.
 - unit arguments are now named consistently across the package. A function takes
   input.unit for the unit a value is supplied in, output.unit for the unit a
-  result is returned in, and <quantity>.unit (as in temp.unit, pressure.unit)
-  where it takes several quantities that each need a unit. The former names still
-  work and warn, and will be removed in a future release:
+  result is returned in, time.unit for the unit positions and lengths in time
+  are measured in, and <quantity>.unit (as in temp.unit, pressure.unit) where it
+  takes several quantities that each need a unit. A converter such as
+  convert2seconds() takes input.unit, as it is the unit of the value it is given,
+  where readAudio() takes time.unit, as its unit says how `from` and `to` are
+  measured rather than what is read. The former names still work and warn, and
+  will be removed in a future release:
   - input became input.unit in convert2Pascals(), convert2dyne_cm2(),
     convert2Kelvin(), convert2Celsius(), convert2Fahrenheit(), convert2degrees(),
     convert2radians(), convert2bytes(), convert2seconds(), dielFraction() and
     yearlyFraction().
-  - units became input.unit in readAudio(), readRespeaker6() and tdoa().
-  - unit became input.unit in humanTime() and region().
+  - units became time.unit in readAudio(), readRespeaker6() and tdoa().
+  - unit became input.unit in humanTime(), and time.unit in region().
+  In those four, `t =` abbreviated `to`, and now abbreviates time.unit as well,
+  so R refuses it as matching both: `to` is given in full.
   - unit became output.unit in referencePressure(), referenceIntensity(),
     wavelength(), bearing(), dielFraction() and yearlyFraction().
   - the first argument of convert2seconds() was named T, which shadows the base R
@@ -1400,7 +1432,7 @@
   refused as they are for any other file.
 - readAudio() given a start or end point that is no point of a recording gave
   a different answer from each reader, and from a WAVE file gave audio that
-  was never recorded. A fraction of a sample, `from = 2.5, input.unit =
+  was never recorded. A fraction of a sample, `from = 2.5, time.unit =
   "samples"`, was read from part-way into a sample, so a file holding 1:4000
   began 768 where 3 was written, while FLAC, MP3 and a triggered AudioMoth
   recording failed with "In cutws both from and to must be integers"; a start

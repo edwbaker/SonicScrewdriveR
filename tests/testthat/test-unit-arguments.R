@@ -16,7 +16,6 @@ test_that("input.unit is accepted wherever a value's unit is given", {
   expect_equal(convert2bytes(8, input.unit="bits"), 1)
   expect_equal(convert2seconds(1, input.unit="minutes"), 60)
   expect_equal(humanTime(1, input.unit="hours"), "1 hour")
-  expect_equal(region(input.unit="seconds", from=0, to=1)@unit, "seconds")
   expect_equal(dielFraction(0, input.unit="seconds", output.unit="fraction"), 0)
   expect_equal(yearlyFraction(0, input.unit="day", output.unit="fraction"), 0)
 })
@@ -105,21 +104,32 @@ test_that("the first argument of convert2seconds is t, and T still works", {
   expect_equal(x, 60)
 })
 
-test_that("readAudio and readRespeaker6 take input.unit", {
+test_that("time.unit is accepted wherever a position or length in time is given", {
+  # The unit says how times are measured, not what the input is, so these take
+  # time.unit where a converter takes input.unit.
+  expect_equal(region(time.unit="seconds", from=0, to=1)@unit, "seconds")
   f <- system.file("extdata/AUDIOMOTH.WAV", package="sonicscrewdriver")
-  w <- readAudio(f, from=1, to=2, input.unit="seconds")
+  w <- readAudio(f, from=1, to=2, time.unit="seconds")
   expect_true(inherits(w, "Wave"))
 
+  # The names released before still work, and say which to use now.
   expect_warning(
     w2 <- readAudio(f, from=1, to=2, units="seconds"),
-    "units argument of readAudio"
+    "units argument of readAudio\\(\\) is deprecated .* use time.unit instead"
   )
   expect_equal(w2@left, w@left)
+  expect_warning(
+    region(unit="seconds", from=0, to=1),
+    "unit argument of region\\(\\) is deprecated .* use time.unit instead"
+  )
+
+  # input.unit was never released for these, and is not taken.
+  expect_error(readAudio(f, from=1, to=2, input.unit="seconds"), "unused argument")
 })
 
-test_that("tdoa takes input.unit", {
+test_that("tdoa takes time.unit", {
   w <- twoChannelWave()
-  d <- tdoa(w, from=0, to=0.05, input.unit="seconds")
+  d <- tdoa(w, from=0, to=0.05, time.unit="seconds")
   expect_equal(d$channel, 1:2)
 
   expect_warning(
@@ -214,7 +224,7 @@ test_that("a former name mixed with positionals binds as it used to, for waves",
     d <- tdoa(w, 1, 0, 0.05, units="seconds", "cc"),
     "units argument of tdoa"
   )
-  expect_equal(d, tdoa(w, 1, 0, 0.05, input.unit="seconds", method="cc"))
+  expect_equal(d, tdoa(w, 1, 0, 0.05, time.unit="seconds", method="cc"))
 })
 
 test_that("both former names at once bind as they used to", {

@@ -17,11 +17,49 @@
 #' readAudio() recovers from it, and a file or Wave object holding no audio
 #' gives no windows.
 #'
+#' The length of a window and the overlap between windows are both given in
+#' `time.unit`, which is samples unless it says otherwise. A set of recordings
+#' mixes sample rates, and a length in samples is a different length of time in
+#' each of them, so `time.unit = "seconds"` gives every recording windows of the
+#' same length of time. A length in time is rounded to the nearest whole
+#' sample, as [readAudio()] rounds a time it is given. `FUN` is given the start
+#' and length of its window in samples, whatever `time.unit` is, as samples are
+#' where a window falls.
+#'
+#' @section Windows in a pipeline:
+#' In a [pipeline()], `then=` fills `FUN`: the steps it gives are run on each
+#' window, and giving both `then=` and `FUN` is an error. Each window is a
+#' tagged wave whose history is that of the wave it was cut from, followed by
+#' the cut, so a result from a window traces back to where in the recording it
+#' was measured. The results of each step have a row for each window, keyed by
+#' `window_start`, `window_end` and `window_length`, in seconds from the start of
+#' the recording, counting any cut made before the windowing by [cutws()] or
+#' seewave's `cutw()`. A cut made by any other function is not counted, and
+#' the windows after it are placed as though it had not been made. A windowing
+#' inside another adds columns of its own, numbered by how deep it is:
+#' `window_start_2` and so on. A wave shorter than one window gives no windows,
+#' which is an error naming the step.
+#'
+#' @section The order of windowing and filtering:
+#' Windowing then filtering does not give the numbers filtering then windowing
+#' does. [filterWave()] scales what it gives back to the peak level of the wave
+#' it was given. Filtered before windowing, the whole recording is scaled by one
+#' factor, so the level of a band can be compared between windows, but the whole
+#' recording has to be in memory. Filtered after windowing, each window is
+#' scaled by a factor of its own, raising the band in every window to that
+#' window's own peak, so the levels of a band compared across windows mislead,
+#' but the recording can be read a window at a time. Both orders are sound, and
+#' the history of every window records which was used.
+#'
 #' @param wave A Wave object or filename. Using filenames may save loading an
 #'   entire large file into memory.
-#' @param window.length The length of the analysis window (in samples).
-#' @param window.overlap The overlap between successive windows (in samples), a
-#'   negative value will result in a gap between windows.
+#' @param window.length The length of the analysis window, in `time.unit`.
+#' @param window.overlap The overlap between successive windows, in `time.unit`.
+#'   A negative value will result in a gap between windows.
+#' @param time.unit The unit `window.length` and `window.overlap` are given in:
+#'   one of "samples", "seconds", "minutes" or "hours". It comes after `...`, so
+#'   that an argument meant for `FUN` is not taken for it, and has to be named in
+#'   full.
 #' @param bind.wave If TRUE and FUN returns wave objects, then these are
 #'   combined into a single object
 #' @param FUN FUN to be applied to windows.
@@ -36,6 +74,7 @@
 #' @examples
 #' \dontrun{
 #' windowing(wave, window.length=1000, FUN=function(w, ...) length(w), window.overlap=0)
+#' windowing(wave, 60, FUN=function(w, ...) seewave::H(w), time.unit="seconds")
 #' }
 windowing <- function(
   wave,
@@ -45,7 +84,12 @@ windowing <- function(
   bind.wave=FALSE,
   complete.windows=TRUE,
   cluster=NULL,
-  ...){
+  ...,
+  time.unit="samples"){
+  .validateChoice(
+    time.unit, .timeRegionUnits(),
+    msg="time.unit must be one of samples, seconds, minutes, hours."
+  )
   if (typeof(wave) == "character" && .isTriggeredRecording(wave)) {
     # An AudioMoth triggered recording holds neither the length nor the timing
     # of the recording it stands for, so the file on disk cannot be used to
@@ -67,19 +111,30 @@ windowing <- function(
 
   if (typeof(wave) == "character") {
     FUN2 <- function(start, wave, window.length, ...){
-      wave <- readAudio(wave, from=start,to=start+window.length-1,input.unit="samples")
+      wave <- readAudio(wave, from=start,to=start+window.length-1,time.unit="samples")
       return(FUN(wave, start, window.length, ...))
     }
     n.samples <- .windowingSamples(wave)
+    #Read only for a length in time, so that windowing a file in samples reads
+    #nothing more than it did.
+    samp.rate <- if (time.unit != "samples") {
+      readAudio(wave, from=1, to=1, time.unit="samples")@samp.rate
+    }
   } else {
     validateIsWave(wave)
     n.samples <- length(wave)
+    samp.rate <- wave@samp.rate
     FUN2 <- function(start, wave, window.length, ...){
       # Only an incomplete final window reaches past the last sample, and
       # cutws() cuts a point beyond it back to the end of the wave.
       section <- cutws(wave, from=start, to=start+window.length-1)
       return(FUN(section, start, window.length, ...))
     }
+  }
+  window.length <- .inSamples(window.length, time.unit, samp.rate)
+  window.overlap <- .inSamples(window.overlap, time.unit, samp.rate)
+  if (window.length < 1) {
+    stop("In windowing a window must be at least one sample long.")
   }
   if (bind.wave) {
     if (window.overlap > 0) {
@@ -149,7 +204,7 @@ windowing <- function(
         if (inherits(wave, "Wave")) {
           parts[[2*i]] <- cutws(wave, from=gap.start, to=gap.end)
         } else {
-          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, input.unit="samples")
+          parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, time.unit="samples")
         }
       }
       l <- do.call(tuneR::bind, untagWave(parts[!vapply(parts, is.null, logical(1))]))
@@ -163,6 +218,25 @@ windowing <- function(
     }
   }
   return(l)
+}
+
+#' A length or a position in time, in samples
+#'
+#' Rounded to the nearest whole sample, as readAudio() rounds a time it is given,
+#' and kept as it is where it is already in samples. An overlap below zero is a
+#' gap, which convert2seconds() refuses as a time, so the size of it is
+#' converted and its sign kept.
+#' @param x The length.
+#' @param time.unit The unit it is in.
+#' @param samp.rate The sample rate of the audio it is a length of.
+#' @return A number of samples.
+#' @keywords internal
+#' @noRd
+.inSamples <- function(x, time.unit, samp.rate) {
+  if (time.unit == "samples") {
+    return(x)
+  }
+  return(sign(x) * round(convert2seconds(abs(x), input.unit=time.unit) * samp.rate))
 }
 
 #' How many samples of a file windowing() places its windows over
