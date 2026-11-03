@@ -20,7 +20,8 @@ audioblastDownload(
 
 - d:
 
-  Data returned from a search using audioBlast().
+  Data returned from a search using audioBlast(), as a data frame or a
+  `RecordingSet`.
 
 - metadata:
 
@@ -52,3 +53,8 @@ The paths of the files, invisibly.
 Where audioBlast has measured a file, the SHA-256 hash of the file
 downloaded is checked against the hash audioBlast measured, and a file
 that does not match is reported through `on.issue`.
+
+A
+[RecordingSet](https://sonicscrewdriver.ebaker.me.uk/dev/reference/recordingSet.md)
+is downloaded from the URL each recording has as its `location`, and
+checked against its `hash`.

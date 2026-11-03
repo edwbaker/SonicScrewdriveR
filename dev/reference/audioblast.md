@@ -66,9 +66,12 @@ audioblast(
 
   By default a `data.frame`. "Annotation" will return a list of
   `Annotation` objects; "Annotations", as it was spelt before, still
-  works and is deprecated. "JSON-LD" and "Turtle" return the RDF that
-  audioBlast gives for modules that describe their records as linked
-  data, as a character vector with one element for each page.
+  works and is deprecated. "RecordingSet" returns the recordings found
+  by a search of the recordings module as a
+  [RecordingSet](https://sonicscrewdriver.ebaker.me.uk/dev/reference/recordingSet.md).
+  "JSON-LD" and "Turtle" return the RDF that audioBlast gives for
+  modules that describe their records as linked data, as a character
+  vector with one element for each page.
 
 - ...:
 
@@ -76,8 +79,9 @@ audioblast(
 
 ## Value
 
-A data frame, a list of `Annotation` objects or a character vector,
-depending on `output`. `NULL` if nothing matches the query.
+A data frame, a list of `Annotation` objects, a `RecordingSet` or a
+character vector, depending on `output`. `NULL` if nothing matches the
+query.
 
 ## Details
 
@@ -113,6 +117,20 @@ a record that came without a field has `NA` there. The fields that only
 some responses carried are named in a message, as such an `NA` says that
 audioBlast did not give the field for that record rather than that its
 source holds nothing.
+
+In a `RecordingSet` each recording is identified by its audioBlast
+address, and its `location` is the URL of its file. Where audioBlast has
+measured a file, which its `status` says, the `hash`, `duration`,
+`sample_rate`, `channels` and `codec` of the recording are what
+audioBlast measured; otherwise its `duration`, `sample_rate` and
+`channels` are what its source says of it. What the source says is kept
+in the columns `declared_duration`, `declared_sample_rate` and
+`declared_channels`, and every other field audioBlast gives is kept
+under its own name. A recording that audioBlast gives without a source
+or an ID has no address, and is left out with a message. A recording
+given more than once, as a search paged through while recordings are
+being added to audioBlast can give one, is kept once, also with a
+message.
 
 ## See also
 

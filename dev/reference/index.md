@@ -268,6 +268,8 @@
   : Read every kind of metadata a file carries
 - [`readRespeaker6()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readRespeaker6.md)
   : Read a file from Seeed Studio Respeaker 6 mic array
+- [`recordingSet()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/recordingSet.md)
+  : A set of recordings
 - [`referenceIntensity()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/referenceIntensity.md)
   : Reference intensity
 - [`referencePressure()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/referencePressure.md)

@@ -111,9 +111,11 @@ a standard R error. Setting to <code>warning</code> will instead a warning.</p><
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
 <dd><p>By default a <code>data.frame</code>. "Annotation" will return a list of
 <code>Annotation</code> objects; "Annotations", as it was spelt before, still works and
-is deprecated. "JSON-LD" and "Turtle" return the RDF that audioBlast
-gives for modules that describe their records as linked data, as a
-character vector with one element for each page.</p></dd>
+is deprecated. "RecordingSet" returns the recordings found by a search of
+the recordings module as a <a href="recordingSet.html">RecordingSet</a>. "JSON-LD" and
+"Turtle" return the RDF that audioBlast gives for modules that describe
+their records as linked data, as a character vector with one element for
+each page.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -122,8 +124,9 @@ character vector with one element for each page.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame, a list of <code>Annotation</code> objects or a character vector,
-depending on <code>output</code>. <code>NULL</code> if nothing matches the query.</p>
+    <p>A data frame, a list of <code>Annotation</code> objects, a <code>RecordingSet</code> or a
+character vector, depending on <code>output</code>. <code>NULL</code> if nothing matches the
+query.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -151,6 +154,18 @@ results are joined on all the fields any response carried, and a record that
 came without a field has <code>NA</code> there. The fields that only some responses
 carried are named in a message, as such an <code>NA</code> says that audioBlast did not
 give the field for that record rather than that its source holds nothing.</p>
+<p>In a <code>RecordingSet</code> each recording is identified by its audioBlast address,
+and its <code>location</code> is the URL of its file. Where audioBlast has measured a
+file, which its <code>status</code> says, the <code>hash</code>, <code>duration</code>, <code>sample_rate</code>,
+<code>channels</code> and <code>codec</code> of the recording are what audioBlast measured;
+otherwise its <code>duration</code>, <code>sample_rate</code> and <code>channels</code> are what its source
+says of it. What the source says is kept in the columns <code>declared_duration</code>,
+<code>declared_sample_rate</code> and <code>declared_channels</code>, and every other field
+audioBlast gives is kept under its own name. A recording that audioBlast gives
+without a source or an ID has no address, and is left out with a message. A
+recording given more than once, as a search paged through while recordings
+are being added to audioBlast can give one, is kept once, also with a
+message.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

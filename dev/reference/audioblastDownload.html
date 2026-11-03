@@ -64,7 +64,8 @@
 
 
 <dl><dt id="arg-d">d<a class="anchor" aria-label="anchor" href="#arg-d"></a></dt>
-<dd><p>Data returned from a search using audioBlast().</p></dd>
+<dd><p>Data returned from a search using audioBlast(), as a data frame or a
+<code>RecordingSet</code>.</p></dd>
 
 
 <dt id="arg-metadata">metadata<a class="anchor" aria-label="anchor" href="#arg-metadata"></a></dt>
@@ -97,6 +98,8 @@ a standard R error. Setting to <code>warning</code> will instead a warning.</p><
     <p>Where audioBlast has measured a file, the SHA-256 hash of the file
 downloaded is checked against the hash audioBlast measured, and a file that
 does not match is reported through <code>on.issue</code>.</p>
+<p>A <a href="recordingSet.html">RecordingSet</a> is downloaded from the URL each recording
+has as its <code>location</code>, and checked against its <code>hash</code>.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
