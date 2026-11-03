@@ -202,6 +202,46 @@
   `options(sonicscrewdriver.provenance="full")` buys that back at the cost
   above, and `hash_method` records which a record holds so that a digest is
   never taken for more than it is worth.
+  A record says which versions ran. The same call can give a different answer
+  under another version of the package it comes from, or of this package,
+  which decides what a function is given and how the record is made, so
+  `versions` holds both as a named character vector:
+  `c(seewave="2.2.4", sonicscrewdriver="0.0.8.9000")`. They are the versions
+  loaded in the session that ran the call, which after an update without a
+  restart are not the ones installed. A primitive is recorded as `base`, whose
+  version is R's, and a function written outside any package has only this
+  package's. The record a result that is not a wave carries has them too, and
+  is complete but for an output digest and its `output`, so that whatever
+  keeps the result can put it in the record and add the record to the history
+  of the wave. A record made with addProcess() keeps the two fields it always
+  had.
+  filterWave() records the filter's function as well as its settings. A record
+  named `filterWave` and the settings it was given, so two filters given the
+  same cut-off frequencies were recorded alike, whatever their functions did. The
+  function is now the first of the arguments, as `filter`: named as it would
+  be called from outside its package, as `"seewave::bwfilter"`, by its name
+  where it was written at the top level, and as `"<anonymous function>"` where
+  it was written inline. The settings are named as that function names them,
+  so one given by position is named, the arguments it was not given are
+  recorded as its `defaults`, and the version recorded is that of its package.
+  The record stays under `filterWave`, which is what filters every channel and
+  normalises the result to the peak of the input, so a record naming the
+  filter's function alone would not say how to repeat it.
+- flattenOutput() turns what a process gives back into rows, so that the
+  results of one process over many recordings, or over many windows of one,
+  bind into one table. What a function returns can be a single number, a named
+  vector of indices, a data frame of detected events, a list of all of these,
+  or nothing. A data frame keeps its rows as they are, so a detector that found
+  five events gives five rows and one that found none gives none, and
+  everything else is one row: a single value is a column, a named vector a
+  column for each element, and a named list is flattened all the way down with
+  the names of each level joined by a full stop. A vector without names, a
+  matrix, an object with a class of its own, and a list whose elements could
+  not each be given a column are kept whole in a list cell. Which columns there
+  are depends on the names in the output and never on how long its parts are,
+  so that the rows from different recordings line up. Every column name begins
+  with `value`, so a table of results can name its own columns - the
+  recording, the window, the process - anything else without a clash.
 - wavCues() reads the cue points of a wave file together with the labels that
   name them. The two halves of an annotation are written in different chunks:
   a cue chunk holds positions and nothing else, and the text naming them is in
