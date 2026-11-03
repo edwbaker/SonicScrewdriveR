@@ -53,7 +53,15 @@ kept.
 Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
 `processing` slot of the result, as described in
 [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md).
-The settings of the filter are its arguments, so two runs of the same
-filter at different frequencies are told apart by their records. The
-description of the filter is the process the record is under, where it
-has one.
+The function the record is under is `filterWave`, as it is what filters
+every channel and normalises the result, and the filter is its
+arguments: first the filter's function, as `filter`, then its settings,
+so that two filters with the same settings, and two runs of one filter
+at different frequencies, are told apart by their records. The function
+is named as it would be called from outside its package, as
+`"seewave::bwfilter"`, by its name where it was written at the top
+level, and as `"<anonymous function>"` where it was written inline. The
+settings are named as the filter's function names them, the arguments it
+was not given are recorded as its `defaults`, and the version recorded
+is that of its package. The description of the filter is the process the
+record is under, where it has one.

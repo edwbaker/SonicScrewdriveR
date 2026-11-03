@@ -110,6 +110,14 @@ given.</p></dd>
 <dt><code>func</code></dt>
 <dd><p>The function as it was called, as a name or <code>pkg::name</code>.</p></dd>
 
+<dt><code>versions</code></dt>
+<dd><p>The versions of the package the function comes from and
+of this package, as a named character vector, since the same call can
+give a different answer under another version of either. They are the
+versions loaded in the session that ran the call. A primitive is
+recorded as <code>base</code>, whose version is R's, and a function defined outside
+any package has only this package's.</p></dd>
+
 <dt><code>params</code></dt>
 <dd><p>The arguments the caller supplied, under the names of the
 formals they filled rather than the names they were passed under, so an
@@ -167,7 +175,9 @@ is not carried over, as it no longer matches the signal.</p>
 <p>If <code>fun</code> returns something that is not a wave, such as a number or a data
 frame, there is no tagged object to hold the record. The result is returned
 with an attribute <code>processing</code> holding the history of <code>w</code> followed by the new
-record (without an output digest). A <code>NULL</code> result is returned as it is.</p>
+record, which is complete but for an output digest, as no wave came out, and
+its <code>output</code>, which is left for whatever keeps the result to fill in. A
+<code>NULL</code> result is returned as it is, as it cannot carry an attribute.</p>
 <p>Functions from other packages are given an untagged wave. seewave, for
 example, checks the class of a wave with <code>class(w)[1] == "Wave"</code> and so
 rejects a <code>TaggedWave</code>. The tags are put back on a wave that is returned, as
@@ -185,6 +195,10 @@ seewave calls a sampling frequency, which is exactly the sort of call this
 function is for. <code>label</code>, <code>untag</code> and <code>cl</code> come after <code>...</code> and so must be
 named in full, which leaves only a function with an argument of one of those
 three names beyond reach.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="flattenOutput.html">flattenOutput()</a></code>, which turns the output a record holds into rows.</p></div>
     </div>
 
     <div class="section level2">

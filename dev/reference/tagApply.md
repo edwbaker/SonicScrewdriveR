@@ -60,6 +60,15 @@ with what, when and to which audio:
 
   The function as it was called, as a name or `pkg::name`.
 
+- `versions`:
+
+  The versions of the package the function comes from and of this
+  package, as a named character vector, since the same call can give a
+  different answer under another version of either. They are the
+  versions loaded in the session that ran the call. A primitive is
+  recorded as `base`, whose version is R's, and a function defined
+  outside any package has only this package's.
+
 - `params`:
 
   The arguments the caller supplied, under the names of the formals they
@@ -125,8 +134,10 @@ slot is not carried over, as it no longer matches the signal.
 If `fun` returns something that is not a wave, such as a number or a
 data frame, there is no tagged object to hold the record. The result is
 returned with an attribute `processing` holding the history of `w`
-followed by the new record (without an output digest). A `NULL` result
-is returned as it is.
+followed by the new record, which is complete but for an output digest,
+as no wave came out, and its `output`, which is left for whatever keeps
+the result to fill in. A `NULL` result is returned as it is, as it
+cannot carry an attribute.
 
 Functions from other packages are given an untagged wave. seewave, for
 example, checks the class of a wave with `class(w)[1] == "Wave"` and so
@@ -147,6 +158,11 @@ or `w` - and `f` is what seewave calls a sampling frequency, which is
 exactly the sort of call this function is for. `label`, `untag` and `cl`
 come after `...` and so must be named in full, which leaves only a
 function with an argument of one of those three names beyond reach.
+
+## See also
+
+[`flattenOutput()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/flattenOutput.md),
+which turns the output a record holds into rows.
 
 ## Examples
 

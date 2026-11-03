@@ -150,6 +150,8 @@
   : Units used for file sizes
 - [`filterWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/filterWave.md)
   : Apply a WaveFilter object to a Wave object
+- [`flattenOutput()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/flattenOutput.md)
+  : Flatten the output of a process into rows
 - [`frequencySound()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/frequencySound.md)
   : Get the frequency from wavelength and speed of sound
 - [`frequencyStats()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/frequencyStats.md)
