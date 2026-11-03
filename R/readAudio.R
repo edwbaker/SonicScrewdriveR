@@ -147,18 +147,18 @@
 #' @param to End point in file to return, a number that is not negative, and a
 #'   whole number in samples, which must leave some audio after the start
 #'   point, read as the end of the recording where it is beyond it
-#' @param input.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
-#' @param units Deprecated, use input.unit instead.
+#' @param time.unit One of "samples", "seconds", "minutes", "hours". Default is "seconds".
+#' @param units Deprecated, use time.unit instead.
 #' @return A Wave object, or a WaveMC object for a file with more than two
 #'   channels.
 #' @export
 #' @importFrom tuneR readMP3 readWave stereo Wave
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
-readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
+readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
                       units) {
   redone <- .withRenamedArgs(
-    sys.call(), parent.frame(), c(units="input.unit"), "readAudio"
+    sys.call(), parent.frame(), c(units="time.unit"), "readAudio"
   )
   if (!is.null(redone)) {
     return(redone[[1]])
@@ -167,12 +167,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   # that is no point at all into one. Every reader below is given the points
   # these return, so a number of samples a double misses by its last bits is
   # read as the whole number it stands for by all of them alike.
-  from <- .pointValid(file, from, "start", input.unit)
-  to <- .pointValid(file, to, "end", input.unit)
+  from <- .pointValid(file, from, "start", time.unit)
+  to <- .pointValid(file, to, "end", time.unit)
   if (mime == "auto") {
     mime <- .audioMime(file)
   }
-  if (input.unit=="samples" & from == 0) {
+  if (time.unit=="samples" & from == 0) {
     fromS <- 1
   } else{
     fromS <- from
@@ -195,7 +195,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     )
     if (!is.null(wave)) {
       .wavRateWarning(wave, file)
-      return(.cutAudio(wave, from, to, input.unit, file))
+      return(.cutAudio(wave, from, to, time.unit, file))
     }
   }
 
@@ -230,13 +230,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # cannot be counted from its chunks is asked as it always was.
     start <- fromS
     end <- to
-    unit <- input.unit
+    unit <- time.unit
     if (from != 0 || to != Inf) {
       held <- .wavFramesHeld(if (is.null(repaired)) file else repaired)
       if (!is.null(held)) {
-        .startWithin(file, from, input.unit, held$frames, held$rate)
-        .endAfterStart(file, from, to, input.unit, held$rate)
-        part <- .samplesAsked(from, to, input.unit, held$rate)
+        .startWithin(file, from, time.unit, held$frames, held$rate)
+        .endAfterStart(file, from, to, time.unit, held$rate)
+        part <- .samplesAsked(from, to, time.unit, held$rate)
         start <- part[1]
         end <- part[2]
         unit <- "samples"
@@ -271,7 +271,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # wrong with the part of it asked for is said of the audio that was read.
     wave <- tryCatch(readMP3(file), error=function(cond) NULL)
     if (!is.null(wave)) {
-      return(.cutAudio(wave, from, to, input.unit, file))
+      return(.cutAudio(wave, from, to, time.unit, file))
     }
   }
 
@@ -297,7 +297,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 
     # Only as far into the recording as the part asked for needs. .avEndTime()
     # says why the start is not asked for as well.
-    endTime <- .avEndTime(to, input.unit, info[['sample_rate']])
+    endTime <- .avEndTime(to, time.unit, info[['sample_rate']])
     samples <- if (is.null(endTime)) {
       av::read_audio_bin(source, channels=channels)
     } else {
@@ -319,7 +319,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # the point asked for at worst, against the second added to it - but a
     # recording quietly cut short is not a thing to leave to a margin.
     if (!is.null(endTime) && .avFellShort(samples, channels, samp.rate,
-                                          from, to, input.unit, media$duration)) {
+                                          from, to, time.unit, media$duration)) {
       samples <- av::read_audio_bin(source, channels=channels)
     }
     #read_audio_bin() attaches sample_rate and channels to the vector it returns,
@@ -353,7 +353,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # metadata disagrees with its header whichever of the two read it.
     .wavRateWarning(wave, file)
 
-    return(.cutAudio(wave, from, to, input.unit, file))
+    return(.cutAudio(wave, from, to, time.unit, file))
   }
   stop("File could not be processed")
 }
@@ -768,23 +768,23 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #'
 #' @param from Start point as given to readAudio()
 #' @param to End point as given to readAudio()
-#' @param input.unit The unit `from` and `to` are given in
+#' @param time.unit The unit `from` and `to` are given in
 #' @param samp.rate The sample rate of the recording
 #' @return The first and last sample asked for, the last of them `Inf` for an
 #'   end of `Inf`
 #' @keywords internal
 #' @noRd
-.samplesAsked <- function(from, to, input.unit, samp.rate) {
+.samplesAsked <- function(from, to, time.unit, samp.rate) {
   start <- if (from == 0) 1 else from
   end <- to
-  if (input.unit != "samples") {
+  if (time.unit != "samples") {
     if (from != 0) {
-      start <- round(convert2seconds(from, input.unit=input.unit) * samp.rate) + 1
+      start <- round(convert2seconds(from, input.unit=time.unit) * samp.rate) + 1
     }
     #is.infinite() alone would also take -Inf, which convert2seconds() rejects as
     #a negative time and which must keep being rejected.
     if (!(is.infinite(to) && to > 0)) {
-      end <- round(convert2seconds(to, input.unit=input.unit) * samp.rate)
+      end <- round(convert2seconds(to, input.unit=time.unit) * samp.rate)
     }
   }
   return(c(start, end))
@@ -858,15 +858,15 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @param wave A Wave or WaveMC object
 #' @param from Start point to return
 #' @param to End point to return
-#' @param input.unit One of "samples", "seconds", "minutes", "hours"
+#' @param time.unit One of "samples", "seconds", "minutes", "hours"
 #' @param file The file the wave was read from
 #' @return A Wave or WaveMC object
 #' @keywords internal
 #' @noRd
-.cutAudio <- function(wave, from, to, input.unit, file) {
-  .startWithin(file, from, input.unit, length(wave), wave@samp.rate)
-  .endAfterStart(file, from, to, input.unit, wave@samp.rate)
-  part <- .samplesAsked(from, to, input.unit, wave@samp.rate)
+.cutAudio <- function(wave, from, to, time.unit, file) {
+  .startWithin(file, from, time.unit, length(wave), wave@samp.rate)
+  .endAfterStart(file, from, to, time.unit, wave@samp.rate)
+  part <- .samplesAsked(from, to, time.unit, wave@samp.rate)
   # Everything the file said about itself is carried over, not just its GUANO
   # metadata: a section of a recording came from the same recording.
   metadata <- .mdStore(wave)
@@ -909,12 +909,12 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @param file The file being read, to name in the error
 #' @param point The start or end point as given to readAudio()
 #' @param which "start" or "end", to name in the error
-#' @param input.unit The unit the point is given in
+#' @param time.unit The unit the point is given in
 #' @return The point, as the whole number it stands for where it is given in
 #'   samples
 #' @keywords internal
 #' @noRd
-.pointValid <- function(file, point, which, input.unit) {
+.pointValid <- function(file, point, which, time.unit) {
   problem <- NULL
   if (length(point) != 1L) {
     shown <- .countText(length(point), "value")
@@ -926,10 +926,10 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
     # Enough digits to show the fraction of a sample that is refused, which the
     # seven format() gives by default do not for a long recording.
     text <- format(point, digits=15, scientific=FALSE, trim=TRUE)
-    shown <- if (input.unit == "samples") paste0("sample ", text) else paste(text, input.unit)
+    shown <- if (time.unit == "samples") paste0("sample ", text) else paste(text, time.unit)
     # The whole number is taken first, so that a start of zero worked out as
     # (0.3 - 0.1 - 0.2) * 48000, which is a hair below it, is the start.
-    if (input.unit == "samples" && is.finite(point)) {
+    if (time.unit == "samples" && is.finite(point)) {
       if (abs(point - round(point)) > 1e-6) {
         problem <- "is not a whole number of samples"
       } else {
@@ -975,27 +975,27 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #'
 #' @param file The file being read, to name in the error
 #' @param from Start point as given to readAudio()
-#' @param input.unit The unit `from` is given in
+#' @param time.unit The unit `from` is given in
 #' @param samples The number of sample frames the recording holds
 #' @param samp.rate The sample rate of the recording
 #' @return NULL, called for the error it raises
 #' @keywords internal
 #' @noRd
-.startWithin <- function(file, from, input.unit, samples, samp.rate) {
+.startWithin <- function(file, from, time.unit, samples, samp.rate) {
   # Nothing is converted for a start of zero, so that reading a whole file
   # asks nothing of the unit it was given in.
   if (from == 0) {
     return(invisible(NULL))
   }
-  if (.samplesAsked(from, Inf, input.unit, samp.rate)[1] <= max(1, samples)) {
+  if (.samplesAsked(from, Inf, time.unit, samp.rate)[1] <= max(1, samples)) {
     return(invisible(NULL))
   }
-  if (input.unit == "samples") {
+  if (time.unit == "samples") {
     asked <- paste0("sample ", format(from, scientific=FALSE, trim=TRUE))
     held <- paste0("which holds ", .countText(samples, "sample"))
     where <- "beyond"
   } else {
-    asked <- .countText(convert2seconds(from, input.unit=input.unit), "second")
+    asked <- .countText(convert2seconds(from, input.unit=time.unit), "second")
     held <- paste0("which is ", .countText(samples / samp.rate, "second"), " long")
     where <- "at or beyond"
   }
@@ -1031,17 +1031,17 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @param file The file being read, to name in the error
 #' @param from Start point as given to readAudio()
 #' @param to End point as given to readAudio()
-#' @param input.unit The unit `from` and `to` are given in
+#' @param time.unit The unit `from` and `to` are given in
 #' @param samp.rate The sample rate of the recording
 #' @return NULL, called for the error it raises
 #' @keywords internal
 #' @noRd
-.endAfterStart <- function(file, from, to, input.unit, samp.rate) {
-  part <- .samplesAsked(from, to, input.unit, samp.rate)
+.endAfterStart <- function(file, from, to, time.unit, samp.rate) {
+  part <- .samplesAsked(from, to, time.unit, samp.rate)
   if (part[2] >= part[1]) {
     return(invisible(NULL))
   }
-  if (input.unit == "samples") {
+  if (time.unit == "samples") {
     start <- if (part[1] == 1) {
       "the first sample"
     } else {
@@ -1052,8 +1052,8 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
       ", is before ", start, ", so no audio of '", file, "' was asked for."
     )
   } else {
-    start <- convert2seconds(from, input.unit=input.unit)
-    end <- convert2seconds(to, input.unit=input.unit)
+    start <- convert2seconds(from, input.unit=time.unit)
+    end <- convert2seconds(to, input.unit=time.unit)
     if (end < start) {
       message <- paste0(
         "The end point asked for, ", .countText(end, "second"),
@@ -1123,16 +1123,16 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' nothing: the av package returns the whole of it rather than refusing.
 #'
 #' @param to End point as given to readAudio()
-#' @param input.unit The unit `to` is given in
+#' @param time.unit The unit `to` is given in
 #' @param rate The sample rate the av package reports for the file
 #' @return The end point in seconds, or NULL where the whole file is wanted
 #' @keywords internal
 #' @noRd
-.avEndTime <- function(to, input.unit, rate) {
+.avEndTime <- function(to, time.unit, rate) {
   if (!is.finite(to)) {
     return(NULL)
   }
-  if (input.unit == "samples") {
+  if (time.unit == "samples") {
     if (is.null(rate) || !is.finite(rate) || rate <= 0) {
       return(NULL)
     }
@@ -1140,7 +1140,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
   }
   # A point that is no point at all was refused before anything was read, so
   # convert2seconds() is given a finite number here and gives one back.
-  return(convert2seconds(to, input.unit=input.unit) + 1)
+  return(convert2seconds(to, input.unit=time.unit) + 1)
 }
 
 #' Did a bounded decode stop before the part that was asked for?
@@ -1161,17 +1161,17 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, input.unit="seconds",
 #' @param rate Sample rate of the recording
 #' @param from Start point as given to readAudio()
 #' @param to End point as given to readAudio()
-#' @param input.unit The unit they are given in
+#' @param time.unit The unit they are given in
 #' @param duration Duration of the file in seconds, as the av package reports
 #' @return TRUE where the decode stopped too early
 #' @keywords internal
 #' @noRd
-.avFellShort <- function(samples, channels, rate, from, to, input.unit,
+.avFellShort <- function(samples, channels, rate, from, to, time.unit,
                          duration) {
   if (is.null(rate) || !is.finite(rate) || rate <= 0 || channels < 1) {
     return(FALSE)
   }
-  wanted <- .samplesAsked(from, to, input.unit, rate)[2]
+  wanted <- .samplesAsked(from, to, time.unit, rate)[2]
   if (!is.finite(wanted)) {
     return(FALSE)
   }

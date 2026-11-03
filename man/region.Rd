@@ -4,17 +4,17 @@
 \alias{region}
 \title{Specify a region with a file to analyse}
 \usage{
-region(input.unit, from = 0, to = Inf, unit)
+region(time.unit, from = 0, to = Inf, unit)
 }
 \arguments{
-\item{input.unit}{Unit the from and to values are given in (one of samples,
+\item{time.unit}{Unit the from and to values are given in (one of samples,
 seconds, minutes, hours)}
 
 \item{from}{Start time}
 
 \item{to}{End time}
 
-\item{unit}{Deprecated, use input.unit instead.}
+\item{unit}{Deprecated, use time.unit instead.}
 }
 \value{
 A TimeRegion object.

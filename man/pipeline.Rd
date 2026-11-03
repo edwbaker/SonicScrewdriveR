@@ -70,7 +70,7 @@ only once it has run:
 transformations stays flat: \code{pipeline(normalise(), dutyCycle())}
 measures the normalised wave.}
 \item{Several waves}{An error, as there is no single wave to carry on
-with.}
+with, unless the step is a windowing given \verb{then=}, as below.}
 \item{Anything else}{The step is an analysis, and the wave it was given
 goes on to the next step as it was.}
 }
@@ -82,7 +82,25 @@ measures the band and leaves the rest of the pipeline the whole recording.
 \verb{then=} is taken out of the call before the function is called, so a function
 with an argument of its own called \code{then} cannot be given it through a
 pipeline. A step given \verb{then=} that turns out not to give a wave is an error,
-raised when it runs, and so for now is one that gives several.
+raised when it runs, and so is one that gives several.
+
+\code{\link[=windowing]{windowing()}} is the step that gives several waves, and takes its \verb{then=}
+itself as its \code{FUN}: \code{windowing(60, time.unit = "seconds", then = pipeline(dutyCycle(), seewave::M()))} runs both steps on every minute of the
+recording, and their tables have a row for each window, keyed by where it
+starts and how long it is. A windowing in a pipeline needs \verb{then=}, and
+cannot be given both \verb{then=} and \code{FUN}.
+
+A step of \code{\link[=cutws]{cutws()}} or seewave's \code{cutw()} is a cut, and is placed in the
+recording. Every row measured on what it cuts, by the steps of its \verb{then=}
+or by the steps after it, has \code{cut_start} and \code{cut_end}, in seconds from the
+start of the recording; a cut of a cut gives the span that was measured. A
+window inside a cut is counted from the start of the recording too, so
+\code{cutws(160001, 240000, then = windowing(8000, then = dutyCycle()))} on audio
+sampled at 8 kHz keys its rows with a cut from 20 to 30 seconds and windows
+starting at 20, 21, 22 seconds and so on. A function that cuts in some other
+way, one of the user's among
+them, is not recognised, and what it gives is taken to start where the wave
+it was given did.
 
 The results of a pipeline are a table for each analysis step, its result
 turned into rows by \code{\link[=flattenOutput]{flattenOutput()}}, named by the step's path through the

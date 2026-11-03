@@ -5,18 +5,18 @@
 #' such a file and saves it as a six channel file.
 #'
 #' @param filename file to read.
-#' @param from Where to start reading the wave in input.unit.
-#' @param to Where to stop reading the wave in input.unit.
-#' @param input.unit Unit in which from and to is given, the default is "samples", but can be set to time intervals such as "seconds".
+#' @param from Where to start reading the wave in time.unit.
+#' @param to Where to stop reading the wave in time.unit.
+#' @param time.unit Unit in which from and to is given, the default is "samples", but can be set to time intervals such as "seconds".
 #' @param header If TRUE, just header information of the Wave file are returned, otherwise (the default) the whole Wave object.
-#' @param units Deprecated, use input.unit instead.
+#' @param units Deprecated, use time.unit instead.
 #' @return A WaveMC object.
 #' @export
 #' @importFrom tuneR readWave
-readRespeaker6 <- function(filename, from=1, to=Inf, input.unit="samples",
+readRespeaker6 <- function(filename, from=1, to=Inf, time.unit="samples",
                            header=FALSE, units) {
   redone <- .withRenamedArgs(
-    sys.call(), parent.frame(), c(units="input.unit"), "readRespeaker6"
+    sys.call(), parent.frame(), c(units="time.unit"), "readRespeaker6"
   )
   if (!is.null(redone)) {
     return(redone[[1]])
@@ -24,9 +24,9 @@ readRespeaker6 <- function(filename, from=1, to=Inf, input.unit="samples",
   #With header=TRUE readWave() gives a plain list describing the file, which has
   #no channels to select from, so it is returned as it comes.
   if (header) {
-    return(readWave(filename, from, to, input.unit, header=TRUE, toWaveMC=TRUE))
+    return(readWave(filename, from, to, time.unit, header=TRUE, toWaveMC=TRUE))
   }
-  w <- readWave(filename, from, to, input.unit, header, toWaveMC=TRUE)
+  w <- readWave(filename, from, to, time.unit, header, toWaveMC=TRUE)
   w@.Data[which(is.na(w@.Data))] <- 0
   #A recording of one sample frame is a matrix of one row, and selecting
   #channels from it drops to a plain vector unless told not to, which the slot

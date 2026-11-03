@@ -9,7 +9,7 @@ readAudio(
   mime = "auto",
   from = 0,
   to = Inf,
-  input.unit = "seconds",
+  time.unit = "seconds",
   units
 )
 }
@@ -28,9 +28,9 @@ and a whole number in samples, which must fall within the recording}
 whole number in samples, which must leave some audio after the start
 point, read as the end of the recording where it is beyond it}
 
-\item{input.unit}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
+\item{time.unit}{One of "samples", "seconds", "minutes", "hours". Default is "seconds".}
 
-\item{units}{Deprecated, use input.unit instead.}
+\item{units}{Deprecated, use time.unit instead.}
 }
 \value{
 A Wave object, or a WaveMC object for a file with more than two

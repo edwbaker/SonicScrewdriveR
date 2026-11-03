@@ -82,7 +82,7 @@ test_that("0 and Inf are handled correctly", {
 
 test_that("a TimeRegion that cannot be resolved is refused when it is built", {
   #The class had no validity method, so new() accepted anything the slot types
-  #allowed and region() checked only its input.unit. A region running backwards
+  #allowed and region() checked only its time.unit. A region running backwards
   #survived until `[` reported "Time region begins after the end of the wave.",
   #which is false and points at the wave rather than at the region.
   expect_error(

@@ -44,7 +44,7 @@
 #'     transformations stays flat: `pipeline(normalise(), dutyCycle())`
 #'     measures the normalised wave.}
 #'   \item{Several waves}{An error, as there is no single wave to carry on
-#'     with.}
+#'     with, unless the step is a windowing given `then=`, as below.}
 #'   \item{Anything else}{The step is an analysis, and the wave it was given
 #'     goes on to the next step as it was.}
 #' }
@@ -56,7 +56,26 @@
 #' `then=` is taken out of the call before the function is called, so a function
 #' with an argument of its own called `then` cannot be given it through a
 #' pipeline. A step given `then=` that turns out not to give a wave is an error,
-#' raised when it runs, and so for now is one that gives several.
+#' raised when it runs, and so is one that gives several.
+#'
+#' [windowing()] is the step that gives several waves, and takes its `then=`
+#' itself as its `FUN`: `windowing(60, time.unit = "seconds", then =
+#' pipeline(dutyCycle(), seewave::M()))` runs both steps on every minute of the
+#' recording, and their tables have a row for each window, keyed by where it
+#' starts and how long it is. A windowing in a pipeline needs `then=`, and
+#' cannot be given both `then=` and `FUN`.
+#'
+#' A step of [cutws()] or seewave's `cutw()` is a cut, and is placed in the
+#' recording. Every row measured on what it cuts, by the steps of its `then=`
+#' or by the steps after it, has `cut_start` and `cut_end`, in seconds from the
+#' start of the recording; a cut of a cut gives the span that was measured. A
+#' window inside a cut is counted from the start of the recording too, so
+#' `cutws(160001, 240000, then = windowing(8000, then = dutyCycle()))` on audio
+#' sampled at 8 kHz keys its rows with a cut from 20 to 30 seconds and windows
+#' starting at 20, 21, 22 seconds and so on. A function that cuts in some other
+#' way, one of the user's among
+#' them, is not recognised, and what it gives is taken to start where the wave
+#' it was given did.
 #'
 #' The results of a pipeline are a table for each analysis step, its result
 #' turned into rows by [flattenOutput()], named by the step's path through the
@@ -198,6 +217,29 @@ task <- function(.fun, ..., then = NULL) {
 #' @keywords internal
 #' @noRd
 .newStep <- function(fun, call, args, then) {
+  #A windowing's then= is its FUN, so it needs one or the other and cannot use
+  #both; said when the pipeline is written rather than when it first runs.
+  if (.takesThen(fun)) {
+    params <- names(.describeCall(fun, args)$params)
+    given <- "FUN" %in% params
+    if (given && !is.null(then)) {
+      stop("windowing() is given both FUN and then=. In a pipeline its then= is ",
+           "its FUN, so give one or the other.", call.=FALSE)
+    }
+    if (!given && is.null(then)) {
+      stop("windowing() in a pipeline needs then=, the steps to run on each ",
+           "window.", call.=FALSE)
+    }
+    #Anything that is none of its own arguments would be handed to FUN, which
+    #then= leaves nothing to take, so a misspelt time.unit would be dropped and
+    #the windows measured in samples.
+    stray <- setdiff(params, c(names(formals(fun)), ""))
+    if (!is.null(then) && length(stray) > 0) {
+      stop("windowing() is given ", paste(stray, collapse=", "), ", which ",
+           if (length(stray) == 1) "is" else "are", " none of its arguments. ",
+           "With then= nothing is passed on to FUN.", call.=FALSE)
+    }
+  }
   return(list(fun=fun, call=call, args=args, then=then))
 }
 

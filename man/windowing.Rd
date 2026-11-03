@@ -12,19 +12,20 @@ windowing(
   bind.wave = FALSE,
   complete.windows = TRUE,
   cluster = NULL,
-  ...
+  ...,
+  time.unit = "samples"
 )
 }
 \arguments{
 \item{wave}{A Wave object or filename. Using filenames may save loading an
 entire large file into memory.}
 
-\item{window.length}{The length of the analysis window (in samples).}
+\item{window.length}{The length of the analysis window, in \code{time.unit}.}
 
 \item{FUN}{FUN to be applied to windows.}
 
-\item{window.overlap}{The overlap between successive windows (in samples), a
-negative value will result in a gap between windows.}
+\item{window.overlap}{The overlap between successive windows, in \code{time.unit}.
+A negative value will result in a gap between windows.}
 
 \item{bind.wave}{If TRUE and FUN returns wave objects, then these are
 combined into a single object}
@@ -36,6 +37,11 @@ processed holding what is left of the audio, which can be shorter.}
 \item{cluster}{A cluster form the 'parallel' package for multi-core computation.}
 
 \item{...}{Additional parameters to FUN}
+
+\item{time.unit}{The unit \code{window.length} and \code{window.overlap} are given in:
+one of "samples", "seconds", "minutes" or "hours". It comes after \code{...}, so
+that an argument meant for \code{FUN} is not taken for it, and has to be named in
+full.}
 }
 \value{
 A list of the results of FUN for each window, or a single Wave object if bind.wave is TRUE.
@@ -57,10 +63,49 @@ what is left of it, as for a Wave object holding the same audio. A wave
 file whose audio size was never written is windowed over the audio
 readAudio() recovers from it, and a file or Wave object holding no audio
 gives no windows.
+
+The length of a window and the overlap between windows are both given in
+\code{time.unit}, which is samples unless it says otherwise. A set of recordings
+mixes sample rates, and a length in samples is a different length of time in
+each of them, so \code{time.unit = "seconds"} gives every recording windows of the
+same length of time. A length in time is rounded to the nearest whole
+sample, as \code{\link[=readAudio]{readAudio()}} rounds a time it is given. \code{FUN} is given the start
+and length of its window in samples, whatever \code{time.unit} is, as samples are
+where a window falls.
 }
+\section{Windows in a pipeline}{
+
+In a \code{\link[=pipeline]{pipeline()}}, \verb{then=} fills \code{FUN}: the steps it gives are run on each
+window, and giving both \verb{then=} and \code{FUN} is an error. Each window is a
+tagged wave whose history is that of the wave it was cut from, followed by
+the cut, so a result from a window traces back to where in the recording it
+was measured. The results of each step have a row for each window, keyed by
+\code{window_start}, \code{window_end} and \code{window_length}, in seconds from the start of
+the recording, counting any cut made before the windowing by \code{\link[=cutws]{cutws()}} or
+seewave's \code{cutw()}. A cut made by any other function is not counted, and
+the windows after it are placed as though it had not been made. A windowing
+inside another adds columns of its own, numbered by how deep it is:
+\code{window_start_2} and so on. A wave shorter than one window gives no windows,
+which is an error naming the step.
+}
+
+\section{The order of windowing and filtering}{
+
+Windowing then filtering does not give the numbers filtering then windowing
+does. \code{\link[=filterWave]{filterWave()}} scales what it gives back to the peak level of the wave
+it was given. Filtered before windowing, the whole recording is scaled by one
+factor, so the level of a band can be compared between windows, but the whole
+recording has to be in memory. Filtered after windowing, each window is
+scaled by a factor of its own, raising the band in every window to that
+window's own peak, so the levels of a band compared across windows mislead,
+but the recording can be read a window at a time. Both orders are sound, and
+the history of every window records which was used.
+}
+
 \examples{
 \dontrun{
 windowing(wave, window.length=1000, FUN=function(w, ...) length(w), window.overlap=0)
+windowing(wave, 60, FUN=function(w, ...) seewave::H(w), time.unit="seconds")
 }
 }
 \keyword{wave}
