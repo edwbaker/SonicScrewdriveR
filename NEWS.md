@@ -1741,6 +1741,11 @@
   negative window.overlap, as the gap after the final window was requested as a
   section ending before it began. Passing a Wave object and passing a filename now
   give the same result.
+- windowing() with bind.wave=TRUE returned the windows of a TaggedWave as a list
+  rather than binding them, as it tested the first class of a window for "Wave".
+  They are now bound into a TaggedWave with the tags of the wave they were cut
+  from, rather than those of the first window, whose history ends in a record of
+  cutting the wave down to that window.
 - windowing() analysed a wave twice when its length was a single window, as the
   window start positions were counted down rather than up.
 - channels_se() returned NULL for the ndsi() and acoustic_complexity() indices from
