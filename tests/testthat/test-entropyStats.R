@@ -56,3 +56,26 @@ test_that("entropyStats asks meanspec not to plot", {
   expect_false(is.na(plot.arg))
   expect_false(plot.arg)
 })
+
+test_that("a tagged wave gives the entropies of the wave it holds", {
+  # seewave takes a wave only if its class is exactly "Wave", so meanspec() read
+  # a TaggedWave as bare samples and failed with "argument "f" is missing", both
+  # called directly and through tagApply(), which hands this function the tagged
+  # wave.
+  sr <- 8000
+  n <- 8000
+  set.seed(4)
+  L <- tuneR::Wave(round(sin(2*pi*300*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(rnorm(n) * 15000), samp.rate=sr, bit=16)
+
+  waves <- list(L, tuneR::stereo(L, R), tuneR::WaveMC(cbind(L@left, R@left), samp.rate=sr, bit=16))
+  for (w in waves) {
+    tw <- tagWave(w)
+    expect_equal(entropyStats(tw), entropyStats(w))
+
+    r <- tagApply(tw, entropyStats)
+    expect_length(attr(r, "processing"), 1)
+    attr(r, "processing") <- NULL
+    expect_equal(r, entropyStats(w))
+  }
+})

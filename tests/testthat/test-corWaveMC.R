@@ -58,3 +58,19 @@ test_that("corWaveMC passes arguments on to corenv", {
 test_that("corWaveMC needs a WaveMC object", {
   expect_error(corWaveMC(tuneR::sine(440), times=0.1, window=0.05), "Expecting a WaveMC object")
 })
+
+test_that("a TaggedWaveMC gives the correlations of the wave it holds", {
+  # seewave takes a WaveMC only if its class is exactly "WaveMC", so cutw() read
+  # a TaggedWaveMC as a bare matrix and failed with "argument "f" is missing",
+  # both called directly and through tagApply().
+  w <- pulsedWave(c(0, -40, 25))
+  tw <- tagWave(w)
+  expected <- corWaveMC(w, times=c(0.25, 0.75), window=0.4, method="pearson")
+
+  expect_equal(corWaveMC(tw, times=c(0.25, 0.75), window=0.4, method="pearson"), expected)
+
+  r <- tagApply(tw, corWaveMC, times=c(0.25, 0.75), window=0.4, method="pearson")
+  expect_length(attr(r, "processing"), 1)
+  attr(r, "processing") <- NULL
+  expect_equal(r, expected)
+})

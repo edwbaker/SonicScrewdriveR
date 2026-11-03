@@ -218,8 +218,10 @@ fcisClip <- function(probs=c(0.02, 0.98), log=FALSE) {
     wave <- .waveChannel(wave, channel)
   }
   #A spectrogram in decibels contains negative values, which the indices are not
-  #defined for, so the linear amplitudes are used.
-  spec <- spectro(wave, f=wave@samp.rate, wl=wl, plot=FALSE, dB=NULL, norm=FALSE)
+  #defined for, so the linear amplitudes are used. seewave takes a wave only if
+  #its class is exactly "Wave", and read a TaggedWave as bare samples: given f
+  #it went on to fail in seq(), with "'to' must be of length 1".
+  spec <- spectro(untagWave(wave), f=wave@samp.rate, wl=wl, plot=FALSE, dB=NULL, norm=FALSE)
   ret <- lapply(indices, function(i) .fcisIndexFunctions[[i]](spec$amp))
   names(ret) <- indices
   ret$freq <- spec$freq

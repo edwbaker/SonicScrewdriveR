@@ -118,12 +118,19 @@ windowing <- function(
     }
   }
 
-  if (bind.wave && length(l) > 0 && typeof(l[[1]]) == "S4" && class(l[[1]])[[1]] == "Wave") {
+  #inherits() rather than a test of the first class, which the windows of a
+  #tagged wave failed: they are tagged, and came back as a list unbound.
+  if (bind.wave && length(l) > 0 && inherits(l[[1]], "Wave")) {
     #tuneR::bind() copies everything it is given, so binding one window at a time
     #copies the whole of the output so far on every iteration. Collecting the parts
     #and binding them in a single call avoids that.
+    #
+    #The parts are bound untagged. A window of a tagged wave carries the wave's
+    #history and a record of its own cut, and bind() keeps the tags of the first
+    #part, so the bound wave would hold every sample and a record saying it had
+    #been cut to its first window.
     if (window.overlap == 0) {
-      l <- do.call(tuneR::bind, l)
+      l <- do.call(tuneR::bind, untagWave(l))
     } else {
       #With a gap between windows the sections of the wave that no window covers are
       #read back in, so the parts alternate between a window and the gap after it.
@@ -145,7 +152,14 @@ windowing <- function(
           parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, input.unit="samples")
         }
       }
-      l <- do.call(tuneR::bind, parts[!vapply(parts, is.null, logical(1))])
+      l <- do.call(tuneR::bind, untagWave(parts[!vapply(parts, is.null, logical(1))]))
+    }
+    #The bound wave is given the tags of the wave it was cut from, as tagApply()
+    #gives them to a wave a function returns untagged.
+    if (is(wave, "TaggedWave")) {
+      l <- tagWave(l, origin=wave@origin)
+      l@metadata <- wave@metadata
+      l@processing <- wave@processing
     }
   }
   return(l)
