@@ -35,6 +35,7 @@ setClass(
 #' @param output The output of the process.
 #' @param duration How long it took, in seconds.
 #' @param func The name of the function that was applied.
+#' @param versions The versions of the packages it depends on.
 #' @param params The arguments it was given, named as it names them.
 #' @param defaults The arguments it was not given, as it defines them.
 #' @param time When it was applied.
@@ -46,7 +47,7 @@ setClass(
 #' @keywords internal
 #' @noRd
 .processRecord <- function(process, output=NULL, duration=NULL, func=NULL,
-                           params=NULL, defaults=NULL, time=NULL,
+                           versions=NULL, params=NULL, defaults=NULL, time=NULL,
                            timezone=NULL, input_hash=NULL, output_hash=NULL,
                            hash_method=NULL) {
   entry <- list("process" = process, "output" = output)
@@ -54,7 +55,8 @@ setClass(
   #output_hash is only known once the process has run - and so is added to the
   #record after it is built - still reads with the two digests side by side.
   optional <- list(
-    func = func, params = params, defaults = defaults, time = time,
+    func = func, versions = versions, params = params, defaults = defaults,
+    time = time,
     timezone = timezone, duration = duration, hash_method = hash_method,
     input_hash = input_hash, output_hash = output_hash
   )

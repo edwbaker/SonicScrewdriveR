@@ -158,6 +158,84 @@ test_that("a zone that cannot be named is recorded as the clock's abbreviation",
   expect_null(attr(timed$time, "tzone"))
 })
 
+test_that("a record says which versions of which packages ran", {
+  tw <- tagWave(.recWave())
+  own <- getNamespaceVersion(asNamespace("sonicscrewdriver"))[[1]]
+
+  # The same call can give a different answer under another version of the
+  # package it comes from, or of this one, which decides what the function is
+  # given and how the record is made.
+  rec <- tagApply(tw, tuneR::normalize, unit="1")@processing[[1]]
+  expect_equal(
+    rec$versions,
+    c(tuneR=getNamespaceVersion(asNamespace("tuneR"))[[1]], sonicscrewdriver=own)
+  )
+  # Next to the function it describes, ahead of the digests added once the
+  # function has run.
+  expect_equal(which(names(rec) == "versions"), which(names(rec) == "func") + 1)
+
+  # A function of this package is this package's alone.
+  expect_equal(normalise(tw)@processing[[1]]$versions, c(sonicscrewdriver=own))
+
+  # A function of base R, closure or primitive, is R's.
+  r_version <- as.character(getRversion())
+  expect_equal(
+    tagApply(tw, base::identity)@processing[[1]]$versions,
+    c(base=r_version, sonicscrewdriver=own)
+  )
+  expect_equal(
+    tagApply(tw, `(`)@processing[[1]]$versions,
+    c(base=r_version, sonicscrewdriver=own)
+  )
+
+  # A function written outside any package has no package of its own to name.
+  user_fun <- function(x) x
+  environment(user_fun) <- globalenv()
+  expect_equal(tagApply(tw, user_fun)@processing[[1]]$versions, c(sonicscrewdriver=own))
+
+  # The record a result that is not a wave carries says the same.
+  sp <- tagApply(tagWave(noise("white", duration=4410, samp.rate=44100)),
+                 seewave::spec, plot=FALSE)
+  expect_equal(
+    attr(sp, "processing")[[1]]$versions,
+    c(seewave=getNamespaceVersion(asNamespace("seewave"))[[1]], sonicscrewdriver=own)
+  )
+
+  # A record made by hand keeps the two fields every record once had.
+  expect_named(addProcess(tw, "by hand")@processing[[1]], c("process", "output"))
+})
+
+test_that("a function is placed in the package it was written in", {
+  expect_equal(.funPackage(seewave::ffilter), "seewave")
+  expect_equal(.funPackage(cutws), "sonicscrewdriver")
+  expect_null(.funPackage(sum))
+  user_fun <- function(x) x
+  environment(user_fun) <- globalenv()
+  expect_null(.funPackage(user_fun))
+})
+
+test_that("a function that was stored rather than called is named from itself", {
+  # Named as it would be called from outside the package it was written in.
+  expect_equal(.functionName(seewave::bwfilter), "seewave::bwfilter")
+  expect_equal(.functionName(.ffilterWave), "sonicscrewdriver:::.ffilterWave")
+  expect_equal(.functionName(`(`), "base::(")
+
+  # Written at the top level, it goes by the name it was given there.
+  stored <- function(x) x
+  environment(stored) <- globalenv()
+  assign(".ssdStoredFilter", stored, envir=globalenv())
+  withr::defer(rm(".ssdStoredFilter", envir=globalenv()))
+  expect_equal(.functionName(stored), ".ssdStoredFilter")
+
+  # Written inline, it has no name to go by.
+  expect_equal(.functionName(function(x) x), "<anonymous function>")
+  expect_equal(.functionName(new("WaveFilter")@func), "<anonymous function>")
+
+  # Two names for code that is the same cannot be told apart, and either says
+  # what ran: an exported name is preferred, then the first alphabetically.
+  expect_equal(.functionName(base::identity), "base::dontCheck")
+})
+
 test_that("a record says which digest its hashes are", {
   tw <- tagWave(.recWave())
   # The sketch is the default: a full digest of an hour-long recording would be

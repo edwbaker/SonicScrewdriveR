@@ -19,6 +19,42 @@
   "<anonymous function>"
 }
 
+#' Name of a function for a process record, from the function alone
+#'
+#' A function that was stored rather than called, as a filter's is, comes with
+#' no expression to read its name from as `.funcName()` does. It is looked for
+#' among the bindings of the package it was written in, or of the global
+#' environment for one written there, and named as it would be called from
+#' outside: `pkg::name` if the package exports it and `pkg:::name` if not. A
+#' function bound to no name there, as one written inline is, is anonymous.
+#'
+#' Functions are compared by what they are rather than by where they are held,
+#' so two names for one function, or two functions written alike in one
+#' package, cannot be told apart: base R's `identity` and `dontCheck` are both
+#' `function(x) x`. Either name says what ran. An exported name is preferred to
+#' one that is not, and then the first in alphabetical order.
+#' @param fun A function.
+#' @return A single string.
+#' @keywords internal
+#' @noRd
+.functionName <- function(fun) {
+  top <- if (is.primitive(fun)) .BaseNamespaceEnv else topenv(environment(fun))
+  bound <- mget(ls(top, all.names=TRUE, sorted=TRUE), envir=top, inherits=FALSE)
+  found <- names(bound)[vapply(bound, identical, logical(1), fun)]
+  if (length(found) == 0) {
+    return("<anonymous function>")
+  }
+  if (!isNamespace(top)) {
+    return(found[1])
+  }
+  pkg <- getNamespaceName(top)[[1]]
+  exported <- found[found %in% getNamespaceExports(top)]
+  if (length(exported) > 0) {
+    return(paste0(pkg, "::", exported[1]))
+  }
+  return(paste0(pkg, ":::", found[1]))
+}
+
 #' Does a function need to be given an untagged wave?
 #'
 #' Functions from other packages, such as seewave, check the class of a wave
@@ -29,12 +65,58 @@
 #' @keywords internal
 #' @noRd
 .needsUntag <- function(fun) {
+  pkg <- .funPackage(fun)
+  !is.null(pkg) && !identical(pkg, .ownPackage())
+}
+
+#' The package a function was defined in
+#'
+#' Read from the namespace the function's environment belongs to, so a function
+#' is placed by where it was written rather than by the name it was called
+#' under. A primitive has no environment to read.
+#' @param fun A function.
+#' @return The name of the package, or `NULL` for a primitive or for a function
+#'   defined outside any package.
+#' @keywords internal
+#' @noRd
+.funPackage <- function(fun) {
   env <- environment(fun)
   if (is.null(env)) {
-    return(FALSE)
+    return(NULL)
   }
   top <- topenv(env)
-  isNamespace(top) && !identical(top, topenv(environment(.needsUntag)))
+  if (!isNamespace(top)) {
+    return(NULL)
+  }
+  return(getNamespaceName(top)[[1]])
+}
+
+#' The name of this package
+#' @keywords internal
+#' @noRd
+.ownPackage <- function() {
+  getNamespaceName(topenv(environment(.ownPackage)))[[1]]
+}
+
+#' Versions of the packages a process record depends on
+#'
+#' The same call can give a different answer under another version of the
+#' package it comes from, so a record that does not say which version ran
+#' cannot be repeated with confidence. This package's own version is recorded
+#' too, as it decides what the wave a function is given looks like and how the
+#' record is made. The versions are those loaded in the session that ran the
+#' call, which after an update without a restart are not the ones installed. A
+#' primitive is part of R, so is recorded as `base`, whose version is R's.
+#' @param fun The function being applied.
+#' @return A named character vector of versions, the function's package first.
+#' @keywords internal
+#' @noRd
+.recordVersions <- function(fun) {
+  pkg <- if (is.primitive(fun)) "base" else .funPackage(fun)
+  pkgs <- unique(c(pkg, .ownPackage()))
+  return(vapply(
+    pkgs, function(p) getNamespaceVersion(asNamespace(p))[[1]], character(1)
+  ))
 }
 
 #' Is an object a single tagged wave?
@@ -380,6 +462,12 @@
 #'   \item{`process`}{The label, which is the function's name unless one was
 #'     given.}
 #'   \item{`func`}{The function as it was called, as a name or `pkg::name`.}
+#'   \item{`versions`}{The versions of the package the function comes from and
+#'     of this package, as a named character vector, since the same call can
+#'     give a different answer under another version of either. They are the
+#'     versions loaded in the session that ran the call. A primitive is
+#'     recorded as `base`, whose version is R's, and a function defined outside
+#'     any package has only this package's.}
 #'   \item{`params`}{The arguments the caller supplied, under the names of the
 #'     formals they filled rather than the names they were passed under, so an
 #'     argument given by position or by an abbreviation is still named.}
@@ -428,7 +516,9 @@
 #' If `fun` returns something that is not a wave, such as a number or a data
 #' frame, there is no tagged object to hold the record. The result is returned
 #' with an attribute `processing` holding the history of `w` followed by the new
-#' record (without an output digest). A `NULL` result is returned as it is.
+#' record, which is complete but for an output digest, as no wave came out, and
+#' its `output`, which is left for whatever keeps the result to fill in. A
+#' `NULL` result is returned as it is, as it cannot carry an attribute.
 #'
 #' Functions from other packages are given an untagged wave. seewave, for
 #' example, checks the class of a wave with `class(w)[1] == "Wave"` and so
@@ -463,6 +553,7 @@
 #'   process a list of waves in parallel. The workers need `sonicscrewdriver`
 #'   to be available.
 #' @return The result of `.fun`, with the process recorded if `.w` is tagged.
+#' @seealso [flattenOutput()], which turns the output a record holds into rows.
 #' @export
 #' @examples
 #' tw <- tagWave(tuneR::sine(440, duration = 44100, samp.rate = 44100))
@@ -492,11 +583,18 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
 #' Apply a function to one wave and record the process if it is tagged
 #' @param .label The label given by the user, or `NULL` to use `.func`.
 #' @param .untag `TRUE` or `FALSE`, or `NA` to decide with `.needsUntag()`.
+#' @param .described The function the record describes, whose formals name the
+#'   arguments and give the defaults, and whose package's version is recorded.
+#'   It is `.fun` unless `.fun` only wraps the function that does the work, as
+#'   it does for a filter. It comes after `...`, so has to be named in full.
+#' @param .recorded A named list of arguments to record ahead of those in `...`,
+#'   which `.fun` is not given: what a filter is, beside its settings.
 #' @details While a process is being recorded further calls are not recorded,
 #'   so that only the outermost call makes a record.
 #' @keywords internal
 #' @noRd
-.tagApplyOne <- function(.w, .fun, .func, .label, .untag, ...) {
+.tagApplyOne <- function(.w, .fun, .func, .label, .untag, ..., .described = .fun,
+                         .recorded = NULL) {
   # Every formal is named with a dot for the same reason tagApply()'s are: the
   # arguments meant for .fun arrive in `...`, and R would match a short name
   # against the formals before it.
@@ -519,12 +617,13 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
   #Described after the function has run, so that a call that fails costs nothing
   #to describe. The arguments are already evaluated by then, so naming them does
   #not run anything a second time.
-  call <- .describeCall(.fun, list(...))
+  call <- .describeCall(.described, list(...))
   record <- .processRecord(
     if (is.null(.label)) .func else .label,
     duration = duration,
     func = .func,
-    params = .summariseParams(call$params),
+    versions = .recordVersions(.described),
+    params = .summariseParams(c(.recorded, call$params)),
     defaults = call$defaults,
     time = started$time,
     timezone = started$timezone,

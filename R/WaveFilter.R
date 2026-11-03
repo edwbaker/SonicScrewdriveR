@@ -47,10 +47,18 @@ setClass(
 #' level a band had in the input is not kept.
 #'
 #' Applied to a `TaggedWave` or `TaggedWaveMC` the call is recorded in the
-#' `processing` slot of the result, as described in [tagApply()]. The settings
-#' of the filter are its arguments, so two runs of the same filter at different
-#' frequencies are told apart by their records. The description of the filter is
-#' the process the record is under, where it has one.
+#' `processing` slot of the result, as described in [tagApply()]. The function
+#' the record is under is `filterWave`, as it is what filters every channel and
+#' normalises the result, and the filter is its arguments: first the filter's
+#' function, as `filter`, then its settings, so that two filters with the same
+#' settings, and two runs of one filter at different frequencies, are told apart
+#' by their records. The function is named as it would be called from outside
+#' its package, as `"seewave::bwfilter"`, by its name where it was written at
+#' the top level, and as `"<anonymous function>"` where it was written inline.
+#' The settings are named as the filter's function names them, the arguments it
+#' was not given are recorded as its `defaults`, and the version recorded is
+#' that of its package. The description of the filter is the process the record
+#' is under, where it has one.
 #'
 #' @param w A Wave object.
 #' @param filt Wave object with the selected filter applied.
@@ -58,6 +66,23 @@ setClass(
 #' @return A filtered Wave or WaveMC object, or a list of such objects if given a list.
 #' @export
 filterWave <- function(w, filt, cl=NULL) {
+  #The filter's function is named here, once, rather than for each wave. A
+  #function written at the top level is found under its name in the global
+  #environment of the session that wrote it, which the workers of a cluster do
+  #not share, so a worker naming it would record it as anonymous and the same
+  #filter would be recorded differently in parallel. It is passed on unforced,
+  #so that it is not looked for unless a record is made.
+  return(.filterWave(w, filt, cl, .functionName(filt@func)))
+}
+
+#' Apply a filter to a wave or a list of waves
+#' @param w A Wave-like object, or a list of them.
+#' @param filt A WaveFilter object.
+#' @param cl A cluster, or `NULL`.
+#' @param filter_name The name of the filter's function for the record.
+#' @return What [filterWave()] returns.
+#' @noRd
+.filterWave <- function(w, filt, cl, filter_name) {
   if (inherits(w, c("Wave", "WaveMC"))) {
     #The filters dispatch on the class of the wave and know nothing of a
     #TaggedWave, so .tagApplyOne() is asked for an untagged one and puts the
@@ -68,16 +93,25 @@ filterWave <- function(w, filt, cl=NULL) {
     #inside, so that they reach the record as the arguments of the call. Only
     #the name of the filter was recorded, which left two cut-offs of one filter
     #indistinguishable.
-    return(do.call(
-      .tagApplyOne,
-      c(list(w, .applyFilter(filt), "filterWave", .filterLabel(filt), TRUE), filt@params)
-    ))
+    #
+    #They are described as the filter's function names them and with its
+    #defaults, and its package's version is recorded, rather than as arguments
+    #of the wrapper that hands them on. The function itself is recorded beside
+    #them: the settings alone left two filters with the same cut-offs
+    #indistinguishable.
+    apply_one <- function(...) {
+      .tagApplyOne(
+        w, .applyFilter(filt), "filterWave", .filterLabel(filt), TRUE, ...,
+        .described=filt@func, .recorded=list(filter=filter_name)
+      )
+    }
+    return(do.call(apply_one, filt@params))
   }
   if (all(sapply(w, inherits, what=c("Wave", "WaveMC", "TaggedWave", "TaggedWaveMC")))) {
     if (is.null(cl)) {
-      return(lapply(w, filterWave, filt))
+      return(lapply(w, .filterWave, filt, NULL, filter_name))
     } else {
-      return(parallel::parLapply(cl, w, filterWave, filt))
+      return(parallel::parLapply(cl, w, .filterWave, filt, NULL, filter_name))
     }
   }
   stop("Can only filter a Wave or WaveMC object.")

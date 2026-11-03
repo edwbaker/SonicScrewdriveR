@@ -39,8 +39,16 @@ recording raises what it keeps to the peak the whole recording had, so the
 level a band had in the input is not kept.
 
 Applied to a \code{TaggedWave} or \code{TaggedWaveMC} the call is recorded in the
-\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The settings
-of the filter are its arguments, so two runs of the same filter at different
-frequencies are told apart by their records. The description of the filter is
-the process the record is under, where it has one.
+\code{processing} slot of the result, as described in \code{\link[=tagApply]{tagApply()}}. The function
+the record is under is \code{filterWave}, as it is what filters every channel and
+normalises the result, and the filter is its arguments: first the filter's
+function, as \code{filter}, then its settings, so that two filters with the same
+settings, and two runs of one filter at different frequencies, are told apart
+by their records. The function is named as it would be called from outside
+its package, as \code{"seewave::bwfilter"}, by its name where it was written at
+the top level, and as \code{"<anonymous function>"} where it was written inline.
+The settings are named as the filter's function names them, the arguments it
+was not given are recorded as its \code{defaults}, and the version recorded is
+that of its package. The description of the filter is the process the record
+is under, where it has one.
 }

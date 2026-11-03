@@ -42,6 +42,12 @@ what, when and to which audio:
 \item{\code{process}}{The label, which is the function's name unless one was
 given.}
 \item{\code{func}}{The function as it was called, as a name or \code{pkg::name}.}
+\item{\code{versions}}{The versions of the package the function comes from and
+of this package, as a named character vector, since the same call can
+give a different answer under another version of either. They are the
+versions loaded in the session that ran the call. A primitive is
+recorded as \code{base}, whose version is R's, and a function defined outside
+any package has only this package's.}
 \item{\code{params}}{The arguments the caller supplied, under the names of the
 formals they filled rather than the names they were passed under, so an
 argument given by position or by an abbreviation is still named.}
@@ -91,7 +97,9 @@ is not carried over, as it no longer matches the signal.
 If \code{fun} returns something that is not a wave, such as a number or a data
 frame, there is no tagged object to hold the record. The result is returned
 with an attribute \code{processing} holding the history of \code{w} followed by the new
-record (without an output digest). A \code{NULL} result is returned as it is.
+record, which is complete but for an output digest, as no wave came out, and
+its \code{output}, which is left for whatever keeps the result to fill in. A
+\code{NULL} result is returned as it is, as it cannot carry an attribute.
 
 Functions from other packages are given an untagged wave. seewave, for
 example, checks the class of a wave with \code{class(w)[1] == "Wave"} and so
@@ -123,4 +131,7 @@ tw@processing[[1]]$func
 \dontrun{
 tw <- tagApply(tw, seewave::ffilter, from = 1000, to = 2000, output = "Wave")
 }
+}
+\seealso{
+\code{\link[=flattenOutput]{flattenOutput()}}, which turns the output a record holds into rows.
 }
