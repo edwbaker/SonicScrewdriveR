@@ -47,13 +47,29 @@
 #'   a standard R error. Setting to `warning` will instead a warning.
 #' @param output By default a `data.frame`. "Annotation" will return a list of
 #'   `Annotation` objects; "Annotations", as it was spelt before, still works and
-#'   is deprecated. "JSON-LD" and "Turtle" return the RDF that audioBlast
-#'   gives for modules that describe their records as linked data, as a
-#'   character vector with one element for each page.
+#'   is deprecated. "RecordingSet" returns the recordings found by a search of
+#'   the recordings module as a [RecordingSet][recordingSet()]. "JSON-LD" and
+#'   "Turtle" return the RDF that audioBlast gives for modules that describe
+#'   their records as linked data, as a character vector with one element for
+#'   each page.
 #' @param ... Fields and values to filter on. Any field defined by audioBlast.
+#' @details
+#' In a `RecordingSet` each recording is identified by its audioBlast address,
+#' and its `location` is the URL of its file. Where audioBlast has measured a
+#' file, which its `status` says, the `hash`, `duration`, `sample_rate`,
+#' `channels` and `codec` of the recording are what audioBlast measured;
+#' otherwise its `duration`, `sample_rate` and `channels` are what its source
+#' says of it. What the source says is kept in the columns `declared_duration`,
+#' `declared_sample_rate` and `declared_channels`, and every other field
+#' audioBlast gives is kept under its own name. A recording that audioBlast gives
+#' without a source or an ID has no address, and is left out with a message. A
+#' recording given more than once, as a search paged through while recordings
+#' are being added to audioBlast can give one, is kept once, also with a
+#' message.
 #' @export
-#' @return A data frame, a list of `Annotation` objects or a character vector,
-#'   depending on `output`. `NULL` if nothing matches the query.
+#' @return A data frame, a list of `Annotation` objects, a `RecordingSet` or a
+#'   character vector, depending on `output`. `NULL` if nothing matches the
+#'   query.
 #' @seealso [audioblastFilters()] for the filters a module takes,
 #'   [audioblastRecord()] to fetch one record, and [audioblastDownload()] to
 #'   download the recordings found.
@@ -93,7 +109,7 @@ audioblast <- function(
     output <- "Annotation"
   }
   .validateChoice(
-    output, c("data.frame", "Annotation", "JSON-LD", "Turtle"),
+    output, c("data.frame", "Annotation", "RecordingSet", "JSON-LD", "Turtle"),
     msg=paste(output, "is not a valid output type.")
   )
   if (!is.numeric(page_size) || length(page_size) != 1 || page_size < 1) {
@@ -105,6 +121,11 @@ audioblast <- function(
   if (output=="Annotation") {
     if (type != "data" | name != "annomate") {
       stop("Query does not gives results that can be turned into Annotation objects.")
+    }
+  }
+  if (output=="RecordingSet") {
+    if (type != "data" | name != "recordings" | !is.null(endpoint)) {
+      stop("Only a search of the recordings module gives a RecordingSet.")
     }
   }
   filters <- .audioblast_filters(list(...))
@@ -154,6 +175,9 @@ audioblast <- function(
     if (output=="Annotation") {
       ret <- .audioblast_annotations(ret)
     }
+    if (output=="RecordingSet") {
+      ret <- .audioblast_recordingSet(ret)
+    }
     return(ret)
   }, error=function(e) .audioblast_issue(e, on.issue), warning=function(w) .audioblast_issue(w, on.issue))
 }
@@ -184,9 +208,7 @@ audioblast <- function(
 audioblastRecord <- function(type, source, id, output="data.frame") {
   type <- match.arg(type, .audioblast_record_types)
   output <- match.arg(output, c("data.frame", "JSON-LD", "Turtle"))
-  # An ID can contain a slash, which audioBlast reads as part of it
-  escape <- function(x) gsub("%2F", "/", utils::URLencode(as.character(x), reserved=TRUE), fixed=TRUE)
-  path <- paste(type, escape(source), escape(id), sep="/")
+  path <- paste(type, .audioblast_escape(source), .audioblast_escape(id), sep="/")
   query <- list()
   if (output != "data.frame") {
     query$output <- output
@@ -325,7 +347,11 @@ print.ab_range <- function(x, ...) {
 #' downloaded is checked against the hash audioBlast measured, and a file that
 #' does not match is reported through `on.issue`.
 #'
-#' @param d Data returned from a search using audioBlast().
+#' A [RecordingSet][recordingSet()] is downloaded from the URL each recording
+#' has as its `location`, and checked against its `hash`.
+#'
+#' @param d Data returned from a search using audioBlast(), as a data frame or a
+#'   `RecordingSet`.
 #' @param metadata If true saves the data in d as a csv file.
 #' @param skip.existing If true will not overwrite existing files.
 #' @param dir Directory to save files to.
@@ -342,16 +368,21 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
   if (metadata) {
     write.csv(d, file=file.path(dir, "metadata.csv"), row.names=FALSE)
   }
-  if ("filename" %in% colnames(d)) {
-    urls <- d[, "filename"]
-  } else if ("recording_url" %in% colnames(d)) {
-    urls <- d[, "recording_url"]
+  hashes <- rep(NA_character_, nrow(d))
+  if (inherits(d, "RecordingSet")) {
+    urls <- d$location
+    hashes <- d$hash
   } else {
-    stop("d does not have a filename or recording_url column of files to download.")
-  }
-  hashes <- rep(NA_character_, length(urls))
-  if ("calculated_hash" %in% colnames(d)) {
-    hashes <- d[, "calculated_hash"]
+    if ("filename" %in% colnames(d)) {
+      urls <- d[, "filename"]
+    } else if ("recording_url" %in% colnames(d)) {
+      urls <- d[, "recording_url"]
+    } else {
+      stop("d does not have a filename or recording_url column of files to download.")
+    }
+    if ("calculated_hash" %in% colnames(d)) {
+      hashes <- d[, "calculated_hash"]
+    }
   }
   names <- .audioblast_file_names(d, urls)
   keep <- !is.na(urls) & urls != "" & !duplicated(urls)
@@ -858,6 +889,112 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
     }
   }
   d
+}
+
+#' Escape a source or an ID for a path on audioBlast
+#'
+#' An ID can contain a slash, which audioBlast reads as part of it. An ID given
+#' as a number is written out in full, where as.character() writes 100000 as
+#' "1e+05".
+#'
+#' URLencode() works a character at a time, which takes minutes over the
+#' millions of recordings audioBlast holds, so it is only given the values
+#' holding a character it would change.
+#' @param x Sources or IDs.
+#' @return The escaped values.
+#' @keywords internal
+#' @noRd
+.audioblast_escape <- function(x) {
+  if (is.numeric(x)) {
+    x <- .audioblast_number(x)
+  }
+  x <- as.character(x)
+  change <- grepl("[^A-Za-z0-9._~/-]", x, perl=TRUE)
+  x[change] <- gsub("%2F", "/", utils::URLencode(x[change], reserved=TRUE), fixed=TRUE)
+  return(x)
+}
+
+#' Convert recordings results to a RecordingSet
+#'
+#' @param d The recordings found, as a data frame.
+#' @return A RecordingSet.
+#' @keywords internal
+#' @noRd
+.audioblast_recordingSet <- function(d) {
+  field <- function(name) {
+    if (name %in% names(d)) d[[name]] else rep(NA, nrow(d))
+  }
+  #Numbers come as text where the module's information was not fetched
+  number <- function(v) {
+    if (is.character(v)) {
+      v[.isBlank(v)] <- NA
+    }
+    suppressWarnings(as.numeric(v))
+  }
+  #What audioBlast measured of a file where it has measured it, and what the
+  #source of the recording says of it otherwise
+  measured <- function(name) {
+    value <- number(field(paste0("calculated_", name)))
+    declared <- number(field(name))
+    value[is.na(value)] <- declared[is.na(value)]
+    value
+  }
+
+  unaddressed <- is.na(field("source")) | is.na(field("id"))
+  if (any(unaddressed)) {
+    message(
+      "audioBlast gave ", sum(unaddressed), " recording", if (sum(unaddressed) > 1) "s",
+      " without a source or an ID, which ", if (sum(unaddressed) > 1) "are" else "is",
+      " left out of the RecordingSet as ", if (sum(unaddressed) > 1) "they have" else "it has",
+      " no address."
+    )
+  }
+
+  uri <- paste0(
+    "https://api.audioblast.org/recording/",
+    .audioblast_escape(field("source")), "/", .audioblast_escape(field("id"))
+  )
+  #A search paged through while recordings are being added to audioBlast can
+  #give a recording on two pages
+  again <- duplicated(replace(uri, unaddressed, NA), incomparables=NA)
+  if (any(again)) {
+    message(
+      "audioBlast gave ", sum(again), " recording", if (sum(again) > 1) "s",
+      " more than once, as a search can when recordings are added while it is ",
+      "paged through. Each is kept once, as it came first."
+    )
+  }
+
+  core <- data.frame(
+    uri = uri,
+    source = as.character(field("source")),
+    location = as.character(field("filename")),
+    hash = as.character(field("calculated_hash")),
+    duration = measured("duration"),
+    sample_rate = measured("sample_rate"),
+    channels = measured("channels"),
+    codec = as.character(field("calculated_codec")),
+    status = as.character(field("calculated_status")),
+    lat = number(field("lat")),
+    lon = number(field("lon")),
+    taxon = as.character(field("taxon")),
+    author = as.character(field("author")),
+    license = as.character(field("license")),
+    rights_holder = as.character(field("rights_holder")),
+    stringsAsFactors = FALSE
+  )
+  used <- c(
+    "source", "filename", "calculated_hash", "calculated_duration",
+    "calculated_sample_rate", "calculated_channels", "calculated_codec",
+    "calculated_status", "lat", "lon", "taxon", "author", "license",
+    "rights_holder"
+  )
+  others <- d[setdiff(names(d), used)]
+  #A field named as a column of the set, such as the duration a source gives,
+  #is not the value the set holds there
+  clash <- names(others) %in% names(.recordingSetColumns)
+  names(others)[clash] <- paste0("declared_", names(others)[clash])
+  return(recordingSet(cbind(core, others)[!unaddressed & !again, , drop=FALSE]))
 }
 
 #' Convert annomate results to Annotation objects

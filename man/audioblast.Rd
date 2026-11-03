@@ -43,15 +43,18 @@ a standard R error. Setting to \code{warning} will instead a warning.}
 
 \item{output}{By default a \code{data.frame}. "Annotation" will return a list of
 \code{Annotation} objects; "Annotations", as it was spelt before, still works and
-is deprecated. "JSON-LD" and "Turtle" return the RDF that audioBlast
-gives for modules that describe their records as linked data, as a
-character vector with one element for each page.}
+is deprecated. "RecordingSet" returns the recordings found by a search of
+the recordings module as a \link[=recordingSet]{RecordingSet}. "JSON-LD" and
+"Turtle" return the RDF that audioBlast gives for modules that describe
+their records as linked data, as a character vector with one element for
+each page.}
 
 \item{...}{Fields and values to filter on. Any field defined by audioBlast.}
 }
 \value{
-A data frame, a list of \code{Annotation} objects or a character vector,
-depending on \code{output}. \code{NULL} if nothing matches the query.
+A data frame, a list of \code{Annotation} objects, a \code{RecordingSet} or a
+character vector, depending on \code{output}. \code{NULL} if nothing matches the
+query.
 }
 \description{
 Search for data or analyses on \href{https://audioblast.org}{audioBlast}.
@@ -86,6 +89,19 @@ results are joined on all the fields any response carried, and a record that
 came without a field has \code{NA} there. The fields that only some responses
 carried are named in a message, as such an \code{NA} says that audioBlast did not
 give the field for that record rather than that its source holds nothing.
+
+In a \code{RecordingSet} each recording is identified by its audioBlast address,
+and its \code{location} is the URL of its file. Where audioBlast has measured a
+file, which its \code{status} says, the \code{hash}, \code{duration}, \code{sample_rate},
+\code{channels} and \code{codec} of the recording are what audioBlast measured;
+otherwise its \code{duration}, \code{sample_rate} and \code{channels} are what its source
+says of it. What the source says is kept in the columns \code{declared_duration},
+\code{declared_sample_rate} and \code{declared_channels}, and every other field
+audioBlast gives is kept under its own name. A recording that audioBlast gives
+without a source or an ID has no address, and is left out with a message. A
+recording given more than once, as a search paged through while recordings
+are being added to audioBlast can give one, is kept once, also with a
+message.
 }
 \examples{
 \dontrun{
