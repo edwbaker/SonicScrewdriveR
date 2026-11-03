@@ -232,6 +232,9 @@
   : Pulse detection using Dietrich (2004)
 - [`pd_simple()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pd_simple.md)
   : Simplified pulse detection using Dietrich (2004)
+- [`pipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md)
+  [`task()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md)
+  : Write an analysis as a pipeline of steps
 - [`plot(`*`<fcis>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plot.fcis.md)
   : Plot a false-colour index spectrogram
 - [`` `+`( ``*`<PseudoWave>`*`,`*`<numeric>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-PseudoWave-numeric-method.md)
