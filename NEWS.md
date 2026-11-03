@@ -1773,6 +1773,11 @@
   negative window.overlap, as the gap after the final window was requested as a
   section ending before it began. Passing a Wave object and passing a filename now
   give the same result.
+- windowing() with bind.wave=TRUE returned the windows of a TaggedWave as a list
+  rather than binding them, as it tested the first class of a window for "Wave".
+  They are now bound into a TaggedWave with the tags of the wave they were cut
+  from, rather than those of the first window, whose history ends in a record of
+  cutting the wave down to that window.
 - windowing() analysed a wave twice when its length was a single window, as the
   window start positions were counted down rather than up.
 - channels_se() returned NULL for the ndsi() and acoustic_complexity() indices from
@@ -1931,6 +1936,11 @@
 - filterWave() raised an error for TaggedWave and TaggedWaveMC objects, as the
   filters do not know that class and addProcess() has no method for the plain wave
   they return. The tags are now carried across the filter.
+- frequencyStats(), entropyStats(), fcis() and corWaveMC() raised an error given a
+  tagged wave, called directly or through tagApply(), as they handed it to seewave,
+  which takes a wave only if its class is exactly "Wave" or "WaveMC". The first two
+  failed for a TaggedWave, fcis() for a TaggedWave of one channel, and corWaveMC()
+  for a TaggedWaveMC. Each now gives the result of the wave the tagged one holds.
 - addProcess() nested the processing history rather than appending to it, so the
   shape of the slot changed with every process added.
 - gs_transcribe() rewrote the sample rate in the header of a file it described as

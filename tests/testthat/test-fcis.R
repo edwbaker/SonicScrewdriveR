@@ -439,6 +439,28 @@ test_that("the settings reach every channel", {
   expect_true(is.na(whole[[2]]$window.seconds))
 })
 
+test_that("a tagged wave gives the spectrogram of the wave it holds", {
+  # seewave takes a wave only if its class is exactly "Wave", so spectro() read
+  # a TaggedWave of one channel as bare samples and failed with "'to' must be of
+  # length 1". Inside tagApply() the windows of a tagged wave are cut untagged,
+  # so only a call without windows failed there.
+  mc <- tuneR::WaveMC(
+    cbind(channelTone(500), channelTone(3000)), samp.rate=8000, bit=16, pcm=TRUE
+  )
+  for (w in list(oneChannelWave(500), twoChannelWave(), mc)) {
+    tw <- tagWave(w)
+    for (window.length in list(4000, NULL)) {
+      expected <- fcis(w, window.length=window.length, wl=128)
+      expect_equal(fcis(tw, window.length=window.length, wl=128), expected)
+
+      r <- tagApply(tw, fcis, window.length=window.length, wl=128)
+      expect_length(attr(r, "processing"), 1)
+      attr(r, "processing") <- NULL
+      expect_equal(r, expected)
+    }
+  }
+})
+
 test_that(".waveChannel takes a channel from either class", {
   st <- twoChannelWave()
   expect_equal(.waveChannel(st, 1)@left, st@left)

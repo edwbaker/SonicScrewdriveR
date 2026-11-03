@@ -188,6 +188,36 @@ test_that("bind.wave fills the gaps between windows from a Wave object", {
   expect_equal(ws@left, w@left)
 })
 
+test_that("bind.wave binds the windows of a tagged wave, keeping its tags", {
+  # The windows of a tagged wave are tagged, and the test for a Wave read the
+  # first class only, so they came back as a list. Bound as they were, the wave
+  # would have kept the tags of the first window, whose history ends in a
+  # record of cutting the wave down to that window.
+  set.seed(21)
+  w <- tuneR::Wave(round(runif(2000, -2^13, 2^13)), samp.rate=8000, bit=16)
+  tw <- tagWave(w, origin="test")
+  tw@metadata <- list(site="A")
+  tw <- addProcess(tw, "earlier step")
+  idfun <- function(wave, start, window.length) wave
+
+  for (overlap in c(0, -500)) {
+    expected <- windowing(w, window.length=500, window.overlap=overlap, FUN=idfun, bind.wave=TRUE)
+
+    ws <- windowing(tw, window.length=500, window.overlap=overlap, FUN=idfun, bind.wave=TRUE)
+    expect_s4_class(ws, "TaggedWave")
+    expect_equal(untagWave(ws), expected)
+    expect_equal(ws@origin, "test")
+    expect_equal(ws@metadata, list(site="A"))
+    expect_equal(ws@processing, tw@processing)
+
+    # Through tagApply() the windows are cut untagged, and the call is recorded.
+    r <- tagApply(tw, windowing, window.length=500, window.overlap=overlap, FUN=idfun, bind.wave=TRUE)
+    expect_equal(untagWave(r), expected)
+    expect_equal(r@processing[1], tw@processing)
+    expect_equal(r@processing[[2]]$func, "windowing")
+  }
+})
+
 test_that("bind.wave gives the same result from a Wave object and a filename", {
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   w <- tuneR::readWave(f)

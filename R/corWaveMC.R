@@ -31,6 +31,11 @@
 #' @export
 corWaveMC <- function(wave, times, window, cluster=NULL, ...) {
   validateIsWaveMC(wave)
+  #seewave takes a WaveMC only if its class is exactly "WaveMC", and read a
+  #TaggedWaveMC as a bare matrix, failing for want of a sample rate with
+  #"argument "f" is missing". It is untagged once here, before its channels are
+  #cut for cutw() and before it is sent to the workers of a cluster.
+  wave <- untagWave(wave)
 
   outtimes <- vector(mode="list", length=length(times))
   for (i in seq_along(times)) {

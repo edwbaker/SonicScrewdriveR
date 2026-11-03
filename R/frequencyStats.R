@@ -65,7 +65,10 @@ frequencyStats <- function(
   validateIsWave(wave)
   if (is.null(wave_spec)) {
     .validateSpectrumLength(wave, "frequencyStats")
-    wave_spec <- seewave::meanspec(wave, norm=FALSE, plot=FALSE)
+    #seewave takes a wave only if its class is exactly "Wave", and read a
+    #TaggedWave as bare samples, failing for want of a sample rate with
+    #"argument "f" is missing". tagApply() hands this function the tagged wave.
+    wave_spec <- seewave::meanspec(untagWave(wave), norm=FALSE, plot=FALSE)
   }
 
   #The spectrum has its frequency axis in kHz, as seewave gives it, and is
