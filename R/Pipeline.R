@@ -29,9 +29,11 @@
 #' `pipeline()` or `task()`, or to one of the functions of base R that build a
 #' list, such as `list()` and `lapply()`, which take no wave. A pipeline held in
 #' a variable, or a list of them, is given by its name, and `NULL` gives no
-#' steps. A pipeline can carry the recordings it is for, as `recordings`, which
-#' are not part of what identifies it. Pipelines joined together keep the
-#' recordings they carry where they agree on them.
+#' steps.
+#'
+#' A pipeline does not carry the recordings it is run on. They are given when
+#' it is run, so that the same pipeline can be run on any number of sets, and
+#' its id is the same whichever set it runs on.
 #'
 #' @section How waves and results pass between steps:
 #' What a step does to the pipeline depends on what it gives back, which is known
@@ -120,8 +122,6 @@
 #' @param ... For `pipeline()`, the steps: calls written with the wave left out,
 #'   pipelines, or lists of pipelines. For `task()`, the arguments of `.fun`
 #'   other than the wave.
-#' @param recordings Optional. The [RecordingSet][recordingSet()] the pipeline is
-#'   for, which is not part of its id.
 #' @param .fun A function, or the name of one, taking the wave as its first
 #'   argument.
 #' @param then Optional. A pipeline, or a single step, to give the wave the step
@@ -142,23 +142,15 @@
 #' pipeline(lapply(c(1000, 4000), function(f) {
 #'   task(filterWave, bandpass(f, 2 * f), then = dutyCycle())
 #' }))
-pipeline <- function(..., recordings = NULL) {
+pipeline <- function(...) {
   env <- parent.frame()
-  if (!is.null(recordings) && !inherits(recordings, "RecordingSet")) {
-    stop("recordings must be a RecordingSet, not ", class(recordings)[1], ".")
-  }
   exprs <- eval(substitute(alist(...)))
   #An argument left empty, as a comma too many leaves one, is the empty symbol.
   empty <- vapply(seq_along(exprs), function(i) identical(exprs[[i]], quote(expr=)), logical(1))
   if (any(empty)) {
     stop("Step ", which(empty)[1], " of pipeline() is empty. Is there a comma too many?")
   }
-  parts <- lapply(exprs, .stepsOf, env)
-  steps <- unlist(lapply(parts, `[[`, "steps"), recursive=FALSE)
-  if (is.null(recordings)) {
-    recordings <- .joinRecordings(lapply(parts, `[[`, "recordings"))
-  }
-  return(.newPipeline(steps, recordings))
+  return(.newPipeline(unlist(lapply(exprs, .stepsOf, env), recursive=FALSE)))
 }
 
 #' @rdname pipeline
@@ -181,22 +173,16 @@ task <- function(.fun, ..., then = NULL) {
   names(shown) <- names(values)
   call <- as.call(c(list(.taskHead(fun, fun_expr, env)), shown))
   then_expr <- substitute(then)
-  return(.newPipeline(
-    list(.newStep(fun, call, values, .thenOf(then_expr, env))), NULL
-  ))
+  return(.newPipeline(list(.newStep(fun, call, values, .thenOf(then_expr, env)))))
 }
 
 #' Make a pipeline
 #' @param steps A list of steps, as `.newStep()` makes them.
-#' @param recordings A RecordingSet, or `NULL`.
 #' @return A `Pipeline`.
 #' @keywords internal
 #' @noRd
-.newPipeline <- function(steps, recordings) {
-  return(structure(
-    list(steps=unname(as.list(steps)), recordings=recordings),
-    class="Pipeline"
-  ))
+.newPipeline <- function(steps) {
+  return(structure(list(steps=unname(as.list(steps))), class="Pipeline"))
 }
 
 #' Make a step
@@ -227,31 +213,35 @@ task <- function(.fun, ..., then = NULL) {
 #' @param expr The argument as written, or its value where it was given one, as
 #'   `do.call()` gives.
 #' @param env Where it was written.
-#' @return A list of `steps` and the `recordings` a pipeline carried.
+#' @return A list of steps.
 #' @keywords internal
 #' @noRd
 .stepsOf <- function(expr, env) {
   if (is.call(expr) && !.evaluatesToSteps(expr, env)) {
-    return(list(steps=list(.captureStep(expr, env)), recordings=NULL))
+    return(list(.captureStep(expr, env)))
   }
   value <- eval(expr, env)
   if (is.null(value)) {
-    return(list(steps=list(), recordings=NULL))
+    return(list())
   }
   if (inherits(value, "Pipeline")) {
-    return(list(steps=value$steps, recordings=value$recordings))
+    return(value$steps)
   }
   if (is.list(value) && !is.object(value) &&
       all(vapply(value, inherits, logical(1), what="Pipeline"))) {
-    return(list(
-      steps=unlist(lapply(value, `[[`, "steps"), recursive=FALSE),
-      recordings=.joinRecordings(lapply(value, `[[`, "recordings"))
-    ))
+    return(unlist(lapply(value, `[[`, "steps"), recursive=FALSE))
   }
   if (is.function(value)) {
     stop(
       "`", .deparseOne(expr), "` is a function. A step is a call to one with ",
       "the wave left out, as `", .deparseOne(expr), "()`, or task().",
+      call.=FALSE
+    )
+  }
+  if (inherits(value, "RecordingSet")) {
+    stop(
+      "`", .deparseOne(expr), "` is a RecordingSet. A pipeline does not carry ",
+      "the recordings it is run on: they are given when it is run.",
       call.=FALSE
     )
   }
@@ -360,30 +350,7 @@ task <- function(.fun, ..., then = NULL) {
   if (is.null(expr)) {
     return(NULL)
   }
-  return(.newPipeline(.stepsOf(expr, env)$steps, NULL))
-}
-
-#' The recordings a joined pipeline carries
-#'
-#' Those of the pipelines joined, where they carry the same set or only one of
-#' them carries one. Two different sets cannot both be kept, and keeping
-#' either silently would run the pipeline over recordings no one chose.
-#' @param sets A list of RecordingSets and `NULL`s.
-#' @return A RecordingSet, or `NULL`.
-#' @keywords internal
-#' @noRd
-.joinRecordings <- function(sets) {
-  sets <- Filter(Negate(is.null), sets)
-  if (length(sets) == 0) {
-    return(NULL)
-  }
-  if (!all(vapply(sets, identical, logical(1), sets[[1]]))) {
-    stop(
-      "The pipelines joined carry different recordings. Give the set to keep as ",
-      "recordings=.", call.=FALSE
-    )
-  }
-  return(sets[[1]])
+  return(.newPipeline(.stepsOf(expr, env)))
 }
 
 #' How the function of a step made by task() is shown
@@ -610,14 +577,6 @@ format.Pipeline <- function(x, ...) {
     strrep(" ", outline$indent), outline$label, " ", outline$text,
     ifelse(outline$then, ", then", "")
   )
-  set <- x$recordings
-  if (!is.null(set)) {
-    files <- length(unique(.recordingSetFiles(set)))
-    lines <- c(paste0(
-      "Recordings: ", nrow(set), if (nrow(set) == 1) " recording" else " recordings",
-      " of ", files, if (files == 1) " file" else " files"
-    ), lines)
-  }
   return(c(header, lines, code))
 }
 

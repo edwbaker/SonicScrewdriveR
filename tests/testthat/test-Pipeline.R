@@ -15,12 +15,12 @@ test_that("pipeline() keeps each call as written and runs none of them", {
   }
   p <- pipeline(normalise(), counted(n = 2), filterWave(bandpass(2000, 11000)))
   expect_s3_class(p, "Pipeline")
+  expect_named(p, "steps")
   expect_equal(ran, 0)
   expect_equal(
     .pipeCalls(p),
     c("normalise()", "counted(n = 2)", "filterWave(bandpass(2000, 11000))")
   )
-  expect_null(p$recordings)
 })
 
 test_that("the arguments of a step are evaluated once, when the pipeline is made", {
@@ -107,8 +107,11 @@ test_that("anything else given to pipeline() is an error that says what it was",
   expect_error(pipeline(function(w) 1), "is a function")
   expect_error(pipeline(5), "`5` is a numeric")
   expect_error(pipeline(list(1, 2)), "is a list")
+  # A pipeline is given its recordings when it runs, so that one pipeline can
+  # run on any number of sets.
   set <- recordingSet(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
-  expect_error(pipeline(recording = set), "is a RecordingSet")
+  expect_error(pipeline(dutyCycle(), recordings = set),
+               "`set` is a RecordingSet. A pipeline does not carry the recordings it is run on")
   expect_error(pipeline(set), "is a RecordingSet")
   expect_error(pipeline(noSuchFunction()), "Could not find the function of the step noSuchFunction")
   holder <- list(f = 1)
@@ -123,32 +126,6 @@ test_that("a step's function is found as R finds the function of a call", {
   expect_identical(p$steps[[2]]$fun, sonicscrewdriver::normalise)
   expect_true(is.function(p$steps[[3]]$fun))
   expect_equal(.pipeCalls(p)[3], "(function(w) 1)()")
-})
-
-test_that("a pipeline carries its recordings, which joining keeps where they agree", {
-  f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
-  set <- recordingSet(f)
-  other <- recordingSet(f, source="AudioMoth")
-  p <- pipeline(dutyCycle(), recordings = set)
-  expect_identical(p$recordings, set)
-  expect_error(pipeline(dutyCycle(), recordings = data.frame()), "must be a RecordingSet")
-
-  expect_identical(pipeline(p, normalise())$recordings, set)
-  expect_identical(pipeline(p, p)$recordings, set)
-  expect_identical(pipeline(list(p, pipeline(normalise())))$recordings, set)
-  q <- pipeline(beatSpectrum(), recordings = other)
-  expect_error(pipeline(p, q), "carry different recordings")
-  expect_error(pipeline(list(p, q)), "carry different recordings")
-  expect_identical(pipeline(p, q, recordings = other)$recordings, other)
-
-  # A pipeline given as then= runs on the wave, not on recordings of its own.
-  expect_null(pipeline(normalise(then = p))$steps[[1]]$then$recordings)
-
-  expect_match(format(p)[2], "^Recordings: 1 recording of 1 file$")
-  two <- recordingSet(c(f, system.file("extdata", "STEREO.WAV",
-                                       package="sonicscrewdriver")))
-  expect_match(format(pipeline(dutyCycle(), recordings = two))[2],
-               "^Recordings: 2 recordings of 2 files$")
 })
 
 test_that("task() makes the same step as a call", {

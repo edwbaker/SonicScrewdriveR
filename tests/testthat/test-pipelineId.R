@@ -40,10 +40,6 @@ test_that("pipelines that compute the same thing share an id", {
   expect_equal(ids[1], ids[2])
   expect_equal(ids[1], ids[3])
   expect_equal(ids[4], ids[5])
-
-  # The recordings a pipeline carries are not part of it.
-  set <- recordingSet(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"))
-  expect_equal(.idsWith(pipeline(p, recordings = set)), .idsWith(p))
 })
 
 test_that("anything that could change a number changes the id", {

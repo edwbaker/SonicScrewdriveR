@@ -5,7 +5,7 @@
 \alias{task}
 \title{Write an analysis as a pipeline of steps}
 \usage{
-pipeline(..., recordings = NULL)
+pipeline(...)
 
 task(.fun, ..., then = NULL)
 }
@@ -13,9 +13,6 @@ task(.fun, ..., then = NULL)
 \item{...}{For \code{pipeline()}, the steps: calls written with the wave left out,
 pipelines, or lists of pipelines. For \code{task()}, the arguments of \code{.fun}
 other than the wave.}
-
-\item{recordings}{Optional. The \link[=recordingSet]{RecordingSet} the pipeline is
-for, which is not part of its id.}
 
 \item{.fun}{A function, or the name of one, taking the wave as its first
 argument.}
@@ -56,9 +53,11 @@ An argument of \code{pipeline()} that is a call is a step, unless it is a call t
 \code{pipeline()} or \code{task()}, or to one of the functions of base R that build a
 list, such as \code{list()} and \code{lapply()}, which take no wave. A pipeline held in
 a variable, or a list of them, is given by its name, and \code{NULL} gives no
-steps. A pipeline can carry the recordings it is for, as \code{recordings}, which
-are not part of what identifies it. Pipelines joined together keep the
-recordings they carry where they agree on them.
+steps.
+
+A pipeline does not carry the recordings it is run on. They are given when
+it is run, so that the same pipeline can be run on any number of sets, and
+its id is the same whichever set it runs on.
 }
 
 \section{How waves and results pass between steps}{
