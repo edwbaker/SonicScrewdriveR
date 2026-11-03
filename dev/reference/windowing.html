@@ -66,7 +66,8 @@ if the 'pbapply' package is installed.</p>
 <span>  bind.wave <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  complete.windows <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cluster <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  time.unit <span class="op">=</span> <span class="st">"samples"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,7 +81,7 @@ entire large file into memory.</p></dd>
 
 
 <dt id="arg-window-length">window.length<a class="anchor" aria-label="anchor" href="#arg-window-length"></a></dt>
-<dd><p>The length of the analysis window (in samples).</p></dd>
+<dd><p>The length of the analysis window, in <code>time.unit</code>.</p></dd>
 
 
 <dt id="arg-fun">FUN<a class="anchor" aria-label="anchor" href="#arg-fun"></a></dt>
@@ -88,8 +89,8 @@ entire large file into memory.</p></dd>
 
 
 <dt id="arg-window-overlap">window.overlap<a class="anchor" aria-label="anchor" href="#arg-window-overlap"></a></dt>
-<dd><p>The overlap between successive windows (in samples), a
-negative value will result in a gap between windows.</p></dd>
+<dd><p>The overlap between successive windows, in <code>time.unit</code>.
+A negative value will result in a gap between windows.</p></dd>
 
 
 <dt id="arg-bind-wave">bind.wave<a class="anchor" aria-label="anchor" href="#arg-bind-wave"></a></dt>
@@ -110,6 +111,13 @@ processed holding what is left of the audio, which can be shorter.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional parameters to FUN</p></dd>
 
+
+<dt id="arg-time-unit">time.unit<a class="anchor" aria-label="anchor" href="#arg-time-unit"></a></dt>
+<dd><p>The unit <code>window.length</code> and <code>window.overlap</code> are given in:
+one of "samples", "seconds", "minutes" or "hours". It comes after <code>...</code>, so
+that an argument meant for <code>FUN</code> is not taken for it, and has to be named in
+full.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -127,12 +135,52 @@ what is left of it, as for a Wave object holding the same audio. A wave
 file whose audio size was never written is windowed over the audio
 readAudio() recovers from it, and a file or Wave object holding no audio
 gives no windows.</p>
+<p>The length of a window and the overlap between windows are both given in
+<code>time.unit</code>, which is samples unless it says otherwise. A set of recordings
+mixes sample rates, and a length in samples is a different length of time in
+each of them, so <code>time.unit = "seconds"</code> gives every recording windows of the
+same length of time. A length in time is rounded to the nearest whole
+sample, as <code><a href="readAudio.html">readAudio()</a></code> rounds a time it is given. <code>FUN</code> is given the start
+and length of its window in samples, whatever <code>time.unit</code> is, as samples are
+where a window falls.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="windows-in-a-pipeline">Windows in a pipeline<a class="anchor" aria-label="anchor" href="#windows-in-a-pipeline"></a></h2>
+
+
+<p>In a <code><a href="pipeline.html">pipeline()</a></code>, <code>then=</code> fills <code>FUN</code>: the steps it gives are run on each
+window, and giving both <code>then=</code> and <code>FUN</code> is an error. Each window is a
+tagged wave whose history is that of the wave it was cut from, followed by
+the cut, so a result from a window traces back to where in the recording it
+was measured. The results of each step have a row for each window, keyed by
+<code>window_start</code>, <code>window_end</code> and <code>window_length</code>, in seconds from the start of
+the recording, counting any cut made before the windowing by <code><a href="cutws.html">cutws()</a></code> or
+seewave's <code>cutw()</code>. A cut made by any other function is not counted, and
+the windows after it are placed as though it had not been made. A windowing
+inside another adds columns of its own, numbered by how deep it is:
+<code>window_start_2</code> and so on. A wave shorter than one window gives no windows,
+which is an error naming the step.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="the-order-of-windowing-and-filtering">The order of windowing and filtering<a class="anchor" aria-label="anchor" href="#the-order-of-windowing-and-filtering"></a></h2>
+
+
+<p>Windowing then filtering does not give the numbers filtering then windowing
+does. <code><a href="filterWave.html">filterWave()</a></code> scales what it gives back to the peak level of the wave
+it was given. Filtered before windowing, the whole recording is scaled by one
+factor, so the level of a band can be compared between windows, but the whole
+recording has to be in memory. Filtered after windowing, each window is
+scaled by a factor of its own, raising the band in every window to that
+window's own peak, so the levels of a band compared across windows mislead,
+but the recording can be read a window at a time. Both orders are sound, and
+the history of every window records which was used.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">windowing</span><span class="op">(</span><span class="va">wave</span>, window.length<span class="op">=</span><span class="fl">1000</span>, FUN<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">w</span>, <span class="va">...</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span>, window.overlap<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">windowing</span><span class="op">(</span><span class="va">wave</span>, <span class="fl">60</span>, FUN<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">w</span>, <span class="va">...</span><span class="op">)</span> <span class="fu">seewave</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/seewave/man/H.html" class="external-link">H</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span>, time.unit<span class="op">=</span><span class="st">"seconds"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

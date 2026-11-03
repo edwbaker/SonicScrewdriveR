@@ -12,7 +12,7 @@ tdoa(
   ref = 1,
   from = NULL,
   to = NULL,
-  input.unit = "seconds",
+  time.unit = "seconds",
   method = "phat",
   max.delay = NULL,
   interpolate = TRUE,
@@ -38,7 +38,7 @@ tdoa(
 
   Optionally, the end of the region to correlate.
 
-- input.unit:
+- time.unit:
 
   Unit in which `from` and `to` are given, one of "samples", "seconds"
   (the default), "minutes", or "hours".
@@ -62,7 +62,7 @@ tdoa(
 
 - units:
 
-  Deprecated, use input.unit instead.
+  Deprecated, use time.unit instead.
 
 ## Value
 

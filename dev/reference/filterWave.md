@@ -65,3 +65,19 @@ settings are named as the filter's function names them, the arguments it
 was not given are recorded as its `defaults`, and the version recorded
 is that of its package. The description of the filter is the process the
 record is under, where it has one.
+
+## The order of filtering and windowing
+
+Filtering then windowing does not give the numbers windowing then
+filtering does, because the result is normalised to the peak of the wave
+it was given. Filtered before it is cut into windows, by
+[`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)
+or in a
+[`pipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md),
+the whole recording is scaled by one factor, so the level of a band can
+be compared between windows, but the whole recording has to be in
+memory. Filtered after, each window is scaled by a factor of its own,
+raising the band in every window to that window's own peak, so the
+levels of a band compared across windows mislead, but the recording can
+be read a window at a time. Both orders are sound, and the record of
+each filter says which was used.

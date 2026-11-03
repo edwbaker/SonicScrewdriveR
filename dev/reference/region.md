@@ -5,12 +5,12 @@ Specifies a time-bounded region to analyse.
 ## Usage
 
 ``` r
-region(input.unit, from = 0, to = Inf, unit)
+region(time.unit, from = 0, to = Inf, unit)
 ```
 
 ## Arguments
 
-- input.unit:
+- time.unit:
 
   Unit the from and to values are given in (one of samples, seconds,
   minutes, hours)
@@ -25,7 +25,7 @@ region(input.unit, from = 0, to = Inf, unit)
 
 - unit:
 
-  Deprecated, use input.unit instead.
+  Deprecated, use time.unit instead.
 
 ## Value
 

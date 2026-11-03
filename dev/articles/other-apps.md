@@ -93,7 +93,7 @@ recording rather than over what is left of it on disk.
 
 ``` r
 
-w <- readAudio("20201103_112430T.WAV", from=60, to=120, units="seconds")
+w <- readAudio("20201103_112430T.WAV", from=60, to=120, time.unit="seconds")
 ```
 
 [`audiomothCompress()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothCompress.md)

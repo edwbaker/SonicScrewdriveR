@@ -87,7 +87,8 @@ known only once it has run:
 
 - Several waves:
 
-  An error, as there is no single wave to carry on with.
+  An error, as there is no single wave to carry on with, unless the step
+  is a windowing given `then=`, as below.
 
 - Anything else:
 
@@ -102,7 +103,29 @@ band and leaves the rest of the pipeline the whole recording. `then=` is
 taken out of the call before the function is called, so a function with
 an argument of its own called `then` cannot be given it through a
 pipeline. A step given `then=` that turns out not to give a wave is an
-error, raised when it runs, and so for now is one that gives several.
+error, raised when it runs, and so is one that gives several.
+
+[`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)
+is the step that gives several waves, and takes its `then=` itself as
+its `FUN`:
+`windowing(60, time.unit = "seconds", then = pipeline(dutyCycle(), seewave::M()))`
+runs both steps on every minute of the recording, and their tables have
+a row for each window, keyed by where it starts and how long it is. A
+windowing in a pipeline needs `then=`, and cannot be given both `then=`
+and `FUN`.
+
+A step of
+[`cutws()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/cutws.md)
+or seewave's `cutw()` is a cut, and is placed in the recording. Every
+row measured on what it cuts, by the steps of its `then=` or by the
+steps after it, has `cut_start` and `cut_end`, in seconds from the start
+of the recording; a cut of a cut gives the span that was measured. A
+window inside a cut is counted from the start of the recording too, so
+`cutws(160001, 240000, then = windowing(8000, then = dutyCycle()))` on
+audio sampled at 8 kHz keys its rows with a cut from 20 to 30 seconds
+and windows starting at 20, 21, 22 seconds and so on. A function that
+cuts in some other way, one of the user's among them, is not recognised,
+and what it gives is taken to start where the wave it was given did.
 
 The results of a pipeline are a table for each analysis step, its result
 turned into rows by
@@ -194,21 +217,21 @@ p <- pipeline(
   dutyCycle()
 )
 p
-#> <Pipeline 148494c5: 4 steps>
+#> <Pipeline 8487486f: 4 steps>
 #> 1. normalise()
 #> 2. filterWave(bandpass(2000, 11000)), then
 #>    2.1 dutyCycle()
 #> 3. dutyCycle()
-#> Code: sonicscrewdriver 0df53475, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
+#> Code: sonicscrewdriver ceb8b473, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
 
 # Two bands, built in code
 pipeline(lapply(c(1000, 4000), function(f) {
   task(filterWave, bandpass(f, 2 * f), then = dutyCycle())
 }))
-#> <Pipeline 0866f188: 4 steps>
+#> <Pipeline 7cddccb1: 4 steps>
 #> 1. filterWave(bandpass(1000, 2 * 1000)), then
 #>    1.1 dutyCycle()
 #> 2. filterWave(bandpass(4000, 2 * 4000)), then
 #>    2.1 dutyCycle()
-#> Code: sonicscrewdriver 0df53475, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
+#> Code: sonicscrewdriver ceb8b473, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
 ```

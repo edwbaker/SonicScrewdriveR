@@ -12,7 +12,7 @@ readRespeaker6(
   filename,
   from = 1,
   to = Inf,
-  input.unit = "samples",
+  time.unit = "samples",
   header = FALSE,
   units
 )
@@ -26,13 +26,13 @@ readRespeaker6(
 
 - from:
 
-  Where to start reading the wave in input.unit.
+  Where to start reading the wave in time.unit.
 
 - to:
 
-  Where to stop reading the wave in input.unit.
+  Where to stop reading the wave in time.unit.
 
-- input.unit:
+- time.unit:
 
   Unit in which from and to is given, the default is "samples", but can
   be set to time intervals such as "seconds".
@@ -44,7 +44,7 @@ readRespeaker6(
 
 - units:
 
-  Deprecated, use input.unit instead.
+  Deprecated, use time.unit instead.
 
 ## Value
 

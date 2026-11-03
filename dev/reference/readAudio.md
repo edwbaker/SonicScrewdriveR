@@ -13,7 +13,7 @@ readAudio(
   mime = "auto",
   from = 0,
   to = Inf,
-  input.unit = "seconds",
+  time.unit = "seconds",
   units
 )
 ```
@@ -42,13 +42,13 @@ readAudio(
   whole number in samples, which must leave some audio after the start
   point, read as the end of the recording where it is beyond it
 
-- input.unit:
+- time.unit:
 
   One of "samples", "seconds", "minutes", "hours". Default is "seconds".
 
 - units:
 
-  Deprecated, use input.unit instead.
+  Deprecated, use time.unit instead.
 
 ## Value
 

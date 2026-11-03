@@ -16,7 +16,8 @@ windowing(
   bind.wave = FALSE,
   complete.windows = TRUE,
   cluster = NULL,
-  ...
+  ...,
+  time.unit = "samples"
 )
 ```
 
@@ -29,7 +30,7 @@ windowing(
 
 - window.length:
 
-  The length of the analysis window (in samples).
+  The length of the analysis window, in `time.unit`.
 
 - FUN:
 
@@ -37,8 +38,8 @@ windowing(
 
 - window.overlap:
 
-  The overlap between successive windows (in samples), a negative value
-  will result in a gap between windows.
+  The overlap between successive windows, in `time.unit`. A negative
+  value will result in a gap between windows.
 
 - bind.wave:
 
@@ -59,6 +60,13 @@ windowing(
 
   Additional parameters to FUN
 
+- time.unit:
+
+  The unit `window.length` and `window.overlap` are given in: one of
+  "samples", "seconds", "minutes" or "hours". It comes after `...`, so
+  that an argument meant for `FUN` is not taken for it, and has to be
+  named in full.
+
 ## Value
 
 A list of the results of FUN for each window, or a single Wave object if
@@ -78,10 +86,54 @@ it, as for a Wave object holding the same audio. A wave file whose audio
 size was never written is windowed over the audio readAudio() recovers
 from it, and a file or Wave object holding no audio gives no windows.
 
+The length of a window and the overlap between windows are both given in
+`time.unit`, which is samples unless it says otherwise. A set of
+recordings mixes sample rates, and a length in samples is a different
+length of time in each of them, so `time.unit = "seconds"` gives every
+recording windows of the same length of time. A length in time is
+rounded to the nearest whole sample, as
+[`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
+rounds a time it is given. `FUN` is given the start and length of its
+window in samples, whatever `time.unit` is, as samples are where a
+window falls.
+
+## Windows in a pipeline
+
+In a
+[`pipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md),
+`then=` fills `FUN`: the steps it gives are run on each window, and
+giving both `then=` and `FUN` is an error. Each window is a tagged wave
+whose history is that of the wave it was cut from, followed by the cut,
+so a result from a window traces back to where in the recording it was
+measured. The results of each step have a row for each window, keyed by
+`window_start`, `window_end` and `window_length`, in seconds from the
+start of the recording, counting any cut made before the windowing by
+[`cutws()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/cutws.md)
+or seewave's `cutw()`. A cut made by any other function is not counted,
+and the windows after it are placed as though it had not been made. A
+windowing inside another adds columns of its own, numbered by how deep
+it is: `window_start_2` and so on. A wave shorter than one window gives
+no windows, which is an error naming the step.
+
+## The order of windowing and filtering
+
+Windowing then filtering does not give the numbers filtering then
+windowing does.
+[`filterWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/filterWave.md)
+scales what it gives back to the peak level of the wave it was given.
+Filtered before windowing, the whole recording is scaled by one factor,
+so the level of a band can be compared between windows, but the whole
+recording has to be in memory. Filtered after windowing, each window is
+scaled by a factor of its own, raising the band in every window to that
+window's own peak, so the levels of a band compared across windows
+mislead, but the recording can be read a window at a time. Both orders
+are sound, and the history of every window records which was used.
+
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
 windowing(wave, window.length=1000, FUN=function(w, ...) length(w), window.overlap=0)
+windowing(wave, 60, FUN=function(w, ...) seewave::H(w), time.unit="seconds")
 } # }
 ```

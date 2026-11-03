@@ -157,7 +157,7 @@ meet and a triggered one can be renamed out of. <code><a href="../reference/wind
 reads such a file the same way, so windows are scheduled over the
 recording rather than over what is left of it on disk.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readAudio.html">readAudio</a></span><span class="op">(</span><span class="st">"20201103_112430T.WAV"</span>, from<span class="op">=</span><span class="fl">60</span>, to<span class="op">=</span><span class="fl">120</span>, units<span class="op">=</span><span class="st">"seconds"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readAudio.html">readAudio</a></span><span class="op">(</span><span class="st">"20201103_112430T.WAV"</span>, from<span class="op">=</span><span class="fl">60</span>, to<span class="op">=</span><span class="fl">120</span>, time.unit<span class="op">=</span><span class="st">"seconds"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/audiomothCompress.html">audiomothCompress()</a></code> goes the other way, writing a Wave
 as a triggered file and leaving out the segments whose peak amplitude
 falls below a threshold. Audio left out is not recoverable, as it is not

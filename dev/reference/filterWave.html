@@ -109,6 +109,21 @@ was not given are recorded as its <code>defaults</code>, and the version recorde
 that of its package. The description of the filter is the process the record
 is under, where it has one.</p>
     </div>
+    <div class="section level2">
+    <h2 id="the-order-of-filtering-and-windowing">The order of filtering and windowing<a class="anchor" aria-label="anchor" href="#the-order-of-filtering-and-windowing"></a></h2>
+
+
+<p>Filtering then windowing does not give the numbers windowing then filtering
+does, because the result is normalised to the peak of the wave it was given.
+Filtered before it is cut into windows, by <code><a href="windowing.html">windowing()</a></code> or in a
+<code><a href="pipeline.html">pipeline()</a></code>, the whole recording is scaled by one factor, so the level of a
+band can be compared between windows, but the whole recording has to be in
+memory. Filtered after, each window is scaled by a factor of its own, raising
+the band in every window to that window's own peak, so the levels of a band
+compared across windows mislead, but the recording can be read a window at a
+time. Both orders are sound, and the record of each filter says which was
+used.</p>
+    </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
