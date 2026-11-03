@@ -343,10 +343,13 @@
 #' of the vector recorded is the one that ran.
 #' @param shape A function with the formals to read the defaults from.
 #' @param matched The call as `.matchedCall()` matched it.
+#' @param deparser How each default is turned into text: capped in length for a
+#'   record, and whole for a pipeline's id, where two defaults that differ only
+#'   past the cap must still be told apart.
 #' @return A named list of deparsed defaults, or `NULL` if there are none.
 #' @keywords internal
 #' @noRd
-.argDefaults <- function(shape, matched) {
+.argDefaults <- function(shape, matched, deparser=.shortDeparse) {
   formal_args <- as.list(formals(shape))
   if (length(formal_args) == 0) {
     return(NULL)
@@ -363,7 +366,7 @@
   if (!any(kept)) {
     return(NULL)
   }
-  return(lapply(formal_args[kept], .shortDeparse))
+  return(lapply(formal_args[kept], deparser))
 }
 
 #' Describe a call for a process record
@@ -376,10 +379,12 @@
 #' that cannot be matched.
 #' @param fun The function being applied.
 #' @param supplied The arguments meant for it, as a list.
+#' @param deparser How each default is turned into text, as for
+#'   `.argDefaults()`.
 #' @return A list of `params` and `defaults`.
 #' @keywords internal
 #' @noRd
-.describeCall <- function(fun, supplied) {
+.describeCall <- function(fun, supplied, deparser=.shortDeparse) {
   #args() carries the formals of a primitive, which has none of its own, and is
   #not a function for the few that have no formals to carry.
   shape <- args(fun)
@@ -392,7 +397,7 @@
   }
   return(list(
     params=.matchParams(matched, supplied),
-    defaults=.argDefaults(shape, matched)
+    defaults=.argDefaults(shape, matched, deparser)
   ))
 }
 
@@ -601,19 +606,60 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
   #
   # tagApply() refuses anything that is not a wave, or a list of them, before
   # this is reached, so a caller of its own has to do the same.
+  ran <- .tagApplyRecord(
+    .w, .fun, .func, .label, .untag, ..., .described = .described,
+    .recorded = .recorded
+  )
+  return(.keepRecord(.w, ran$result, ran$record))
+}
+
+#' Apply a function to one wave, giving its result and its record apart
+#'
+#' What `.tagApplyOne()` does, short of putting the record anywhere. A result
+#' that is not a wave carries its record as an attribute, which `NULL` cannot
+#' carry, so a caller that needs the record of every call - a pipeline, which
+#' records that a step ran even where it found nothing - is given the two
+#' together instead. Handing them back is what lets that work on the workers of
+#' a cluster, where state held anywhere else would not come back.
+#'
+#' A function of this package that records itself, as [filterWave()] does,
+#' makes a better record than one made around it can: filterWave() names its
+#' filter's function and settings, where a record around it holds only the
+#' filter object. Only the outermost call ordinarily records, so `.selfRecord`
+#' lets the function's own record be made, and makes none here where it was.
+#'
+#' @param .w,.fun,.func,.label,.untag,...,.described,.recorded As for
+#'   `.tagApplyOne()`.
+#' @param .selfRecord Whether `.fun` may make its own record. Where it gives
+#'   back a tagged wave whose history is longer than that of `.w`, it did, and
+#'   no record is made here.
+#' @return A list of `result`, what `.fun` gave back, and `record`, its record,
+#'   complete but for `output` and `output_hash`. `record` is `NULL` where none
+#'   was made: for an untagged wave, inside a call already being recorded, and
+#'   for a function that recorded itself.
+#' @keywords internal
+#' @noRd
+.tagApplyRecord <- function(.w, .fun, .func, .label, .untag, ..., .described = .fun,
+                            .recorded = NULL, .selfRecord = FALSE) {
   if (is.na(.untag)) {
     .untag <- .needsUntag(.fun)
   }
   if (!.isTagged(.w) || isTRUE(.recState$active)) {
-    return(.fun(if (.untag) untagWave(.w) else .w, ...))
+    return(list(result=.fun(if (.untag) untagWave(.w) else .w, ...), record=NULL))
   }
-  .recState$active <- TRUE
-  on.exit(.recState$active <- FALSE)
+  if (!.selfRecord) {
+    .recState$active <- TRUE
+    on.exit(.recState$active <- FALSE)
+  }
   method <- .hashMethod()
   started <- .recordTime()
   input_hash <- .waveHash(.w, method)
   res <- .fun(if (.untag) untagWave(.w) else .w, ...)
   duration <- as.numeric(difftime(Sys.time(), started$time, units = "secs"))
+  if (.selfRecord && .isTaggedOne(res) &&
+      length(res@processing) > length(.w@processing)) {
+    return(list(result=res, record=NULL))
+  }
   #Described after the function has run, so that a call that fails costs nothing
   #to describe. The arguments are already evaluated by then, so naming them does
   #not run anything a second time.
@@ -630,7 +676,25 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
     input_hash = input_hash,
     hash_method = method
   )
+  return(list(result=res, record=record))
+}
 
+#' Keep a record with the result it describes
+#'
+#' A wave takes the record into its history, and is given the tags of the wave
+#' it was made from where it came back without them. Anything else carries the
+#' history of the wave it was made from, and the record, as an attribute, which
+#' `NULL` cannot carry.
+#' @param .w The wave the function was applied to.
+#' @param res What the function gave back.
+#' @param record The record `.tagApplyRecord()` made, or `NULL` for none.
+#' @return `res`, holding the record.
+#' @keywords internal
+#' @noRd
+.keepRecord <- function(.w, res, record) {
+  if (is.null(record)) {
+    return(res)
+  }
   if (!inherits(res, c("Wave", "WaveMC"))) {
     if (is.null(res)) {
       return(res)
@@ -644,7 +708,7 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
     res@metadata <- .w@metadata
     res@processing <- .w@processing
   }
-  record$output_hash <- .waveHash(res, method)
+  record$output_hash <- .waveHash(res, record$hash_method)
 
   res@processing <- c(res@processing, list(record))
   res
