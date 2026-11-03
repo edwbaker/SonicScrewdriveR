@@ -1899,6 +1899,11 @@
 - filterWave() raised an error for TaggedWave and TaggedWaveMC objects, as the
   filters do not know that class and addProcess() has no method for the plain wave
   they return. The tags are now carried across the filter.
+- frequencyStats(), entropyStats(), fcis() and corWaveMC() raised an error given a
+  tagged wave, called directly or through tagApply(), as they handed it to seewave,
+  which takes a wave only if its class is exactly "Wave" or "WaveMC". The first two
+  failed for a TaggedWave, fcis() for a TaggedWave of one channel, and corWaveMC()
+  for a TaggedWaveMC. Each now gives the result of the wave the tagged one holds.
 - addProcess() nested the processing history rather than appending to it, so the
   shape of the slot changed with every process added.
 - gs_transcribe() rewrote the sample rate in the header of a file it described as

@@ -23,8 +23,9 @@ entropyStats <- function(wave) {
 
   #meanspec() plots by default, so asking for four numbers opened a device and
   #drew a spectrum as a side effect. frequencyStats() already passes plot=FALSE
-  #on the same call.
-  spec <- meanspec(wave, plot=FALSE)
+  #on the same call. seewave takes a wave only if its class is exactly "Wave",
+  #so a TaggedWave is untagged for it, as it is in frequencyStats().
+  spec <- meanspec(untagWave(wave), plot=FALSE)
 
   data = list(
     "spectral" = list(
