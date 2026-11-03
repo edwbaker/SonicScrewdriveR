@@ -409,6 +409,20 @@
   of them are also classed `audioFileWarning`, for handling every warning about
   the file at once, and `warning`, so `suppressWarnings()` and an ordinary
   warning handler treat them as the warnings they are.
+- A new `RecordingSet` class holds a set of recordings to be analysed, as a
+  data frame with one row for each recording, wherever the recordings come
+  from. Each recording is identified by a `uri` and read from its `location`,
+  and every set has the same columns, with fixed names and units, for what is
+  known of a recording without reading it: its hash, duration, sample rate,
+  channels, codec, start, position, taxon, author, licence and rights holder.
+  recordingSet() makes a set from files, which it reads nothing from, or from a
+  data frame, and audioblast() gives one with `output="RecordingSet"`, using
+  what audioBlast has measured of a file where it has and what the file's
+  source says of it otherwise. Sets from different places are combined with
+  `rbind()`, and audioblastDownload() downloads a set from the URL each of its
+  recordings has as its location. Recordings that share a hash or a location
+  are counted as one file, as the Animal Sound Archive lists a recording of
+  several species once for each of them.
 
 ## Deprecations
 - audioblast() asks for annotations with `output="Annotation"`, as
@@ -2148,6 +2162,9 @@
   audioBlast gives, so every annotation spanned every frequency.
 - birdNetAnalyse() set up its Python environment before refusing an unknown
   `output`, and its example called it by a name it does not have.
+- audioblastRecord() given a round numeric ID, such as 100000, asked audioBlast
+  for the record with ID "1e+05", as `as.character()` writes that number. An ID
+  given as a number is now written out in full.
 
 ## Internal
 - roxygenise() corrupted the help page for `*` on a PseudoWave, so

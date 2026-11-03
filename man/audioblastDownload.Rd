@@ -14,7 +14,8 @@ audioblastDownload(
 )
 }
 \arguments{
-\item{d}{Data returned from a search using audioBlast().}
+\item{d}{Data returned from a search using audioBlast(), as a data frame or a
+\code{RecordingSet}.}
 
 \item{metadata}{If true saves the data in d as a csv file.}
 
@@ -37,4 +38,7 @@ Downloads audio files associated with a search using the audioBlast() function.
 Where audioBlast has measured a file, the SHA-256 hash of the file
 downloaded is checked against the hash audioBlast measured, and a file that
 does not match is reported through \code{on.issue}.
+
+A \link[=recordingSet]{RecordingSet} is downloaded from the URL each recording
+has as its \code{location}, and checked against its \code{hash}.
 }

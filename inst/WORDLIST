@@ -39,6 +39,7 @@ POSIXlt
 PseudoWave
 QUT
 R's
+RecordingSet
 Respeaker
 Rtools
 STP
@@ -207,6 +208,7 @@ readBirdNet
 readMetadata
 readRespeaker
 readWave
+recordingSet
 referenceIntensity
 referencePressure
 rejectDuration
