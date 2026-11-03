@@ -423,6 +423,39 @@
   recordings has as its location. Recordings that share a hash or a location
   are counted as one file, as the Animal Sound Archive lists a recording of
   several species once for each of them.
+- pipeline() writes an analysis down as steps, to be run on every recording in
+  a `RecordingSet`. Each step is an ordinary call with the wave left out, as
+  `pipeline(normalise(), filterWave(bandpass(2000, 11000), then = dutyCycle()),
+  dutyCycle())`, kept as it was written to be run later with the wave put in as
+  its first argument. Its arguments are evaluated once, when the pipeline is
+  made, so a pipeline is fixed and a variable changed afterwards does not change
+  it. A step that gives a wave passes it on to the steps after it, so a chain
+  of transformations stays flat. `then=` gives the wave instead to a pipeline of
+  the step's own, and the rest of the pipeline carries on with the wave as it
+  was, so a band and the whole recording are measured side by side. A step
+  that gives anything else is an analysis: the wave goes on as it was, and the
+  result goes into the step's record, which goes into the history of the wave,
+  so that every result traces back to what was done to the wave before it. A
+  function of this package that records itself, as filterWave() does, keeps
+  the record it makes when called directly. Pipelines join, as
+  `pipeline(p1, p2)`, and a pipeline can be a step, or the `then=` of one, at
+  any depth. task() makes a step as a value, so that a pipeline can be built in
+  code with `lapply()`; it is not called `step()`, which would mask
+  `stats::step()` wherever this package is attached.
+
+  A pipeline is identified by a hash of its steps in order: each function, its
+  arguments, named as the function names them, the defaults it was not given,
+  and the code of every package it uses, which is found by following its calls
+  through the functions of this package and of the user. Code is hashed rather
+  than version numbers, as this package keeps one version number while its
+  code changes: every function of each of those packages, the installed source
+  of scikit-maad where a step reaches it, and R's version. A function is
+  identified by its package and name, or by its own code, and never as an R
+  object, which changes when R byte-compiles it and so would give the same
+  pipeline a new id in every session. Printing a pipeline gives the start of
+  its id, its steps as an outline numbered so that a table of results can be
+  found in it, and the code it was identified by. Running a pipeline over a set
+  of recordings follows separately.
 
 ## Deprecations
 - audioblast() asks for annotations with `output="Annotation"`, as
