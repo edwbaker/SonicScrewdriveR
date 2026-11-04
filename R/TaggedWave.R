@@ -116,6 +116,11 @@ setMethod("addProcess", signature(object = "TaggedWaveMC"), .addProcess)
 #'
 #' This function takes a `Wave`/`WaveMC` object (or a list of such objects) and
 #' returns a corresponding tagged version (`TaggedWave` or `TaggedWaveMC`).
+#'
+#' A plain wave keeps the file it was read from, which [readAudio()] records,
+#' and the metadata of that file, which [`audioMetadata<-`] attaches, as
+#' attributes. Tagging moves both into the `metadata` slot, under the names
+#' `"audioFile"` and `"audioMetadata"`.
 #' @param w A `Wave` or `WaveMC` object (or list of such objects).
 #' @param origin The origin of the object (default "user").
 #' @return A `TaggedWave` or `TaggedWaveMC` object (or list of such objects).
@@ -126,12 +131,12 @@ tagWave <- function(w, origin="user") {
     return(w)
   } else if (is(w, "Wave")) {
     validateIsWave(w)
-    tw <- as(w, "TaggedWave")
+    tw <- .mdCarryStores(w, as(w, "TaggedWave"))
     tw@origin <- origin
     return(tw)
   } else if (is(w, "WaveMC")) {
     validateIsWaveMC(w)
-    tw <- as(w, "TaggedWaveMC")
+    tw <- .mdCarryStores(w, as(w, "TaggedWaveMC"))
     tw@origin <- origin
     return(tw)
   } else if (is(w, "list")) {

@@ -1,6 +1,22 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- calculateMetadata() works out what can be measured of a wave and of the file
+  it was read from, and keeps it in the wave's `metadata` slot as
+  `calculatedMetadata`. The fields are:
+  - the SHA-256 hash of the file;
+  - a digest of every sample;
+  - the frames, duration, sample rate, channels, bit depth, bit rate, codec
+    and size;
+  - when they were calculated, and by which version.
+
+  They are named as the fields audioBlast calculates, without their
+  `calculated_` prefix, so that the two can be read side by side. Nothing is
+  compared. The fields describe the file as it was read, and are carried
+  unchanged through later processes, whose records hold digests of their own.
+- readAudio() records the path of the file it read on the wave it returns, in
+  an attribute named `"audioFile"`, which tagWave() moves into the `metadata`
+  slot. calculateMetadata() reads it to find the file.
 - readMetadata() reads the record a xeno-canto comment holds. Every recording
   from that collection carries one, written into its ID3 tag and beginning
   with the collection's catalogue number, as `XC428067 (c) A Recordist //
@@ -610,6 +626,10 @@
   the paper, so `U/4` is offered rather than assumed.
 
 ## Fixes
+- tagWave() lost the metadata that `audioMetadata<-` attaches to a plain wave.
+  Tagging builds a new object from the wave's slots, and a plain wave keeps
+  that metadata in an attribute, which is not a slot. It is now moved into the
+  `metadata` slot, where readMetadata() finds it.
 - pd_dietrich2004() compares an energy against a threshold as the paper does,
   with "at least" rather than "greater than". This is the one place the package
   lets a detector depart from the convention at the top of `R/pulseDetection.R`,
