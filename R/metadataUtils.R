@@ -28,6 +28,14 @@
 #' @noRd
 .MD_STORE <- "audioMetadata"
 
+#' The name a wave keeps the path of the file it was read from under
+#'
+#' Kept as the metadata of the file is: an attribute on a plain Wave, and an
+#' entry in the metadata slot of a TaggedWave.
+#' @keywords internal
+#' @noRd
+.FILE_STORE <- "audioFile"
+
 #' Readable names for the formats these readers read
 #' @keywords internal
 #' @noRd
@@ -386,6 +394,57 @@ print.audioMetadataFields <- function(x, ...) {
 #' @noRd
 .mdIsTagged <- function(x) {
   return(methods::is(x, "TaggedWave") || methods::is(x, "TaggedWaveMC"))
+}
+
+#' The file a wave was read from
+#'
+#' @param x A Wave, WaveMC, TaggedWave or TaggedWaveMC object
+#' @return The path readAudio() recorded on the wave, or NULL
+#' @keywords internal
+#' @noRd
+.fileStore <- function(x) {
+  held <- if (.mdIsTagged(x)) x@metadata[[.FILE_STORE]] else attr(x, .FILE_STORE)
+  if (is.character(held) && length(held) == 1L && !is.na(held)) {
+    return(held)
+  }
+  return(NULL)
+}
+
+#' Record on a wave the file it was read from
+#'
+#' Only readAudio() records a file, and it gives plain waves, so the path goes
+#' in an attribute. tagWave() moves it into the metadata slot.
+#'
+#' @param x A Wave or WaveMC object
+#' @param path The path of the file
+#' @return The wave, carrying the path
+#' @keywords internal
+#' @noRd
+.fileSetStore <- function(x, path) {
+  attr(x, .FILE_STORE) <- path
+  return(x)
+}
+
+#' Move what a plain wave carries as attributes into the slot of a tagged one
+#'
+#' as() builds the tagged wave from the slots of the plain one, and the
+#' attributes a plain wave keeps its file and that file's metadata in are not
+#' slots, so tagging lost both. They go into the metadata slot, where a tagged
+#' wave keeps them.
+#'
+#' @param from The plain Wave or WaveMC object
+#' @param to The TaggedWave or TaggedWaveMC object made from it
+#' @return `to`, carrying what `from` carried
+#' @keywords internal
+#' @noRd
+.mdCarryStores <- function(from, to) {
+  for (name in c(.MD_STORE, .FILE_STORE)) {
+    held <- attr(from, name)
+    if (!is.null(held)) {
+      to@metadata[[name]] <- held
+    }
+  }
+  return(to)
 }
 
 #' Read one format of metadata out of the store a wave carries

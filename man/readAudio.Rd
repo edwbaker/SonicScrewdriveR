@@ -177,4 +177,12 @@ as the warnings they are.
 )
 }\if{html}{\out{</div>}}
 }
+
+\subsection{The file it was read from}{
+
+The wave records the path of the file it was read from, made absolute, in an
+attribute named \code{"audioFile"}, which \code{\link[=tagWave]{tagWave()}} moves into the \code{metadata} slot
+and \code{\link[=calculateMetadata]{calculateMetadata()}} reads to find the file. A wave read from part of a
+file records the same path as one read from the whole of it.
+}
 }

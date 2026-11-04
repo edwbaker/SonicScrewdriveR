@@ -794,6 +794,12 @@ test_that("readAudio reads a file under the wrong extension as what it holds", {
   wav <- system.file("extdata/STEREO.WAV", package="sonicscrewdriver")
   mp3 <- system.file("extdata/STEREO.mp3", package="sonicscrewdriver")
   flac <- system.file("extdata/STEREO.flac", package="sonicscrewdriver")
+  # Each copy is a file of its own, and readAudio() records which file it read,
+  # so only the audio is compared.
+  unfiled <- function(w) {
+    attr(w, "audioFile") <- NULL
+    return(w)
+  }
 
   # A wave file called .mp3. tuneR::readMP3() does not refuse one: it finds a
   # frame header somewhere in the PCM and decodes from there, giving back a
@@ -802,21 +808,21 @@ test_that("readAudio reads a file under the wrong extension as what it holds", {
   asMp3 <- tempfile(fileext=".mp3")
   on.exit(unlink(asMp3), add=TRUE)
   expect_true(file.copy(wav, asMp3, overwrite=TRUE))
-  expect_equal(readAudio(asMp3), readAudio(wav))
+  expect_equal(unfiled(readAudio(asMp3)), unfiled(readAudio(wav)))
 
   # An MP3 called .wav, which went to the av package instead of to readMP3()
   # and came back at a different bit depth and length.
   asWav <- tempfile(fileext=".wav")
   on.exit(unlink(asWav), add=TRUE)
   expect_true(file.copy(mp3, asWav, overwrite=TRUE))
-  expect_equal(readAudio(asWav), readAudio(mp3))
+  expect_equal(unfiled(readAudio(asWav)), unfiled(readAudio(mp3)))
 
   # A FLAC called .wav is read by the av package either way, but now without
   # being offered to tuneR::readWave() first.
   flacAsWav <- tempfile(fileext=".wav")
   on.exit(unlink(flacAsWav), add=TRUE)
   expect_true(file.copy(flac, flacAsWav, overwrite=TRUE))
-  expect_equal(readAudio(flacAsWav), readAudio(flac))
+  expect_equal(unfiled(readAudio(flacAsWav)), unfiled(readAudio(flac)))
 })
 
 test_that("A mime type given to readAudio is taken as given", {

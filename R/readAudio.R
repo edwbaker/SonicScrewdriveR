@@ -137,6 +137,12 @@
 #' )
 #' ```
 #'
+#' ## The file it was read from
+#' The wave records the path of the file it was read from, made absolute, in an
+#' attribute named `"audioFile"`, which [tagWave()] moves into the `metadata` slot
+#' and [calculateMetadata()] reads to find the file. A wave read from part of a
+#' file records the same path as one read from the whole of it.
+#'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto" to read the type from the
 #'   bytes of the file rather than from its name. Supported types are
@@ -261,7 +267,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
       }
       wave <- .waveFinite(wave, file)
       .wavRateWarning(wave, file)
-      return(wave)
+      return(.recordFile(wave, file))
     }
   }
 
@@ -879,7 +885,21 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
   if (!is.null(metadata)) {
     wave <- .mdSetStore(wave, metadata)
   }
-  return(wave)
+  return(.recordFile(wave, file))
+}
+
+#' Record on a wave the file it was read from
+#'
+#' The path is made absolute, so that it still names the file once the working
+#' directory has changed. [calculateMetadata()] reads it to find the file.
+#'
+#' @param wave A Wave or WaveMC object
+#' @param file The file the wave was read from
+#' @return The wave, carrying the path
+#' @keywords internal
+#' @noRd
+.recordFile <- function(wave, file) {
+  return(.fileSetStore(wave, normalizePath(file, winslash="/", mustWork=FALSE)))
 }
 
 #' Refuse a start or end point that is no point of any recording

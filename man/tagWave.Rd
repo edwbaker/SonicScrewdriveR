@@ -18,3 +18,9 @@ A \code{TaggedWave} or \code{TaggedWaveMC} object (or list of such objects).
 This function takes a \code{Wave}/\code{WaveMC} object (or a list of such objects) and
 returns a corresponding tagged version (\code{TaggedWave} or \code{TaggedWaveMC}).
 }
+\details{
+A plain wave keeps the file it was read from, which \code{\link[=readAudio]{readAudio()}} records,
+and the metadata of that file, which \code{\link{audioMetadata<-}} attaches, as
+attributes. Tagging moves both into the \code{metadata} slot, under the names
+\code{"audioFile"} and \code{"audioMetadata"}.
+}
