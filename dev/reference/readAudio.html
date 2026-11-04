@@ -234,6 +234,16 @@ as the warnings they are.</p>
 <span><span class="op">)</span></span></code></pre><p></p></div>
 </div>
 
+<div class="section">
+<h3 id="the-file-it-was-read-from">The file it was read from<a class="anchor" aria-label="anchor" href="#the-file-it-was-read-from"></a></h3>
+
+
+<p>The wave records the path of the file it was read from, made absolute, in an
+attribute named <code>"audioFile"</code>, which <code><a href="tagWave.html">tagWave()</a></code> moves into the <code>metadata</code> slot
+and <code><a href="calculateMetadata.html">calculateMetadata()</a></code> reads to find the file. A wave read from part of a
+file records the same path as one read from the whole of it.</p>
+</div>
+
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

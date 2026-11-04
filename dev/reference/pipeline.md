@@ -217,21 +217,21 @@ p <- pipeline(
   dutyCycle()
 )
 p
-#> <Pipeline 8487486f: 4 steps>
+#> <Pipeline a9caf434: 4 steps>
 #> 1. normalise()
 #> 2. filterWave(bandpass(2000, 11000)), then
 #>    2.1 dutyCycle()
 #> 3. dutyCycle()
-#> Code: sonicscrewdriver ceb8b473, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
+#> Code: sonicscrewdriver 68158701, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
 
 # Two bands, built in code
 pipeline(lapply(c(1000, 4000), function(f) {
   task(filterWave, bandpass(f, 2 * f), then = dutyCycle())
 }))
-#> <Pipeline 7cddccb1: 4 steps>
+#> <Pipeline 199a11f1: 4 steps>
 #> 1. filterWave(bandpass(1000, 2 * 1000)), then
 #>    1.1 dutyCycle()
 #> 2. filterWave(bandpass(4000, 2 * 4000)), then
 #>    2.1 dutyCycle()
-#> Code: sonicscrewdriver ceb8b473, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
+#> Code: sonicscrewdriver 68158701, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
 ```

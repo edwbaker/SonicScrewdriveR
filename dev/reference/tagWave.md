@@ -23,3 +23,11 @@ tagWave(w, origin = "user")
 ## Value
 
 A `TaggedWave` or `TaggedWaveMC` object (or list of such objects).
+
+## Details
+
+A plain wave keeps the file it was read from, which
+[`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md)
+records, and the metadata of that file, which `audioMetadata<-`
+attaches, as attributes. Tagging moves both into the `metadata` slot,
+under the names `"audioFile"` and `"audioMetadata"`.

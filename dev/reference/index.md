@@ -67,6 +67,9 @@
   : Read Broadcast Wave metadata
 - [`birdNetAnalyse()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/birdNetAnalyse.md)
   : Analyse sound files using BirdNET-Analyzer
+- [`calculateMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/calculateMetadata.md)
+  : Calculate what can be measured of a wave and the file it was read
+  from
 - [`channels_se()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/channels_se.md)
   : Channels for sound ecology
 - [`circularise()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/circularise.md)

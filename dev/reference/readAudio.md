@@ -209,3 +209,13 @@ ordinary warning handler treat them as the warnings they are.
       readAudio(file),
       sampleRateMismatch = function(cond) invokeRestart("muffleWarning")
     )
+
+### The file it was read from
+
+The wave records the path of the file it was read from, made absolute,
+in an attribute named `"audioFile"`, which
+[`tagWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagWave.md)
+moves into the `metadata` slot and
+[`calculateMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/calculateMetadata.md)
+reads to find the file. A wave read from part of a file records the same
+path as one read from the whole of it.
