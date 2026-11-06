@@ -120,3 +120,27 @@ test_that("the regions the package already builds are still valid", {
   #A region of no length is a region, so it is not refused
   expect_silent(validObject(new("TimeRegion", from=5, to=5, unit="samples")))
 })
+
+test_that("cutting a tagged wave to a region is recorded", {
+  w <- tuneR::sine(440, duration=44100, samp.rate=44100, stereo=TRUE)
+  tw <- tagWave(w, origin="test")
+  cut <- tw[region("seconds", 0.25, 0.5)]
+  expect_s4_class(cut, "TaggedWave")
+  expect_equal(cut@origin, "test")
+  expect_equal(cut@left, w[region("seconds", 0.25, 0.5)]@left)
+  expect_equal(cut@right, w[region("seconds", 0.25, 0.5)]@right)
+  expect_length(cut@processing, 1)
+  rec <- cut@processing[[1]]
+  expect_identical(rec$func, "[")
+  expect_equal(rec$params, list(from=0.25, to=0.5, time.unit="seconds"))
+  expect_equal(rec$input_hash, .waveHash(tw, rec$hash_method))
+  expect_equal(rec$output_hash, .waveHash(cut, rec$hash_method))
+  # A cut of a cut adds a record of its own.
+  again <- cut[region("samples", 1, 10)]
+  expect_length(again@processing, 2)
+  expect_equal(again@processing[[2]]$params, list(from=1, to=10, time.unit="samples"))
+  # A plain wave is cut without a record, and a region past its end is refused
+  # as before.
+  expect_false(.isTagged(w[region("seconds", 0.25, 0.5)]))
+  expect_error(tw[region("seconds", 2, 3)], "Time region begins after the end of the wave.")
+})

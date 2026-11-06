@@ -140,27 +140,53 @@ depseduoWave <- function(pw, n, stereo=NULL, samp.rate, bit, pcm) {
   )
 }
 
+#Whichever side of the operator the PseudoWave is on, the result is the wave it
+#met, holding the new samples, so a tagged wave keeps its tags and the
+#arithmetic is recorded in its history. With the PseudoWave on the left the
+#result used to be the wave the PseudoWave was turned into, which has no tags.
+#.Generic carries the package of the generic as an attribute, which is not part
+#of the operator's name.
 setMethod("Arith", signature(e1 = "Wave", e2 = "PseudoWave"),
   function(e1, e2){
-    e2 <- depseduoWave(e2, n=length(e1@left), stereo=e1@stereo, samp.rate=e1@samp.rate, bit=e1@bit, pcm=e1@pcm)
-    .equalWave(e1, e2)
-    e1@left <- callGeneric(e1@left, e2@left)
-    if(e1@stereo)
-      e1@right <- callGeneric(e1@right, e2@right)
-    return(e1)
+    op <- as.character(.Generic)
+    return(.tagApplyOne(
+      e1, .pseudoArith, op, NULL, FALSE, operator=op, pseudoWave=e2, pseudoFirst=FALSE
+    ))
   }
 )
 
 setMethod("Arith", signature(e1 = "PseudoWave", e2 = "Wave"),
   function(e1, e2){
-    e1 <- depseduoWave(e1, n=length(e2@left), stereo=e2@stereo, samp.rate=e2@samp.rate, bit=e2@bit, pcm=e2@pcm)
-    .equalWave(e1, e2)
-    e1@left <- callGeneric(e1@left, e2@left)
-    if(e1@stereo)
-      e1@right <- callGeneric(e1@right, e2@right)
-    return(e1)
+    op <- as.character(.Generic)
+    return(.tagApplyOne(
+      e2, .pseudoArith, op, NULL, FALSE, operator=op, pseudoWave=e1, pseudoFirst=TRUE
+    ))
   }
 )
+
+#' Combine a wave with the samples a PseudoWave stands for
+#' @param .w The wave.
+#' @param operator The arithmetic operator, as `"+"`.
+#' @param pseudoWave The PseudoWave.
+#' @param pseudoFirst Whether the PseudoWave was written on the left of the
+#'   operator, as the order matters to `-`, `/` and `^`.
+#' @return `.w`, holding the result.
+#' @keywords internal
+#' @noRd
+.pseudoArith <- function(.w, operator, pseudoWave, pseudoFirst) {
+  p <- depseduoWave(
+    pseudoWave, n=length(.w@left), stereo=.w@stereo, samp.rate=.w@samp.rate,
+    bit=.w@bit, pcm=.w@pcm
+  )
+  .equalWave(.w, p)
+  op <- match.fun(operator)
+  combine <- function(a, b) if (pseudoFirst) op(b, a) else op(a, b)
+  .w@left <- combine(.w@left, p@left)
+  if (.w@stereo) {
+    .w@right <- combine(.w@right, p@right)
+  }
+  return(.w)
+}
 
 # Every multiplication below is written with a space either side of the
 # asterisk, including the ones inside a*e2 and b*e2 that used not to be. This

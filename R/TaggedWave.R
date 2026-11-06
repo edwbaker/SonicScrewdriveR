@@ -8,18 +8,22 @@
   return(list(
     origin="character",
     metadata="list",
-    processing="list",
-    spectrogram_maad_power = "spectrogram_maad"
+    processing="list"
   ))
 }
 
 #' A S4 class for tagged waves
 #'
-#' The TaggedWave class extended the Wave class from the tuneR package so
-#' that it can include extended metadata and the results of analyses.
+#' The TaggedWave class extends the Wave class from the tuneR package so that a
+#' wave carries where it came from, what is known about it and a record of what
+#' has been done to it.
 #'
-#' @slot metadata A list for storing metadata.
-#' @slot analyses A list for storing analyses.
+#' @slot origin Where the wave came from, such as the file it was read from, or
+#'   "user".
+#' @slot metadata A list of what is known about the wave, such as the metadata
+#'   of the file it was read from.
+#' @slot processing A list holding a record of each process applied to the
+#'   wave, in the order they were applied, as described in [tagApply()].
 setClass(
   "TaggedWave",
   contains="Wave",
@@ -97,11 +101,15 @@ setMethod("addProcess", signature(object = "TaggedWave"), .addProcess)
 
 #' A S4 class for tagged multi-channel waves
 #'
-#' The TaggedWaveMC class extended the WaveMC class from the tuneR package so
-#' that it can include extended metadata and the results of analyses.
+#' The TaggedWaveMC class extends the WaveMC class from the tuneR package as
+#' the TaggedWave class extends the Wave class.
 #'
-#' @slot metadata A list for storing metadata.
-#' @slot analyses A list for storing analyses.
+#' @slot origin Where the wave came from, such as the file it was read from, or
+#'   "user".
+#' @slot metadata A list of what is known about the wave, such as the metadata
+#'   of the file it was read from.
+#' @slot processing A list holding a record of each process applied to the
+#'   wave, in the order they were applied, as described in [tagApply()].
 setClass(
   "TaggedWaveMC",
   contains="WaveMC",
@@ -205,7 +213,7 @@ untagWave <- function(w) {
 #' @noRd
 .getTags <- function(w) {
   if (is(w, "TaggedWave") | is(w, "TaggedWaveMC")) {
-    return(list("origin"=w@origin, "metadata"=w@metadata, "processing"=w@processing, spectrogram_maad_power=w@spectrogram_maad_power))
+    return(list("origin"=w@origin, "metadata"=w@metadata, "processing"=w@processing))
   }
   if (!is(w, "list")) {
     stop("Attempting to get tags from object that is not TaggedWave or TaggedWaveMC.")
