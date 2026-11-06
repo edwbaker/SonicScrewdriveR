@@ -141,6 +141,17 @@ analyses. The
 function can be used to tag a `Wave` or `WaveMC` object with additional
 metadata.
 
-In addition, combined with new classes `WaveAugment`, `WaveFilter`, and
-`WaveAnalyse` it is possible to create a self-documenting pipeline for
-audio processing and analysis (that is also compatible with the R pipe).
+A tagged wave also keeps a record of what is done to it.
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md)
+applies any function to a tagged wave and records the call, its
+arguments and the packages it came from in the wave’s `processing` slot,
+and functions of this package such as
+[`filterWave()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/filterWave.md)
+and
+[`normalise()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/normalise.md)
+record themselves. Calls written with the R pipe are recorded in the
+same way, so `tw |> normalise() |> filterWave(bandpass(2000, 11000))`
+gives a wave whose history says how it was made.
+[`pipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md)
+writes such a chain of steps down as an analysis of its own, which can
+be printed as an outline.

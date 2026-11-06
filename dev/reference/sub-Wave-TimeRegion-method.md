@@ -1,6 +1,9 @@
 # Allow subsetting a Wave object with a TimeRegion
 
-Allow subsetting a Wave object with a TimeRegion
+Applied to a `TaggedWave`, the cut is recorded in the `processing` slot
+of the result, as described in
+[`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md),
+with the `from`, `to` and `time.unit` of the region.
 
 ## Usage
 

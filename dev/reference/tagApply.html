@@ -170,8 +170,7 @@ for more than it is worth. An option is not carried to the workers of a <code>cl
 cluster that does not inherit it, which use the default and record that they
 did.</p>
 <p>If <code>fun</code> returns a wave without tags, the <code>origin</code>, <code>metadata</code> and
-<code>processing</code> of <code>w</code> are carried over to it. The <code>spectrogram_maad_power</code> slot
-is not carried over, as it no longer matches the signal.</p>
+<code>processing</code> of <code>w</code> are carried over to it.</p>
 <p>If <code>fun</code> returns something that is not a wave, such as a number or a data
 frame, there is no tagged object to hold the record. The result is returned
 with an attribute <code>processing</code> holding the history of <code>w</code> followed by the new

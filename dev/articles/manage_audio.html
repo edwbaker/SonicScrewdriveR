@@ -188,10 +188,17 @@ additional information about the audio file, such as the location and
 time of recording, and the results of analyses. The
 <code><a href="../reference/tagWave.html">tagWave()</a></code> function can be used to tag a <code>Wave</code>
 or <code>WaveMC</code> object with additional metadata.</p>
-<p>In addition, combined with new classes <code>WaveAugment</code>,
-<code>WaveFilter</code>, and <code>WaveAnalyse</code> it is possible to
-create a self-documenting pipeline for audio processing and analysis
-(that is also compatible with the R pipe).</p>
+<p>A tagged wave also keeps a record of what is done to it.
+<code><a href="../reference/tagApply.html">tagApply()</a></code> applies any function to a tagged wave and
+records the call, its arguments and the packages it came from in the
+wave’s <code>processing</code> slot, and functions of this package such
+as <code><a href="../reference/filterWave.html">filterWave()</a></code> and <code><a href="../reference/normalise.html">normalise()</a></code> record
+themselves. Calls written with the R pipe are recorded in the same way,
+so
+<code>tw |&gt; normalise() |&gt; filterWave(bandpass(2000, 11000))</code>
+gives a wave whose history says how it was made. <code><a href="../reference/pipeline.html">pipeline()</a></code>
+writes such a chain of steps down as an analysis of its own, which can
+be printed as an outline.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
