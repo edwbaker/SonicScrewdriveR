@@ -55,7 +55,9 @@ attribute tells such a file apart from one that was never run. A table is
 listed once a file has run without failing.
 
 A file that was run more than once, by \code{retry = TRUE}, gives the rows of its
-last run.
+last run that did not fail, or its last error where every run failed. A file
+at a URL that failed before its hash was known is matched to its hash once a
+later run finds it.
 }
 \seealso{
 \code{\link[=runPipeline]{runPipeline()}}

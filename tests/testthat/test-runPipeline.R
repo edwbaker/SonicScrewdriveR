@@ -141,22 +141,190 @@ test_that("batches are written one at a time, and a stopped batch is run again",
   expect_true(file.exists(file.path(batches, "000002.rds")))
 })
 
-test_that("two files that hold the same bytes give their rows once", {
+test_that("copies of one file are run once, with the columns all of them agree on", {
   .quickIds()
   dir <- withr::local_tempdir()
   fa <- .writeTestWav(file.path(dir, "a.wav"))
   copy <- file.path(dir, "copy.wav")
   file.copy(fa, copy)
   set <- recordingSet(c(fa, copy))
-  p <- pipeline(length())
+  # The copies disagree on when the recording began.
+  set$start <- as.POSIXct(c("2026-05-01 04:00:00", "2026-05-01 05:00:00"), tz="UTC")
+  p <- pipeline(windowing(1, time.unit="seconds", then=length()))
   for (size in c(1000, 1)) {
     store <- file.path(dir, paste0("store", size))
-    out <- runPipeline(p, set, store, batch=size, quiet=TRUE)
+    msgs <- capture_messages(out <- runPipeline(p, set, store, batch=size))
+    expect_match(msgs[1], "1 file to run, 0 already in the store")
     expect_equal(out$hash, rep(.sha256(fa), 2))
     res <- pipelineResults(store, p)
-    expect_equal(res[[1]]$file, .sha256(fa))
+    expect_equal(res[[1]]$file, rep(.sha256(fa), 2))
+    expect_false("window_time" %in% names(res[[1]]))
     expect_equal(nrow(attr(res, "files")), 1)
   }
+})
+
+test_that("of two downloads that hold the same bytes, the rows of one that ran are kept", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  src <- .writeTestWav(file.path(dir, "src.wav"))
+  local_mocked_bindings(.audioblast_download=function(url, path) {
+    file.copy(src, path)
+    invisible(path)
+  })
+  urls <- c("https://example.org/a/one.wav", "https://example.org/b/two.wav")
+  set <- recordingSet(data.frame(uri=c("r1", "r2"), location=urls))
+  for (failing in c("/a/", "/b/")) {
+    p <- pipeline((function(w) {
+      if (grepl(failing, w@origin, fixed=TRUE)) stop("not this one")
+      length(w)
+    })())
+    for (size in c(1000, 1)) {
+      store <- tempfile("store", tmpdir=dir)
+      out <- runPipeline(p, set, store, batch=size, quiet=TRUE)
+      expect_equal(out$hash, rep(.sha256(src), 2))
+      res <- pipelineResults(store, p)
+      files <- attr(res, "files")
+      # One file, which ran, with the rows of the download that did not fail.
+      expect_equal(files$status, "ok")
+      expect_equal(files$location, urls[!grepl(failing, urls, fixed=TRUE)])
+      expect_equal(res[[1]]$file, .sha256(src))
+      expect_equal(res[[1]]$value, 16000)
+      expect_equal(res[[1]]$error, NA_character_)
+    }
+  }
+  # Where both run, the rows of the first are kept, once.
+  p <- pipeline(length())
+  runPipeline(p, set, file.path(dir, "both"), quiet=TRUE)
+  res <- pipelineResults(file.path(dir, "both"), p)
+  expect_equal(res[[1]]$value, 16000)
+})
+
+test_that("a download that failed and then ran is taken for one file", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  src <- .writeTestWav(file.path(dir, "src.wav"))
+  up <- FALSE
+  local_mocked_bindings(.audioblast_download=function(url, path) {
+    if (!up) stop("HTTP 503")
+    file.copy(src, path)
+    invisible(path)
+  })
+  url <- "https://example.org/files/later.wav"
+  set <- recordingSet(data.frame(uri="r", location=url))
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  runPipeline(p, set, store, quiet=TRUE)
+  expect_equal(attr(pipelineResults(store, p), "files")$status, "error")
+  up <- TRUE
+  out <- runPipeline(p, set, store, retry=TRUE, quiet=TRUE)
+  expect_equal(out$hash, .sha256(src))
+  res <- pipelineResults(store, p)
+  files <- attr(res, "files")
+  expect_equal(nrow(files), 1)
+  expect_equal(files$status, "ok")
+  expect_equal(files$batch, 2)
+  # The failure before its hash was known leaves no error row behind.
+  expect_equal(res[[1]]$file, .sha256(src))
+  expect_equal(res[[1]]$error, NA_character_)
+})
+
+test_that("downloads of the same name from different places are kept apart", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  srcs <- c(.writeTestWav(file.path(dir, "s1.wav"), seconds=2, seed=1),
+            .writeTestWav(file.path(dir, "s2.wav"), seconds=3, seed=2))
+  urls <- c("https://example.org/site-a/audio.wav", "https://example.org/site-b/audio.wav")
+  local_mocked_bindings(.audioblast_download=function(url, path) {
+    file.copy(srcs[match(url, urls)], path)
+    invisible(path)
+  })
+  set <- recordingSet(data.frame(uri=c("a", "b"), location=urls))
+  keep <- file.path(dir, "keep")
+  p <- pipeline(length())
+  out <- runPipeline(p, set, file.path(dir, "store"), keep=keep, quiet=TRUE)
+  expect_equal(out$hash, c(.sha256(srcs[1]), .sha256(srcs[2])))
+  expect_equal(pipelineResults(file.path(dir, "store"), p)[[1]]$value, c(16000, 24000))
+  kept <- list.files(keep, recursive=TRUE)
+  expect_length(kept, 2)
+  expect_equal(basename(kept), c("audio.wav", "audio.wav"))
+})
+
+test_that("a file moved since it was run is found in the store, and comes back with its hash", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  fa <- .writeTestWav(file.path(dir, "a.wav"))
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  runPipeline(p, recordingSet(fa), store, quiet=TRUE)
+  moved <- file.path(dir, "moved.wav")
+  file.rename(fa, moved)
+  msgs <- capture_messages(out <- runPipeline(p, recordingSet(moved), store))
+  expect_match(msgs[1], "0 files to run, 1 already in the store")
+  expect_equal(out$hash, .sha256(moved))
+})
+
+test_that("a file that cannot be hashed before the run fails alone", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  good <- .writeTestWav(file.path(dir, "good.wav"))
+  locked <- .writeTestWav(file.path(dir, "locked.wav"), seed=2)
+  real <- .audioblast_sha256
+  local_mocked_bindings(.audioblast_sha256=function(path) {
+    if (grepl("locked", path, fixed=TRUE)) stop("Permission denied")
+    real(path)
+  })
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  out <- runPipeline(p, recordingSet(c(good, locked)), store, quiet=TRUE)
+  files <- attr(pipelineResults(store, p), "files")
+  expect_equal(files$status, c("ok", "error"))
+  expect_equal(files$error[2], "Permission denied")
+  expect_equal(out$hash, c(.sha256(good), NA))
+})
+
+test_that("local locations reach the batches as absolute paths", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  .writeTestWav(file.path(dir, "rel.wav"))
+  withr::local_dir(dir)
+  set <- recordingSet(data.frame(uri="r", location="rel.wav"))
+  given <- NULL
+  local_mocked_bindings(.runPipelineBatch=function(job, p, id, dir, keep) {
+    given <<- job
+    data.frame(status="ok")
+  })
+  out <- runPipeline(pipeline(length()), set, "store", quiet=TRUE)
+  expect_equal(given$files$location, normalizePath(file.path(dir, "rel.wav"), winslash="/"))
+  expect_equal(given$rows$location, given$files$location)
+  # The set comes back with its locations as they were given.
+  expect_equal(out$location, "rel.wav")
+})
+
+test_that("store files are written whole or not at all", {
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "x.rds")
+  .saveWhole(list(a=1), path)
+  expect_equal(readRDS(path), list(a=1))
+  expect_equal(list.files(dir), "x.rds")
+  # A file that cannot be put in place leaves nothing behind.
+  blocked <- file.path(dir, "blocked.rds")
+  dir.create(blocked)
+  expect_error(.saveWhole(1, blocked), paste0("Could not write ", blocked, "."), fixed=TRUE)
+  expect_setequal(list.files(dir), c("x.rds", "blocked.rds"))
+})
+
+test_that("a file left half written in a store is not read", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  set <- recordingSet(.writeTestWav(file.path(dir, "a.wav")))
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  runPipeline(p, set, store, quiet=TRUE)
+  batches <- file.path(store, .pipelineIdentity(p)$id, "batches")
+  writeLines("half", file.path(batches, "000002.rds.1a2b.part"))
+  expect_equal(nrow(pipelineResults(store, p)[[1]]), 1)
+  msgs <- capture_messages(runPipeline(p, set, store))
+  expect_match(msgs, "0 files to run, 1 already in the store")
 })
 
 test_that("files at a URL are downloaded, checked and deleted unless kept", {
@@ -186,7 +354,7 @@ test_that("files at a URL are downloaded, checked and deleted unless kept", {
   # Kept, and not fetched again where it is already there.
   keep <- file.path(dir, "keep")
   runPipeline(p, set, file.path(dir, "store2"), keep=keep, quiet=TRUE)
-  expect_true(file.exists(file.path(keep, "a.wav")))
+  expect_equal(basename(list.files(keep, recursive=TRUE)), "a.wav")
   runPipeline(p, set, file.path(dir, "store3"), keep=keep, quiet=TRUE)
   expect_length(fetched, 2)
   expect_equal(pipelineResults(file.path(dir, "store3"), p)[[1]]$value, 16000)
@@ -229,7 +397,7 @@ test_that("a download that fails is recorded and the run moves on", {
     expect_equal(res[[1]]$file, c(.sha256(file.path(dir, "a.wav")), NA))
     expect_equal(res[[1]]$error, c(NA, files$error[1]))
   }
-  expect_length(list.files(file.path(dir, "keep")), 0)
+  expect_length(list.files(file.path(dir, "keep"), recursive=TRUE), 0)
 })
 
 test_that("files that cannot be found, read or matched to their hash fail", {
@@ -294,7 +462,8 @@ test_that("each file is tagged with its location and what its recordings agree o
   store <- file.path(dir, "store")
   runPipeline(p, set, store, quiet=TRUE)
   res <- pipelineResults(store, p)
-  expect_equal(res[[1]]$value.origin, fa)
+  # Its location, made absolute.
+  expect_equal(res[[1]]$value.origin, normalizePath(fa, winslash="/"))
   expect_equal(res[[1]]$value.lat, 51.5)
   expect_false(res[[1]]$value.has_taxon)
   expect_equal(res[[1]]$value.hash, .sha256(fa))

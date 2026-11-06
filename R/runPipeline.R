@@ -20,8 +20,11 @@
 #' A file is known by the SHA-256 hash of its bytes. A file the set gives a hash
 #' has to match it, and a local file the set gives none is hashed before the run
 #' starts, so that a file already in the store is recognised wherever it has
-#' been moved to. A file at a URL the set gives no hash is recognised by its
-#' location once it has been run.
+#' been moved to, and copies of one file are run once. A file that cannot be
+#' hashed then is left to fail when it is read. A file at a URL the set gives no
+#' hash is recognised by its location once it has been run. A local location is
+#' made absolute before the run, as a worker of a cluster can be working in
+#' another folder.
 #'
 #' @section Batches:
 #' The files not yet in the store are run in batches of `batch` files, and each
@@ -52,7 +55,9 @@
 #'   exist.
 #' @param batch How many files to run between writes to the store.
 #' @param keep A folder to keep downloaded files in, or `NULL` to delete each
-#'   one once it has been run. A file already in it is not downloaded again.
+#'   one once it has been run. Each file is kept in a folder of its own, named
+#'   from its URL, so that files of the same name from different places are
+#'   kept apart, and one already there is not downloaded again.
 #' @param retry If `TRUE`, files that failed in an earlier run are run again.
 #' @param cl A cluster from the parallel package, to run batches on, or `NULL`.
 #' @param quiet If `TRUE`, no progress is reported.
@@ -102,10 +107,17 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
   }
   identity <- .pipelineIdentity(p)
   dir <- .pipelineStore(store, p, identity)
-  group <- .recordingSetFiles(set)
-  files <- .setFiles(set, group)
+  work <- .absoluteLocations(set)
+  group <- .recordingSetFiles(work)
   records <- .storeRecords(.readManifests(dir))
-  files$hash <- .knownHashes(files, records)
+  #The hashes found before the run go into the set, which is grouped again, so
+  #that recordings found to be of the same file are run once, and the columns
+  #they agree on are agreed across all of them.
+  found <- .knownHashes(.setFiles(work, group), records)
+  unhashed <- is.na(work$hash)
+  work$hash[unhashed] <- found[group][unhashed]
+  group <- .recordingSetFiles(work)
+  files <- .setFiles(work, group)
   todo <- files[.toRun(files, .latestFiles(records), retry), , drop=FALSE]
   if (!quiet) {
     message(
@@ -114,7 +126,7 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
       nrow(files) - nrow(todo), " already in the store."
     )
   }
-  jobs <- .batchJobs(todo, set, group, batch, .nextBatch(dir))
+  jobs <- .batchJobs(todo, work, group, batch, .nextBatch(dir))
   if (is.null(cl)) {
     for (i in seq_along(jobs)) {
       ran <- .runPipelineBatch(jobs[[i]], p, identity$id, dir, keep)
@@ -131,6 +143,9 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
       )))
     }
   }
+  #The hashes found before the run come first, as a file that has been moved is
+  #in the store under its old location only.
+  set$hash <- work$hash
   return(invisible(.withHashes(set, .storeRecords(.readManifests(dir)))))
 }
 
@@ -166,7 +181,9 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
 #' listed once a file has run without failing.
 #'
 #' A file that was run more than once, by `retry = TRUE`, gives the rows of its
-#' last run.
+#' last run that did not fail, or its last error where every run failed. A file
+#' at a URL that failed before its hash was known is matched to its hash once a
+#' later run finds it.
 #'
 #' @param store The folder [runPipeline()] wrote to.
 #' @param p The `Pipeline`, or its id. The id changes with the code of the
@@ -244,6 +261,42 @@ pipelineResults <- function(store, p, step=NULL) {
   return(!is.na(x) & grepl("^https?://", x, ignore.case=TRUE))
 }
 
+#' A set with its local locations made absolute
+#'
+#' A set made from a data frame keeps a location as it was given, and a worker
+#' of a cluster can be working in another folder, where a relative path names
+#' another file or none.
+#' @param set A RecordingSet.
+#' @return The set.
+#' @keywords internal
+#' @noRd
+.absoluteLocations <- function(set) {
+  local <- !is.na(set$location) & !.isUrl(set$location)
+  set$location[local] <- normalizePath(set$location[local], winslash="/", mustWork=FALSE)
+  return(set)
+}
+
+#' Write an object to a file in one step
+#'
+#' It is written to a file beside the one it is for and renamed into place, so a
+#' run stopped part way through leaves the whole file or none, never a truncated
+#' one that could not be read again. The name the file is written under first
+#' matches none of the names the store reads.
+#' @param object The object.
+#' @param path The file.
+#' @return `path`, invisibly.
+#' @keywords internal
+#' @noRd
+.saveWhole <- function(object, path) {
+  part <- tempfile(paste0(basename(path), "."), tmpdir=dirname(path), fileext=".part")
+  on.exit(unlink(part))
+  saveRDS(object, part)
+  if (!suppressWarnings(file.rename(part, path))) {
+    stop("Could not write ", path, ".")
+  }
+  return(invisible(path))
+}
+
 #' The folder of a pipeline in a store
 #'
 #' Made with the pipeline in it the first time the pipeline is run into the
@@ -259,7 +312,7 @@ pipelineResults <- function(store, p, step=NULL) {
   dir.create(file.path(dir, "batches"), recursive=TRUE, showWarnings=FALSE)
   record <- file.path(dir, "pipeline.rds")
   if (!file.exists(record)) {
-    saveRDS(list(
+    .saveWhole(list(
       pipeline=p, id=identity$id, code=identity$code,
       created=structure(Sys.time(), tzone="UTC"), R=R.version.string
     ), record)
@@ -306,7 +359,9 @@ pipelineResults <- function(store, p, step=NULL) {
 #' The hash of each file, as far as it can be known before the run
 #'
 #' A file at a URL the set gives no hash is given the one the store has for its
-#' location, and a local file that exists is hashed.
+#' location, and a local file that exists is hashed. A local file that cannot be
+#' read to hash it is left unknown, to fail when it is read, rather than stopping
+#' the run for every file.
 #' @param files The files, as `.setFiles()` gives them.
 #' @param records Every record of the store, as `.storeRecords()` gives them.
 #' @return The hash of each file, `NA` where it is not known.
@@ -318,8 +373,9 @@ pipelineResults <- function(store, p, step=NULL) {
   url <- unknown & .isUrl(files$location)
   hash[url] <- .hashAt(files$location[url], records)
   local <- which(unknown & !url & file.exists(files$location) & !dir.exists(files$location))
-  hash[local] <- vapply(files$location[local], .audioblast_sha256, character(1),
-                        USE.NAMES=FALSE)
+  hash[local] <- vapply(files$location[local], function(path) {
+    tryCatch(.audioblast_sha256(path), error=function(e) NA_character_)
+  }, character(1), USE.NAMES=FALSE)
   return(hash)
 }
 
@@ -391,7 +447,12 @@ pipelineResults <- function(store, p, step=NULL) {
 #'
 #' Its tables are written first, and the list of the files it covered last, so
 #' a batch stopped part way through has no list, and is neither read nor taken
-#' to have been run.
+#' to have been run. Each is written whole or not at all.
+#'
+#' Two files of the set can turn out to hold the same bytes once they are
+#' hashed, as two URLs the set gives no hash for can. Each is recorded, so that
+#' both locations are known to hold that hash, and the rows kept are those of
+#' the first of them to run without failing.
 #' @param job A batch, as `.batchJobs()` gives it.
 #' @param p The pipeline.
 #' @param id Its id.
@@ -405,27 +466,25 @@ pipelineResults <- function(store, p, step=NULL) {
   numbers <- stats::setNames(outline$number, outline$name)
   records <- list()
   tables <- list()
+  measured <- character(0)
   for (i in seq_len(nrow(job$files))) {
     f <- job$files[i, , drop=FALSE]
     ran <- .runPipelineFile(p, id, f, job$rows[job$rows$.file == f$file, , drop=FALSE], keep)
-    #Two files of the set can turn out to hold the same bytes once they are
-    #hashed, and only the rows of the first are kept.
-    seen <- vapply(records, `[[`, character(1), "file")
-    again <- !is.na(ran$record$file) && ran$record$file %in% seen
     records[[length(records) + 1]] <- ran$record
-    if (again) {
+    if (ran$record$status != "ok" || ran$record$file %in% measured) {
       next
     }
+    measured <- c(measured, ran$record$file)
     for (name in names(ran$results)) {
       tables[[name]] <- c(tables[[name]], list(ran$results[[name]]))
     }
   }
   for (name in names(tables)) {
-    saveRDS(.bindResults(tables[[name]]), .tablePath(dir, job$number, numbers[[name]]))
+    .saveWhole(.bindResults(tables[[name]]), .tablePath(dir, job$number, numbers[[name]]))
   }
   files <- do.call(rbind, lapply(records, as.data.frame, stringsAsFactors=FALSE))
   files$batch <- rep(job$number, nrow(files))
-  saveRDS(list(
+  .saveWhole(list(
     batch=job$number,
     files=files,
     tables=data.frame(number=unname(numbers[names(tables)]), name=names(tables),
@@ -503,10 +562,12 @@ pipelineResults <- function(store, p, step=NULL) {
 
 #' Fetch a file
 #'
-#' A local file is read where it is. A file at a URL is downloaded into the
-#' folder `keep` names, where one already there is used as it is, or otherwise
-#' into a temporary folder of its own, to be deleted once the file has been run.
-#' It is named as [audioblastDownload()] names it.
+#' A local file is read where it is. A file at a URL is downloaded into a folder
+#' of its own: within the folder `keep` names, one named from the start of the
+#' SHA-256 hash of its URL, where one already there is used as it is, or
+#' otherwise a temporary folder, to be deleted once the file has been run. It is
+#' named as [audioblastDownload()] names it, which can give two URLs the same
+#' name, so the folder is what tells their files apart.
 #' @param location Where the file is.
 #' @param rows The rows of the set that are the file.
 #' @param keep The folder to keep downloads in, or `NULL`.
@@ -522,7 +583,9 @@ pipelineResults <- function(store, p, step=NULL) {
     return(list(path=location, temporary=NULL))
   }
   temporary <- if (is.null(keep)) tempfile("runPipeline")
-  folder <- if (is.null(keep)) temporary else keep
+  folder <- if (is.null(keep)) temporary else file.path(
+    keep, substr(digest::digest(location, algo="sha256", serialize=FALSE), 1, 16)
+  )
   dir.create(folder, recursive=TRUE, showWarnings=FALSE)
   path <- file.path(folder, .audioblast_file_names(rows[1, , drop=FALSE], location))
   if (!file.exists(path)) {
@@ -634,14 +697,28 @@ pipelineResults <- function(store, p, step=NULL) {
   )))
 }
 
-#' The last record of every file in a store
+#' The record that stands for every file in a store
+#'
+#' A record made before a file's hash was known, as of a download that failed,
+#' is matched to the hash a later record found at the same location, so that the
+#' two are taken for one file. Of the records of a file, the last that did not
+#' fail stands for it, or the last of all where every run failed: only a failed
+#' file is run again, so a file that failed after running is a second file of
+#' the same bytes, whose rows are those of the run that did not.
 #' @param records What `.storeRecords()` gives.
-#' @return The records, one for each file.
+#' @return The records, one for each file, in the order they were written, with
+#'   the hash found later in `file` where it was not known before.
 #' @keywords internal
 #' @noRd
 .latestFiles <- function(records) {
+  unknown <- is.na(records$file)
+  records$file[unknown] <- .hashAt(records$location[unknown], records)
   key <- .fileKey(records$file, records$location, records$uri)
-  files <- records[!duplicated(key, fromLast=TRUE), , drop=FALSE]
+  #Within each file, failures before runs that did not fail, each in the order
+  #written, so that the last row of each file is the one that stands for it.
+  o <- order(key, records$status == "ok", seq_along(key), method="radix")
+  chosen <- sort(o[!duplicated(key[o], fromLast=TRUE)])
+  files <- records[chosen, , drop=FALSE]
   rownames(files) <- NULL
   return(files)
 }

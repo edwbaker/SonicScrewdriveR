@@ -26,7 +26,9 @@ exist.}
 \item{batch}{How many files to run between writes to the store.}
 
 \item{keep}{A folder to keep downloaded files in, or \code{NULL} to delete each
-one once it has been run. A file already in it is not downloaded again.}
+one once it has been run. Each file is kept in a folder of its own, named
+from its URL, so that files of the same name from different places are
+kept apart, and one already there is not downloaded again.}
 
 \item{retry}{If \code{TRUE}, files that failed in an earlier run are run again.}
 
@@ -61,8 +63,11 @@ of the set that all of its recordings agree on, such as \code{start}, \code{lat}
 A file is known by the SHA-256 hash of its bytes. A file the set gives a hash
 has to match it, and a local file the set gives none is hashed before the run
 starts, so that a file already in the store is recognised wherever it has
-been moved to. A file at a URL the set gives no hash is recognised by its
-location once it has been run.
+been moved to, and copies of one file are run once. A file that cannot be
+hashed then is left to fail when it is read. A file at a URL the set gives no
+hash is recognised by its location once it has been run. A local location is
+made absolute before the run, as a worker of a cluster can be working in
+another folder.
 }
 
 \section{Batches}{
