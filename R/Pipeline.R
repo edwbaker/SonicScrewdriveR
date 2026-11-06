@@ -31,9 +31,9 @@
 #' a variable, or a list of them, is given by its name, and `NULL` gives no
 #' steps.
 #'
-#' A pipeline does not carry the recordings it is run on. They are given when
-#' it is run, so that the same pipeline can be run on any number of sets, and
-#' its id is the same whichever set it runs on.
+#' A pipeline does not carry the recordings it is run on. They are given to
+#' [runPipeline()] when it is run, so that the same pipeline can be run on any
+#' number of sets, and its id is the same whichever set it runs on.
 #'
 #' @section How waves and results pass between steps:
 #' What a step does to the pipeline depends on what it gives back, which is known
@@ -146,8 +146,9 @@
 #' @param then Optional. A pipeline, or a single step, to give the wave the step
 #'   gives back, as described in Details.
 #' @return A `Pipeline`. `task()` gives a pipeline of one step.
-#' @seealso [tagApply()], whose records the steps leave, and [flattenOutput()],
-#'   which turns their results into rows.
+#' @seealso [runPipeline()] to run one over a set of recordings, [tagApply()],
+#'   whose records the steps leave, and [flattenOutput()], which turns their
+#'   results into rows.
 #' @export
 #' @examples
 #' p <- pipeline(

@@ -1,0 +1,745 @@
+#' Run a pipeline over a set of recordings
+#'
+#' Runs a [pipeline()] on every file of a [RecordingSet][recordingSet()] and
+#' writes its results to a folder, the store. The store is the whole state of a
+#' run, so the same call made again carries on where the last one stopped, and
+#' the results are read back with [pipelineResults()].
+#'
+#' @section Files:
+#' The recordings of a set that share a hash or a location are one file, as a
+#' recording the Animal Sound Archive lists under three species is, and each
+#' file is run once. A file is fetched from its location: a local file is read
+#' where it is, and one at a URL is downloaded, then deleted once it has been
+#' run unless `keep` names a folder to keep it in. Each file is read whole by
+#' [readAudio()], tagged with its location as its origin and with the columns
+#' of the set that all of its recordings agree on, such as `start`, `lat` and
+#' `lon`, in the `"recordingSet"` entry of its metadata, and measured by
+#' [calculateMetadata()]. Columns its recordings disagree on, such as the
+#' `taxon` of a file listed under three species, are left in the set.
+#'
+#' A file is known by the SHA-256 hash of its bytes. A file the set gives a hash
+#' has to match it, and a local file the set gives none is hashed before the run
+#' starts, so that a file already in the store is recognised wherever it has
+#' been moved to. A file at a URL the set gives no hash is recognised by its
+#' location once it has been run.
+#'
+#' @section Batches:
+#' The files not yet in the store are run in batches of `batch` files, and each
+#' batch is written to the store once all of its files have been run. Stopping a
+#' run loses only the batch it was in, and the next run starts again from that
+#' batch. With `cl`, a cluster from the parallel package, each worker runs whole
+#' batches and writes them itself, and needs this package installed.
+#'
+#' @section Failures:
+#' A file that cannot be fetched or read, that does not match the hash the set
+#' gives it, or on which a step fails, is recorded as failed with the reason,
+#' and the run moves on. It has a row in every table of results, with `error`
+#' saying what went wrong, and it is not run again unless `retry` is `TRUE`.
+#'
+#' @section The store:
+#' The store holds a folder for each pipeline run into it, named by the
+#' pipeline's id, so pipelines that share a store are kept apart and a file is
+#' run once for each of them. That folder holds the pipeline itself, in
+#' `pipeline.rds`, and a `batches` folder with a list of the files each batch
+#' covered and a file for each of its tables of results, so that one table can
+#' be read without the others. As the id covers the code of every package a
+#' step uses, a pipeline run after any of them has changed is run into a folder
+#' of its own.
+#'
+#' @param p A `Pipeline`.
+#' @param set A `RecordingSet`.
+#' @param store The folder to write the results to. It is made if it does not
+#'   exist.
+#' @param batch How many files to run between writes to the store.
+#' @param keep A folder to keep downloaded files in, or `NULL` to delete each
+#'   one once it has been run. A file already in it is not downloaded again.
+#' @param retry If `TRUE`, files that failed in an earlier run are run again.
+#' @param cl A cluster from the parallel package, to run batches on, or `NULL`.
+#' @param quiet If `TRUE`, no progress is reported.
+#' @return The set, invisibly, with the hash of every file the store holds
+#'   filled in where the set gave none, so that its rows can be joined to the
+#'   results by `hash`.
+#' @seealso [pipeline()] to write one, and [pipelineResults()] to read what a
+#'   run wrote.
+#' @export
+#' @examples
+#' \dontrun{
+#' # Working out a pipeline's id hashes the code of every package it uses,
+#' # which takes some seconds.
+#' f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
+#' set <- recordingSet(f, source="AudioMoth")
+#' p <- pipeline(windowing(1, time.unit="seconds", then=dutyCycle()))
+#' store <- file.path(tempdir(), "store")
+#' set <- runPipeline(p, set, store)
+#' res <- pipelineResults(store, p)
+#' head(res[[1]])
+#' merge(res[[1]], set, by.x="file", by.y="hash")[, c("window_start", "value", "uri")]
+#' }
+runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NULL,
+                        quiet=FALSE) {
+  if (!inherits(p, "Pipeline")) {
+    stop("runPipeline() runs a Pipeline, not ", .aDescription(p), ".")
+  }
+  if (!inherits(set, "RecordingSet")) {
+    stop("runPipeline() runs over a RecordingSet, not ", .aDescription(set),
+         ". recordingSet() makes one.")
+  }
+  .validateFolder(store, "store")
+  if (!is.numeric(batch) || length(batch) != 1 || is.na(batch) || batch < 1 ||
+      batch != round(batch)) {
+    stop("batch must be a whole number of files, at least 1.")
+  }
+  if (!is.null(keep)) {
+    .validateFolder(keep, "keep")
+  }
+  if (!isTRUE(retry) && !isFALSE(retry)) {
+    stop("retry must be TRUE or FALSE.")
+  }
+  #Made absolute, as a worker of a cluster can be working in another folder.
+  store <- .madeFolder(store)
+  if (!is.null(keep)) {
+    keep <- .madeFolder(keep)
+  }
+  identity <- .pipelineIdentity(p)
+  dir <- .pipelineStore(store, p, identity)
+  group <- .recordingSetFiles(set)
+  files <- .setFiles(set, group)
+  records <- .storeRecords(.readManifests(dir))
+  files$hash <- .knownHashes(files, records)
+  todo <- files[.toRun(files, .latestFiles(records), retry), , drop=FALSE]
+  if (!quiet) {
+    message(
+      "Pipeline ", substr(identity$id, 1, 8), ": ", nrow(todo),
+      if (nrow(todo) == 1) " file" else " files", " to run, ",
+      nrow(files) - nrow(todo), " already in the store."
+    )
+  }
+  jobs <- .batchJobs(todo, set, group, batch, .nextBatch(dir))
+  if (is.null(cl)) {
+    for (i in seq_along(jobs)) {
+      ran <- .runPipelineBatch(jobs[[i]], p, identity$id, dir, keep)
+      if (!quiet) {
+        message(.batchReport(ran, paste("Batch", i, "of", length(jobs))))
+      }
+    }
+  } else if (length(jobs) > 0) {
+    ran <- parallel::parLapply(cl, jobs, .runPipelineBatch, p=p, id=identity$id,
+                               dir=dir, keep=keep)
+    if (!quiet) {
+      message(.batchReport(do.call(rbind, ran), paste(
+        length(jobs), if (length(jobs) == 1) "batch" else "batches"
+      )))
+    }
+  }
+  return(invisible(.withHashes(set, .storeRecords(.readManifests(dir)))))
+}
+
+#' Read the results of a pipeline from a store
+#'
+#' @description
+#' Reads what [runPipeline()] wrote: a table for each analysis step of the
+#' pipeline, named by the step's path through it, as
+#' `windowing(60, time.unit = "seconds") / maad_temporal_entropy()`, in the order
+#' of its outline. Each table holds one measurement at one grain, so values from
+#' windows of different lengths, or from raw and filtered audio, are never in
+#' the same table.
+#'
+#' @details
+#' Every table has these columns, in this order:
+#'
+#' * `file`: the SHA-256 hash of the file the row was measured on, which joins
+#'   to the `hash` of the set that [runPipeline()] gives back.
+#' * `pipeline`: the id of the pipeline.
+#' * `cut_start`, `cut_end`, `window_start`, `window_end`, `window_length`:
+#'   where in the recording the row was measured, in seconds from its start,
+#'   for a step inside a cut or a windowing, as [pipeline()] describes.
+#' * `window_time`: when the window began, where all the recordings of the file
+#'   give the same `start`.
+#' * `error`: why the file failed, or `NA`.
+#' * `value` and the columns beginning `value.`: the result, as
+#'   [flattenOutput()] gives it.
+#'
+#' A file that failed has one row in every table, holding only its `file`,
+#' `pipeline` and `error`. A file in which a step found nothing has no rows in
+#' its table, as [flattenOutput()] gives none for `NULL`, and the `"files"`
+#' attribute tells such a file apart from one that was never run. A table is
+#' listed once a file has run without failing.
+#'
+#' A file that was run more than once, by `retry = TRUE`, gives the rows of its
+#' last run.
+#'
+#' @param store The folder [runPipeline()] wrote to.
+#' @param p The `Pipeline`, or its id. The id changes with the code of the
+#'   packages a pipeline uses, so results written before a package was updated
+#'   are read with the id they were written under, which is the name of their
+#'   folder in the store.
+#' @param step `NULL` for every table, or the name of one, or its number in the
+#'   outline of the pipeline, as `"2.1"`, to read that table alone.
+#' @return A named list of data frames, one for each analysis step, or a single
+#'   data frame where `step` is given. The list has a `"files"` attribute, a
+#'   data frame of every file the store holds: its `file` hash, the `uri` of its
+#'   first recording, its `location`, its `status`, `"ok"` or `"error"`, its
+#'   `error`, the `time` it was run and the `batch` it was run in.
+#' @seealso [runPipeline()]
+#' @export
+pipelineResults <- function(store, p, step=NULL) {
+  .validateFolder(store, "store")
+  id <- .resultsId(store, p)
+  dir <- file.path(store, id)
+  outline <- .outline(readRDS(file.path(dir, "pipeline.rds"))$pipeline)
+  manifests <- .readManifests(dir)
+  files <- .latestFiles(.storeRecords(manifests))
+  tables <- unique(do.call(rbind, c(
+    list(data.frame(number=character(0), name=character(0), stringsAsFactors=FALSE)),
+    lapply(manifests, `[[`, "tables")
+  )))
+  tables <- tables[order(match(tables$number, outline$number)), , drop=FALSE]
+  if (!is.null(step)) {
+    if (!is.character(step) || length(step) != 1 || is.na(step)) {
+      stop("step must be the name of one table, or its number in the outline.")
+    }
+    found <- which(tables$name == step | tables$number == step)
+    if (length(found) == 0) {
+      stop("The store holds no table called ", step, ". It holds: ",
+           if (nrow(tables) == 0) "none" else paste(tables$name, collapse=", "), ".")
+    }
+    return(.readTable(tables$number[found], dir, id, manifests, files))
+  }
+  out <- lapply(tables$number, .readTable, dir=dir, id=id, manifests=manifests, files=files)
+  names(out) <- tables$name
+  attr(out, "files") <- files
+  return(out)
+}
+
+#' Check that something names a folder
+#' @param x The value.
+#' @param what The name of the argument, for the error.
+#' @keywords internal
+#' @noRd
+.validateFolder <- function(x, what) {
+  if (!is.character(x) || length(x) != 1 || is.na(x) || !nzchar(x)) {
+    stop(what, " must be the path of a folder.")
+  }
+}
+
+#' Make a folder, and give its absolute path
+#' @param path The folder.
+#' @return Its absolute path.
+#' @keywords internal
+#' @noRd
+.madeFolder <- function(path) {
+  dir.create(path, recursive=TRUE, showWarnings=FALSE)
+  if (!dir.exists(path)) {
+    stop("Could not make the folder ", path, ".")
+  }
+  return(normalizePath(path, winslash="/"))
+}
+
+#' Is a location a URL?
+#' @param x Locations.
+#' @return A logical vector, FALSE for NA.
+#' @keywords internal
+#' @noRd
+.isUrl <- function(x) {
+  return(!is.na(x) & grepl("^https?://", x, ignore.case=TRUE))
+}
+
+#' The folder of a pipeline in a store
+#'
+#' Made with the pipeline in it the first time the pipeline is run into the
+#' store, so that its results can be read, and its outline printed, without it.
+#' @param store The store.
+#' @param p The pipeline.
+#' @param identity Its id and code, as `.pipelineIdentity()` gives them.
+#' @return The path of the folder.
+#' @keywords internal
+#' @noRd
+.pipelineStore <- function(store, p, identity) {
+  dir <- file.path(store, identity$id)
+  dir.create(file.path(dir, "batches"), recursive=TRUE, showWarnings=FALSE)
+  record <- file.path(dir, "pipeline.rds")
+  if (!file.exists(record)) {
+    saveRDS(list(
+      pipeline=p, id=identity$id, code=identity$code,
+      created=structure(Sys.time(), tzone="UTC"), R=R.version.string
+    ), record)
+  }
+  return(dir)
+}
+
+#' The files of a set
+#'
+#' A file is given the hash its recordings give it, the first location they
+#' give, and the uri of its first recording.
+#' @param set A RecordingSet.
+#' @param group The file each recording is in, as `.recordingSetFiles()` gives.
+#' @return A data frame with one row per file: `file`, its number in `group`,
+#'   `hash`, `uri`, `location`, and `problem`, why the file cannot be run, or
+#'   `NA`.
+#' @keywords internal
+#' @noRd
+.setFiles <- function(set, group) {
+  n <- if (length(group) == 0) 0L else max(group)
+  hashed <- which(!is.na(set$hash))
+  pairs <- unique(data.frame(group=group[hashed], hash=set$hash[hashed],
+                             stringsAsFactors=FALSE))
+  count <- tabulate(pairs$group, n)
+  hash <- rep(NA_character_, n)
+  single <- pairs[count[pairs$group] == 1, , drop=FALSE]
+  hash[single$group] <- single$hash
+  first <- which(!duplicated(group))
+  uri <- rep(NA_character_, n)
+  uri[group[first]] <- set$uri[first]
+  located <- which(!is.na(set$location))
+  first <- located[!duplicated(group[located])]
+  location <- rep(NA_character_, n)
+  location[group[first]] <- set$location[first]
+  problem <- rep(NA_character_, n)
+  problem[count > 1] <- paste0(
+    "The set gives this file ", count[count > 1], " different hashes."
+  )
+  problem[is.na(location)] <- "The set gives no location for this file."
+  return(data.frame(file=seq_len(n), hash=hash, uri=uri, location=location,
+                    problem=problem, stringsAsFactors=FALSE))
+}
+
+#' The hash of each file, as far as it can be known before the run
+#'
+#' A file at a URL the set gives no hash is given the one the store has for its
+#' location, and a local file that exists is hashed.
+#' @param files The files, as `.setFiles()` gives them.
+#' @param records Every record of the store, as `.storeRecords()` gives them.
+#' @return The hash of each file, `NA` where it is not known.
+#' @keywords internal
+#' @noRd
+.knownHashes <- function(files, records) {
+  hash <- files$hash
+  unknown <- is.na(hash) & is.na(files$problem)
+  url <- unknown & .isUrl(files$location)
+  hash[url] <- .hashAt(files$location[url], records)
+  local <- which(unknown & !url & file.exists(files$location) & !dir.exists(files$location))
+  hash[local] <- vapply(files$location[local], .audioblast_sha256, character(1),
+                        USE.NAMES=FALSE)
+  return(hash)
+}
+
+#' What a file is known by in a store
+#'
+#' Its hash, or where that is not known, its location, or where neither is, the
+#' uri of its first recording.
+#' @param file,location,uri Of each file.
+#' @return A character vector.
+#' @keywords internal
+#' @noRd
+.fileKey <- function(file, location, uri) {
+  return(ifelse(
+    !is.na(file), file,
+    ifelse(!is.na(location), paste0("location:", location), paste0("uri:", uri))
+  ))
+}
+
+#' Which files a run has to run
+#'
+#' Every file the store holds no record of, and with `retry` every file whose
+#' last run failed.
+#' @param files The files, with the hashes `.knownHashes()` gives.
+#' @param stored The files of the store.
+#' @param retry Whether to run failed files again.
+#' @return A logical vector, one for each file.
+#' @keywords internal
+#' @noRd
+.toRun <- function(files, stored, retry) {
+  status <- stored$status[match(
+    .fileKey(files$hash, files$location, files$uri),
+    .fileKey(stored$file, stored$location, stored$uri)
+  )]
+  return(is.na(status) | (retry & status == "error"))
+}
+
+#' Split the files to run into batches
+#' @param todo The files to run.
+#' @param set The set, whose rows of each file go with it.
+#' @param group The file each of its recordings is in.
+#' @param size How many files to a batch.
+#' @param first The number of the first batch.
+#' @return A list of batches, each a list of its `number`, its `files` and the
+#'   `rows` of the set they are, with the file each row is in as `.file`.
+#' @keywords internal
+#' @noRd
+.batchJobs <- function(todo, set, group, size, first) {
+  if (nrow(todo) == 0) {
+    return(list())
+  }
+  rows <- set
+  class(rows) <- "data.frame"
+  rows$.file <- group
+  #The rows of each file, found once rather than by searching the whole set for
+  #the files of every batch.
+  of_file <- split(seq_len(nrow(rows)), factor(group, levels=seq_len(max(group))))
+  chunks <- split(seq_len(nrow(todo)), ceiling(seq_len(nrow(todo)) / size))
+  return(unname(lapply(seq_along(chunks), function(i) {
+    files <- todo[chunks[[i]], , drop=FALSE]
+    list(
+      number=first + i - 1,
+      files=files,
+      rows=rows[unlist(of_file[files$file], use.names=FALSE), , drop=FALSE]
+    )
+  })))
+}
+
+#' Run one batch and write it to the store
+#'
+#' Its tables are written first, and the list of the files it covered last, so
+#' a batch stopped part way through has no list, and is neither read nor taken
+#' to have been run.
+#' @param job A batch, as `.batchJobs()` gives it.
+#' @param p The pipeline.
+#' @param id Its id.
+#' @param dir Its folder in the store.
+#' @param keep The folder to keep downloads in, or `NULL`.
+#' @return The records of the files it ran, as written to the store.
+#' @keywords internal
+#' @noRd
+.runPipelineBatch <- function(job, p, id, dir, keep) {
+  outline <- .outline(p)
+  numbers <- stats::setNames(outline$number, outline$name)
+  records <- list()
+  tables <- list()
+  for (i in seq_len(nrow(job$files))) {
+    f <- job$files[i, , drop=FALSE]
+    ran <- .runPipelineFile(p, id, f, job$rows[job$rows$.file == f$file, , drop=FALSE], keep)
+    #Two files of the set can turn out to hold the same bytes once they are
+    #hashed, and only the rows of the first are kept.
+    seen <- vapply(records, `[[`, character(1), "file")
+    again <- !is.na(ran$record$file) && ran$record$file %in% seen
+    records[[length(records) + 1]] <- ran$record
+    if (again) {
+      next
+    }
+    for (name in names(ran$results)) {
+      tables[[name]] <- c(tables[[name]], list(ran$results[[name]]))
+    }
+  }
+  for (name in names(tables)) {
+    saveRDS(.bindResults(tables[[name]]), .tablePath(dir, job$number, numbers[[name]]))
+  }
+  files <- do.call(rbind, lapply(records, as.data.frame, stringsAsFactors=FALSE))
+  files$batch <- rep(job$number, nrow(files))
+  saveRDS(list(
+    batch=job$number,
+    files=files,
+    tables=data.frame(number=unname(numbers[names(tables)]), name=names(tables),
+                      stringsAsFactors=FALSE)
+  ), .manifestPath(dir, job$number))
+  return(files)
+}
+
+#' Run the pipeline on one file
+#' @param p The pipeline.
+#' @param id Its id.
+#' @param f The file, a row of `.setFiles()`.
+#' @param rows The rows of the set that are this file.
+#' @param keep The folder to keep downloads in, or `NULL`.
+#' @return A list of the file's `record` and its `results`, the rows of each
+#'   table it gave.
+#' @keywords internal
+#' @noRd
+.runPipelineFile <- function(p, id, f, rows, keep) {
+  failed <- function(e, hash=f$hash) {
+    return(list(
+      record=.fileRecord(hash, f$uri, f$location, conditionMessage(e)), results=list()
+    ))
+  }
+  if (!is.na(f$problem)) {
+    return(failed(simpleError(f$problem)))
+  }
+  fetched <- tryCatch(.fetchFile(f$location, rows, keep), error=function(e) e)
+  if (inherits(fetched, "error")) {
+    return(failed(fetched))
+  }
+  if (!is.null(fetched$temporary)) {
+    on.exit(unlink(fetched$temporary, recursive=TRUE), add=TRUE)
+  }
+  metadata <- .agreedColumns(rows)
+  w <- tryCatch({
+    tw <- tagWave(readAudio(fetched$path), origin=f$location)
+    tw@metadata[["recordingSet"]] <- metadata
+    calculateMetadata(tw)
+  }, error=function(e) e)
+  if (inherits(w, "error")) {
+    return(failed(w))
+  }
+  hash <- w@metadata[["calculatedMetadata"]]$hash
+  if (!is.na(f$hash) && hash != f$hash) {
+    return(failed(simpleError(paste0(
+      "The file at ", f$location, " has the hash ", hash, ", not the ", f$hash,
+      " the set gives it."
+    ))))
+  }
+  ran <- tryCatch(.runPipelineWave(p, w)$results, error=function(e) e)
+  if (inherits(ran, "error")) {
+    return(failed(ran, hash))
+  }
+  return(list(
+    record=.fileRecord(hash, f$uri, f$location, NA_character_),
+    results=lapply(ran, .keyedRows, file=hash, id=id, start=metadata$start)
+  ))
+}
+
+#' What the store records of a file
+#' @param hash Its hash, `NA` where it is not known.
+#' @param uri The uri of its first recording.
+#' @param location Where it was fetched from.
+#' @param error Why it failed, or `NA`.
+#' @return A list.
+#' @keywords internal
+#' @noRd
+.fileRecord <- function(hash, uri, location, error) {
+  return(list(
+    file=hash, uri=uri, location=location, status=if (is.na(error)) "ok" else "error",
+    error=error, time=structure(Sys.time(), tzone="UTC")
+  ))
+}
+
+#' Fetch a file
+#'
+#' A local file is read where it is. A file at a URL is downloaded into the
+#' folder `keep` names, where one already there is used as it is, or otherwise
+#' into a temporary folder of its own, to be deleted once the file has been run.
+#' It is named as [audioblastDownload()] names it.
+#' @param location Where the file is.
+#' @param rows The rows of the set that are the file.
+#' @param keep The folder to keep downloads in, or `NULL`.
+#' @return A list of the `path` to read it from and the `temporary` folder to
+#'   delete afterwards, or `NULL`.
+#' @keywords internal
+#' @noRd
+.fetchFile <- function(location, rows, keep) {
+  if (!.isUrl(location)) {
+    if (!file.exists(location) || dir.exists(location)) {
+      stop("There is no file at ", location, ".")
+    }
+    return(list(path=location, temporary=NULL))
+  }
+  temporary <- if (is.null(keep)) tempfile("runPipeline")
+  folder <- if (is.null(keep)) temporary else keep
+  dir.create(folder, recursive=TRUE, showWarnings=FALSE)
+  path <- file.path(folder, .audioblast_file_names(rows[1, , drop=FALSE], location))
+  if (!file.exists(path)) {
+    tryCatch(.audioblast_download(location, path), error=function(e) {
+      if (!is.null(temporary)) {
+        unlink(temporary, recursive=TRUE)
+      }
+      stop("Could not download ", location, ": ", conditionMessage(e), call.=FALSE)
+    })
+  }
+  return(list(path=path, temporary=temporary))
+}
+
+#' The columns all the recordings of a file agree on
+#'
+#' A value that is not known in any of them is left out, as is one they
+#' disagree on.
+#' @param rows The rows of the set that are one file.
+#' @return A named list of single values.
+#' @keywords internal
+#' @noRd
+.agreedColumns <- function(rows) {
+  rows$.file <- NULL
+  agreed <- vapply(rows, function(v) {
+    is.atomic(v) && !is.na(v[1]) && all(!is.na(v) & v == v[1])
+  }, logical(1))
+  return(lapply(rows[agreed], `[`, 1))
+}
+
+#' The rows of one table from one file, with their keys in front
+#'
+#' The file and the pipeline, then where in the recording each row was
+#' measured, the clock time of a window where the start of the recording is
+#' known, the error, which is `NA` for a file that ran, and then the result.
+#' @param rows A table as the run gives it.
+#' @param file The hash of the file.
+#' @param id The id of the pipeline.
+#' @param start When the recording began, or `NULL`.
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+.keyedRows <- function(rows, file, id, start) {
+  n <- nrow(rows)
+  values <- startsWith(names(rows), "value")
+  cols <- c(list(file=rep(file, n), pipeline=rep(id, n)), as.list(rows)[!values])
+  if (!is.null(start) && "window_start" %in% names(rows)) {
+    cols$window_time <- start + rows$window_start
+  }
+  cols$error <- rep(NA_character_, n)
+  return(structure(
+    c(cols, as.list(rows)[values]), class="data.frame", row.names=.set_row_names(n)
+  ))
+}
+
+#' The path of the list of the files a batch covered
+#' @param dir The folder of a pipeline in a store.
+#' @param batch The number of the batch.
+#' @keywords internal
+#' @noRd
+.manifestPath <- function(dir, batch) {
+  return(file.path(dir, "batches", sprintf("%06d.rds", batch)))
+}
+
+#' The path of one table of a batch
+#' @param dir The folder of a pipeline in a store.
+#' @param batch The number of the batch.
+#' @param number The number of the table's step in the outline.
+#' @keywords internal
+#' @noRd
+.tablePath <- function(dir, batch, number) {
+  return(file.path(dir, "batches", sprintf("%06d_%s.rds", batch, number)))
+}
+
+#' The lists of the files each batch covered, in the order they were written
+#' @param dir The folder of a pipeline in a store.
+#' @return A list of what `.runPipelineBatch()` wrote of each batch.
+#' @keywords internal
+#' @noRd
+.readManifests <- function(dir) {
+  found <- list.files(file.path(dir, "batches"), pattern="^[0-9]+\\.rds$", full.names=TRUE)
+  found <- found[order(as.numeric(sub("\\.rds$", "", basename(found))))]
+  return(lapply(found, readRDS))
+}
+
+#' The number the next batch written to a store takes
+#' @param dir The folder of a pipeline in a store.
+#' @return A number.
+#' @keywords internal
+#' @noRd
+.nextBatch <- function(dir) {
+  found <- list.files(file.path(dir, "batches"), pattern="^[0-9]+\\.rds$")
+  return(if (length(found) == 0) 1 else max(as.numeric(sub("\\.rds$", "", found))) + 1)
+}
+
+#' Every record of a store, in the order the batches were written
+#' @param manifests What `.readManifests()` gives.
+#' @return A data frame of `file`, `uri`, `location`, `status`, `error`, `time`
+#'   and `batch`, one row for each time a file was run.
+#' @keywords internal
+#' @noRd
+.storeRecords <- function(manifests) {
+  return(do.call(rbind, c(
+    list(data.frame(
+      file=character(0), uri=character(0), location=character(0),
+      status=character(0), error=character(0), time=.POSIXct(numeric(0), tz="UTC"),
+      batch=numeric(0), stringsAsFactors=FALSE
+    )),
+    lapply(manifests, `[[`, "files")
+  )))
+}
+
+#' The last record of every file in a store
+#' @param records What `.storeRecords()` gives.
+#' @return The records, one for each file.
+#' @keywords internal
+#' @noRd
+.latestFiles <- function(records) {
+  key <- .fileKey(records$file, records$location, records$uri)
+  files <- records[!duplicated(key, fromLast=TRUE), , drop=FALSE]
+  rownames(files) <- NULL
+  return(files)
+}
+
+#' The hash a store found at each location
+#' @param location Locations.
+#' @param records What `.storeRecords()` gives.
+#' @return A hash for each location, `NA` where the store has none.
+#' @keywords internal
+#' @noRd
+.hashAt <- function(location, records) {
+  hashed <- records[!is.na(records$file), , drop=FALSE]
+  hashed <- hashed[!duplicated(hashed$location, fromLast=TRUE), , drop=FALSE]
+  return(hashed$file[match(location, hashed$location)])
+}
+
+#' Fill in the hashes of a set from a store
+#' @param set The set.
+#' @param records What `.storeRecords()` gives.
+#' @return The set.
+#' @keywords internal
+#' @noRd
+.withHashes <- function(set, records) {
+  unknown <- which(is.na(set$hash))
+  set$hash[unknown] <- .hashAt(set$location[unknown], records)
+  return(set)
+}
+
+#' Report on a run of batches
+#' @param ran The records of the files they ran.
+#' @param what Which batches they were.
+#' @return A message.
+#' @keywords internal
+#' @noRd
+.batchReport <- function(ran, what) {
+  return(paste0(
+    what, ": ", nrow(ran), if (nrow(ran) == 1) " file, " else " files, ",
+    sum(ran$status == "error"), " failed."
+  ))
+}
+
+#' The id of a pipeline whose results are read
+#' @param store The store.
+#' @param p A pipeline, or an id.
+#' @return The id, which has a folder in the store.
+#' @keywords internal
+#' @noRd
+.resultsId <- function(store, p) {
+  if (inherits(p, "Pipeline")) {
+    id <- .pipelineId(p)
+  } else if (is.character(p) && length(p) == 1 && !is.na(p) && nzchar(p)) {
+    id <- p
+  } else {
+    stop("p must be a Pipeline, or the id of one.")
+  }
+  if (!file.exists(file.path(store, id, "pipeline.rds"))) {
+    held <- list.dirs(store, full.names=FALSE, recursive=FALSE)
+    held <- held[file.exists(file.path(store, held, "pipeline.rds"))]
+    stop(
+      "The store holds no results of the pipeline ", substr(id, 1, 8), ". ",
+      if (length(held) == 0) "It holds none at all." else paste0(
+        "It holds the results of ", paste(held, collapse=", "), ". An id ",
+        "changes whenever the code of a package the pipeline uses does, and ",
+        "any of these can be given as p."
+      )
+    )
+  }
+  return(id)
+}
+
+#' Read one table of results from every batch
+#'
+#' The rows of each file come from the batch it was last run in, and a file
+#' whose last run failed has a row holding its error instead.
+#' @param number The number of the table's step in the outline.
+#' @param dir The folder of the pipeline in the store.
+#' @param id The pipeline's id.
+#' @param manifests What `.readManifests()` gives.
+#' @param files What `.latestFiles()` gives.
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+.readTable <- function(number, dir, id, manifests, files) {
+  parts <- lapply(manifests, function(m) {
+    if (!number %in% m$tables$number) {
+      return(NULL)
+    }
+    rows <- readRDS(.tablePath(dir, m$batch, number))
+    last <- match(rows$file, files$file)
+    here <- files$batch[last] == m$batch & files$status[last] == "ok"
+    return(rows[!is.na(here) & here, , drop=FALSE])
+  })
+  failed <- files[files$status == "error", , drop=FALSE]
+  if (nrow(failed) > 0) {
+    parts[[length(parts) + 1]] <- data.frame(
+      file=failed$file, pipeline=rep(id, nrow(failed)), error=failed$error,
+      stringsAsFactors=FALSE
+    )
+  }
+  return(.bindResults(parts))
+}
