@@ -40,9 +40,8 @@ maad_spectrogram <- function(wave, mode="power", ..., maad=NULL) {
 #' The name scikit-maad knows a spectrogram mode by
 #'
 #' scikit-maad calls a power spectrogram "psd", and this package calls it
-#' "power" throughout: in the `mode` slot of `spectrogram_maad`, in the
-#' `spectrogram_maad_power` slot of a `TaggedWave` and in the name of
-#' `.spectrogram_maad_power()`. The name is therefore translated on the way out
+#' "power" throughout: in the `mode` slot of `spectrogram_maad` and in the name
+#' of `.spectrogram_maad_power()`. The name is therefore translated on the way out
 #' rather than changed on the way in.
 #'
 #' A mode scikit-maad does not know is refused here. Its own `spectrogram()`

@@ -113,27 +113,47 @@ region <- function(time.unit, from=0, to=Inf, unit) {
 }
 
 #' Allow subsetting a Wave object with a TimeRegion
+#'
+#' Applied to a `TaggedWave`, the cut is recorded in the `processing` slot of
+#' the result, as described in [tagApply()], with the `from`, `to` and
+#' `time.unit` of the region.
 #' @param x Wave Object
 #' @param i TimeRegion object
 #' @return A Wave object containing only the samples within the time region.
 setMethod("[", signature(x = "Wave", i = "TimeRegion"), function(x,i){
-  if (inherits(i,"TimeRegion")) {
-    tr <- .timeRegion2samples(i, x@samp.rate)
-    #Clamped either way. Only an infinite end used to be brought back to the
-    #length of the wave, so a finite region reaching past it gave a wave padded
-    #with NA rather than one ending where the audio does.
-    tr[1] <- max(1, tr[1])
-    tr[2] <- min(tr[2], length(x@left))
-    if (tr[1] > length(x@left)) {
-      stop("Time region begins after the end of the wave.")
-    }
-    #A region in time ends before the sample at its end, so one of no length
-    #holds no samples.
-    samples <- if (tr[2] < tr[1]) integer(0) else tr[1]:tr[2]
-    x@left <- x@left[samples]
-    if (x@stereo) {
-      x@right <- x@right[samples]
-    }
-    return(x)
-  }
+  return(.tagApplyOne(
+    x, .waveInRegion, "[", NULL, FALSE, from=i@from, to=i@to, time.unit=i@unit
+  ))
 })
+
+#' The part of a wave within a region
+#'
+#' The region is given by its parts, so that its record names them. Not to be
+#' confused with `.cutRegion()` in `tdoa.R`, which places a region's ends by
+#' rounding rather than by the samples that begin within it.
+#' @param .x A Wave object.
+#' @param from,to,time.unit The region.
+#' @return The samples of `.x` within the region.
+#' @keywords internal
+#' @noRd
+.waveInRegion <- function(.x, from, to, time.unit) {
+  tr <- .timeRegion2samples(
+    new("TimeRegion", from=from, to=to, unit=time.unit), .x@samp.rate
+  )
+  #Clamped either way. Only an infinite end used to be brought back to the
+  #length of the wave, so a finite region reaching past it gave a wave padded
+  #with NA rather than one ending where the audio does.
+  tr[1] <- max(1, tr[1])
+  tr[2] <- min(tr[2], length(.x@left))
+  if (tr[1] > length(.x@left)) {
+    stop("Time region begins after the end of the wave.")
+  }
+  #A region in time ends before the sample at its end, so one of no length
+  #holds no samples.
+  samples <- if (tr[2] < tr[1]) integer(0) else tr[1]:tr[2]
+  .x@left <- .x@left[samples]
+  if (.x@stereo) {
+    .x@right <- .x@right[samples]
+  }
+  return(.x)
+}

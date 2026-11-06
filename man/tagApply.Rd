@@ -91,8 +91,7 @@ cluster that does not inherit it, which use the default and record that they
 did.
 
 If \code{fun} returns a wave without tags, the \code{origin}, \code{metadata} and
-\code{processing} of \code{w} are carried over to it. The \code{spectrogram_maad_power} slot
-is not carried over, as it no longer matches the signal.
+\code{processing} of \code{w} are carried over to it.
 
 If \code{fun} returns something that is not a wave, such as a number or a data
 frame, there is no tagged object to hold the record. The result is returned

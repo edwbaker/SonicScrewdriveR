@@ -15,5 +15,7 @@
 A Wave object containing only the samples within the time region.
 }
 \description{
-Allow subsetting a Wave object with a TimeRegion
+Applied to a \code{TaggedWave}, the cut is recorded in the \code{processing} slot of
+the result, as described in \code{\link[=tagApply]{tagApply()}}, with the \code{from}, \code{to} and
+\code{time.unit} of the region.
 }

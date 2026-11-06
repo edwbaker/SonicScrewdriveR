@@ -129,3 +129,22 @@ test_that(".getTags() works as expected", {
   expect_true(all(names(.getTags(tw)[[1]]) == names(.tagSlots())))
   expect_true(all(names(.getTags(tw)[[2]]) == names(.tagSlots())))
 })
+
+test_that("a tagged wave has the slots its help describes", {
+  expect_named(.tagSlots(), c("origin", "metadata", "processing"))
+  for (cls in c("TaggedWave", "TaggedWaveMC")) {
+    added <- setdiff(methods::slotNames(cls), methods::slotNames(sub("^Tagged", "", cls)))
+    expect_setequal(added, c("origin", "metadata", "processing"))
+  }
+  tw <- tagWave(tuneR::sine(440, duration=100))
+  expect_named(.getTags(tw), c("origin", "metadata", "processing"))
+})
+
+test_that("a tagged wave saved with the slot that was removed still works", {
+  # The spectrogram_maad_power slot was never written or read. An object saved
+  # while the class had it comes back holding it as an attribute.
+  tw <- tagWave(tuneR::sine(440, duration=100))
+  attr(tw, "spectrogram_maad_power") <- new("spectrogram_maad")
+  expect_true(validObject(tw))
+  expect_length(normalise(tw)@processing, 1)
+})

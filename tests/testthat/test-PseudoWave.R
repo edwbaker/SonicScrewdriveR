@@ -325,3 +325,45 @@ test_that("unipolar noise at half scale is bounded as written", {
   expect_gte(min(s), 0)
   expect_lte(max(s), 1)
 })
+
+test_that("a tagged wave keeps its tags on either side of a PseudoWave, and the arithmetic is recorded", {
+  plain <- tuneR::sine(440, duration=1000)
+  tw <- tagWave(plain, origin="test")
+  tw@metadata$site <- "A"
+  pw <- pseudoWave("noise", "white", seed=7)
+  # The samples the PseudoWave stands for, met with the wave's format.
+  noise <- (tuneR::silence(duration=1000) + pw)@left
+  for (op in c("+", "-", "*", "/", "^")) {
+    f <- match.fun(op)
+    for (pseudoFirst in c(FALSE, TRUE)) {
+      out <- if (pseudoFirst) f(pw, tw) else f(tw, pw)
+      expect_s4_class(out, "TaggedWave")
+      expect_equal(out@origin, "test")
+      expect_equal(out@metadata$site, "A")
+      # In the order the operator was written.
+      expect_equal(out@left, if (pseudoFirst) f(noise, plain@left) else f(plain@left, noise))
+      expect_length(out@processing, 1)
+      rec <- out@processing[[1]]
+      expect_identical(rec$func, op)
+      expect_identical(rec$params$operator, op)
+      expect_identical(rec$params$pseudoFirst, pseudoFirst)
+      expect_equal(rec$params$pseudoWave, pw)
+      expect_equal(rec$input_hash, .waveHash(tw, rec$hash_method))
+      expect_equal(rec$output_hash, .waveHash(out, rec$hash_method))
+    }
+  }
+  # A plain wave stays plain on either side, with the same samples as before.
+  expect_false(.isTagged(pw + plain))
+  expect_equal((pw - plain)@left, noise - plain@left)
+  expect_equal((plain - pw)@left, plain@left - noise)
+})
+
+test_that("a stereo wave meets a PseudoWave in both channels, on either side", {
+  st <- tagWave(tuneR::sine(440, duration=500, stereo=TRUE))
+  pw <- pseudoWave("noise", "white", seed=3)
+  left <- pw - st
+  right <- st - pw
+  expect_true(left@stereo)
+  expect_equal(left@left + right@left, rep(0, 500))
+  expect_equal(left@right + right@right, rep(0, 500))
+})

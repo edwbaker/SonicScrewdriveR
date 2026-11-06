@@ -626,6 +626,15 @@
   the paper, so `U/4` is offered rather than assumed.
 
 ## Fixes
+- Arithmetic with a PseudoWave on the left of the operator, as in
+  `pseudoWave("noise", "white") + tw`, gave back the plain wave the PseudoWave
+  was turned into, so a tagged wave on the right lost its origin, metadata and
+  history. The result is now the wave the PseudoWave met, whichever side it is
+  on, and on a tagged wave the arithmetic is recorded in its history, with the
+  operator, the PseudoWave and which side of the operator it was on.
+- Cutting a tagged wave to a region, as in `tw[region("seconds", 1, 2)]`, left
+  no record of the cut. It is now recorded, with the region's `from`, `to` and
+  `time.unit`.
 - tagWave() lost the metadata that `audioMetadata<-` attaches to a plain wave.
   Tagging builds a new object from the wave's slots, and a plain wave keeps
   that metadata in an attribute, which is not a slot. It is now moved into the
@@ -2328,6 +2337,15 @@
   their place.
 
 ## Documentation
+- The `TaggedWave` and `TaggedWaveMC` classes listed an `analyses` slot they
+  do not have. Their help now describes the slots they do have: `origin`,
+  `metadata` and `processing`. Their `spectrogram_maad_power` slot, which
+  nothing wrote or read, is removed; a tagged wave saved while the class had it
+  still reads and works.
+- The "Managing audio" vignette described a self-documenting pipeline built
+  from `WaveAugment`, `WaveFilter` and `WaveAnalyse` classes, two of which were
+  never written. It now describes the records tagApply(), filterWave() and
+  normalise() keep, and pipeline().
 - rainfallDetection() cited Bedoya et al. (2017) as a bare link in a sentence,
   and the method was not in `inst/REFERENCES.bib` at all, so there was nothing to
   check the implementation against and no reference in the manual page. The paper

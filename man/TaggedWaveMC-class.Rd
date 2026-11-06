@@ -5,14 +5,19 @@
 \alias{TaggedWaveMC-class}
 \title{A S4 class for tagged multi-channel waves}
 \description{
-The TaggedWaveMC class extended the WaveMC class from the tuneR package so
-that it can include extended metadata and the results of analyses.
+The TaggedWaveMC class extends the WaveMC class from the tuneR package as
+the TaggedWave class extends the Wave class.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{metadata}}{A list for storing metadata.}
+\item{\code{origin}}{Where the wave came from, such as the file it was read from, or
+"user".}
 
-\item{\code{analyses}}{A list for storing analyses.}
+\item{\code{metadata}}{A list of what is known about the wave, such as the metadata
+of the file it was read from.}
+
+\item{\code{processing}}{A list holding a record of each process applied to the
+wave, in the order they were applied, as described in \code{\link[=tagApply]{tagApply()}}.}
 }}
 
