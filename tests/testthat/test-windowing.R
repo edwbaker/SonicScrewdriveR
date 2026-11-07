@@ -99,7 +99,7 @@ test_that("Overlap gives expected results", {
 })
 
 test_that("windowing() rejects incorrect input", {
-  expect_error(windowing(123, 4, {print("Oh")}), "Expecting a Wave object")
+  expect_error(windowing(123, 4, {print("Oh")}), "Expecting a Wave or WaveMC object")
   w <- sine(440)
   f1 <- function(wave, start, window.length) {
     return(1)
@@ -216,6 +216,33 @@ test_that("bind.wave binds the windows of a tagged wave, keeping its tags", {
     expect_equal(r@processing[1], tw@processing)
     expect_equal(r@processing[[2]]$func, "windowing")
   }
+})
+
+test_that("a WaveMC object is windowed as its file is", {
+  # A file of more than two channels was windowed from disk, a window at a
+  # time, but the same audio in memory was refused as not being a Wave.
+  set.seed(22)
+  m <- matrix(as.integer(round(runif(3000 * 3, -2^13, 2^13))), 3000, 3)
+  colnames(m) <- tuneR::MCnames$name[1:3]
+  w <- tuneR::WaveMC(data=m, samp.rate=8000, bit=16, pcm=TRUE)
+  f <- withr::local_tempfile(fileext=".wav")
+  tuneR::writeWave(w, f, extensible=TRUE)
+  idfun <- function(wave, start, window.length) wave
+
+  from.wave <- windowing(w, window.length=1000, window.overlap=200, FUN=idfun)
+  from.file <- windowing(f, window.length=1000, window.overlap=200, FUN=idfun)
+  expect_length(from.wave, 3)
+  expect_equal(lapply(from.wave, function(x) x@.Data), lapply(from.file, function(x) x@.Data))
+
+  for (overlap in c(0, -500)) {
+    bound <- windowing(w, window.length=500, window.overlap=overlap, FUN=idfun, bind.wave=TRUE)
+    expect_s4_class(bound, "WaveMC")
+    expect_equal(bound@.Data, w@.Data)
+  }
+  tw <- tagWave(w, origin="test")
+  bound <- windowing(tw, window.length=500, window.overlap=-500, FUN=idfun, bind.wave=TRUE)
+  expect_s4_class(bound, "TaggedWaveMC")
+  expect_equal(bound@origin, "test")
 })
 
 test_that("bind.wave gives the same result from a Wave object and a filename", {

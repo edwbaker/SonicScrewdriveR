@@ -17,8 +17,8 @@ windowing(
 )
 }
 \arguments{
-\item{wave}{A Wave object or filename. Using filenames may save loading an
-entire large file into memory.}
+\item{wave}{A Wave or WaveMC object, or a filename. Using filenames may save
+loading an entire large file into memory.}
 
 \item{window.length}{The length of the analysis window, in \code{time.unit}.}
 

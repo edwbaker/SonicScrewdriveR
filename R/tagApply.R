@@ -196,12 +196,28 @@
 #' @keywords internal
 #' @noRd
 .waveSketch <- function(x, n=4096, blocks=10) {
-  len <- length(x)
-  if (len <= n * blocks) {
+  starts <- .sketchStarts(length(x), n, blocks)
+  if (is.null(starts)) {
     return(x)
   }
-  starts <- round(seq(1, len - n + 1, length.out=blocks))
   return(x[unlist(lapply(starts, function(s) seq.int(s, s + n - 1)))])
+}
+
+#' Where the blocks of a sketch begin
+#'
+#' Found from the length alone, so that a sketch of a file too long to hold is
+#' read from disk at the samples .waveSketch() takes from a wave.
+#' @param len The length of the vector.
+#' @param n,blocks As for `.waveSketch()`.
+#' @return The first position of each block, or `NULL` where the blocks would
+#'   cover the vector and it is taken whole.
+#' @keywords internal
+#' @noRd
+.sketchStarts <- function(len, n=4096, blocks=10) {
+  if (len <= n * blocks) {
+    return(NULL)
+  }
+  return(round(seq(1, len - n + 1, length.out=blocks)))
 }
 
 #' Digest of a Wave-like object
@@ -632,6 +648,10 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
 #' @param .selfRecord Whether `.fun` may make its own record. Where it gives
 #'   back a tagged wave whose history is longer than that of `.w`, it did, and
 #'   no record is made here.
+#' @param .inputHash `NULL` to digest `.w`, or a function of the hash method
+#'   giving the digest of the wave `.w` stands for, where `.w` does not hold
+#'   its samples: a window of a file too long to read whole is recorded as cut
+#'   from the whole recording.
 #' @return A list of `result`, what `.fun` gave back, and `record`, its record,
 #'   complete but for `output` and `output_hash`. `record` is `NULL` where none
 #'   was made: for an untagged wave, inside a call already being recorded, and
@@ -639,7 +659,7 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
 #' @keywords internal
 #' @noRd
 .tagApplyRecord <- function(.w, .fun, .func, .label, .untag, ..., .described = .fun,
-                            .recorded = NULL, .selfRecord = FALSE) {
+                            .recorded = NULL, .selfRecord = FALSE, .inputHash = NULL) {
   if (is.na(.untag)) {
     .untag <- .needsUntag(.fun)
   }
@@ -652,7 +672,7 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
   }
   method <- .hashMethod()
   started <- .recordTime()
-  input_hash <- .waveHash(.w, method)
+  input_hash <- if (is.null(.inputHash)) .waveHash(.w, method) else .inputHash(method)
   res <- .fun(if (.untag) untagWave(.w) else .w, ...)
   duration <- as.numeric(difftime(Sys.time(), started$time, units = "secs"))
   if (.selfRecord && .isTaggedOne(res) &&

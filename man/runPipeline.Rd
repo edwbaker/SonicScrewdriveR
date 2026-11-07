@@ -9,6 +9,7 @@ runPipeline(
   set,
   store,
   batch = 1000,
+  max.memory = 4e+09,
   keep = NULL,
   retry = FALSE,
   cl = NULL,
@@ -24,6 +25,9 @@ runPipeline(
 exist.}
 
 \item{batch}{How many files to run between writes to the store.}
+
+\item{max.memory}{The most memory, in bytes, a file may take once decoded to
+be read whole, 4 GB unless it is given, or \code{Inf} to read every file whole.}
 
 \item{keep}{A folder to keep downloaded files in, or \code{NULL} to delete each
 one once it has been run. Each file is kept in a folder of its own, named
@@ -53,8 +57,9 @@ The recordings of a set that share a hash or a location are one file, as a
 recording the Animal Sound Archive lists under three species is, and each
 file is run once. A file is fetched from its location: a local file is read
 where it is, and one at a URL is downloaded, then deleted once it has been
-run unless \code{keep} names a folder to keep it in. Each file is read whole by
-\code{\link[=readAudio]{readAudio()}}, tagged with its location as its origin and with the columns
+run unless \code{keep} names a folder to keep it in. Each file is read by
+\code{\link[=readAudio]{readAudio()}}, whole unless it is too long to hold (see Long files), tagged
+with its location as its origin and with the columns
 of the set that all of its recordings agree on, such as \code{start}, \code{lat} and
 \code{lon}, in the \code{"recordingSet"} entry of its metadata, and measured by
 \code{\link[=calculateMetadata]{calculateMetadata()}}. Columns its recordings disagree on, such as the
@@ -68,6 +73,29 @@ hashed then is left to fail when it is read. A file at a URL the set gives no
 hash is recognised by its location once it has been run. A local location is
 made absolute before the run, as a worker of a cluster can be working in
 another folder.
+}
+
+\section{Long files}{
+
+A file is read whole unless it would take more than \code{max.memory} bytes once
+decoded, which is worked out from its header before it is read. R holds a
+sample in 4 bytes for a WAV file of 8, 16 or 32-bit PCM and for an MP3 file,
+and in 8 for a WAV file of 24-bit PCM or floating-point audio and for
+anything the av package decodes, FLAC among them.
+
+A file over \code{max.memory} is read a window at a time, by each \code{\link[=windowing]{windowing()}}
+at the top of the pipeline, as windowing() reads a file. Each window holds
+the samples, and the tags, of the window cut from the whole recording, so
+the results are those a whole read gives, and the \code{wave_hash} of the file is
+taken a block at a time. That writes the samples to a temporary file, as the
+digest is of all of them at once, so it needs room on disk for 8 bytes a
+sample while it is taken. Only a RIFF WAV file of PCM or floating-point audio
+can be read in parts that are exact, so any other file over \code{max.memory}, an
+MP3 or a FLAC file among them, fails without being read. So does a file whose
+pipeline has a step outside a windowing given \verb{then=}, which needs the whole
+recording at once, or windows that are themselves over \code{max.memory}. The
+size of a file other than a WAV file is asked of the av package, and where
+that is not installed such a file is read whole.
 }
 
 \section{Batches}{

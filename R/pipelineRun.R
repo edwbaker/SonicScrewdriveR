@@ -4,12 +4,16 @@
 #' @param p A `Pipeline`.
 #' @param w A `Wave`, `WaveMC`, `TaggedWave` or `TaggedWaveMC` object. A wave
 #'   without tags gives the same results, and keeps no history of how.
+#' @param file `NULL`, or a file too long to read whole, as `.longFileWave()`
+#'   gives it, with `w` the tagged wave standing for it, which holds no samples.
+#'   Every step of such a pipeline is a windowing given then=, and reads its
+#'   windows from the file.
 #' @return A list of `results`, a data frame for each analysis step that ran,
 #'   named as the outline of the pipeline names it and in its order, and
 #'   `wave`, the wave the pipeline carried to its end.
 #' @keywords internal
 #' @noRd
-.runPipelineWave <- function(p, w) {
+.runPipelineWave <- function(p, w, file=NULL) {
   if (!inherits(p, "Pipeline")) {
     stop("Can only run a Pipeline, not ", .aDescription(p), ".")
   }
@@ -18,7 +22,7 @@
   }
   outline <- .outline(p)
   names <- stats::setNames(outline$name, outline$number)
-  return(.runSteps(p$steps, w, character(0), names))
+  return(.runSteps(p$steps, w, character(0), names, file=file))
 }
 
 #' Run steps in turn, each on the wave the one before it carried on
@@ -31,13 +35,15 @@
 #'   `NULL` where they run on the whole recording.
 #' @param offset How far into the recording, in seconds, the wave the first of
 #'   them gets starts.
+#' @param file A file too long to read whole, for the steps at the top of a
+#'   pipeline, as for `.runPipelineWave()`, or `NULL`.
 #' @return A list of `wave` and `results`, as `.runPipelineWave()` gives.
 #' @keywords internal
 #' @noRd
-.runSteps <- function(steps, w, number, names, keys=NULL, offset=0) {
+.runSteps <- function(steps, w, number, names, keys=NULL, offset=0, file=NULL) {
   results <- list()
   for (i in seq_along(steps)) {
-    ran <- .runStep(steps[[i]], w, c(number, as.character(i)), names, keys, offset)
+    ran <- .runStep(steps[[i]], w, c(number, as.character(i)), names, keys, offset, file)
     w <- ran$wave
     #A cut without then= cuts the wave the steps after it get.
     keys <- ran$keys
@@ -60,13 +66,18 @@
 #' @param number Its number in the outline, as a character vector of its parts.
 #' @param names The name of each step's table of results, by its number.
 #' @param keys,offset Where in the recording it runs, as for `.runSteps()`.
+#' @param file A file too long to read whole, which a windowing reads its
+#'   windows from, or `NULL`.
 #' @return A list of `wave`, `results`, and the `keys` and `offset` of the steps
 #'   after it.
 #' @keywords internal
 #' @noRd
-.runStep <- function(s, w, number, names, keys=NULL, offset=0) {
+.runStep <- function(s, w, number, names, keys=NULL, offset=0, file=NULL) {
   if (!is.null(s$then) && .takesThen(s$fun)) {
-    return(c(.runWindows(s, w, number, names, keys, offset), list(keys=keys, offset=offset)))
+    return(c(
+      .runWindows(s, w, number, names, keys, offset, file),
+      list(keys=keys, offset=offset)
+    ))
   }
   num <- paste(number, collapse=".")
   ran <- tryCatch(
@@ -182,10 +193,12 @@
 #' @param number Its number in the outline, as a character vector of its parts.
 #' @param names The name of each step's table of results, by its number.
 #' @param keys,offset Where in the recording it runs, as for `.runSteps()`.
+#' @param file A file too long to read whole, to read the windows from, as for
+#'   `.runPipelineWave()`, or `NULL` to cut them from `w`.
 #' @return A list of `wave` and `results`.
 #' @keywords internal
 #' @noRd
-.runWindows <- function(s, w, number, names, keys, offset) {
+.runWindows <- function(s, w, number, names, keys, offset, file=NULL) {
   num <- paste(number, collapse=".")
   level <- sum(startsWith(as.character(names(keys)), "window_start")) + 1
   rate <- w@samp.rate
@@ -197,8 +210,8 @@
     inside <- if (is.null(keys)) here else cbind(keys, here)
     return(.runSteps(s$then$steps, section, number, names, inside, from)$results)
   }
-  ran <- tryCatch(
-    .callStep(s, w, list(FUN=each)),
+  windows <- tryCatch(
+    if (is.null(file)) .callStep(s, w, list(FUN=each))$result else .fileWindows(s, w, file, each),
     error=function(e) {
       #A step inside a window has already said which step it was.
       if (inherits(e, "pipelineStepError")) {
@@ -207,7 +220,8 @@
       .stepError(s, num, paste("failed:", conditionMessage(e)), e)
     }
   )
-  windows <- ran$result
+  #A file too long to read whole never gets here: a window longer than the file
+  #is over max.memory too, and the file failed before it was read.
   if (length(windows) == 0) {
     seconds <- signif(length(w) / rate, 4)
     .stepError(s, num, paste0(
