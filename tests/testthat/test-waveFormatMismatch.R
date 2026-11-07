@@ -234,8 +234,8 @@ test_that("generateNoise() gives a PCM wave whole samples", {
     scale <- if (bit == 8) 25 else 2^(bit - 4)
     w <- tuneR::Wave(round(scale * stats::rnorm(4000)) + centre, samp.rate=8000, bit=bit)
     noisy <- generateNoise(w, "white", noise.ratio=0.3)
-    expect_equal(noisy@left, round(noisy@left), info=bit)
-    expect_equal(formatWarnings(cutws(noisy, 1, 100)), 0, info=bit)
+    expect_equal(noisy@left, round(noisy@left), info=paste(bit, "bit"))
+    expect_equal(formatWarnings(cutws(noisy, 1, 100)), 0, info=paste(bit, "bit"))
   }
   st <- tuneR::stereo(w, w)
   noisy <- generateNoise(st, "white", noise.ratio=0.3)

@@ -210,7 +210,11 @@ validateIsWaveMC <- function(wave) {
   if (len == 0) {
     return(numeric())
   }
-  i <- unique(round(seq(1, len, length.out=min(len, n))))
+  #Spread over more than n samples the steps are longer than one, so no two of
+  #them round to the same sample. floor() rounds them, as round() takes about
+  #a hundred microseconds over a thousand values, and the validators are called
+  #once for every window windowing() cuts.
+  i <- if (len <= n) seq_len(len) else floor(1.5 + (seq_len(n) - 1) * ((len - 1) / (n - 1)))
   if (mc) {
     return(as.vector(wave@.Data[i, , drop=FALSE]))
   }
@@ -259,7 +263,7 @@ validateIsWaveMC <- function(wave) {
     return(invisible(wave))
   }
   format <- paste0(wave@bit, "-bit PCM")
-  if (!is.integer(x) && any(x != round(x))) {
+  if (!is.integer(x) && any(x != trunc(x))) {
     .waveFormatWarning(
       "The wave declares ", format, " but holds samples that are not whole ",
       "numbers, which are rounded wherever the wave is cut, filtered or written. ",
