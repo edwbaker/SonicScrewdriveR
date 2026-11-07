@@ -147,9 +147,11 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
     }
   }
   #The hashes found before the run come first, as a file that has been moved is
-  #in the store under its old location only.
-  set$hash <- work$hash
-  return(invisible(.withHashes(set, .storeRecords(.readManifests(dir)))))
+  #in the store under its old location only. The rest are found by the absolute
+  #locations the store records, and only the hashes go back to the set, whose
+  #locations are left as they were given.
+  set$hash <- .withHashes(work, .storeRecords(.readManifests(dir)))$hash
+  return(invisible(set))
 }
 
 #' Read the results of a pipeline from a store

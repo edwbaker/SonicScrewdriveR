@@ -313,6 +313,26 @@ test_that("a local file that failed before it could be hashed waits for retry", 
   expect_equal(files$status, "ok")
 })
 
+test_that("a relative file hashed only when it is run comes back with its hash", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  fa <- .writeTestWav(file.path(dir, "rel.wav"))
+  withr::local_dir(dir)
+  real <- .audioblast_sha256
+  calls <- 0
+  local_mocked_bindings(.audioblast_sha256=function(path) {
+    calls <<- calls + 1
+    if (calls == 1) stop("busy")
+    real(path)
+  })
+  set <- recordingSet(data.frame(uri="r", location="rel.wav"))
+  out <- runPipeline(pipeline(length()), set, "store", quiet=TRUE)
+  # Not hashed before the run, and hashed when it was read.
+  expect_equal(calls, 2)
+  expect_equal(out$hash, .sha256(fa))
+  expect_equal(out$location, "rel.wav")
+})
+
 test_that("a file that is not there yet has the path it will have once it is", {
   dir <- withr::local_tempdir()
   long <- normalizePath(dir, winslash="/")
