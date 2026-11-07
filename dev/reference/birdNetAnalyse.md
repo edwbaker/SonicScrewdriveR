@@ -43,6 +43,13 @@ birdNetAnalyse(
 
 A list of Annotation objects, or a data frame if output is "data.frame".
 
+## Details
+
+Each detection is credited, as its `identifiedBy`, to the model that
+made it and the version of that model, as `BirdNET-Analyzer 2.4`, and
+dated, as its `dateIdentified`, to the time its file was analysed, in
+UTC.
+
 ## References
 
 Kahl S, Wood CM, Eibl M, Klinck H (2021). “BirdNET: A deep learning

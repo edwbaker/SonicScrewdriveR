@@ -110,8 +110,9 @@ a standard R error. Setting to <code>warning</code> will instead a warning.</p><
 
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
 <dd><p>By default a <code>data.frame</code>. "Annotation" will return a list of
-<code>Annotation</code> objects; "Annotations", as it was spelt before, still works and
-is deprecated. "RecordingSet" returns the recordings found by a search of
+<code>Annotation</code> objects, with the annotator as <code>identifiedBy</code> and the date of
+the annotation as <code>dateIdentified</code>; "Annotations", as it was spelt before,
+still works and is deprecated. "RecordingSet" returns the recordings found by a search of
 the recordings module as a <a href="recordingSet.html">RecordingSet</a>. "JSON-LD" and
 "Turtle" return the RDF that audioBlast gives for modules that describe
 their records as linked data, as a character vector with one element for

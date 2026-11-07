@@ -8,7 +8,12 @@ are merged. Annotation objects must have the same `file`, `type` and
 ## Usage
 
 ``` r
-merge_annotations(annotations, domain = "time", same.source = TRUE)
+merge_annotations(
+  annotations,
+  domain = "time",
+  same.source = TRUE,
+  same.identifiedBy = TRUE
+)
 ```
 
 ## Arguments
@@ -25,6 +30,12 @@ merge_annotations(annotations, domain = "time", same.source = TRUE)
 
   If TRUE, annotations must have the same source to be merged.
 
+- same.identifiedBy:
+
+  If TRUE, annotations must have been made by the same person or
+  software, their `identifiedBy`, to be merged. Merging the annotations
+  of several people into one credits only one of them.
+
 ## Value
 
 A list of Annotation objects.
@@ -32,7 +43,7 @@ A list of Annotation objects.
 ## Details
 
 The merged annotation spans all of those merged into it, in both
-domains. It keeps the `source` and `metadata` of the last of them in the
-order
+domains. It keeps the `source`, `identifiedBy`, `dateIdentified` and
+`metadata` of the last of them in the order
 [`sort_annotations()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/sort_annotations.md)
 puts them in.

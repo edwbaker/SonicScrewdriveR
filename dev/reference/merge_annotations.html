@@ -58,7 +58,12 @@ where <code>NA</code> is the same as <code>NA</code> and nothing else.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">merge_annotations</span><span class="op">(</span><span class="va">annotations</span>, domain <span class="op">=</span> <span class="st">"time"</span>, same.source <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">merge_annotations</span><span class="op">(</span></span>
+<span>  <span class="va">annotations</span>,</span>
+<span>  domain <span class="op">=</span> <span class="st">"time"</span>,</span>
+<span>  same.source <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  same.identifiedBy <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -76,6 +81,12 @@ where <code>NA</code> is the same as <code>NA</code> and nothing else.</p>
 <dt id="arg-same-source">same.source<a class="anchor" aria-label="anchor" href="#arg-same-source"></a></dt>
 <dd><p>If TRUE, annotations must have the same source to be merged.</p></dd>
 
+
+<dt id="arg-same-identifiedby">same.identifiedBy<a class="anchor" aria-label="anchor" href="#arg-same-identifiedby"></a></dt>
+<dd><p>If TRUE, annotations must have been made by the same
+person or software, their <code>identifiedBy</code>, to be merged. Merging the
+annotations of several people into one credits only one of them.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -84,8 +95,8 @@ where <code>NA</code> is the same as <code>NA</code> and nothing else.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The merged annotation spans all of those merged into it, in both domains. It
-keeps the <code>source</code> and <code>metadata</code> of the last of them in the order
-<code><a href="sort_annotations.html">sort_annotations()</a></code> puts them in.</p>
+keeps the <code>source</code>, <code>identifiedBy</code>, <code>dateIdentified</code> and <code>metadata</code> of the
+last of them in the order <code><a href="sort_annotations.html">sort_annotations()</a></code> puts them in.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

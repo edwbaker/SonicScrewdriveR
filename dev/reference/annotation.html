@@ -64,7 +64,9 @@ stands for a limit that is not known.</p>
 <span>  high <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  source <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">""</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">""</span></span>
+<span>  value <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  identifiedBy <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  dateIdentified <span class="op">=</span> <span class="st">""</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -106,6 +108,17 @@ stands for a limit that is not known.</p>
 
 <dt id="arg-value">value<a class="anchor" aria-label="anchor" href="#arg-value"></a></dt>
 <dd><p>Value of annotation.</p></dd>
+
+
+<dt id="arg-identifiedby">identifiedBy<a class="anchor" aria-label="anchor" href="#arg-identifiedby"></a></dt>
+<dd><p>Who made the annotation: a person, or the software and
+model that did.</p></dd>
+
+
+<dt id="arg-dateidentified">dateIdentified<a class="anchor" aria-label="anchor" href="#arg-dateidentified"></a></dt>
+<dd><p>When the annotation was made: ISO 8601 text, a <code>Date</code>,
+or a time, which is given as UTC. A date and time written with a space
+rather than a <code>T</code>, as <code>2016-10-17 13:20</code>, is given with a <code>T</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

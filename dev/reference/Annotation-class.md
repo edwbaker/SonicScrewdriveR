@@ -10,6 +10,12 @@ annotation is not after its end, nor its low frequency above its high,
 and an annotation that breaks either rule is refused when it is made. A
 limit that is not known is `NA`, which no rule refuses.
 
+Who made an annotation and when are `identifiedBy` and `dateIdentified`,
+as `dwc:identifiedBy` and `dwc:dateIdentified` give them for a region of
+interest in Audiovisual Core. Either is `""` where it is not known. The
+`source` is where the annotation came from, such as the software or the
+collection, rather than who made it.
+
 ## Slots
 
 - `file`:
@@ -47,3 +53,11 @@ limit that is not known is `NA`, which no rule refuses.
 - `value`:
 
   Value of annotation.
+
+- `identifiedBy`:
+
+  Who made the annotation: a person, or the software and model that did.
+
+- `dateIdentified`:
+
+  When the annotation was made, as ISO 8601 text.

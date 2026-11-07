@@ -65,9 +65,10 @@ audioblast(
 - output:
 
   By default a `data.frame`. "Annotation" will return a list of
-  `Annotation` objects; "Annotations", as it was spelt before, still
-  works and is deprecated. "RecordingSet" returns the recordings found
-  by a search of the recordings module as a
+  `Annotation` objects, with the annotator as `identifiedBy` and the
+  date of the annotation as `dateIdentified`; "Annotations", as it was
+  spelt before, still works and is deprecated. "RecordingSet" returns
+  the recordings found by a search of the recordings module as a
   [RecordingSet](https://sonicscrewdriver.ebaker.me.uk/dev/reference/recordingSet.md).
   "JSON-LD" and "Turtle" return the RDF that audioBlast gives for
   modules that describe their records as linked data, as a character

@@ -54,6 +54,11 @@
 is not after its end, nor its low frequency above its high, and an
 annotation that breaks either rule is refused when it is made. A limit that
 is not known is <code>NA</code>, which no rule refuses.</p>
+<p>Who made an annotation and when are <code>identifiedBy</code> and <code>dateIdentified</code>, as
+<code>dwc:identifiedBy</code> and <code>dwc:dateIdentified</code> give them for a region of
+interest in Audiovisual Core. Either is <code>""</code> where it is not known. The
+<code>source</code> is where the annotation came from, such as the software or the
+collection, rather than who made it.</p>
     </div>
     <div class="section level2">
     <h2 id="slots">Slots<a class="anchor" aria-label="anchor" href="#slots"></a></h2>
@@ -93,6 +98,15 @@ is not known is <code>NA</code>, which no rule refuses.</p>
 
 <dt><code>value</code></dt>
 <dd><p>Value of annotation.</p></dd>
+
+
+<dt><code>identifiedBy</code></dt>
+<dd><p>Who made the annotation: a person, or the software and
+model that did.</p></dd>
+
+
+<dt><code>dateIdentified</code></dt>
+<dd><p>When the annotation was made, as ISO 8601 text.</p></dd>
 
 
 </dl></div>

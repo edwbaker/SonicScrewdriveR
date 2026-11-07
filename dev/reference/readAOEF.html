@@ -103,8 +103,9 @@ annotated as a whole, are read in the same way as annotations spanning the
 clip. A clip with no tags and no sound events, annotated as holding nothing,
 is read as one annotation with no type and no value, so that the absence is
 kept.</p>
-<p>The <code>metadata</code> of each annotation holds who made it (<code>created_by</code>), when
-(<code>created_on</code>), its <code>notes</code>, the <code>features</code> measured of it, and for a
+<p>Who made each annotation (<code>created_by</code>) is its <code>identifiedBy</code>, by the
+person's name, and when (<code>created_on</code>) its <code>dateIdentified</code>. The <code>metadata</code>
+of each annotation holds its <code>notes</code>, the <code>features</code> measured of it, and for a
 prediction its <code>score</code> and the <code>tag_score</code> of its tag. Under <code>aoef</code> it also
 holds the identifiers and the exact shape that <code><a href="writeAOEF.html">writeAOEF()</a></code> needs to write
 it back as it was, and what the file said of its recording. Sequences of

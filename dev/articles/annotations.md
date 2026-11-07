@@ -50,9 +50,19 @@ storing the file name (`file`) and the `source`, `type` and `value` of
 the annotation. A list slot `metadata` is provided for storing
 additional metadata.
 
-The `file`, `source`, `type` and `value` slots are used by
-SonicScrewdriveR. For example, the `merge_annotations` function uses
-these slots to appropriately merge overlapping annotations.
+Who made an annotation and when are held in the `identifiedBy` and
+`dateIdentified` slots, as Audiovisual Core gives them for a region of
+interest (`dwc:identifiedBy` and `dwc:dateIdentified`). `identifiedBy`
+is a person, or the software and model that made the annotation, while
+`source` is where the annotation came from. `dateIdentified` is ISO 8601
+text, and a `Date` or a time given to
+[`annotation()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/annotation.md)
+is written as such, a time in UTC.
+
+The `file`, `source`, `type`, `value` and `identifiedBy` slots are used
+by SonicScrewdriveR. For example, the `merge_annotations` function uses
+these slots to appropriately merge overlapping annotations, so that the
+annotations of two people are not merged into one unless asked.
 
 When using tools from SonicScrewdriveR these slots may be pre-populated.
 The example below creates an `Annotation` object equivalent to one
@@ -67,6 +77,8 @@ a5 <- annotation(
   source = "BirdNet-Analyzer",
   type = "birdnet-detection",
   value = "sparrow",
+  identifiedBy = "BirdNET-Analyzer 2.4",
+  dateIdentified = as.POSIXct("2026-10-30 09:15:00", tz="UTC"),
   metadata = list(
     confidence = 0.9
   )
@@ -127,7 +139,7 @@ annotations <- birdNetAnalyse(f, output="Annotation")
 The `merge_annotations` function can be used to merge overlapping
 annotations. The function will merge annotations with overlapping time
 extents with the same `file`, `type`, `value` and optionally `source`
-slots.
+and `identifiedBy` slots.
 
 ``` r
 
@@ -187,6 +199,12 @@ merge_annotations(a)
 #> 
 #> Slot "value":
 #> [1] "sparrow"
+#> 
+#> Slot "identifiedBy":
+#> [1] ""
+#> 
+#> Slot "dateIdentified":
+#> [1] ""
 ```
 
 The two annotations in the list `a` overlap in time and have the same

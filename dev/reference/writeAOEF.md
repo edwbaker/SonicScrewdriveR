@@ -71,7 +71,10 @@ had. A sound event moved off its clip altogether is put in a clip
 spanning its recording, and one of several tags given a range of its own
 becomes a sound event of its own. Whombat imports the annotations of a
 project only for recordings it already holds under the same identifiers,
-which those annotations keep. `created_by`, `created_on`, `notes` and
+which those annotations keep. The `identifiedBy` of an annotation is
+written as who made it (`created_by`) and its `dateIdentified` as when
+(`created_on`), where that is a single date and time of day: AOEF holds
+no date without a time, and one is not made up, nor a range. `notes` and
 `features` in the `metadata` of an annotation are written; nothing else
 of it is, so predictions are written as annotations without their
 scores.

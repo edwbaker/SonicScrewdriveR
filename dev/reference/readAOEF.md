@@ -49,10 +49,11 @@ annotations spanning the clip. A clip with no tags and no sound events,
 annotated as holding nothing, is read as one annotation with no type and
 no value, so that the absence is kept.
 
-The `metadata` of each annotation holds who made it (`created_by`), when
-(`created_on`), its `notes`, the `features` measured of it, and for a
-prediction its `score` and the `tag_score` of its tag. Under `aoef` it
-also holds the identifiers and the exact shape that
+Who made each annotation (`created_by`) is its `identifiedBy`, by the
+person's name, and when (`created_on`) its `dateIdentified`. The
+`metadata` of each annotation holds its `notes`, the `features` measured
+of it, and for a prediction its `score` and the `tag_score` of its tag.
+Under `aoef` it also holds the identifiers and the exact shape that
 [`writeAOEF()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/writeAOEF.md)
 needs to write it back as it was, and what the file said of its
 recording. Sequences of sound events are not read.

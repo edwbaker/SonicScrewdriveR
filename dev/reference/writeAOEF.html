@@ -123,9 +123,12 @@ identifiers it had. A sound event moved off its clip altogether is put in a
 clip spanning its recording, and one of several tags given a range of its
 own becomes a sound event of its own. Whombat imports the annotations of a
 project only for recordings it already holds under the same identifiers,
-which those annotations keep. <code>created_by</code>, <code>created_on</code>, <code>notes</code> and
-<code>features</code> in the <code>metadata</code> of an annotation are written; nothing else of
-it is, so predictions are written as annotations without their scores.</p>
+which those annotations keep. The <code>identifiedBy</code> of an annotation is
+written as who made it (<code>created_by</code>) and its <code>dateIdentified</code> as when
+(<code>created_on</code>), where that is a single date and time of day: AOEF holds no
+date without a time, and one is not made up, nor a range. <code>notes</code> and <code>features</code> in the
+<code>metadata</code> of an annotation are written; nothing else of it is, so
+predictions are written as annotations without their scores.</p>
 <p>soundevent reads only annotations in a clip, so every other annotation is
 put in a clip spanning the whole of its recording. AOEF also needs the
 duration, channels and sample rate of each recording, which are read from

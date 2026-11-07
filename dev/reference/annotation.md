@@ -16,7 +16,9 @@ annotation(
   high = Inf,
   source = "",
   type = "",
-  value = ""
+  value = "",
+  identifiedBy = "",
+  dateIdentified = ""
 )
 ```
 
@@ -57,6 +59,16 @@ annotation(
 - value:
 
   Value of annotation.
+
+- identifiedBy:
+
+  Who made the annotation: a person, or the software and model that did.
+
+- dateIdentified:
+
+  When the annotation was made: ISO 8601 text, a `Date`, or a time,
+  which is given as UTC. A date and time written with a space rather
+  than a `T`, as `2016-10-17 13:20`, is given with a `T`.
 
 ## Value
 
