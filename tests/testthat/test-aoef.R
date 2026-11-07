@@ -276,6 +276,46 @@ test_that("readAOEF refuses a shape it cannot read", {
   expect_equal(c(a[[1]]@start, a[[1]]@end), c(1, 2))
 })
 
+test_that("A clip's date is the date of its annotation, written or not", {
+  # The date the clip was read with was written once the annotation's own had
+  # been cleared or made a date alone.
+  original <- readAOEF(aoefFixture("soundevent_annotation_project"), audio.dir="D:/audio")
+  clip <- original[[1]]@metadata$aoef$uuid
+  expect_equal(original[[1]]@metadata$aoef$object, "clip_annotation")
+  f <- withr::local_tempfile(fileext=".json")
+  written <- function(a) {
+    writeAOEF(a, f, audio.dir="D:/audio")
+    annotations <- aoefJSON(f)$data$clip_annotations
+    annotations[[which(vapply(annotations, function(x) x$uuid, character(1)) == clip)]]
+  }
+  expect_equal(written(original)$created_on, "2026-10-30T12:00:00")
+  for (date in c("", "2026-10-30", "2026-10-30T12:00:00/2026-10-30T13:00:00")) {
+    changed <- original
+    for (i in seq_along(changed)) {
+      if (identical(changed[[i]]@metadata$aoef$uuid, clip)) {
+        changed[[i]]@dateIdentified <- date
+      }
+    }
+    expect_null(written(changed)$created_on)
+  }
+})
+
+test_that("Only a single date and time is written as when an annotation was made", {
+  # A range began with a date and time, and was written whole.
+  aoefTime <- sonicscrewdriver:::.aoefTime
+  for (kept in c("2026-10-30T09:15", "2026-10-30T09:15:00", "2026-10-30T09:15:00.250000",
+                 "2026-10-30T09:15:00Z", "2026-10-30T09:15:00.25+01:00", "2026-10-30T09:15:00-0500",
+                 "2023-11-23T20:44:32.913233")) {
+    expect_identical(aoefTime(kept), kept)
+  }
+  for (left in c("2026-10-30T09:15:00Z/2026-10-30T10:15:00Z", "2026-10-30/2026-10-31",
+                 "2026-10-30", "2026", "", NA_character_, "2026-10-30T09:15:00 and later")) {
+    expect_null(aoefTime(left))
+  }
+  expect_null(aoefTime(c("2026-10-30T09:15", "2026-10-30T10:15")))
+  expect_null(aoefTime(NULL))
+})
+
 test_that("Annotations read from AOEF are written back as they were", {
   original <- readAOEF(aoefFixture("soundevent_annotation_project"), audio.dir="D:/audio")
   f <- withr::local_tempfile(fileext=".json")

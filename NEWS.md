@@ -338,7 +338,9 @@
   the slots instead. birdNetAnalyse() credits each detection to the model and
   its version, as `BirdNET-Analyzer 2.4`, at the time its file was analysed.
   writeAOEF() writes the slots as who made an annotation and when, a
-  `dateIdentified` without a time of day being left out, as AOEF holds none.
+  `dateIdentified` without a time of day, or a range, being left out, as AOEF
+  holds a single date and time; for an annotation read from AOEF it is the
+  slot that is written, so clearing it leaves the date out.
   AnnotationList2DataFrame() gives both as columns. An annotation saved by an
   earlier version has neither slot, and is made again with annotation().
 

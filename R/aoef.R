@@ -465,8 +465,8 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
 #' project only for recordings it already holds under the same identifiers,
 #' which those annotations keep. The `identifiedBy` of an annotation is
 #' written as who made it (`created_by`) and its `dateIdentified` as when
-#' (`created_on`), where that is a date and a time of day: AOEF holds no date
-#' without a time, and one is not made up. `notes` and `features` in the
+#' (`created_on`), where that is a single date and time of day: AOEF holds no
+#' date without a time, and one is not made up, nor a range. `notes` and `features` in the
 #' `metadata` of an annotation are written; nothing else of it is, so
 #' predictions are written as annotations without their scores.
 #'
@@ -595,10 +595,9 @@ writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_
       clips[[k]]$tags <- union(clips[[k]]$tags, .aoefTags(tags, annotations[group]))
       clips[[k]]$notes <- first@metadata[["notes"]]
       clips[[k]]$features <- first@metadata[["features"]]
-      when <- .aoefTime(first@dateIdentified)
-      if (!is.null(when)) {
-        clips[[k]]$created_on <- when
-      }
+      #The annotation's own date is written, or none: the date the clip was read
+      #with is not kept once the annotation's has been cleared or changed.
+      clips[[k]]$created_on <- .aoefTime(first@dateIdentified)
       next
     }
 
@@ -947,16 +946,19 @@ writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_
 
 #' A time as AOEF writes it
 #'
-#' AOEF holds a date and a time of day, so a date alone is not written, rather
-#' than being given a time it does not have; nor is an empty one. A time is
+#' AOEF holds a single date and time of day, so a date alone is not written,
+#' rather than being given a time it does not have; nor is a range, which
+#' `dateIdentified` allows as Darwin Core does, nor an empty one. A time is
 #' text, as readAOEF() and the `dateIdentified` of an annotation give it.
 #' @param time A time as ISO 8601 text.
 #' @return Text, or NULL.
 #' @keywords internal
 #' @noRd
 .aoefTime <- function(time) {
-  if (is.character(time) && length(time) == 1 && !is.na(time) &&
-      grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}", time)) {
+  #The whole of the text, so that a range beginning with a date and time is not
+  #taken for one.
+  single <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2}([.][0-9]+)?)?(Z|[+-][0-9]{2}(:?[0-9]{2})?)?$"
+  if (is.character(time) && length(time) == 1 && !is.na(time) && grepl(single, time)) {
     return(time)
   }
   return(NULL)

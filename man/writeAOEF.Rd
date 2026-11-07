@@ -59,8 +59,8 @@ own becomes a sound event of its own. Whombat imports the annotations of a
 project only for recordings it already holds under the same identifiers,
 which those annotations keep. The \code{identifiedBy} of an annotation is
 written as who made it (\code{created_by}) and its \code{dateIdentified} as when
-(\code{created_on}), where that is a date and a time of day: AOEF holds no date
-without a time, and one is not made up. \code{notes} and \code{features} in the
+(\code{created_on}), where that is a single date and time of day: AOEF holds no
+date without a time, and one is not made up, nor a range. \code{notes} and \code{features} in the
 \code{metadata} of an annotation are written; nothing else of it is, so
 predictions are written as annotations without their scores.
 
