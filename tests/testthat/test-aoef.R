@@ -92,10 +92,13 @@ test_that("readAOEF reads the tags of clips and clips annotated as holding nothi
 
 test_that("readAOEF keeps who made an annotation, when, its notes and its features", {
   a <- readAOEF(aoefFixture("soundevent_annotation_project"))
-  expect_equal(a[[2]]@metadata$created_by, "Ed Baker")
+  expect_equal(a[[2]]@identifiedBy, "Ed Baker")
   #A user with a name and no username is named by the name.
-  expect_equal(a[[4]]@metadata$created_by, "A. Recordist")
-  expect_equal(a[[2]]@metadata$created_on, "2026-10-30T12:00:00")
+  expect_equal(a[[4]]@identifiedBy, "A. Recordist")
+  expect_equal(a[[2]]@dateIdentified, "2026-10-30T12:00:00")
+  #Who and when are the annotation's own slots, not its metadata.
+  expect_null(a[[2]]@metadata$created_by)
+  expect_null(a[[2]]@metadata$created_on)
   expect_equal(a[[2]]@metadata$notes, c("Clear song", "Second phrase overlaps"))
   expect_equal(a[[2]]@metadata$features, c(snr=12.5))
   kept <- a[[2]]@metadata$aoef$recording
@@ -124,7 +127,8 @@ test_that("readAOEF gives a data frame", {
   df <- readAOEF(aoefFixture("soundevent_annotation_project"), output="data.frame")
   expect_s3_class(df, "data.frame")
   expect_equal(nrow(df), 13)
-  expect_true(all(c("created_by", "created_on", "notes", "features", "aoef") %in% colnames(df)))
+  expect_true(all(c("identifiedBy", "dateIdentified", "notes", "features", "aoef") %in% colnames(df)))
+  expect_equal(df$identifiedBy[2], "Ed Baker")
   expect_error(readAOEF(aoefFixture("soundevent_annotation_project"), output="ewe"), "Unknown output format.")
 })
 
@@ -134,7 +138,7 @@ test_that("readAOEF reads the annotations of an evaluation set as Whombat writes
   expect_length(unique(vapply(events, function(x) x@metadata$aoef$uuid, character(1))), 8)
   expect_equal(e[[1]]@value, "Diclidurus albus")
   expect_equal(e[[1]]@start, 2.2304061436545557)
-  expect_equal(e[[1]]@metadata$created_by, "Santiago Martinez Balvanera")
+  expect_equal(e[[1]]@identifiedBy, "Santiago Martinez Balvanera")
 })
 
 test_that("readAOEF reads predictions with their scores, from the model that made them", {
@@ -272,6 +276,46 @@ test_that("readAOEF refuses a shape it cannot read", {
   expect_equal(c(a[[1]]@start, a[[1]]@end), c(1, 2))
 })
 
+test_that("A clip's date is the date of its annotation, written or not", {
+  # The date the clip was read with was written once the annotation's own had
+  # been cleared or made a date alone.
+  original <- readAOEF(aoefFixture("soundevent_annotation_project"), audio.dir="D:/audio")
+  clip <- original[[1]]@metadata$aoef$uuid
+  expect_equal(original[[1]]@metadata$aoef$object, "clip_annotation")
+  f <- withr::local_tempfile(fileext=".json")
+  written <- function(a) {
+    writeAOEF(a, f, audio.dir="D:/audio")
+    annotations <- aoefJSON(f)$data$clip_annotations
+    annotations[[which(vapply(annotations, function(x) x$uuid, character(1)) == clip)]]
+  }
+  expect_equal(written(original)$created_on, "2026-10-30T12:00:00")
+  for (date in c("", "2026-10-30", "2026-10-30T12:00:00/2026-10-30T13:00:00")) {
+    changed <- original
+    for (i in seq_along(changed)) {
+      if (identical(changed[[i]]@metadata$aoef$uuid, clip)) {
+        changed[[i]]@dateIdentified <- date
+      }
+    }
+    expect_null(written(changed)$created_on)
+  }
+})
+
+test_that("Only a single date and time is written as when an annotation was made", {
+  # A range began with a date and time, and was written whole.
+  aoefTime <- sonicscrewdriver:::.aoefTime
+  for (kept in c("2026-10-30T09:15", "2026-10-30T09:15:00", "2026-10-30T09:15:00.250000",
+                 "2026-10-30T09:15:00Z", "2026-10-30T09:15:00.25+01:00", "2026-10-30T09:15:00-0500",
+                 "2023-11-23T20:44:32.913233")) {
+    expect_identical(aoefTime(kept), kept)
+  }
+  for (left in c("2026-10-30T09:15:00Z/2026-10-30T10:15:00Z", "2026-10-30/2026-10-31",
+                 "2026-10-30", "2026", "", NA_character_, "2026-10-30T09:15:00 and later")) {
+    expect_null(aoefTime(left))
+  }
+  expect_null(aoefTime(c("2026-10-30T09:15", "2026-10-30T10:15")))
+  expect_null(aoefTime(NULL))
+})
+
 test_that("Annotations read from AOEF are written back as they were", {
   original <- readAOEF(aoefFixture("soundevent_annotation_project"), audio.dir="D:/audio")
   f <- withr::local_tempfile(fileext=".json")
@@ -331,16 +375,16 @@ test_that("writeAOEF writes annotations made here, with the shapes they describe
   f <- normalizePath(system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver"), "/")
   annotations <- list(
     annotation(file=f, start=0, end=3, type="birdnet-detection", value="Turdus merula",
-               metadata=list(confidence=0.9, created_by="BirdNET", notes=c("one", "two"),
-                             created_on=as.POSIXct("2026-10-30 09:15:00", tz="UTC"),
-                             features=c(snr=4, bad=NA))),
+               identifiedBy="BirdNET", dateIdentified=as.POSIXct("2026-10-30 09:15:00", tz="UTC"),
+               metadata=list(confidence=0.9, notes=c("one", "two"), features=c(snr=4, bad=NA))),
     annotation(file=f, start=1, end=Inf, low=1000, value="label only"),
     annotation(file=f, start=2, end=2),
     annotation(file=f, start=2.5, end=2.5, low=3000, high=3000, type="t", value="v"),
     annotation(file=f, start=3, end=4, low=500, high=900, type=NA, value=NA,
-               metadata=list(created_by=NA, created_on="2026-10-30T10:00:00", features="x")),
+               identifiedBy=NA, dateIdentified="2026-10-30T10:00:00", metadata=list(features="x")),
+    #AOEF holds no date without a time of day, so this one's date is not written.
     annotation(file=f, start=4, end=4.5, low=NA, high=NA, type="t", value="v",
-               metadata=list(created_on=as.Date("2026-10-30"), features=c(1, 2)))
+               dateIdentified=as.Date("2026-10-30"), metadata=list(features=c(1, 2)))
   )
   out <- withr::local_tempfile(fileext=".json")
   writeAOEF(annotations, out, audio.dir=dirname(f))
@@ -361,7 +405,7 @@ test_that("writeAOEF writes annotations made here, with the shapes they describe
   events <- data$sound_event_annotations
   expect_equal(lapply(events, function(e) unlist(e$tags)), list(0L, 1L, NULL, 2L, NULL, 2L))
   expect_equal(vapply(events[[1]]$notes, function(n) n$message, character(1)), c("one", "two"))
-  expect_equal(events[[1]]$created_on, "2026-10-30T09:15:00.000000Z")
+  expect_equal(events[[1]]$created_on, "2026-10-30T09:15:00Z")
   expect_equal(events[[5]]$created_on, "2026-10-30T10:00:00")
   expect_null(events[[6]]$created_on)
   expect_equal(data$users[[1]]$name, "BirdNET")
@@ -379,7 +423,8 @@ test_that("writeAOEF writes annotations made here, with the shapes they describe
 
   back <- readAOEF(out, audio.dir=dirname(f))
   expect_equal(back[[1]]@file, f)
-  expect_equal(back[[1]]@metadata$created_by, "BirdNET")
+  expect_equal(back[[1]]@identifiedBy, "BirdNET")
+  expect_equal(back[[1]]@dateIdentified, "2026-10-30T09:15:00Z")
   expect_null(back[[1]]@metadata$confidence)
 })
 
@@ -441,7 +486,7 @@ test_that("writeAOEF writes tags and names beginning with a dot", {
   f <- system.file("extdata", "AUDIOMOTH.WAV", package="sonicscrewdriver")
   out <- withr::local_tempfile(fileext=".json")
   writeAOEF(annotation(file=f, start=0, end=1, type=".key", value=".value",
-                       metadata=list(created_by=".someone")), out)
+                       identifiedBy=".someone"), out)
   data <- aoefJSON(out)$data
   expect_equal(data$tags[[1]][c("key", "value")], list(key=".key", value=".value"))
   expect_equal(data$users[[1]]$name, ".someone")

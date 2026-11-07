@@ -303,8 +303,9 @@
   frequency, a single moment, a single point, or lines and polygons drawn on
   the spectrogram, and any number of tags, each a key and a value. It is read
   as one `Annotation` for each of its tags, spanning the smallest range of time
-  and frequency that holds the shape, with who made it, when, its notes and the
-  features measured of it in its metadata. The tags of a clip, a part of a
+  and frequency that holds the shape, with who made it and when as its
+  `identifiedBy` and `dateIdentified`, and its notes and the features measured
+  of it in its metadata. The tags of a clip, a part of a
   recording annotated as a whole, are read as annotations spanning the clip,
   and a clip annotated as holding nothing is read as an annotation with no
   value, so that the absence is kept. The predictions of a model run are read
@@ -322,6 +323,31 @@
   the locale rather than in UTF-8, so a file that is not UTF-8 is read as
   Windows-1252, and every character outside ASCII is written as an escape,
   which every reader decodes alike.
+- An `Annotation` says who made it and when, in two new slots, `identifiedBy`
+  and `dateIdentified`, as Audiovisual Core gives them for a region of
+  interest (`dwc:identifiedBy` and `dwc:dateIdentified`). There was nowhere to
+  keep either: audioblast() put them in metadata as `annotator` and
+  `annotation_date`, readAOEF() as `created_by` and `created_on`,
+  birdNetAnalyse() kept neither, and `source` named a program for some
+  annotations and a person for others. `dateIdentified` is ISO 8601 text; a
+  `Date` or a time given to annotation() is written as such, a time in UTC,
+  and a date and time written with a space, as bio.acousti.ca writes them in
+  audioBlast, is given a `T`. audioblast() and readAOEF() now fill the slots
+  rather than the metadata, so code reading `annotator`, `annotation_date`,
+  `created_by` or `created_on` from the metadata of an annotation should read
+  the slots instead. birdNetAnalyse() credits each detection to the model and
+  its version, as `BirdNET-Analyzer 2.4`, at the time its file was analysed.
+  writeAOEF() writes the slots as who made an annotation and when, a
+  `dateIdentified` without a time of day, or a range, being left out, as AOEF
+  holds a single date and time; for an annotation read from AOEF it is the
+  slot that is written, so clearing it leaves the date out.
+  AnnotationList2DataFrame() gives both as columns. An annotation saved by an
+  earlier version has neither slot, and is made again with annotation().
+
+  merge_annotations() merged overlapping annotations by different people into
+  one crediting only the last of them, as every annotation from audioBlast has
+  the same `source`. It now merges only annotations with the same
+  `identifiedBy`, unless `same.identifiedBy=FALSE`.
 - wavChunks() lists the chunks a wave file holds: every one of them, in the
   order the file holds them, with where its body begins, how large it is,
   whether it was cut short, and, for a list, which kind of list it is. The

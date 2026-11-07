@@ -32,6 +32,11 @@ This function takes a list of sound files and analyses them using the
 either returns a data frame with the results of the analysis or a list of
 \code{Annotation} objects.
 }
+\details{
+Each detection is credited, as its \code{identifiedBy}, to the model that made
+it and the version of that model, as \verb{BirdNET-Analyzer 2.4}, and dated, as
+its \code{dateIdentified}, to the time its file was analysed, in UTC.
+}
 \examples{
 \dontrun{
   birdNetAnalyse(files=c("path/to/file1.wav", "path/to/file2.wav"), output="data.frame")

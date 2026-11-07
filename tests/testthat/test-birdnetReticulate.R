@@ -10,11 +10,17 @@ test_that("birdNetAnalyse() returns correct format", {
   f <- c(f,f)
   df <- birdNetAnalyse(f, output="data.frame")
   expect_true(is.data.frame(df))
-  expect_equal(ncol(df), 11)
+  expect_equal(ncol(df), 13)
 
   a <- birdNetAnalyse(f, output="Annotation")
   expect_type(a, "list")
   expect_true(all(sapply(a, is, "Annotation")))
+  # Each detection is credited to the model and its version, at the time of
+  # the run.
+  expect_match(vapply(a, function(x) x@identifiedBy, character(1)), "^BirdNET-Analyzer [0-9]")
+  expect_match(vapply(a, function(x) x@dateIdentified, character(1)),
+               "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9.]+Z$")
+  expect_identical(df$identifiedBy, vapply(a, function(x) x@identifiedBy, character(1)))
 
   a <- birdNetAnalyse(f, lat=54, lon=0, output="Annotation")
   expect_type(a, "list")

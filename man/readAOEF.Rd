@@ -42,8 +42,9 @@ clip. A clip with no tags and no sound events, annotated as holding nothing,
 is read as one annotation with no type and no value, so that the absence is
 kept.
 
-The \code{metadata} of each annotation holds who made it (\code{created_by}), when
-(\code{created_on}), its \code{notes}, the \code{features} measured of it, and for a
+Who made each annotation (\code{created_by}) is its \code{identifiedBy}, by the
+person's name, and when (\code{created_on}) its \code{dateIdentified}. The \code{metadata}
+of each annotation holds its \code{notes}, the \code{features} measured of it, and for a
 prediction its \code{score} and the \code{tag_score} of its tag. Under \code{aoef} it also
 holds the identifiers and the exact shape that \code{\link[=writeAOEF]{writeAOEF()}} needs to write
 it back as it was, and what the file said of its recording. Sequences of
