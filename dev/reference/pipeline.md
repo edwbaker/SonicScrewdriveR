@@ -70,7 +70,8 @@ and [`lapply()`](https://rdrr.io/r/base/lapply.html), which take no
 wave. A pipeline held in a variable, or a list of them, is given by its
 name, and `NULL` gives no steps.
 
-A pipeline does not carry the recordings it is run on. They are given
+A pipeline does not carry the recordings it is run on. They are given to
+[`runPipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/runPipeline.md)
 when it is run, so that the same pipeline can be run on any number of
 sets, and its id is the same whichever set it runs on.
 
@@ -203,6 +204,8 @@ of the hash of each package, and R's version.
 
 ## See also
 
+[`runPipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/runPipeline.md)
+to run one over a set of recordings,
 [`tagApply()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/tagApply.md),
 whose records the steps leave, and
 [`flattenOutput()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/flattenOutput.md),
@@ -217,21 +220,21 @@ p <- pipeline(
   dutyCycle()
 )
 p
-#> <Pipeline 7bc82e23: 4 steps>
+#> <Pipeline be312093: 4 steps>
 #> 1. normalise()
 #> 2. filterWave(bandpass(2000, 11000)), then
 #>    2.1 dutyCycle()
 #> 3. dutyCycle()
-#> Code: sonicscrewdriver 2ef1b9f5, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
+#> Code: sonicscrewdriver ad28d4dc, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
 
 # Two bands, built in code
 pipeline(lapply(c(1000, 4000), function(f) {
   task(filterWave, bandpass(f, 2 * f), then = dutyCycle())
 }))
-#> <Pipeline acb740bd: 4 steps>
+#> <Pipeline 7d12130b: 4 steps>
 #> 1. filterWave(bandpass(1000, 2 * 1000)), then
 #>    1.1 dutyCycle()
 #> 2. filterWave(bandpass(4000, 2 * 4000)), then
 #>    2.1 dutyCycle()
-#> Code: sonicscrewdriver 2ef1b9f5, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
+#> Code: sonicscrewdriver ad28d4dc, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)
 ```

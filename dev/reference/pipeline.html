@@ -111,9 +111,9 @@ rather than being taken for it, as with <code><a href="tagApply.html">tagApply()
 list, such as <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> and <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply()</a></code>, which take no wave. A pipeline held in
 a variable, or a list of them, is given by its name, and <code>NULL</code> gives no
 steps.</p>
-<p>A pipeline does not carry the recordings it is run on. They are given when
-it is run, so that the same pipeline can be run on any number of sets, and
-its id is the same whichever set it runs on.</p>
+<p>A pipeline does not carry the recordings it is run on. They are given to
+<code><a href="runPipeline.html">runPipeline()</a></code> when it is run, so that the same pipeline can be run on any
+number of sets, and its id is the same whichever set it runs on.</p>
     </div>
     <div class="section level2">
     <h2 id="how-waves-and-results-pass-between-steps">How waves and results pass between steps<a class="anchor" aria-label="anchor" href="#how-waves-and-results-pass-between-steps"></a></h2>
@@ -224,8 +224,9 @@ hash of each package, and R's version.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="tagApply.html">tagApply()</a></code>, whose records the steps leave, and <code><a href="flattenOutput.html">flattenOutput()</a></code>,
-which turns their results into rows.</p></div>
+    <div class="dont-index"><p><code><a href="runPipeline.html">runPipeline()</a></code> to run one over a set of recordings, <code><a href="tagApply.html">tagApply()</a></code>,
+whose records the steps leave, and <code><a href="flattenOutput.html">flattenOutput()</a></code>, which turns their
+results into rows.</p></div>
     </div>
 
     <div class="section level2">
@@ -236,23 +237,23 @@ which turns their results into rows.</p></div>
 <span class="r-in"><span>  <span class="fu"><a href="dutyCycle.html">dutyCycle</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;Pipeline 7bc82e23: 4 steps&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;Pipeline be312093: 4 steps&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1. normalise()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2. filterWave(bandpass(2000, 11000)), then</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    2.1 dutyCycle()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3. dutyCycle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Code: sonicscrewdriver 2ef1b9f5, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Code: sonicscrewdriver ad28d4dc, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Two bands, built in code</span></span></span>
 <span class="r-in"><span><span class="fu">pipeline</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">4000</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">task</span><span class="op">(</span><span class="va">filterWave</span>, <span class="fu"><a href="bandpass.html">bandpass</a></span><span class="op">(</span><span class="va">f</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">f</span><span class="op">)</span>, then <span class="op">=</span> <span class="fu"><a href="dutyCycle.html">dutyCycle</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;Pipeline acb740bd: 4 steps&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;Pipeline 7d12130b: 4 steps&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1. filterWave(bandpass(1000, 2 * 1000)), then</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    1.1 dutyCycle()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2. filterWave(bandpass(4000, 2 * 4000)), then</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    2.1 dutyCycle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Code: sonicscrewdriver 2ef1b9f5, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Code: sonicscrewdriver ad28d4dc, digest f0d5de56, seewave 76dcf15f, tuneR 3763cca6, R 4.6.2 (2026-10-29)</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

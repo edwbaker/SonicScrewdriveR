@@ -238,6 +238,8 @@
 - [`pipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md)
   [`task()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipeline.md)
   : Write an analysis as a pipeline of steps
+- [`pipelineResults()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/pipelineResults.md)
+  : Read the results of a pipeline from a store
 - [`plot(`*`<fcis>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plot.fcis.md)
   : Plot a false-colour index spectrogram
 - [`` `+`( ``*`<PseudoWave>`*`,`*`<numeric>`*`)`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/plus-PseudoWave-numeric-method.md)
@@ -286,6 +288,8 @@
   : Specify a region with a file to analyse
 - [`resonantFrequency()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/resonantFrequency.md)
   : Calculate the resonant frequency
+- [`runPipeline()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/runPipeline.md)
+  : Run a pipeline over a set of recordings
 - [`sDuration()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/sDuration.md)
   : Sample duration
 - [`sheepFrequencyStats`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/sheepFrequencyStats.md)
