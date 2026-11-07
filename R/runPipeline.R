@@ -227,6 +227,7 @@ pipelineResults <- function(store, p, step=NULL) {
   }
   out <- lapply(tables$number, .readTable, dir=dir, id=id, manifests=manifests, files=files)
   names(out) <- tables$name
+  files$observed <- NULL
   attr(out, "files") <- files
   return(out)
 }
@@ -275,8 +276,41 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @noRd
 .absoluteLocations <- function(set) {
   local <- !is.na(set$location) & !.isUrl(set$location)
-  set$location[local] <- normalizePath(set$location[local], winslash="/", mustWork=FALSE)
+  set$location[local] <- .absolutePath(set$location[local])
   return(set)
+}
+
+#' The absolute path of a file, whether or not it exists yet
+#'
+#' normalizePath() leaves a file that does not exist as it was given, which on
+#' Unix can be relative and on Windows can hold the short name of a folder,
+#' as RUNNER~1, that it gives in full once the file is there. Such a file is
+#' found through the deepest folder of its path that does exist, so that its
+#' path is the same before it exists as after, and a run that failed for want
+#' of it is matched to the file once it is there.
+#' @param path Paths.
+#' @return Absolute paths, with "/" between folders.
+#' @keywords internal
+#' @noRd
+.absolutePath <- function(path) {
+  out <- path
+  there <- file.exists(path)
+  out[there] <- normalizePath(path[there], winslash="/")
+  out[!there] <- vapply(path.expand(path[!there]), function(p) {
+    if (!grepl("^([A-Za-z]:)?[/\\\\]", p)) {
+      p <- file.path(getwd(), p)
+    }
+    rest <- character(0)
+    while (!file.exists(p) && dirname(p) != p) {
+      rest <- c(basename(p), rest)
+      p <- dirname(p)
+    }
+    #The root of a drive ends in "/", as other folders do not. A file is below
+    #a folder, so something is always added after it.
+    found <- sub("/+$", "", normalizePath(p, winslash="/", mustWork=FALSE))
+    return(paste(c(found, rest), collapse="/"))
+  }, character(1), USE.NAMES=FALSE)
+  return(out)
 }
 
 #' Write an object to a file in one step
@@ -514,9 +548,12 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @keywords internal
 #' @noRd
 .runPipelineFile <- function(p, id, f, rows, keep) {
-  failed <- function(e, hash=f$hash) {
+  #Until the file has been read, its hash is the one the set gives, which can
+  #be wrong.
+  failed <- function(e, hash=f$hash, observed=FALSE) {
     return(list(
-      record=.fileRecord(hash, f$uri, f$location, conditionMessage(e)), results=list()
+      record=.fileRecord(hash, f$uri, f$location, conditionMessage(e), observed),
+      results=list()
     ))
   }
   if (!is.na(f$problem)) {
@@ -547,11 +584,13 @@ pipelineResults <- function(store, p, step=NULL) {
   }
   ran <- tryCatch(.runPipelineWave(p, w)$results, error=function(e) e)
   if (inherits(ran, "error")) {
-    return(failed(ran, hash))
+    return(failed(ran, hash, observed=TRUE))
   }
+  #Exactly, as $ would give a column such as start_offset where the recordings
+  #do not agree on start.
   return(list(
-    record=.fileRecord(hash, f$uri, f$location, NA_character_),
-    results=lapply(ran, .keyedRows, file=hash, id=id, start=metadata$start)
+    record=.fileRecord(hash, f$uri, f$location, NA_character_, observed=TRUE),
+    results=lapply(ran, .keyedRows, file=hash, id=id, start=metadata[["start"]])
   ))
 }
 
@@ -560,13 +599,16 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @param uri The uri of its first recording.
 #' @param location Where it was fetched from.
 #' @param error Why it failed, or `NA`.
+#' @param observed Whether `hash` was read from the file's bytes, rather than
+#'   taken from the set, so that only a hash the file was found to have is
+#'   taken to be the hash of what is at its location.
 #' @return A list.
 #' @keywords internal
 #' @noRd
-.fileRecord <- function(hash, uri, location, error) {
+.fileRecord <- function(hash, uri, location, error, observed) {
   return(list(
     file=hash, uri=uri, location=location, status=if (is.na(error)) "ok" else "error",
-    error=error, time=structure(Sys.time(), tzone="UTC")
+    error=error, time=structure(Sys.time(), tzone="UTC"), observed=observed
   ))
 }
 
@@ -692,8 +734,8 @@ pipelineResults <- function(store, p, step=NULL) {
 
 #' Every record of a store, in the order the batches were written
 #' @param manifests What `.readManifests()` gives.
-#' @return A data frame of `file`, `uri`, `location`, `status`, `error`, `time`
-#'   and `batch`, one row for each time a file was run.
+#' @return A data frame of `file`, `uri`, `location`, `status`, `error`, `time`,
+#'   `observed` and `batch`, one row for each time a file was run.
 #' @keywords internal
 #' @noRd
 .storeRecords <- function(manifests) {
@@ -701,7 +743,7 @@ pipelineResults <- function(store, p, step=NULL) {
     list(data.frame(
       file=character(0), uri=character(0), location=character(0),
       status=character(0), error=character(0), time=.POSIXct(numeric(0), tz="UTC"),
-      batch=numeric(0), stringsAsFactors=FALSE
+      observed=logical(0), batch=numeric(0), stringsAsFactors=FALSE
     )),
     lapply(manifests, `[[`, "files")
   )))
@@ -736,7 +778,9 @@ pipelineResults <- function(store, p, step=NULL) {
 #' The hash a store found at each location
 #'
 #' A missing location is no location, so files that have none are not taken
-#' for one another.
+#' for one another. Only a hash read from a file is used: a file that failed
+#' before it was read, as one that did not match the hash the set gave it,
+#' holds the hash the set gave.
 #' @param location Locations.
 #' @param records What `.storeRecords()` gives.
 #' @return A hash for each location, `NA` where the store has none or the
@@ -744,7 +788,8 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @keywords internal
 #' @noRd
 .hashAt <- function(location, records) {
-  hashed <- records[!is.na(records$file) & !is.na(records$location), , drop=FALSE]
+  hashed <- records[!is.na(records$file) & !is.na(records$location) & records$observed, ,
+                    drop=FALSE]
   hashed <- hashed[!duplicated(hashed$location, fromLast=TRUE), , drop=FALSE]
   return(hashed$file[match(location, hashed$location)])
 }

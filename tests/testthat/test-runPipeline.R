@@ -313,6 +313,65 @@ test_that("a local file that failed before it could be hashed waits for retry", 
   expect_equal(files$status, "ok")
 })
 
+test_that("a file that is not there yet has the path it will have once it is", {
+  dir <- withr::local_tempdir()
+  long <- normalizePath(dir, winslash="/")
+  withr::local_dir(dir)
+  expect_equal(.absolutePath(c("later.wav", "sub/deeper/later.wav")),
+               paste0(long, c("/later.wav", "/sub/deeper/later.wav")))
+  # A folder given by its short name, as Windows can give a temporary folder,
+  # is given in full, as it is once the file is there.
+  short <- if (.Platform$OS.type == "windows") utils::shortPathName(dir) else dir
+  expect_equal(.absolutePath(file.path(short, "later.wav")), paste0(long, "/later.wav"))
+  writeLines("", "later.wav")
+  expect_equal(.absolutePath(file.path(short, "later.wav")), paste0(long, "/later.wav"))
+  # Under the root of a drive, with one "/" after it.
+  root <- long
+  while (dirname(root) != root) root <- dirname(root)
+  missing <- paste0(sub("/+$", "", root), "/", basename(tempfile("absent")), "/x.wav")
+  expect_equal(.absolutePath(missing), missing)
+})
+
+test_that("a column whose name begins with start gives no clock time", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  set <- recordingSet(.writeTestWav(file.path(dir, "a.wav")))
+  set$start_offset <- 5
+  p <- pipeline(windowing(1, time.unit="seconds", then=dutyCycle()))
+  store <- file.path(dir, "store")
+  runPipeline(p, set, store, quiet=TRUE)
+  expect_false("window_time" %in% names(pipelineResults(store, p)[[1]]))
+})
+
+test_that("only a hash read from a file is taken for the hash at its location", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  src <- .writeTestWav(file.path(dir, "src.wav"))
+  local_mocked_bindings(.audioblast_download=function(url, path) {
+    file.copy(src, path)
+    invisible(path)
+  })
+  url <- "https://example.org/files/a.wav"
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  # A wrong hash fails the file, and is not then taken to be what is there.
+  runPipeline(p, recordingSet(data.frame(uri="u", location=url, hash=strrep("0", 64))),
+              store, quiet=TRUE)
+  unhashed <- recordingSet(data.frame(uri="u", location=url))
+  out <- runPipeline(p, unhashed, store, quiet=TRUE)
+  expect_equal(out$hash, .sha256(src))
+  files <- attr(pipelineResults(store, p), "files")
+  expect_equal(files$status[files$file == .sha256(src)], "ok")
+
+  # A file that was read before it failed is known by the hash read from it.
+  failing <- pipeline((function(w) stop("no"))())
+  store2 <- file.path(dir, "store2")
+  out <- runPipeline(failing, unhashed, store2, quiet=TRUE)
+  expect_equal(out$hash, .sha256(src))
+  msgs <- capture_messages(runPipeline(failing, unhashed, store2))
+  expect_match(msgs, "0 files to run, 1 already in the store")
+})
+
 test_that("pipelines that share an id share the names of their tables", {
   dir <- withr::local_tempdir()
   # Calls written differently, as these are, give the same id.
