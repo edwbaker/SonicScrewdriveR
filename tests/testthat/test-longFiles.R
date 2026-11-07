@@ -136,7 +136,19 @@ test_that("the size of a file once read is worked out from its header", {
   expanded <- readAudio(triggered)
   expect_equal(.decodedSize(triggered)$bytes, length(expanded@left) * 4)
   expect_gt(length(expanded@left), .wavFramesHeld(triggered)$frames)
-  expect_equal(.triggeredGrowth(triggered, chunk=3), .triggeredGrowth(triggered))
+  # A chunk after the audio that happens to read as an encoded block is not
+  # expanded, and is not counted.
+  bytes <- readBin(triggered, "raw", n=file.size(triggered))
+  pad <- (512 - (length(bytes) + 8) %% 512) %% 512
+  body <- c(raw(pad), .audiomothEncodedBlock(3))
+  trailed <- c(bytes, charToRaw("junk"), mdU32(length(body)), body)
+  trailed[5:8] <- mdU32(length(trailed) - 8)
+  trailed <- mdFile(trailed)
+  expect_equal(length(readAudio(trailed)@left), length(expanded@left))
+  expect_equal(.decodedSize(trailed)$bytes, .decodedSize(triggered)$bytes)
+  data <- .wavFindChunk(.wavChunksFile(triggered)$chunks, "data")
+  expect_equal(.triggeredGrowth(triggered, data$start, data$size, chunk=3),
+               .triggeredGrowth(triggered, data$start, data$size))
 })
 
 test_that("only a RIFF WAV file of PCM or floating-point audio can be read in windows", {
@@ -348,6 +360,34 @@ test_that("a long file that cannot be read in windows fails before it is read", 
       "only a WAV file is read a window at a time", fixed=TRUE
     )
   }
+})
+
+test_that("no read of a long file takes more than max.memory", {
+  .longIds()
+  dir <- withr::local_tempdir()
+  longest <- 0
+  real <- readAudio
+  local_mocked_bindings(readAudio=function(file, mime="auto", from=0, to=Inf, ...) {
+    longest <<- max(longest, to - max(from, 1) + 1)
+    real(file, mime=mime, from=from, to=to, ...)
+  })
+  p <- pipeline(windowing(1000, then=length()))
+  for (channels in c(2, 3)) {
+    path <- .longWav(file.path(dir, paste0(channels, ".wav")), channels=channels)
+    limit <- .decodedSize(path)$bytes * 0.4
+    longest <- 0
+    for (method in c("sketch", "full")) {
+      withr::local_options(sonicscrewdriver.provenance=method)
+      store <- tempfile("store", tmpdir=dir)
+      runPipeline(p, recordingSet(path), store, max.memory=limit, quiet=TRUE)
+      expect_equal(attr(pipelineResults(store, p), "files")$status, "ok")
+    }
+    # Each frame holds a sample of 4 bytes for each channel.
+    expect_lte(longest * channels * 4, limit)
+    expect_gt(longest, 1000)
+  }
+  expect_equal(.hashBlock(list(channels=2, perSample=4), 1e12), 2^20)
+  expect_equal(.hashBlock(list(channels=2, perSample=8), 10), 1)
 })
 
 test_that("a long file whose run fails part way leaves nothing behind", {

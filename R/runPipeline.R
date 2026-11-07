@@ -618,7 +618,7 @@ pipelineResults <- function(store, p, step=NULL) {
   long <- NULL
   w <- tryCatch({
     if (over) {
-      long <- .longFileWave(fetched$path, f$location, metadata)
+      long <- .longFileWave(fetched$path, f$location, metadata, .hashBlock(size, max.memory))
       long$wave
     } else {
       tw <- tagWave(readAudio(fetched$path), origin=f$location)

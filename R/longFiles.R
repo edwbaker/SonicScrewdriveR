@@ -50,7 +50,7 @@
       triggered <- riff && fields$format == 1 && fields$channels == 1 && fields$bits == 16 &&
         .isTriggeredRecording(file)
       if (triggered) {
-        held <- held + .triggeredGrowth(file)
+        held <- held + .triggeredGrowth(file, data$start, held)
       }
       reason <- if (!riff) {
         paste("a WAV file in the", info$form, "form is read whole, by the av package")
@@ -90,14 +90,20 @@
 #'
 #' audiomothExpand() replaces each encoded block with the blocks of silence it
 #' counts, so the expanded audio is that many blocks longer, less the encoded
-#' block itself. The blocks are counted a few megabytes at a time, so a
-#' recording too long to hold is measured without being held.
+#' block itself. Only a block wholly within the audio counts, as it does for
+#' audiomothExpand(): some 512 bytes of a chunk after the audio can read as an
+#' encoded block, and are left as they are. The blocks are counted a few
+#' megabytes at a time, so a recording too long to hold is measured without
+#' being held.
 #' @param file A triggered recording.
+#' @param start The one-based position of the first byte of its audio.
+#' @param size The bytes of audio it holds, recovered where its size was never
+#'   written.
 #' @param chunk How many blocks to read at a time.
 #' @return A number of bytes.
 #' @keywords internal
 #' @noRd
-.triggeredGrowth <- function(file, chunk=2^14) {
+.triggeredGrowth <- function(file, start, size, chunk=2^14) {
   blocks <- file.size(file) %/% .AM_BLOCK_SIZE
   con <- file(file, "rb")
   on.exit(close(con))
@@ -107,7 +113,9 @@
     n <- min(chunk, blocks - done)
     bytes <- readBin(con, "raw", n=n * .AM_BLOCK_SIZE)
     counts <- .audiomothBlockCounts(matrix(bytes, nrow=.AM_BLOCK_SIZE))
-    grown <- grown + sum(counts[counts > 0] - 1)
+    first <- (done + seq_len(n) - 1) * .AM_BLOCK_SIZE + 1
+    inside <- first >= start & first + .AM_BLOCK_SIZE - 1 <= start + size - 1
+    grown <- grown + sum(counts[inside & counts > 0] - 1)
     done <- done + n
   }
   return(grown * .AM_BLOCK_SIZE)
@@ -205,7 +213,8 @@
 #' @param path The file.
 #' @param origin What to tag it with as its origin.
 #' @param metadata What the recordings of the set agree on.
-#' @param block How many sample frames to read at a time for the digest.
+#' @param block How many sample frames to read at a time for the digest, as
+#'   `.hashBlock()` gives it.
 #' @return A list of `wave`, and `file`: the `path` to read windows from, the
 #'   `copy` to delete once the file has been run, or `NULL`, the number of
 #'   `frames`, and `hash`, a function of a hash method giving the digest of the
@@ -257,6 +266,19 @@
   return(list(wave=w, file=list(path=source, copy=copy, frames=frames, hash=hash)))
 }
 
+#' How many sample frames to read at a time for a digest
+#'
+#' A million frames, a few megabytes, unless fewer than that fit in
+#' max.memory, so that no block read takes more than it decoded.
+#' @param size What `.decodedSize()` gives for the file.
+#' @param limit `max.memory`.
+#' @return A number of frames, at least 1.
+#' @keywords internal
+#' @noRd
+.hashBlock <- function(size, limit) {
+  return(max(1, min(2^20, floor(limit / (size$channels * size$perSample)))))
+}
+
 #' The digest .waveHash() gives of a whole recording, read from disk
 #'
 #' The parts .waveParts() gives a wave are each digested as .digestNumeric()
@@ -265,7 +287,8 @@
 #' bit depth. A full digest writes the samples to a file a block at a time, as
 #' the bytes .digestNumeric() would digest, and digests the file, so the memory
 #' it takes does not grow with the recording. A sketch reads only the blocks
-#' .waveSketch() takes.
+#' .waveSketch() takes, which it holds, at most 40,960 samples. Neither reads
+#' more than `block` frames at once.
 #' @param path The file, which readAudio() reads in parts.
 #' @param method "full" or "sketch".
 #' @param one Its first sample frame, as readAudio() reads it.
@@ -284,19 +307,28 @@
     }
     return(if (ch == 1) w@left else w@right)
   }
+  #The samples of one channel from one frame to another, read no more than a
+  #block at a time.
+  values <- function(ch, first, last) {
+    out <- list()
+    for (from in seq(first, last, by=block)) {
+      out[[length(out) + 1]] <- as.numeric(column(read(from, min(last, from + block - 1)), ch))
+    }
+    return(unlist(out))
+  }
   #The values of one part, from position a to position b. A WaveMC part holds
   #every channel in turn, so a run of it can begin in one channel and end in
   #the next.
   part <- function(k, a, b) {
     if (!multi) {
-      return(as.numeric(column(read(a, b), k)))
+      return(values(k, a, b))
     }
     out <- list()
     while (a <= b) {
       ch <- (a - 1) %/% frames + 1
       first <- (a - 1) %% frames + 1
       last <- min(frames, first + (b - a))
-      out[[length(out) + 1]] <- as.numeric(read(first, last)@.Data[, ch])
+      out[[length(out) + 1]] <- values(ch, first, last)
       a <- a + (last - first + 1)
     }
     return(unlist(out))
