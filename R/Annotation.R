@@ -7,6 +7,12 @@
 #' annotation that breaks either rule is refused when it is made. A limit that
 #' is not known is `NA`, which no rule refuses.
 #'
+#' Who made an annotation and when are `identifiedBy` and `dateIdentified`, as
+#' `dwc:identifiedBy` and `dwc:dateIdentified` give them for a region of
+#' interest in Audiovisual Core. Either is `""` where it is not known. The
+#' `source` is where the annotation came from, such as the software or the
+#' collection, rather than who made it.
+#'
 #' @slot file File being annotated.
 #' @slot metadata A list for storing metadata.
 #' @slot start Start time of annotation.
@@ -16,6 +22,9 @@
 #' @slot source Source of annotation.
 #' @slot type Type of annotation.
 #' @slot value Value of annotation.
+#' @slot identifiedBy Who made the annotation: a person, or the software and
+#'   model that did.
+#' @slot dateIdentified When the annotation was made, as ISO 8601 text.
 setClass(
   "Annotation",
   slots=list(
@@ -27,7 +36,9 @@ setClass(
     high="numeric",
     source="character",
     type="character",
-    value="character"
+    value="character",
+    identifiedBy="character",
+    dateIdentified="character"
   ),
   prototype = list(
     file = "",
@@ -38,7 +49,9 @@ setClass(
     high = Inf,
     source = "",
     type = "",
-    value = ""
+    value = "",
+    identifiedBy = "",
+    dateIdentified = ""
   ),
   validity = function(object) .annotationProblems(object)
 )
@@ -54,7 +67,8 @@ setClass(
 #' @noRd
 .annotationProblems <- function(object) {
   problems <- character(0)
-  for (name in c("file", "start", "end", "low", "high", "source", "type", "value")) {
+  for (name in c("file", "start", "end", "low", "high", "source", "type", "value",
+                 "identifiedBy", "dateIdentified")) {
     n <- length(slot(object, name))
     if (n != 1) {
       problems <- c(problems, paste0(name, " must be a single value, not ", n, " values."))
@@ -110,6 +124,11 @@ setClass(
 #' @param source Source of annotation.
 #' @param type Type of annotation.
 #' @param value Value of annotation.
+#' @param identifiedBy Who made the annotation: a person, or the software and
+#'   model that did.
+#' @param dateIdentified When the annotation was made: ISO 8601 text, a `Date`,
+#'   or a time, which is given as UTC. A date and time written with a space
+#'   rather than a `T`, as `2016-10-17 13:20`, is given with a `T`.
 #' @return An Annotation object.
 #' @export
 annotation <- function(
@@ -121,7 +140,9 @@ annotation <- function(
   high=Inf,
   source="",
   type="",
-  value=""
+  value="",
+  identifiedBy="",
+  dateIdentified=""
 ) {
   annotation <- new(
     "Annotation",
@@ -133,9 +154,33 @@ annotation <- function(
     high=as.numeric(high),
     source=as.character(source),
     type=as.character(type),
-    value=as.character(value)
+    value=as.character(value),
+    identifiedBy=as.character(identifiedBy),
+    dateIdentified=.annotationDate(dateIdentified)
   )
   return(annotation)
+}
+
+#' When an annotation was made, as ISO 8601 text
+#'
+#' Darwin Core gives `dateIdentified` as ISO 8601, which holds a date alone, or
+#' a time with no zone, as honestly as a full timestamp; text is therefore kept
+#' as it is given, apart from the space some sources put between a date and
+#' its time.
+#' @param x Text, a `Date`, or a time.
+#' @return Text.
+#' @keywords internal
+#' @noRd
+.annotationDate <- function(x) {
+  if (inherits(x, "POSIXt")) {
+    #format() of a POSIXlt time passes over tz, so a local time was labelled
+    #UTC without being converted; as a POSIXct time it is converted.
+    x <- as.POSIXct(x)
+    whole <- isTRUE(all(as.numeric(x) %% 1 == 0))
+    return(format(x, if (whole) "%Y-%m-%dT%H:%M:%SZ" else "%Y-%m-%dT%H:%M:%OS6Z", tz="UTC"))
+  }
+  x <- as.character(x)
+  return(sub("^([0-9]{4}-[0-9]{2}-[0-9]{2}) ([0-9]{2}:[0-9]{2})", "\\1T\\2", x))
 }
 
 #' Save a time region defined by an Annotation object as a Wave file
@@ -216,14 +261,17 @@ writeAnnotationWave <- function(annotation, wave=NULL, dir=".") {
 #' where `NA` is the same as `NA` and nothing else.
 #'
 #' The merged annotation spans all of those merged into it, in both domains. It
-#' keeps the `source` and `metadata` of the last of them in the order
-#' [sort_annotations()] puts them in.
+#' keeps the `source`, `identifiedBy`, `dateIdentified` and `metadata` of the
+#' last of them in the order [sort_annotations()] puts them in.
 #' @param annotations A list of Annotation objects, or a single one.
 #' @param domain Domain of the annotations, either "time" or "frequency".
 #' @param same.source If TRUE, annotations must have the same source to be merged.
+#' @param same.identifiedBy If TRUE, annotations must have been made by the same
+#'   person or software, their `identifiedBy`, to be merged. Merging the
+#'   annotations of several people into one credits only one of them.
 #' @return A list of Annotation objects.
 #' @export
-merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
+merge_annotations <- function(annotations, domain="time", same.source=TRUE, same.identifiedBy=TRUE) {
   annotations <- .annotationList(annotations)
   if (length(annotations) == 0) {
     return(list())
@@ -231,7 +279,8 @@ merge_annotations <- function(annotations, domain="time", same.source=TRUE) {
   #Comparing the slots with == gave NA for a slot holding NA, which took the
   #annotation out of every group. Quoted, NA is apart from the text "NA".
   key <- vapply(annotations, function(x) {
-    slots <- c(x@file, x@type, x@value, if (same.source) x@source)
+    slots <- c(x@file, x@type, x@value, if (same.source) x@source,
+               if (same.identifiedBy) x@identifiedBy)
     paste(encodeString(slots, quote='"'), collapse=" ")
   }, character(1))
   groups <- split(annotations, factor(key, levels=unique(key)))
@@ -341,6 +390,8 @@ AnnotationList2DataFrame <- function(x) {
     source=slot_column("source", character(1)),
     type=slot_column("type", character(1)),
     value=slot_column("value", character(1)),
+    identifiedBy=slot_column("identifiedBy", character(1)),
+    dateIdentified=slot_column("dateIdentified", character(1)),
     stringsAsFactors=FALSE
   )
 

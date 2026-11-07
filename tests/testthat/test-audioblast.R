@@ -87,6 +87,12 @@ test_that("Annotation output is as expected", {
   expect_equal(d$source, a@metadata$source)
   # These annotations give no frequency limits, so they span every frequency.
   expect_identical(c(a@low, a@high), c(0, Inf))
+  # Who made it and when are its own slots, the date with a T, not metadata.
+  expect_identical(a@identifiedBy, d$annotator)
+  expect_identical(a@dateIdentified, sub(" ", "T", d$annotation_date, fixed=TRUE))
+  expect_match(a@dateIdentified, "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}")
+  expect_null(a@metadata$annotator)
+  expect_null(a@metadata$annotation_date)
 })
 
 test_that("the frequency limits of an annotation from audioBlast are kept", {

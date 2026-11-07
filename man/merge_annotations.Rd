@@ -4,7 +4,12 @@
 \alias{merge_annotations}
 \title{Combine annotations}
 \usage{
-merge_annotations(annotations, domain = "time", same.source = TRUE)
+merge_annotations(
+  annotations,
+  domain = "time",
+  same.source = TRUE,
+  same.identifiedBy = TRUE
+)
 }
 \arguments{
 \item{annotations}{A list of Annotation objects, or a single one.}
@@ -12,6 +17,10 @@ merge_annotations(annotations, domain = "time", same.source = TRUE)
 \item{domain}{Domain of the annotations, either "time" or "frequency".}
 
 \item{same.source}{If TRUE, annotations must have the same source to be merged.}
+
+\item{same.identifiedBy}{If TRUE, annotations must have been made by the same
+person or software, their \code{identifiedBy}, to be merged. Merging the
+annotations of several people into one credits only one of them.}
 }
 \value{
 A list of Annotation objects.
@@ -24,6 +33,6 @@ where \code{NA} is the same as \code{NA} and nothing else.
 }
 \details{
 The merged annotation spans all of those merged into it, in both domains. It
-keeps the \code{source} and \code{metadata} of the last of them in the order
-\code{\link[=sort_annotations]{sort_annotations()}} puts them in.
+keeps the \code{source}, \code{identifiedBy}, \code{dateIdentified} and \code{metadata} of the
+last of them in the order \code{\link[=sort_annotations]{sort_annotations()}} puts them in.
 }

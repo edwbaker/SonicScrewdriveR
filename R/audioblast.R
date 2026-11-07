@@ -46,8 +46,9 @@
 #' @param on.issue Function to call on error or warning. By default `stop` to raise
 #'   a standard R error. Setting to `warning` will instead a warning.
 #' @param output By default a `data.frame`. "Annotation" will return a list of
-#'   `Annotation` objects; "Annotations", as it was spelt before, still works and
-#'   is deprecated. "RecordingSet" returns the recordings found by a search of
+#'   `Annotation` objects, with the annotator as `identifiedBy` and the date of
+#'   the annotation as `dateIdentified`; "Annotations", as it was spelt before,
+#'   still works and is deprecated. "RecordingSet" returns the recordings found by a search of
 #'   the recordings module as a [RecordingSet][recordingSet()]. "JSON-LD" and
 #'   "Turtle" return the RDF that audioBlast gives for modules that describe
 #'   their records as linked data, as a character vector with one element for
@@ -1027,12 +1028,12 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
 
   lapply(seq_len(nrow(ret)), function(i) {
     annotation(
+      #Who made the annotation and when are its identifiedBy and
+      #dateIdentified, rather than metadata.
       metadata = list(
         "source" = ret[i, "source"],
         "source_id" = ret[i, "source_id"],
-        "annotator" = ret[i, "annotator"],
         "annotation_id" = ret[i, "annotation_id"],
-        "annotation_date" = ret[i, "annotation_date"],
         "annotation_info_url" = ret[i, "annotation_info_url"],
         "lat" = ret[i, "lat"],
         "lon" = ret[i, "lon"],
@@ -1045,7 +1046,9 @@ audioblastDownload <- function(d, metadata=TRUE, skip.existing=TRUE, dir=".", qu
       low = low[i],
       high = high[i],
       type = ret[i, "type"],
-      value = ret[i, "taxon"]
+      value = ret[i, "taxon"],
+      identifiedBy = ret[i, "annotator"],
+      dateIdentified = ret[i, "annotation_date"]
     )
   })
 }

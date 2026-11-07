@@ -12,6 +12,12 @@ Every slot but \code{metadata} holds a single value. The start of an annotation
 is not after its end, nor its low frequency above its high, and an
 annotation that breaks either rule is refused when it is made. A limit that
 is not known is \code{NA}, which no rule refuses.
+
+Who made an annotation and when are \code{identifiedBy} and \code{dateIdentified}, as
+\code{dwc:identifiedBy} and \code{dwc:dateIdentified} give them for a region of
+interest in Audiovisual Core. Either is \code{""} where it is not known. The
+\code{source} is where the annotation came from, such as the software or the
+collection, rather than who made it.
 }
 \section{Slots}{
 
@@ -33,5 +39,10 @@ is not known is \code{NA}, which no rule refuses.
 \item{\code{type}}{Type of annotation.}
 
 \item{\code{value}}{Value of annotation.}
+
+\item{\code{identifiedBy}}{Who made the annotation: a person, or the software and
+model that did.}
+
+\item{\code{dateIdentified}}{When the annotation was made, as ISO 8601 text.}
 }}
 

@@ -42,8 +42,9 @@ need fewer requests to fetch many results.}
 a standard R error. Setting to \code{warning} will instead a warning.}
 
 \item{output}{By default a \code{data.frame}. "Annotation" will return a list of
-\code{Annotation} objects; "Annotations", as it was spelt before, still works and
-is deprecated. "RecordingSet" returns the recordings found by a search of
+\code{Annotation} objects, with the annotator as \code{identifiedBy} and the date of
+the annotation as \code{dateIdentified}; "Annotations", as it was spelt before,
+still works and is deprecated. "RecordingSet" returns the recordings found by a search of
 the recordings module as a \link[=recordingSet]{RecordingSet}. "JSON-LD" and
 "Turtle" return the RDF that audioBlast gives for modules that describe
 their records as linked data, as a character vector with one element for
