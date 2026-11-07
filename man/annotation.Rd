@@ -13,7 +13,9 @@ annotation(
   high = Inf,
   source = "",
   type = "",
-  value = ""
+  value = "",
+  identifiedBy = "",
+  dateIdentified = ""
 )
 }
 \arguments{
@@ -34,6 +36,13 @@ annotation(
 \item{type}{Type of annotation.}
 
 \item{value}{Value of annotation.}
+
+\item{identifiedBy}{Who made the annotation: a person, or the software and
+model that did.}
+
+\item{dateIdentified}{When the annotation was made: ISO 8601 text, a \code{Date},
+or a time, which is given as UTC. A date and time written with a space
+rather than a \code{T}, as \verb{2016-10-17 13:20}, is given with a \code{T}.}
 }
 \value{
 An Annotation object.

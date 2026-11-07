@@ -5,6 +5,10 @@
 #' either returns a data frame with the results of the analysis or a list of
 #' `Annotation` objects.
 #'
+#' Each detection is credited, as its `identifiedBy`, to the model that made
+#' it and the version of that model, as `BirdNET-Analyzer 2.4`, and dated, as
+#' its `dateIdentified`, to the time its file was analysed, in UTC.
+#'
 #' @param files A character vector of file paths.
 #' @param lat A latitude or  vector of latitudes.
 #' @param lon A longitude or  vector of longitudes.
@@ -54,6 +58,9 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
   bna <- reticulate::import("birdnetlib.analyzer")
   datetime <- reticulate::import("datetime")
   analyzer <- bna$Analyzer()
+  #A detection is made by a model, and which version made it matters as much
+  #as who made an annotation by hand.
+  model <- paste(analyzer$model_name, analyzer$version)
 
   #A list of dates formatted one element at a time gave a one element list to
   #format(), and as.integer() then read NA for the year, month and day.
@@ -80,6 +87,7 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
       date = d
       )
     recording$analyze()
+    analysed <- Sys.time()
 
     #Collected per file and joined once at the end. Growing the list a detection
     #at a time copied the whole of it on every one.
@@ -91,6 +99,8 @@ birdNetAnalyse <- function(files, lat=NULL, lon=NULL, date=NULL, output="Annotat
         source = "BirdNet-Analyzer",
         type = "birdnet-detection",
         value = detection$label,
+        identifiedBy = model,
+        dateIdentified = analysed,
         metadata = list(
           "confidence" = detection$confidence,
           "common_name" = detection$common_name,

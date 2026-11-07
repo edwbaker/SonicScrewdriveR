@@ -29,8 +29,9 @@
 #' is read as one annotation with no type and no value, so that the absence is
 #' kept.
 #'
-#' The `metadata` of each annotation holds who made it (`created_by`), when
-#' (`created_on`), its `notes`, the `features` measured of it, and for a
+#' Who made each annotation (`created_by`) is its `identifiedBy`, by the
+#' person's name, and when (`created_on`) its `dateIdentified`. The `metadata`
+#' of each annotation holds its `notes`, the `features` measured of it, and for a
 #' prediction its `score` and the `tag_score` of its tag. Under `aoef` it also
 #' holds the identifiers and the exact shape that [writeAOEF()] needs to write
 #' it back as it was, and what the file said of its recording. Sequences of
@@ -338,9 +339,9 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
   if (!is.character(path) || length(path) != 1) {
     stop("Recording ", recording, " in the file has no path.", call.=FALSE)
   }
+  identifiedBy <- .aoefUserName(context$users, object$created_by)
+  dateIdentified <- object$created_on
   metadata <- .aoefDrop(list(
-    created_by=.aoefUserName(context$users, object$created_by),
-    created_on=object$created_on,
     notes=if (length(object$notes) > 0) vapply(object$notes, function(n) n$message, character(1)),
     features=if (length(features) > 0) features,
     score=if (prediction) object$score
@@ -382,6 +383,8 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
   base@low <- as.numeric(bounds[3])
   base@high <- as.numeric(bounds[4])
   base@source <- as.character(context$source)
+  base@identifiedBy <- if (is.character(identifiedBy) && length(identifiedBy) == 1) identifiedBy else ""
+  base@dateIdentified <- if (is.character(dateIdentified) && length(dateIdentified) == 1) dateIdentified else ""
   ret <- vector("list", length(ids))
   for (i in seq_along(ids)) {
     tag <- if (is.na(ids[i])) list(key="", value="") else context$tags[[ids[i]]]
@@ -460,9 +463,12 @@ readAOEF <- function(file, audio.dir=NULL, output="Annotation") {
 #' clip spanning its recording, and one of several tags given a range of its
 #' own becomes a sound event of its own. Whombat imports the annotations of a
 #' project only for recordings it already holds under the same identifiers,
-#' which those annotations keep. `created_by`, `created_on`, `notes` and
-#' `features` in the `metadata` of an annotation are written; nothing else of
-#' it is, so predictions are written as annotations without their scores.
+#' which those annotations keep. The `identifiedBy` of an annotation is
+#' written as who made it (`created_by`) and its `dateIdentified` as when
+#' (`created_on`), where that is a date and a time of day: AOEF holds no date
+#' without a time, and one is not made up. `notes` and `features` in the
+#' `metadata` of an annotation are written; nothing else of it is, so
+#' predictions are written as annotations without their scores.
 #'
 #' soundevent reads only annotations in a clip, so every other annotation is
 #' put in a clip spanning the whole of its recording. AOEF also needs the
@@ -589,7 +595,7 @@ writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_
       clips[[k]]$tags <- union(clips[[k]]$tags, .aoefTags(tags, annotations[group]))
       clips[[k]]$notes <- first@metadata[["notes"]]
       clips[[k]]$features <- first@metadata[["features"]]
-      when <- .aoefTime(first@metadata[["created_on"]])
+      when <- .aoefTime(first@dateIdentified)
       if (!is.null(when)) {
         clips[[k]]$created_on <- when
       }
@@ -616,7 +622,7 @@ writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_
       features=.aoefFeatures(first@metadata[["features"]])
     ))
     uuid <- .aoefClaim(issued, aoef$uuid)
-    user <- first@metadata[["created_by"]]
+    user <- first@identifiedBy
     eventAnnotations[[length(eventAnnotations) + 1]] <- .aoefDrop(list(
       uuid=uuid,
       sound_event=event,
@@ -625,7 +631,7 @@ writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_
       created_by=if (is.character(user) && length(user) == 1 && !is.na(user) && nzchar(user)) {
         .aoefUser(users, issued, user, aoef$user)
       },
-      created_on=.aoefTime(first@metadata[["created_on"]])
+      created_on=.aoefTime(first@dateIdentified)
     ))
     clips[[k]]$events <- c(clips[[k]]$events, uuid)
   }
@@ -941,15 +947,16 @@ writeAOEF <- function(annotations, file, audio.dir=NULL, collection="annotation_
 
 #' A time as AOEF writes it
 #'
-#' @param time A time as text, as readAOEF() gives it, or a POSIXt time.
+#' AOEF holds a date and a time of day, so a date alone is not written, rather
+#' than being given a time it does not have; nor is an empty one. A time is
+#' text, as readAOEF() and the `dateIdentified` of an annotation give it.
+#' @param time A time as ISO 8601 text.
 #' @return Text, or NULL.
 #' @keywords internal
 #' @noRd
 .aoefTime <- function(time) {
-  if (inherits(time, "POSIXt") && length(time) == 1 && !is.na(time)) {
-    return(format(time, "%Y-%m-%dT%H:%M:%OS6Z", tz="UTC"))
-  }
-  if (is.character(time) && length(time) == 1 && !is.na(time)) {
+  if (is.character(time) && length(time) == 1 && !is.na(time) &&
+      grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}", time)) {
     return(time)
   }
   return(NULL)

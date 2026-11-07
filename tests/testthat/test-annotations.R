@@ -418,7 +418,8 @@ test_that("metadata that is NULL wherever it is given is NA", {
   # A value with no name has nothing to name a column by, and is left out.
   expect_identical(
     colnames(d),
-    c("file", "start", "end", "low", "high", "source", "type", "value", "empty")
+    c("file", "start", "end", "low", "high", "source", "type", "value",
+      "identifiedBy", "dateIdentified", "empty")
   )
 })
 
@@ -438,7 +439,7 @@ test_that("a metadata name that is also a slot is given a column of its own", {
   ))
   expect_identical(anyDuplicated(colnames(d)), 0L)
   expect_identical(d$source, "a")
-  expect_setequal(unlist(d[1, -(1:8)]), c("b", "c"))
+  expect_setequal(unlist(d[1, -(1:10)]), c("b", "c"))
 })
 
 test_that("no annotations give a data frame of no rows", {
@@ -503,4 +504,71 @@ test_that("a list holding something other than an annotation is refused by name"
   expect_error(writeAnnotationWave(list(a, 1), tuneR::sine(440)), msg, fixed=TRUE)
   expect_error(AnnotationList2DataFrame(data.frame(start=1)), msg, fixed=TRUE)
   expect_error(merge_annotations("a"), msg, fixed=TRUE)
+})
+
+test_that("an annotation says who made it and when, where that is known", {
+  a <- annotation()
+  expect_identical(c(a@identifiedBy, a@dateIdentified), c("", ""))
+  a <- annotation(identifiedBy="Ed Baker", dateIdentified="2016-10-17T13:20")
+  expect_identical(a@identifiedBy, "Ed Baker")
+  expect_identical(a@dateIdentified, "2016-10-17T13:20")
+  expect_error(annotation(identifiedBy=c("a", "b")), "identifiedBy must be a single value")
+  expect_error(annotation(dateIdentified=character(0)), "dateIdentified must be a single value")
+})
+
+test_that("when an annotation was made is kept as ISO 8601 text", {
+  # A time is given in UTC, with its fraction of a second where it has one.
+  utc <- as.POSIXct("2026-10-30 09:15:00", tz="UTC")
+  expect_identical(annotation(dateIdentified=utc)@dateIdentified, "2026-10-30T09:15:00Z")
+  london <- as.POSIXct("2026-07-01 12:00:00", tz="Europe/London")
+  expect_identical(annotation(dateIdentified=london)@dateIdentified, "2026-07-01T11:00:00Z")
+  expect_identical(annotation(dateIdentified=utc + 0.25)@dateIdentified,
+                   "2026-10-30T09:15:00.250000Z")
+  expect_identical(annotation(dateIdentified=as.POSIXlt(utc))@dateIdentified, "2026-10-30T09:15:00Z")
+  expect_identical(annotation(dateIdentified=as.Date("2026-10-30"))@dateIdentified, "2026-10-30")
+  # bio.acousti.ca puts a space between a date and its time.
+  expect_identical(annotation(dateIdentified="2016-10-17 13:20")@dateIdentified, "2016-10-17T13:20")
+  expect_identical(annotation(dateIdentified="2016-10-17 13:20:05")@dateIdentified, "2016-10-17T13:20:05")
+  # Anything else is kept as it is given, as Darwin Core allows a date alone,
+  # a year, or a range.
+  for (given in c("2016", "2016-10", "2007-03-01/2008-05-11", "2021-09-27T13:48:22.953Z", "spring")) {
+    expect_identical(annotation(dateIdentified=given)@dateIdentified, given)
+  }
+  expect_identical(annotation(dateIdentified=NA)@dateIdentified, NA_character_)
+})
+
+test_that("annotations made by different people are merged only when asked", {
+  # Every annotation from audioBlast has the source "audioblast", so the
+  # annotations of two people were merged into one crediting only the second.
+  ed <- annotation(start=0, end=2, value="Gryllus campestris", identifiedBy="Edward Baker",
+                   dateIdentified="2016-10-17T13:20")
+  q <- annotation(start=1, end=3, value="Gryllus campestris", identifiedBy="qgeissmann",
+                  dateIdentified="2021-09-27T13:48:22.953Z")
+  merged <- merge_annotations(list(ed, q))
+  expect_length(merged, 2)
+  expect_identical(vapply(merged, function(a) a@identifiedBy, character(1)), c("Edward Baker", "qgeissmann"))
+
+  pooled <- merge_annotations(list(ed, q), same.identifiedBy=FALSE)
+  expect_length(pooled, 1)
+  expect_equal(c(pooled[[1]]@start, pooled[[1]]@end), c(0, 3))
+  # As with the source and metadata, the last annotation merged in is credited.
+  expect_identical(pooled[[1]]@identifiedBy, "qgeissmann")
+  expect_identical(pooled[[1]]@dateIdentified, "2021-09-27T13:48:22.953Z")
+
+  # The annotations of one person still merge.
+  again <- annotation(start=1.5, end=4, value="Gryllus campestris", identifiedBy="Edward Baker")
+  merged <- merge_annotations(list(ed, q, again))
+  expect_length(merged, 2)
+  expect_equal(c(merged[[1]]@start, merged[[1]]@end), c(0, 4))
+})
+
+test_that("a data frame of annotations says who made each and when", {
+  d <- AnnotationList2DataFrame(list(
+    annotation(identifiedBy="Ed Baker", dateIdentified="2016-10-17T13:20"),
+    annotation(metadata=list(identifiedBy="kept apart"))
+  ))
+  expect_identical(d$identifiedBy, c("Ed Baker", ""))
+  expect_identical(d$dateIdentified, c("2016-10-17T13:20", ""))
+  # A metadata name that is now a slot is given a column of its own.
+  expect_identical(d$metadata.identifiedBy, c(NA, "kept apart"))
 })
