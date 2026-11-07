@@ -46,8 +46,7 @@
       #audiomothExpand() expands only the mono 16-bit PCM an AudioMoth writes,
       #in any of the three forms, before anything else reads it, and
       #readAudio() reads any other recording as it is.
-      triggered <- fields$format == 1 && fields$channels == 1 && fields$bits == 16 &&
-        .isTriggeredRecording(file)
+      triggered <- .isExpandable(file)
       if (triggered) {
         held <- held + .triggeredGrowth(file, data$start, held)
       }
@@ -303,7 +302,17 @@
 .fileWaveHash <- function(path, method, one, frames, block=2^20) {
   multi <- methods::is(one, "WaveMC")
   channels <- if (multi) ncol(one@.Data) else if (one@stereo) 2L else 1L
-  read <- function(from, to) .quietRead(path, from, to)
+  #A part read short, as from a file cut short since it was measured, would give
+  #the digest of fewer samples than the recording holds, so it fails instead.
+  read <- function(from, to) {
+    w <- .quietRead(path, from, to)
+    held <- if (multi) nrow(w@.Data) else length(w@left)
+    if (held != to - from + 1) {
+      stop("Could not read sample frames ", from, " to ", to,
+           " of the recording to digest them.")
+    }
+    return(w)
+  }
   column <- function(w, ch) {
     if (multi) {
       return(w@.Data[, ch])
@@ -397,16 +406,24 @@
   }
   lapply(cons, close)
   open <- FALSE
+  #A write cut short, as by a full disk, need not fail, and would give the
+  #digest of part of the recording, so each file is measured: every sample is
+  #written as a double of 8 bytes.
+  if (!isTRUE(all(file.size(files) == 8 * frames))) {
+    stop("Could not write the samples of the recording to disk to digest them.")
+  }
   digested <- files
   if (multi) {
-    #A join cut short, as by a full disk, would give the digest of part of the
-    #recording, so it fails the file instead. Each channel is deleted once it
-    #has been joined, so the disk holds no more than one channel twice over.
+    #So with a join cut short. Each channel is deleted once it has been joined,
+    #so the disk holds no more than one channel twice over.
     for (ch in seq_len(channels)[-1]) {
       if (!.appendFile(files[1], files[ch])) {
         stop("Could not join the channels of the recording to digest them.")
       }
       unlink(files[ch])
+    }
+    if (!isTRUE(file.size(files[1]) == 8 * frames * channels)) {
+      stop("Could not join the channels of the recording to digest them.")
     }
     digested <- files[1]
   }

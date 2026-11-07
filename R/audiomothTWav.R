@@ -60,6 +60,33 @@
   ))
 }
 
+#' Is a recording one audiomothExpand() would expand?
+#'
+#' A triggered recording, by its comment, in the mono 16-bit PCM an AudioMoth
+#' writes. audiomothExpand() reads the whole file before it reads the format,
+#' so a recording in any other format that carries the comment, one converted
+#' to stereo or to 24 bits by another program for instance, is told apart from
+#' its header first. It is then read as any other file is, and a part of it is
+#' read without the whole of it being read first. A format that cannot be read
+#' from the header, or a sub-format it does not give, is left for
+#' audiomothExpand() to judge.
+#'
+#' @param file Path to a wave file
+#' @return A logical value
+#' @keywords internal
+#' @noRd
+.isExpandable <- function(file) {
+  if (!.isTriggeredRecording(file)) {
+    return(FALSE)
+  }
+  fmt <- tryCatch(.wavChunkFromFile(file, "fmt "), error=function(cond) NULL)
+  fields <- if (is.null(fmt)) NULL else .wavFmtFields(fmt, length(fmt))
+  if (is.null(fields)) {
+    return(TRUE)
+  }
+  return(fields$format %in% c(1, 65534) && fields$channels == 1 && fields$bits == 16)
+}
+
 #' Find the encoded blocks of a T.WAV file
 #'
 #' @param blocks A raw matrix with one 512-byte block per column

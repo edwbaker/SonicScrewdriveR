@@ -656,6 +656,12 @@
   a file of more than two channels, whose windows are WaveMC objects. A WaveMC
   object, tagged or not, is windowed in memory as its file is, and
   `bind.wave = TRUE` binds its windows back into one.
+- readAudio() and windowing() read the whole of a file carrying the comment of
+  an AudioMoth triggered recording, to find out whether it could be expanded,
+  before reading any part of it, even where the header already said it was not
+  in the mono 16-bit PCM that can be. Such a file, one converted to stereo or
+  to 24 bits by another program for instance, is now read as any other file is,
+  and one over 2 GB is read rather than refused as too long to expand.
 - Arithmetic with a PseudoWave on the left of the operator, as in
   `pseudoWave("noise", "white") + tw`, gave back the plain wave the PseudoWave
   was turned into, so a tagged wave on the right lost its origin, metadata and

@@ -90,7 +90,7 @@ windowing <- function(
     time.unit, .timeRegionUnits(),
     msg="time.unit must be one of samples, seconds, minutes, hours."
   )
-  if (typeof(wave) == "character" && .isTriggeredRecording(wave)) {
+  if (typeof(wave) == "character" && .isExpandable(wave)) {
     # An AudioMoth triggered recording holds neither the length nor the timing
     # of the recording it stands for, so the file on disk cannot be used to
     # schedule the windows: it would give the length with the periods that did

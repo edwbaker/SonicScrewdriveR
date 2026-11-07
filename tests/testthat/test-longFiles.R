@@ -109,6 +109,18 @@
   return(path)
 }
 
+# Give a WAV file the comment an AudioMoth gives a triggered recording, as a
+# program converting one might keep it
+.commented <- function(path) {
+  bytes <- readBin(path, "raw", n=file.size(path))
+  start <- .wavFindChunk(.wavChunksFile(path)$chunks, "data")$start
+  list <- mdChunk("LIST", c(charToRaw("INFO"), mdInfoField("ICMT", "Amplitude threshold was 1000.")))
+  out <- c(bytes[seq_len(start - 9)], list, bytes[(start - 8):length(bytes)])
+  out[5:8] <- mdU32(length(out) - 8)
+  writeBin(out, path)
+  return(path)
+}
+
 test_that("the size of a file once read is worked out from its header", {
   dir <- withr::local_tempdir()
   for (f in .longFormats) {
@@ -246,6 +258,50 @@ test_that("the digest of a file read a block at a time is that of the whole wave
                "Could not join the channels of the recording to digest them.")
 })
 
+test_that("no digest is taken of samples that were not all read or written", {
+  dir <- withr::local_tempdir()
+  path <- .longWav(file.path(dir, "stereo.wav"), channels=2, frames=1000)
+  one <- readAudio(path, from=1, to=1, time.unit="samples")
+  before <- list.files(tempdir(), pattern="\\.bin$")
+  # A part read short, as from a file cut short since it was measured.
+  local({
+    real <- .quietRead
+    local_mocked_bindings(.quietRead=function(path, from, to) real(path, from, max(from, to - 1)))
+    for (method in c("full", "sketch")) {
+      expect_error(.fileWaveHash(path, method, one, 1000, 100),
+                   "Could not read sample frames 1 to 100 of the recording to digest them.",
+                   fixed=TRUE, info=method)
+    }
+  })
+  # A write cut short, as to a full disk, that did not fail.
+  local({
+    real <- base::writeBin
+    local_mocked_bindings(
+      writeBin=function(object, con, ...) {
+        real(if (is.raw(con)) object else utils::head(object, -1), con, ...)
+      },
+      .package="base"
+    )
+    expect_error(.fileWaveHash(path, "full", one, 1000, 100),
+                 "Could not write the samples of the recording to disk to digest them.",
+                 fixed=TRUE)
+  })
+  # A join that said it had worked, but did not give the channels end to end.
+  three <- .longWav(file.path(dir, "three.wav"), channels=3, frames=1000)
+  first <- readAudio(three, from=1, to=1, time.unit="samples")
+  local({
+    local_mocked_bindings(.appendFile=function(to, from) {
+      con <- file(to, "ab")
+      on.exit(close(con))
+      writeBin(as.raw(1:4), con)
+      return(TRUE)
+    })
+    expect_error(.fileWaveHash(three, "full", first, 1000, 100),
+                 "Could not join the channels of the recording to digest them.", fixed=TRUE)
+  })
+  expect_setequal(list.files(tempdir(), pattern="\\.bin$"), before)
+})
+
 test_that("windows read from disk are the windows cut from the whole wave", {
   .longIds()
   dir <- withr::local_tempdir()
@@ -287,6 +343,46 @@ test_that("windows read from disk are the windows cut from the whole wave", {
   disk <- run(recordingSet(path), file.path(dir, "full disk"), .decodedSize(path)$bytes / 2)
   expect_equal(lapply(disk, .untimed), lapply(whole, .untimed))
   expect_equal(disk[[1]]@processing[[1]]$hash_method, "full")
+})
+
+test_that("a recording only commented as a triggered one is read in windows, not whole", {
+  .longIds()
+  dir <- withr::local_tempdir()
+  p <- pipeline(windowing(1000, then=pipeline(length(), dutyCycle())))
+  # audiomothExpand() reads the whole file before it reads the format, so it is
+  # not to be asked of a recording in a format it does not expand.
+  expanded <- new.env()
+  expanded$n <- 0
+  real <- audiomothExpand
+  local_mocked_bindings(audiomothExpand=function(...) {
+    expanded$n <- expanded$n + 1
+    real(...)
+  })
+  long <- .countLong()
+  for (f in .longFormats[c(2, 4, 7)]) {
+    path <- .commented(.longFormatWav(dir, f))
+    expect_true(.isTriggeredRecording(path), info=f$name)
+    expect_false(.isExpandable(path), info=f$name)
+    size <- .decodedSize(path)
+    expect_true(is.na(size$reason), info=f$name)
+    whole <- file.path(dir, paste(f$name, "whole"))
+    disk <- file.path(dir, paste(f$name, "disk"))
+    runPipeline(p, recordingSet(path), whole, max.memory=Inf, quiet=TRUE)
+    runPipeline(p, recordingSet(path), disk, max.memory=size$bytes / 2, quiet=TRUE)
+    expect_equal(.tables(disk, p), .tables(whole, p), info=f$name)
+    expect_equal(attr(pipelineResults(disk, p), "files")$status, "ok", info=f$name)
+  }
+  expect_equal(long$n, 3)
+  expect_equal(expanded$n, 0)
+  # A triggered recording in the format an AudioMoth writes is still expanded.
+  triggered <- system.file("extdata", "AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  expect_true(.isExpandable(triggered))
+  expect_gt(length(readAudio(triggered)@left), .wavFramesHeld(triggered)$frames)
+  expect_equal(expanded$n, 1)
+  # One whose format cannot be read from its header is left for
+  # audiomothExpand() to judge.
+  local_mocked_bindings(.wavChunkFromFile=function(...) stop("unreadable"))
+  expect_true(.isExpandable(triggered))
 })
 
 test_that("what a whole read says of a file is said once", {
