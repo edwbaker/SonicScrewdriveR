@@ -7,7 +7,8 @@
 #' anything the av package decodes, FLAC among them, comes back as doubles. A
 #' WAV file is measured from its chunks, and one whose audio size was never
 #' written from the bytes after its data chunk begins, as readAudio() reads it
-#' to the end of the file. Anything else is asked of the av package, and where
+#' to the end of the file. A triggered recording is measured as it will be once
+#' expanded. Anything else is asked of the av package, and where
 #' that is not installed nothing can be said of its size without decoding it.
 #'
 #' Whether the file can be read a window at a time is said too. Only a RIFF
@@ -32,12 +33,28 @@
     if (!is.null(data) && !is.null(fields) && fields$format %in% c(0, 1, 3, 65534) &&
         fields$frameSize > 0) {
       riff <- info$form == "RIFF"
-      held <- if (data$size == 0) max(0, file.size(file) - data$start + 1) else data$size
+      #A size of zero is the size of the audio only where the RIFF size and what
+      #follows say that it was never written, as readAudio() decides it.
+      held <- if (data$size != 0) data$size else {
+        peek <- function(at, n) {
+          con <- file(file, "rb")
+          on.exit(close(con))
+          return(.wavConReader(con)(at, n))
+        }
+        .wavUnfinalisedSize(data, info$riffSize, fields$frameSize, file.size(file), peek)
+      }
       integer <- riff && fields$format != 3 && fields$bits %in% c(8, 16, 32)
       per <- if (integer) 4 else 8
+      #audiomothExpand() expands only the mono 16-bit PCM an AudioMoth writes,
+      #and readAudio() reads any other recording as it is.
+      triggered <- riff && fields$format == 1 && fields$channels == 1 && fields$bits == 16 &&
+        .isTriggeredRecording(file)
+      if (triggered) {
+        held <- held + .triggeredGrowth(file)
+      }
       reason <- if (!riff) {
         paste("a WAV file in the", info$form, "form is read whole, by the av package")
-      } else if (.isTriggeredRecording(file)) {
+      } else if (triggered) {
         "an AudioMoth triggered recording is expanded whole before it is read"
       } else {
         NA_character_
@@ -67,6 +84,33 @@
       "only a WAV file is read a window at a time, as a part of any other format is not read exactly"
     }
   ))
+}
+
+#' How many bytes expanding a triggered recording adds to its audio
+#'
+#' audiomothExpand() replaces each encoded block with the blocks of silence it
+#' counts, so the expanded audio is that many blocks longer, less the encoded
+#' block itself. The blocks are counted a few megabytes at a time, so a
+#' recording too long to hold is measured without being held.
+#' @param file A triggered recording.
+#' @param chunk How many blocks to read at a time.
+#' @return A number of bytes.
+#' @keywords internal
+#' @noRd
+.triggeredGrowth <- function(file, chunk=2^14) {
+  blocks <- file.size(file) %/% .AM_BLOCK_SIZE
+  con <- file(file, "rb")
+  on.exit(close(con))
+  grown <- 0
+  done <- 0
+  while (done < blocks) {
+    n <- min(chunk, blocks - done)
+    bytes <- readBin(con, "raw", n=n * .AM_BLOCK_SIZE)
+    counts <- .audiomothBlockCounts(matrix(bytes, nrow=.AM_BLOCK_SIZE))
+    grown <- grown + sum(counts[counts > 0] - 1)
+    done <- done + n
+  }
+  return(grown * .AM_BLOCK_SIZE)
 }
 
 #' A number of bytes as a person reads it
@@ -123,7 +167,8 @@
 #' How many sample frames each window of a windowing step holds
 #'
 #' A length windowing() would refuse is left for it to refuse, with its own
-#' message, once the file is run.
+#' message, once the file is run, where a failure is a failure of that file
+#' rather than of the batch.
 #' @param s A windowing step.
 #' @param rate The sample rate of the file.
 #' @return A number of frames.
@@ -134,7 +179,12 @@
   defaults <- formals(windowing)
   len <- if (is.null(given$window.length)) defaults$window.length else given$window.length
   unit <- if (is.null(given$time.unit)) defaults$time.unit else given$time.unit
-  return(tryCatch(.inSamples(len, unit, rate), error=function(e) 0))
+  frames <- tryCatch(.inSamples(len, unit, rate), error=function(e) NA)
+  #Anything but one number, as NA or two lengths, is no length of a window.
+  if (!is.numeric(frames) || length(frames) != 1 || is.na(frames)) {
+    return(0)
+  }
+  return(frames)
 }
 
 #' Stand in for a file too long to read whole
@@ -148,8 +198,10 @@
 #' read records it.
 #'
 #' A file readAudio() reads from a repaired copy, as one whose audio size was
-#' never written, is copied once here and its windows are read from the copy,
-#' rather than each window copying the file again.
+#' never written, is copied once here, and its first frame and its windows are
+#' read from the copy, rather than each read copying the file again. What
+#' readAudio() says of such a file, in the order it says it, is said here of
+#' the file rather than of the copy.
 #' @param path The file.
 #' @param origin What to tag it with as its origin.
 #' @param metadata What the recordings of the set agree on.
@@ -161,11 +213,22 @@
 #' @keywords internal
 #' @noRd
 .longFileWave <- function(path, origin, metadata, block=2^20) {
-  one <- readAudio(path, from=1, to=1, time.unit="samples")
-  copy <- .wavRepaired(path, .wavTruncation(path))
+  truncation <- .wavTruncation(path)
+  copy <- .wavRepaired(path, truncation)
   kept <- FALSE
-  if (!is.null(copy)) {
+  if (is.null(copy)) {
+    one <- readAudio(path, from=1, to=1, time.unit="samples")
+  } else {
     on.exit(if (!kept) unlink(copy), add=TRUE)
+    if (!is.null(truncation)) {
+      .truncatedWarning(truncation, path)
+    }
+    one <- .quietRead(copy, 1, 1)
+    if (is.null(truncation)) {
+      .unwrittenWarning(path)
+    }
+    .wavRateWarning(one, path)
+    one <- .recordFile(one, path)
   }
   source <- if (is.null(copy)) path else copy
   frames <- .wavFramesHeld(source)$frames
@@ -290,14 +353,29 @@
   }
   lapply(cons, close)
   open <- FALSE
+  digested <- files
   if (multi) {
+    #A join cut short, as by a full disk, would give the digest of part of the
+    #recording, so it fails the file instead.
     for (ch in seq_len(channels)[-1]) {
-      file.append(files[1], files[ch])
+      if (!.appendFile(files[1], files[ch])) {
+        stop("Could not join the channels of the recording to digest them.")
+      }
     }
-    files <- files[1]
+    digested <- files[1]
   }
-  return(vapply(files, function(f) digest::digest(file=f, algo="sha256"), character(1),
+  return(vapply(digested, function(f) digest::digest(file=f, algo="sha256"), character(1),
                 USE.NAMES=FALSE))
+}
+
+#' Append one file to another
+#' @param to The file to append to.
+#' @param from The file to append.
+#' @return Whether it was appended.
+#' @keywords internal
+#' @noRd
+.appendFile <- function(to, from) {
+  return(file.append(to, from))
 }
 
 #' Read part of a file whose warnings have been said already

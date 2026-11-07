@@ -127,6 +127,16 @@ test_that("the size of a file once read is worked out from its header", {
   unwritten <- .unwritten(.longWav(file.path(dir, "unwritten.wav"), frames=1000))
   expect_equal(.decodedSize(unwritten)$bytes, 4000)
   expect_warning(expect_length(readAudio(unwritten)@left, 1000), "was never written")
+  # One that holds no audio, with metadata after it, holds none.
+  empty <- mdFile(mdWav(mdFmt(8000), mdChunk("data", raw(0)), mdGuanoChunk("Make:X")))
+  expect_equal(.decodedSize(empty)$bytes, 0)
+  expect_length(readAudio(empty)@left, 0)
+  # A triggered recording is measured as it is once expanded.
+  triggered <- system.file("extdata", "AUDIOMOTHT.WAV", package="sonicscrewdriver")
+  expanded <- readAudio(triggered)
+  expect_equal(.decodedSize(triggered)$bytes, length(expanded@left) * 4)
+  expect_gt(length(expanded@left), .wavFramesHeld(triggered)$frames)
+  expect_equal(.triggeredGrowth(triggered, chunk=3), .triggeredGrowth(triggered))
 })
 
 test_that("only a RIFF WAV file of PCM or floating-point audio can be read in windows", {
@@ -179,11 +189,18 @@ test_that("the digest of a file read a block at a time is that of the whole wave
                      frames=k$frames)
     w <- readAudio(path)
     one <- readAudio(path, from=1, to=1, time.unit="samples")
+    before <- list.files(tempdir(), pattern="\\.bin$")
     for (method in c("full", "sketch")) {
       expect_identical(.fileWaveHash(path, method, one, k$frames, k$block), .waveHash(w, method),
                        info=paste(k$channels, "channels,", k$frames, "frames,", method))
     }
+    # The files the samples were written to are gone, every channel of them.
+    expect_setequal(list.files(tempdir(), pattern="\\.bin$"), before)
   }
+  # Channels that could not be joined give no digest at all.
+  local_mocked_bindings(.appendFile=function(to, from) FALSE)
+  expect_error(.fileWaveHash(path, "full", one, 100, 7),
+               "Could not join the channels of the recording to digest them.")
 })
 
 test_that("windows read from disk are the windows cut from the whole wave", {
@@ -252,10 +269,24 @@ test_that("what a whole read says of a file is said once", {
   }
   classes <- function(found) vapply(found, function(w) class(w)[1], character(1))
 
+  # A file read from a repaired copy is copied once, however many parts of it
+  # are read.
+  copies <- new.env()
+  copies$n <- 0
+  real <- .wavRepaired
+  local_mocked_bindings(.wavRepaired=function(...) {
+    made <- real(...)
+    copies$n <- copies$n + !is.null(made)
+    made
+  })
   unwritten <- .unwritten(.longWav(file.path(dir, "unwritten.wav")))
   said <- runs(unwritten, "unwritten")
   expect_equal(classes(said$whole), "unwrittenAudioSize")
   expect_equal(classes(said$disk), "unwrittenAudioSize")
+  # Said of the file, rather than of the copy read in its place.
+  expect_match(conditionMessage(said$disk[[1]]), basename(unwritten), fixed=TRUE)
+  # One copy for the whole read, and one for the read a window at a time.
+  expect_equal(copies$n, 2)
 
   # Cut part way through a frame, and so read from a copy holding its whole
   # frames, and cut at the end of one, and read where it is.
@@ -337,12 +368,24 @@ test_that("a windowing the file cannot be windowed by says so as it runs", {
   .longIds()
   dir <- withr::local_tempdir()
   path <- .longWav(file.path(dir, "a.wav"))
-  p <- pipeline(windowing(1, time.unit="fortnights", then=length()))
-  runPipeline(p, recordingSet(path), file.path(dir, "store"), max.memory=1e4, quiet=TRUE)
+  other <- .longWav(file.path(dir, "b.wav"), frames=100, seed=2)
+  failed <- function(p) {
+    store <- tempfile("store", tmpdir=dir)
+    runPipeline(p, recordingSet(c(path, other)), store, max.memory=1e4, quiet=TRUE)
+    files <- attr(pipelineResults(store, p), "files")
+    # Each file fails as its windowing does, the long one read a window at a
+    # time and the other read whole, and the batch goes on past the first.
+    expect_equal(files$status, c("error", "error"))
+    expect_equal(sub("^.* failed: ", "", files$error[1]), sub("^.* failed: ", "", files$error[2]))
+    return(files$error[1])
+  }
   expect_match(
-    attr(pipelineResults(file.path(dir, "store"), p), "files")$error,
+    failed(pipeline(windowing(1, time.unit="fortnights", then=length()))),
     "^Step 1 windowing\\(1, time.unit = \"fortnights\"\\) failed: time.unit must be one of"
   )
+  for (len in list(NA, c(100, 200))) {
+    expect_match(failed(pipeline(windowing(len, then=length()))), "^Step 1 windowing\\(.* failed: ")
+  }
 })
 
 test_that("a file whose size cannot be told is read whole", {
