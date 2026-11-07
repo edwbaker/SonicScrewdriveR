@@ -3,7 +3,7 @@
 twoChannelWave <- function(n=4800, samp.rate=48000) {
   set.seed(1)
   data <- cbind(stats::rnorm(n), stats::rnorm(n))
-  return(tuneR::WaveMC(data * 1e4, samp.rate=samp.rate, bit=32, pcm=FALSE))
+  return(tuneR::WaveMC(data / 10, samp.rate=samp.rate, bit=32, pcm=FALSE))
 }
 
 test_that("input.unit is accepted wherever a value's unit is given", {

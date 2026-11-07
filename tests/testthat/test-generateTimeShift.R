@@ -53,7 +53,7 @@ test_that("generateTimeshift gives correct format output", {
 
 test_that("generateTimeShift shifts WaveMC objects", {
   w <- tuneR::sine(440, samp.rate=1000, duration=3000)
-  mc <- tuneR::WaveMC(cbind(w@left, w@left * 0.5), samp.rate=1000, bit=16)
+  mc <- tuneR::WaveMC(cbind(w@left, w@left * 0.5), samp.rate=1000, bit=32, pcm=FALSE)
   colnames(mc@.Data) <- c("A", "B")
 
   for (type in c("silent", "rotate")) {
@@ -114,7 +114,7 @@ test_that("a shift that rounds to no samples returns the wave unchanged", {
   # sample aborted for a Wave while a WaveMC, whose silence is built as a
   # matrix, went through. amount=c(0, 1, 2) - the unshifted wave alongside two
   # shifts - therefore failed for one class and not the other.
-  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=32, pcm=FALSE)
+  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=16)
 
   expect_silent(generateTimeShift(w, type="silent", amount=1e-6))
   expect_equal(generateTimeShift(w, type="silent", amount=0)[[1]]@left, as.numeric(1:10))
@@ -128,6 +128,6 @@ test_that("a shift that rounds to no samples returns the wave unchanged", {
   expect_equal(r[[2]]@left, c(0, 0, 0, 0, 0, 0, 0, 0, 1, 2))
 
   # A WaveMC behaves the same way, as it did before.
-  mc <- tuneR::WaveMC(cbind(1:10, 11:20), samp.rate=8000, bit=32, pcm=FALSE)
+  mc <- tuneR::WaveMC(cbind(1:10, 11:20), samp.rate=8000, bit=16)
   expect_equal(nrow(generateTimeShift(mc, type="silent", amount=0)[[1]]@.Data), 10L)
 })

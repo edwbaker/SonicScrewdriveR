@@ -423,7 +423,7 @@ test_that("A file read through the av package is windowed over every sample it h
 })
 
 test_that("an overlap at or above the window length is refused by name", {
-  w <- tuneR::Wave(as.numeric(1:1000), samp.rate=8000, bit=32, pcm=FALSE)
+  w <- tuneR::Wave(as.numeric(1:1000), samp.rate=8000, bit=16)
 
   # The hop is window.length - window.overlap, so these left nothing to advance
   # by and failed inside seq_len() with "argument must be coercible to

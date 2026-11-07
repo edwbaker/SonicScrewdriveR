@@ -41,7 +41,7 @@ test_that("tagApply works on lists and WaveMC", {
   expect_length(res, 2)
   expect_equal(res[[2]]@processing[[1]]$func, "tuneR::normalize")
 
-  wmc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate = 44100, bit = 16)
+  wmc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate = 44100, bit = 32, pcm = FALSE)
   res <- tagApply(tagWave(wmc), tuneR::normalize, unit = "1")
   expect_s4_class(res, "TaggedWaveMC")
   expect_equal(length(res@processing), 1)
@@ -210,7 +210,7 @@ test_that("tagApply lets seewave functions be used on tagged waves", {
 
 test_that("tagApply handles tagged multi-channel waves with seewave", {
   w <- noise("white", duration = 4410, samp.rate = 44100)
-  wmc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate = 44100, bit = 16)
+  wmc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate = 44100, bit = 32, pcm = FALSE)
   # ffilter returns the filtered channel as a Wave, so that is what is tagged
   res <- tagApply(tagWave(wmc), seewave::ffilter, from = 1000, to = 2000, output = "Wave")
   expect_s4_class(res, "TaggedWave")

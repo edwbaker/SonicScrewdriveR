@@ -253,7 +253,11 @@ test_that("autoBandPass records what it did", {
   skip_if_not_installed("seewave")
   set.seed(42)
   w <- tuneR::Wave(round(10000*rnorm(8000)), samp.rate=8000, bit=16)
-  w <- seewave::ffilter(w, from=1800, to=2200, output="Wave")
+  #ffilter() gives its band at one part in its window length of the level it had,
+  #in 16-bit PCM holding samples that are not whole, so it is scaled back and
+  #rounded to the format it declares.
+  band <- seewave::ffilter(w, from=1800, to=2200, output="Wave")
+  w <- tuneR::Wave(round(1024 * band@left), samp.rate=8000, bit=16)
 
   rec <- .expectRecorded(autoBandPass, "autoBandPass", w, bw="-3dB", n.bw=1, lowcut=1000)
   expect_equal(rec$params$bw, "-3dB")
@@ -301,7 +305,7 @@ test_that("filterWave records the settings of the filter", {
   expect_null(.filterLabel(new("WaveFilter", description=character(0))))
 
   # Every channel of a multi-channel wave is filtered, and recorded once.
-  mc <- tagWave(tuneR::WaveMC(cbind(w@left, rev(w@left)), samp.rate=44100, bit=16))
+  mc <- tagWave(tuneR::WaveMC(cbind(w@left, rev(w@left)), samp.rate=44100, bit=32, pcm=FALSE))
   filtered <- filterWave(mc, bandpass(from=1000, to=2000))
   expect_s4_class(filtered, "TaggedWaveMC")
   expect_equal(length(filtered@processing), 1)

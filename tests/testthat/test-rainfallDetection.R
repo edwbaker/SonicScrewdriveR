@@ -3,7 +3,7 @@ test_that("rainfallDetection analyses each channel of multi-channel input", {
   n <- 8000
   set.seed(4)
   quiet <- tuneR::Wave(round(sin(2*pi*300*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
-  rain <- tuneR::Wave(round(rnorm(n) * 15000), samp.rate=sr, bit=16)
+  rain <- tuneR::Wave(round(pmax(pmin(rnorm(n) * 15000, 32767), -32768)), samp.rate=sr, bit=16)
 
   # Rain in one channel only. Before this was analysed channel by channel the
   # stereo file reported the quiet channel and the rain was missed.
@@ -24,7 +24,7 @@ test_that("rainfallDetection passes arguments to each channel", {
   sr <- 8000
   n <- 8000
   set.seed(5)
-  w <- tuneR::Wave(round(rnorm(n) * 15000), samp.rate=sr, bit=16)
+  w <- tuneR::Wave(round(pmax(pmin(rnorm(n) * 15000, 32767), -32768)), samp.rate=sr, bit=16)
   st <- tuneR::stereo(w, w)
 
   expect_equal(rainfallDetection(st, Tmean=1e-3),

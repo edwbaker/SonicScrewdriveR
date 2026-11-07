@@ -3,7 +3,7 @@
 tone <- function(freq=200, amps=1, duration=44100, samp.rate=44100) {
   t <- 0:(duration-1)
   amp <- rep_len(amps[((t %/% (samp.rate/freq)) %% length(amps)) + 1], duration)
-  tuneR::Wave(amp * sin(2*pi*freq*t/samp.rate), samp.rate=samp.rate, bit=16)
+  tuneR::Wave(amp * sin(2*pi*freq*t/samp.rate), samp.rate=samp.rate, bit=32, pcm=FALSE)
 }
 
 test_that("a tone of constant amplitude has no shimmer", {
@@ -25,7 +25,7 @@ test_that("shimmer does not depend on the frequency of the tone", {
 
 test_that("shimmer is unchanged by inverting the waveform", {
   w <- tone(200, amps=c(1, 0.9))
-  inverted <- tuneR::Wave(-w@left, samp.rate=w@samp.rate, bit=w@bit)
+  inverted <- tuneR::Wave(-w@left, samp.rate=w@samp.rate, bit=w@bit, pcm=w@pcm)
 
   expect_equal(shimmer(w), shimmer(inverted), tolerance=1e-3)
 })
