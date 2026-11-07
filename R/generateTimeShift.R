@@ -34,6 +34,9 @@ generateTimeShift <- function(
   if (!inherits(wave, c("Wave", "WaveMC"))) {
     stop("All elements of wave must be Wave-like objects.")
   }
+  #Each shift cuts the wave with cutws(), which checks its format on every cut,
+  #so it is checked once here and not again for each shift.
+  validateIsWaveLike(wave)
   #Silence inserted at both ends gives two waves per amount, each recorded under
   #the end it was inserted at. A rotation is the same wherever it is applied, so
   #it gives one wave per amount whatever `where` asked for.
@@ -41,10 +44,10 @@ generateTimeShift <- function(
   ret <- list()
   for (i in seq_along(amount)) {
     for (w in wheres) {
-      ret[[length(ret)+1]] <- .tagApplyOne(
+      ret[[length(ret)+1]] <- .withoutFormatWarning(.tagApplyOne(
         wave, .timeShift, "generateTimeShift", NULL, FALSE,
         type=type, amount=amount[i], where=w
-      )
+      ))
     }
   }
   return(ret)

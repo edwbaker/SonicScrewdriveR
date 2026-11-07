@@ -135,6 +135,17 @@ validatePressure <- function(P) {
 #'
 #' Helper function to test that the input is a Wave object. Will create an error if not.
 #'
+#' A warning of class `waveFormatMismatch` is raised where the wave's samples do
+#' not fit the format it declares: a PCM wave holding samples that are not whole
+#' numbers, or samples outside the range its bit depth holds, or a floating
+#' point wave holding samples outside -1 to 1. `tuneR::Wave()`
+#' declares 16-bit PCM unless told otherwise, so floating point samples given to
+#' it without `bit=32, pcm=FALSE` make such a wave, and functions that cut,
+#' filter or write it round each sample to a whole number. The check reads 1024
+#' samples spread evenly over each channel, so that it takes the same time
+#' however long the recording is, and can miss a fault confined to a few
+#' samples.
+#'
 #' @param wave Object to test
 #' @importFrom methods is
 #' @return The Wave object unchanged. An error is raised if it is not a Wave object.
@@ -144,6 +155,7 @@ validateIsWave <- function(wave) {
   if (!inherits(wave, "Wave")) {
     stop("Expecting a Wave object")
   }
+  .validateWaveFormat(wave)
   return(wave)
 }
 
@@ -151,6 +163,7 @@ validateIsWaveLike <- function(wave) {
   if (!inherits(wave, c("Wave", "WaveMC"))) {
     stop("Expecting a Wave or WaveMC object")
   }
+  .validateWaveFormat(wave)
   return(wave)
 }
 
@@ -158,7 +171,148 @@ validateIsWaveMC <- function(wave) {
   if (!inherits(wave, "WaveMC")) {
     stop("Expecting a WaveMC object")
   }
+  .validateWaveFormat(wave)
   return(wave)
+}
+
+#' Range of sample values a PCM format holds
+#'
+#' These are the bounds `tuneR::writeWave()` refuses a wave for exceeding.
+#'
+#' @param bit The bit depth of the format.
+#' @return The lowest and highest sample values, or NULL for a bit depth tuneR
+#'   does not write as PCM.
+#' @keywords internal
+#' @noRd
+.pcmRange <- function(bit) {
+  if (bit == 8) {
+    return(c(0, 255))
+  }
+  if (bit %in% c(16, 24, 32)) {
+    return(c(-2^(bit - 1), 2^(bit - 1) - 1))
+  }
+  return(NULL)
+}
+
+#' Samples spread evenly over a wave, for checking its format
+#'
+#' The same samples are taken every time, so that a check of them gives the same
+#' answer on every call. A wave of `n` samples or fewer is given whole.
+#'
+#' @param wave A Wave or WaveMC object.
+#' @param n The number of samples to take from each channel.
+#' @return A vector of the samples taken from every channel.
+#' @keywords internal
+#' @noRd
+.formatSamples <- function(wave, n=1024) {
+  mc <- inherits(wave, "WaveMC")
+  len <- if (mc) nrow(wave@.Data) else length(wave@left)
+  if (len == 0) {
+    return(numeric())
+  }
+  i <- unique(round(seq(1, len, length.out=min(len, n))))
+  if (mc) {
+    return(as.vector(wave@.Data[i, , drop=FALSE]))
+  }
+  return(c(wave@left[i], if (wave@stereo) wave@right[i]))
+}
+
+#' Warn where a wave's samples do not fit the format it declares
+#'
+#' tuneR's validity rules check that the bit depth and the pcm flag make a
+#' format, but not that the samples fit it. `tuneR::Wave()` declares 16-bit PCM
+#' by default, so floating point samples between -1 and 1 given to it make a
+#' wave claiming to be integer PCM. Every function that rebuilds a wave rounds
+#' its samples to the format it declares, so such a wave is rounded to -1, 0
+#' and 1 at the first cut, with nothing to say so.
+#'
+#' Samples outside the range of the format are warned about too, PCM or
+#' floating point. Nothing here clips them, but `tuneR::writeWave()` refuses a
+#' wave holding them, and a level read as a proportion of full scale exceeds
+#' one.
+#'
+#' A warning rather than an error, as many existing callers build waves this
+#' way. It carries the class `waveFormatMismatch`, so that a caller can handle
+#' it alone, and no call, as the validators are reached from helpers whose names
+#' would mean nothing to the caller.
+#'
+#' @param wave A Wave or WaveMC object.
+#' @return The wave unchanged, invisibly.
+#' @keywords internal
+#' @noRd
+.validateWaveFormat <- function(wave) {
+  x <- .formatSamples(wave)
+  x <- x[!is.na(x)]
+  #tuneR's validity rules let a 32-bit wave leave its pcm slot NA, which says
+  #nothing of the format to check the samples against.
+  if (length(x) == 0 || is.na(wave@pcm)) {
+    return(invisible(wave))
+  }
+  if (!wave@pcm) {
+    if (min(x) < -1 || max(x) > 1) {
+      .waveFormatWarning(
+        "The wave declares floating point samples but holds samples outside ",
+        "the range -1 to 1 that format holds. tuneR::writeWave() refuses such ",
+        "a wave, and tuneR::normalize() scales one into range."
+      )
+    }
+    return(invisible(wave))
+  }
+  format <- paste0(wave@bit, "-bit PCM")
+  if (!is.integer(x) && any(x != round(x))) {
+    .waveFormatWarning(
+      "The wave declares ", format, " but holds samples that are not whole ",
+      "numbers, which are rounded wherever the wave is cut, filtered or written. ",
+      "Floating point samples need bit=32 (or 64) and pcm=FALSE."
+    )
+  }
+  limits <- .pcmRange(wave@bit)
+  if (!is.null(limits) && (min(x) < limits[1] || max(x) > limits[2])) {
+    .waveFormatWarning(
+      "The wave declares ", format, " but holds samples outside the range ",
+      sprintf("%.0f to %.0f", limits[1], limits[2]), " that format holds. ",
+      "tuneR::writeWave() refuses such a wave, and tuneR::normalize() scales ",
+      "one into range."
+    )
+  }
+  return(invisible(wave))
+}
+
+#' Raise a warning that a wave's samples do not fit its format
+#'
+#' @param ... Parts of the message.
+#' @return Nothing, called for the condition it raises.
+#' @keywords internal
+#' @noRd
+.waveFormatWarning <- function(...) {
+  warning(structure(
+    class = c("waveFormatMismatch", "warning", "condition"),
+    list(message = paste0(...), call = NULL)
+  ))
+}
+
+#' Evaluate an expression without the wave format warning
+#'
+#' A function that cuts the same wave many times, once per window or per shift,
+#' reaches a validator on every cut. It checks the wave once itself and
+#' evaluates the cuts here, so that a wave whose samples do not fit its format
+#' is warned about once rather than once per cut, and a function handing its
+#' wave to another that checks it again does the same. `normalise()` checks its
+#' wave here too, as scaling the samples into the format is what it is for,
+#' `autoBandPass()` measures here a wave seewave returned in a format its
+#' samples do not fit, and `tagApply()` tags here the wave a function gave
+#' back, which is warned about where it is next used. Other warnings pass
+#' through.
+#'
+#' @param expr The expression to evaluate.
+#' @return The value of `expr`.
+#' @keywords internal
+#' @noRd
+.withoutFormatWarning <- function(expr) {
+  withCallingHandlers(
+    expr,
+    waveFormatMismatch = function(w) invokeRestart("muffleWarning")
+  )
 }
 
 validateFreq <- function(f) {

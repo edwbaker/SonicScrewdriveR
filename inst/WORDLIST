@@ -252,6 +252,7 @@ unif
 unnormalised
 validateFreq
 validateFreqIsPossible
+validateIsWave
 validateRH
 validateSpectrum
 validateTimeInSeconds

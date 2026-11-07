@@ -111,7 +111,13 @@ autoBandPass <- function(
   #default could be chosen however low the high-pass was set. Its warnings about
   #a single bin are raised for both thresholds, only one of which is used here,
   #so the one that bears on the filter is raised below instead.
-  data <- frequencyStats(wave2, wave_spec=wave_spec, lowcut=lowcut, warn=FALSE, output.unit="Hz")
+  #
+  #seewave returns the high-passed wave as 16-bit PCM holding samples that are
+  #not whole, which frequencyStats() would warn about. It is only measured, and
+  #nothing rounds it, so its format does not bear on the result.
+  data <- .withoutFormatWarning(
+    frequencyStats(wave2, wave_spec=wave_spec, lowcut=lowcut, warn=FALSE, output.unit="Hz")
+  )
   rm(wave2)
   centre <- data[[bw]]$centre
   bandwidth <- data[[bw]]$bandwidth

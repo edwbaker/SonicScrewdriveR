@@ -96,6 +96,9 @@ filterWave <- function(w, filt, cl=NULL) {
 #' @noRd
 .filterWave <- function(w, filt, cl, filter_name) {
   if (inherits(w, c("Wave", "WaveMC"))) {
+    #The filtered samples are rounded to the format the wave declares, which
+    #would hide that the wave's own samples do not fit it.
+    validateIsWaveLike(w)
     #The filters dispatch on the class of the wave and know nothing of a
     #TaggedWave, so .tagApplyOne() is asked for an untagged one and puts the
     #tags back on what the filter returns. Passing the tagged wave straight to a
@@ -231,14 +234,16 @@ bandpass <- function( from, to, ...) {
 #' @noRd
 .filterAllChannels <- function(w, filt) {
   centre <- .waveCentre(w)
-  filtered <- allChannels(
+  #filterWave() and autoBandPass() have checked the format of the wave already,
+  #and allChannels() would warn about it a second time.
+  filtered <- .withoutFormatWarning(allChannels(
     w,
     function(channel) {
       channel@left <- channel@left - centre
       do.call(match.fun(filt@func), c(list(channel), filt@params))
     },
     channel.param = NULL
-  )
+  ))
   #allChannels() wraps a result that is not a list in one.
   filtered <- lapply(filtered, function(x) if (is.list(x)) x[[1]] else x)
 

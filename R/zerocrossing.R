@@ -63,5 +63,7 @@ zerocross <- function(wave) {
 #' @return A vector of period boundary locations
 #' @noRd
 .periodBoundaries <- function(wave) {
-  return(zerocross(wave)[c(TRUE, FALSE)])
+  #Its callers, jitter() and shimmer(), have checked the format of the wave,
+  #which zerocross() would check again.
+  return(.withoutFormatWarning(zerocross(wave))[c(TRUE, FALSE)])
 }

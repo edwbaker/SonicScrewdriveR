@@ -267,5 +267,6 @@ tdoa <- function(
   }
   from <- max(1, round(from))
   to <- min(length(wave), round(to))
-  return(cutws(wave, from, to))
+  #tdoa() has checked the format of the wave, which cutws() would check again.
+  return(.withoutFormatWarning(cutws(wave, from, to)))
 }

@@ -38,6 +38,11 @@
 # after the start point. It has a class of its own rather than sharing that
 # one, as it is no fault of the recording: a caller passing over recordings
 # too short for a part should still hear that the part itself holds nothing.
+#
+# `waveFormatMismatch` is a warning about a wave in memory rather than a file,
+# and so is not an "audioFileWarning". It is raised by `.waveFormatWarning()`
+# in validationFunctions.R, where the validators find a wave whose samples do
+# not fit the format it declares.
 
 #' Raise a warning about the file audio was read from
 #'

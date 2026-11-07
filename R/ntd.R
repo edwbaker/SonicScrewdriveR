@@ -16,6 +16,9 @@
 #'
 
 ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {
+ #Each interval is rebuilt as a wave of its own, which rounds the samples of one
+ #declaring PCM, so its format is checked before any is cut.
+ validateIsWave(wave)
  #Each interval runs between one event and the next, so fewer than two events
  #gives none. The count used to run backwards, indexing events with NA.
  if (length(events) < 2) {

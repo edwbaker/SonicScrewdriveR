@@ -442,6 +442,21 @@
   of them are also classed `audioFileWarning`, for handling every warning about
   the file at once, and `warning`, so `suppressWarnings()` and an ordinary
   warning handler treat them as the warnings they are.
+- validateIsWave() and the functions that call it warn, with the class
+  `waveFormatMismatch`, about a wave whose samples do not fit the format it
+  declares: a PCM wave holding samples that are not whole numbers or that are
+  outside the range of its bit depth, or a floating point wave holding samples
+  outside -1 to 1. `tuneR::Wave()` declares 16-bit PCM unless told otherwise,
+  so floating point samples given to it without `bit=32, pcm=FALSE` make such a
+  wave, and cutws() of one returned -1, 0 and 1 with nothing to say why. The
+  check reads 1024 samples spread over each channel, so it takes the same time
+  however long the recording, and can miss a fault in a few samples alone.
+  allChannels(), ntd(), filterWave(), fcis() and generateTimeShift(), which
+  rebuild a wave without having checked it, now check it. Each call warns once
+  about a wave, rather than once for every window, shift or channel, or for
+  every function it hands the wave on to. normalise() does not warn, as scaling
+  samples into their format is what it does, and tagApply() does not warn about
+  the wave a function gives back, which is warned about where it is used.
 - A new `RecordingSet` class holds a set of recordings to be analysed, as a
   data frame with one row for each recording, wherever the recordings come
   from. Each recording is identified by a `uri` and read from its `location`,

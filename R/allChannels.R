@@ -15,17 +15,22 @@
 #'   count of the input. Each entry is itself a list.
 #' @export
 allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NULL, ...) {
+  #The channels of a WaveMC are rebuilt as waves of their own, which rounds the
+  #samples of one declaring PCM, so the format is checked here, once. FUN is
+  #handed the same wave, or one channel of it, for every channel, and a
+  #validator in FUN would warn about it again for each.
+  validateIsWaveLike(w)
   #Every input is treated as a number of channels, so that the output has the
   #same structure whatever the class and channel count of the input.
-  if (is(w, "Wave")) {
-    channels <- if (w@stereo) 2 else 1
-  } else if (is(w, "WaveMC")) {
+  if (is(w, "WaveMC")) {
     channels <- w@dim[2]
   } else {
-    stop("Expecting a Wave or WaveMC object.")
+    channels <- if (w@stereo) 2 else 1
   }
   if (is.null(cl)) {
-    ret <- lapply(1:channels, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
+    ret <- .withoutFormatWarning(
+      lapply(1:channels, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
+    )
   } else {
     ret <- parallel::parLapply(cl, 1:channels, .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
   }
