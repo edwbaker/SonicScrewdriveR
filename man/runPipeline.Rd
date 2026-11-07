@@ -79,9 +79,11 @@ another folder.
 
 A file is read whole unless it would take more than \code{max.memory} bytes once
 decoded, which is worked out from its header before it is read. R holds a
-sample in 4 bytes for a WAV file of 8, 16 or 32-bit PCM and for an MP3 file,
-and in 8 for a WAV file of 24-bit PCM or floating-point audio and for
-anything the av package decodes, FLAC among them.
+sample in 4 bytes for a RIFF WAV file of 8, 16 or 32-bit PCM, for an AudioMoth
+triggered recording, and for an MP3 file, and in 8 for a WAV file of 24-bit
+PCM or floating-point audio and for anything the av package decodes, a WAV
+file in the RF64 or BW64 form and FLAC among them. A triggered recording is
+measured as it will be once expanded.
 
 A file over \code{max.memory} is read a window at a time, by each \code{\link[=windowing]{windowing()}}
 at the top of the pipeline, as windowing() reads a file. Each window holds
@@ -89,13 +91,16 @@ the samples, and the tags, of the window cut from the whole recording, so
 the results are those a whole read gives, and the \code{wave_hash} of the file is
 taken a block at a time. That writes the samples to a temporary file, as the
 digest is of all of them at once, so it needs room on disk for 8 bytes a
-sample while it is taken. Only a RIFF WAV file of PCM or floating-point audio
-can be read in parts that are exact, so any other file over \code{max.memory}, an
-MP3 or a FLAC file among them, fails without being read. So does a file whose
-pipeline has a step outside a windowing given \verb{then=}, which needs the whole
-recording at once, or windows that are themselves over \code{max.memory}. The
-size of a file other than a WAV file is asked of the av package, and where
-that is not installed such a file is read whole.
+sample while it is taken, and for a file of more than two channels, whose
+channels are written apart and then joined, 8 bytes more for each sample of
+one channel. Only a RIFF WAV file of PCM or floating-point audio can be read
+in parts that are exact, so any other file over \code{max.memory}, an MP3 or a
+FLAC file among them, fails without being read, as does a triggered
+recording, which is expanded whole. So does a file whose pipeline has a step
+outside a windowing given \verb{then=}, which needs the whole recording at once,
+or windows that are themselves over \code{max.memory}. The size of a file other
+than a WAV file is asked of the av package, and where that is not installed
+such a file is read whole.
 }
 
 \section{Batches}{

@@ -43,19 +43,22 @@
         }
         .wavUnfinalisedSize(data, info$riffSize, fields$frameSize, file.size(file), peek)
       }
-      integer <- riff && fields$format != 3 && fields$bits %in% c(8, 16, 32)
-      per <- if (integer) 4 else 8
       #audiomothExpand() expands only the mono 16-bit PCM an AudioMoth writes,
-      #and readAudio() reads any other recording as it is.
-      triggered <- riff && fields$format == 1 && fields$channels == 1 && fields$bits == 16 &&
+      #in any of the three forms, before anything else reads it, and
+      #readAudio() reads any other recording as it is.
+      triggered <- fields$format == 1 && fields$channels == 1 && fields$bits == 16 &&
         .isTriggeredRecording(file)
       if (triggered) {
         held <- held + .triggeredGrowth(file, data$start, held)
       }
-      reason <- if (!riff) {
-        paste("a WAV file in the", info$form, "form is read whole, by the av package")
-      } else if (triggered) {
+      #audiomothExpand() gives the samples as integers, as readWave() gives those
+      #of PCM of 8, 16 and 32 bits.
+      integer <- triggered || (riff && fields$format != 3 && fields$bits %in% c(8, 16, 32))
+      per <- if (integer) 4 else 8
+      reason <- if (triggered) {
         "an AudioMoth triggered recording is expanded whole before it is read"
+      } else if (!riff) {
+        paste("a WAV file in the", info$form, "form is read whole, by the av package")
       } else {
         NA_character_
       }
@@ -311,8 +314,11 @@
   #block at a time.
   values <- function(ch, first, last) {
     out <- list()
-    for (from in seq(first, last, by=block)) {
-      out[[length(out) + 1]] <- as.numeric(column(read(from, min(last, from + block - 1)), ch))
+    from <- first
+    while (from <= last) {
+      to <- min(last, from + block - 1)
+      out[[length(out) + 1]] <- as.numeric(column(read(from, to), ch))
+      from <- to + 1
     }
     return(unlist(out))
   }
@@ -377,22 +383,30 @@
   cons <- lapply(files, file, open="wb")
   open <- TRUE
   on.exit(if (open) lapply(cons, close), add=TRUE, after=FALSE)
-  for (from in seq(1, frames, by=block)) {
-    w <- read(from, min(frames, from + block - 1))
+  #The next block is found from the last, rather than every block being listed
+  #first, which for a small block of a long recording would take more memory
+  #than the blocks themselves.
+  from <- 1
+  while (from <= frames) {
+    to <- min(frames, from + block - 1)
+    w <- read(from, to)
     for (ch in seq_len(channels)) {
       writeBin(as.numeric(column(w, ch)), cons[[ch]])
     }
+    from <- to + 1
   }
   lapply(cons, close)
   open <- FALSE
   digested <- files
   if (multi) {
     #A join cut short, as by a full disk, would give the digest of part of the
-    #recording, so it fails the file instead.
+    #recording, so it fails the file instead. Each channel is deleted once it
+    #has been joined, so the disk holds no more than one channel twice over.
     for (ch in seq_len(channels)[-1]) {
       if (!.appendFile(files[1], files[ch])) {
         stop("Could not join the channels of the recording to digest them.")
       }
+      unlink(files[ch])
     }
     digested <- files[1]
   }

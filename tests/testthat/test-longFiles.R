@@ -149,6 +149,18 @@ test_that("the size of a file once read is worked out from its header", {
   data <- .wavFindChunk(.wavChunksFile(triggered)$chunks, "data")
   expect_equal(.triggeredGrowth(triggered, data$start, data$size, chunk=3),
                .triggeredGrowth(triggered, data$start, data$size))
+  # In the RF64 and BW64 forms it is expanded as the RIFF one is, rather than
+  # read by av, and measured the same.
+  for (form in c("RF64", "BW64")) {
+    f <- mdFile(rf64TWav(bytes, form=form), "T.WAV")
+    size <- .decodedSize(f)
+    expect_equal(size$bytes, length(readAudio(f)@left) * 4, info=form)
+    expect_equal(size$bytes, length(expanded@left) * 4, info=form)
+    expect_equal(size$perSample, 4, info=form)
+    expect_equal(size$reason,
+                 "an AudioMoth triggered recording is expanded whole before it is read",
+                 info=form)
+  }
 })
 
 test_that("only a RIFF WAV file of PCM or floating-point audio can be read in windows", {
@@ -194,7 +206,13 @@ test_that("the digest of a file read a block at a time is that of the whole wave
     list(bits=16, channels=2, frames=50000, block=9973),
     list(bits=24, channels=3, frames=20000, block=4999),
     list(bits=16, channels=1, frames=100, block=7),
-    list(bits=16, channels=3, frames=100, block=7)
+    list(bits=16, channels=3, frames=100, block=7),
+    # A block of one frame, blocks that end with the recording, and one block
+    # longer than it.
+    list(bits=16, channels=2, frames=100, block=1),
+    list(bits=16, channels=1, frames=100, block=25),
+    list(bits=16, channels=3, frames=100, block=100),
+    list(bits=16, channels=3, frames=100, block=250)
   )
   for (k in cases) {
     path <- .longWav(tempfile(tmpdir=dir, fileext=".wav"), bits=k$bits, channels=k$channels,
@@ -209,6 +227,19 @@ test_that("the digest of a file read a block at a time is that of the whole wave
     # The files the samples were written to are gone, every channel of them.
     expect_setequal(list.files(tempdir(), pattern="\\.bin$"), before)
   }
+  # Each channel is deleted once it has been joined to the first, so what is on
+  # disk as the next is joined is the samples once over.
+  path <- .longWav(tempfile(tmpdir=dir, fileext=".wav"), channels=4, frames=1000)
+  one <- readAudio(path, from=1, to=1, time.unit="samples")
+  before <- list.files(tempdir(), pattern="\\.bin$")
+  held <- numeric(0)
+  local_mocked_bindings(.appendFile=function(to, from) {
+    bins <- setdiff(list.files(tempdir(), pattern="\\.bin$"), before)
+    held[length(held) + 1] <<- sum(file.size(file.path(tempdir(), bins)))
+    return(file.append(to, from))
+  })
+  expect_identical(.fileWaveHash(path, "full", one, 1000, 100), .waveHash(readAudio(path), "full"))
+  expect_equal(held, rep(8 * 1000 * 4, 3))
   # Channels that could not be joined give no digest at all.
   local_mocked_bindings(.appendFile=function(to, from) FALSE)
   expect_error(.fileWaveHash(path, "full", one, 100, 7),

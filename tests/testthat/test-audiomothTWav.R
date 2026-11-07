@@ -1128,25 +1128,6 @@ test_that("A triggered recording whose audio size was never written still expand
   )@left)
 })
 
-# A triggered recording rewritten in the RF64 form, which keeps its sizes in a
-# ds64 chunk. The chunk takes its 36 bytes from the comment, which leaves the
-# 488-byte header its length, so that the audio, and the blocks encoding the
-# omitted periods, stay on the 512-byte boundaries they are counted in.
-rf64TWav <- function(bytes, frames=NULL) {
-  dataSize <- .wavFindChunk(.wavChunks(bytes)$chunks, "data")$size
-  list <- c(
-    charToRaw("LIST"), mdU32(400), charToRaw("INFO"),
-    charToRaw("ICMT"), mdU32(348), bytes[57:404], bytes[441:480]
-  )
-  return(c(
-    charToRaw("RF64"), mdU32(4294967295), charToRaw("WAVE"),
-    charToRaw("ds64"), mdU32(28), mdU64(length(bytes) - 8), mdU64(dataSize),
-    mdU64(if (is.null(frames)) dataSize / 2 else frames), mdU32(0),
-    bytes[13:36], list,
-    charToRaw("data"), mdU32(4294967295), bytes[489:length(bytes)]
-  ))
-}
-
 test_that("A triggered recording in the RF64 form expands as the RIFF one does", {
   source <- system.file("extdata/AUDIOMOTHT.WAV", package="sonicscrewdriver")
   bytes <- rf64TWav(readBin(source, "raw", n=file.size(source)))
