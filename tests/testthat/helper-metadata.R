@@ -354,3 +354,23 @@ mdOlymChunk <- function(form=c("wav", "dss"), model="LS-100", fileNumber=204,
 
 #' A wave file carrying the given olym chunks
 mdOlymWav <- function(...) mdWav(mdFmt(), ..., mdData())
+
+# A triggered recording rewritten in the RF64 form, or the BW64 form, which
+# keep their sizes in a ds64 chunk. The chunk takes its 36 bytes from the
+# comment, which leaves the 488-byte header its length, so that the audio, and
+# the blocks encoding the omitted periods, stay on the 512-byte boundaries they
+# are counted in.
+rf64TWav <- function(bytes, frames=NULL, form="RF64") {
+  dataSize <- .wavFindChunk(.wavChunks(bytes)$chunks, "data")$size
+  list <- c(
+    charToRaw("LIST"), mdU32(400), charToRaw("INFO"),
+    charToRaw("ICMT"), mdU32(348), bytes[57:404], bytes[441:480]
+  )
+  return(c(
+    charToRaw(form), mdU32(4294967295), charToRaw("WAVE"),
+    charToRaw("ds64"), mdU32(28), mdU64(length(bytes) - 8), mdU64(dataSize),
+    mdU64(if (is.null(frames)) dataSize / 2 else frames), mdU32(0),
+    bytes[13:36], list,
+    charToRaw("data"), mdU32(4294967295), bytes[489:length(bytes)]
+  ))
+}
