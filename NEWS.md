@@ -1,6 +1,23 @@
 # sonicscrewdriver NEXT RELEASE
 
 ## New functionality
+- runPipeline() runs a pipeline over every file of a RecordingSet and writes
+  its results to a folder, the store. Recordings that share a hash or a
+  location are run once, as one file. Files at a URL are downloaded, checked
+  against their hash and deleted, unless `keep` names a folder for them. Each
+  file is read whole and tagged with its location and with the columns its
+  recordings agree on. The files are run in batches, each written once it is
+  done, so a stopped run loses only its last batch and the same call carries
+  on from there. A file that fails is recorded with the reason, and the run
+  moves on; `retry = TRUE` runs failed files again. Batches can be run on a
+  cluster with `cl`. The set comes back with the hashes of its local files
+  filled in, so that it can be joined to the results.
+- pipelineResults() reads a store back as a table for each analysis step, named
+  by its path through the pipeline. Each row is keyed by the hash of its file,
+  the pipeline's id and where in the recording it was measured, with the clock
+  time of each window where the set gives the recording's start. A file that
+  failed has a row in every table holding its error. `step` reads one table
+  alone.
 - calculateMetadata() works out what can be measured of a wave and of the file
   it was read from, and keeps it in the wave's `metadata` slot as
   `calculatedMetadata`. The fields are:

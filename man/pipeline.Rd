@@ -55,9 +55,9 @@ list, such as \code{list()} and \code{lapply()}, which take no wave. A pipeline 
 a variable, or a list of them, is given by its name, and \code{NULL} gives no
 steps.
 
-A pipeline does not carry the recordings it is run on. They are given when
-it is run, so that the same pipeline can be run on any number of sets, and
-its id is the same whichever set it runs on.
+A pipeline does not carry the recordings it is run on. They are given to
+\code{\link[=runPipeline]{runPipeline()}} when it is run, so that the same pipeline can be run on any
+number of sets, and its id is the same whichever set it runs on.
 }
 
 \section{How waves and results pass between steps}{
@@ -182,6 +182,7 @@ pipeline(lapply(c(1000, 4000), function(f) {
 }))
 }
 \seealso{
-\code{\link[=tagApply]{tagApply()}}, whose records the steps leave, and \code{\link[=flattenOutput]{flattenOutput()}},
-which turns their results into rows.
+\code{\link[=runPipeline]{runPipeline()}} to run one over a set of recordings, \code{\link[=tagApply]{tagApply()}},
+whose records the steps leave, and \code{\link[=flattenOutput]{flattenOutput()}}, which turns their
+results into rows.
 }
