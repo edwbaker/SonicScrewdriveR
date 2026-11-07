@@ -16,9 +16,8 @@
 #' @export
 allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NULL, ...) {
   #The channels of a WaveMC are rebuilt as waves of their own, which rounds the
-  #samples of one declaring PCM, so the format is checked here, once. FUN is
-  #handed the same wave, or one channel of it, for every channel, and a
-  #validator in FUN would warn about it again for each.
+  #samples of one declaring PCM, so the format is checked here, once.
+  #.doChannel() counts what it hands FUN as checked.
   validateIsWaveLike(w)
   #Every input is treated as a number of channels, so that the output has the
   #same structure whatever the class and channel count of the input.
@@ -28,9 +27,7 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
     channels <- if (w@stereo) 2 else 1
   }
   if (is.null(cl)) {
-    ret <- .withoutFormatWarning(
-      lapply(1:channels, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
-    )
+    ret <- lapply(1:channels, .doChannel, w=w,  channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
   } else {
     ret <- parallel::parLapply(cl, 1:channels, .doChannel, w=w, channel.param=channel.param, output.FUN=output.FUN, FUN, ...)
   }
@@ -55,7 +52,11 @@ allChannels <- function(w, FUN, cl=NULL, channel.param="channel",  output.FUN=NU
   if (!is.null(channel.param)) {
     l[as.character(channel.param)] <- channel
   }
-  ret <- eval(as.call(l))
+  #allChannels() has checked the format of the wave, and FUN is handed it, or
+  #one channel of it, for every channel. Counting that as checked here, where
+  #FUN is called, rather than around the loop holds on the workers of a
+  #cluster too, and leaves a wave FUN makes for itself to be checked.
+  ret <- .asChecked(w, eval(as.call(l)))
 
   #Handle when ret is not a list
   if (typeof(ret) != "list") {

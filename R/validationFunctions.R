@@ -246,6 +246,10 @@ validateIsWaveMC <- function(wave) {
 #' @noRd
 .validateWaveFormat <- function(wave) {
   x <- .formatSamples(wave)
+  keys <- .checkedFormats$keys
+  if (length(keys) > 0 && any(vapply(keys, identical, logical(1), list(wave@pcm, wave@bit, x)))) {
+    return(invisible(wave))
+  }
   x <- x[!is.na(x)]
   #tuneR's validity rules let a 32-bit wave leave its pcm slot NA, which says
   #nothing of the format to check the samples against.
@@ -293,6 +297,48 @@ validateIsWaveMC <- function(wave) {
     class = c("waveFormatMismatch", "warning", "condition"),
     list(message = paste0(...), call = NULL)
   ))
+}
+
+#The formats of the waves counted as checked by .asChecked(), each as the
+#format and the samples .validateWaveFormat() reads.
+.checkedFormats <- new.env()
+
+#' What the format check of a wave reads
+#'
+#' Two waves with the same key are given the same answer by the check, as it
+#' reads only the format and the samples `.formatSamples()` takes.
+#'
+#' @param wave A Wave or WaveMC object.
+#' @return A list of the pcm flag, the bit depth and the samples read.
+#' @keywords internal
+#' @noRd
+.formatKey <- function(wave) {
+  return(list(wave@pcm, wave@bit, .formatSamples(wave)))
+}
+
+#' Evaluate an expression with a wave counted as checked
+#'
+#' windowing(), ntd() and allChannels() hand FUN a wave they have checked, or a
+#' piece of one, and a validator in FUN would check it again for every window,
+#' interval or channel. Cutting rounds samples that are not whole, but leaves a
+#' sample outside the range of the format as it was, so the warning was
+#' repeated each time. While `expr` is evaluated, a wave whose check would read
+#' the same format and samples as `wave` is not checked again. A wave that FUN
+#' makes for itself reads other samples, and is checked as any other.
+#'
+#' This holds on the workers of a cluster too, as it is done where FUN is
+#' called rather than around the call that sends it to them.
+#'
+#' @param wave The Wave or WaveMC object to count as checked.
+#' @param expr The expression to evaluate.
+#' @return The value of `expr`.
+#' @keywords internal
+#' @noRd
+.asChecked <- function(wave, expr) {
+  before <- .checkedFormats$keys
+  .checkedFormats$keys <- c(before, list(.formatKey(wave)))
+  on.exit(.checkedFormats$keys <- before)
+  return(expr)
 }
 
 #' Evaluate an expression without the wave format warning

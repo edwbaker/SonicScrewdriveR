@@ -480,7 +480,10 @@
   allChannels(), ntd(), filterWave(), fcis() and generateTimeShift(), which
   rebuild a wave without having checked it, now check it. Each call warns once
   about a wave, rather than once for every window, shift or channel, or for
-  every function it hands the wave on to. normalise() does not warn, as scaling
+  every function it hands the wave on to: a window, interval or channel that
+  windowing(), ntd() or allChannels() hands `FUN` is not checked again, on the
+  workers of a cluster too, while a wave `FUN` makes for itself is checked as
+  any other. normalise() does not warn, as scaling
   samples into their format is what it does, and tagApply() does not warn about
   the wave a function gives back, which is warned about where it is used.
 - A new `RecordingSet` class holds a set of recordings to be analysed, as a
@@ -1668,7 +1671,9 @@
   mixed in without rounding, so the wave declared a format its samples did not
   fit and was rounded only at its next cut or write. The samples are now
   rounded to the format, moving each by at most half a quantisation step. A
-  floating point wave is not rounded.
+  floating point wave is not rounded. The wave is checked before the noise is
+  mixed in, so that a PCM wave whose own samples are not whole is warned about
+  rather than rounded without a word.
 - convert2seconds(), dielFraction(), yearlyFraction() and dielHistogram() read a
   time that carries no timezone of its own in the timezone of the machine they
   ran on, so the same moment fell at a different point of the day, and sometimes

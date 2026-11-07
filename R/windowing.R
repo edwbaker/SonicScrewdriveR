@@ -133,7 +133,9 @@ windowing <- function(
       section <- .withoutFormatWarning(
         cutws(wave, from=start, to=start+window.length-1)
       )
-      return(FUN(section, start, window.length, ...))
+      # A sample outside the range of the format is still there once cut, so
+      # a validator in FUN would warn about it again for every window.
+      return(.asChecked(section, FUN(section, start, window.length, ...)))
     }
   }
   window.length <- .inSamples(window.length, time.unit, samp.rate)

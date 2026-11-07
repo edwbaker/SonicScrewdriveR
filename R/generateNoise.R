@@ -46,12 +46,19 @@ generateNoise <- function(
       stop("wave must be a Wave like object, or a list of such objects.")
     }
   }
+  #The mix is rounded to the format of the wave below, which would hide that the
+  #wave's own samples do not fit it: a PCM wave of samples that are not whole
+  #was turned to silence with nothing to say why. So the wave is checked first.
+  validateIsWaveLike(wave)
   #noise.add was never read, so several sources were always summed, while the
   #documented default of FALSE promised an output for each. The default is now
   #TRUE, which is what every call already got, and FALSE gives what it promised:
-  #each source added on its own, and recorded as a call of its own.
+  #each source added on its own, and recorded as a call of its own. Each of
+  #those calls would check the wave again.
   if (!noise.add && length(noise) > 1) {
-    return(lapply(noise, function(n) generateNoise(wave, n, TRUE, noise.ratio, noise.ref, output)))
+    return(.asChecked(wave, lapply(
+      noise, function(n) generateNoise(wave, n, TRUE, noise.ratio, noise.ref, output)
+    )))
   }
   return(.tagApplyOne(
     wave, .generateNoise, "generateNoise", NULL, FALSE,

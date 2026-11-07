@@ -211,6 +211,87 @@ test_that("a function handing its wave to another that checks it warns once", {
   expect_equal(formatWarnings(tdoa(loud, from=0.01, to=0.05)), 1)
 })
 
+test_that("a wave handed on to FUN is not checked again, but one FUN makes is", {
+  #Cutting rounds samples that are not whole, but leaves a sample outside the
+  #range of the format as it was, so each piece handed on is at fault too.
+  set.seed(291)
+  over <- tuneR::Wave(round(stats::runif(8000, -40000, 40000)), samp.rate=8000, bit=16)
+  overStereo <- tuneR::stereo(over, over)
+  overMC <- tuneR::WaveMC(cbind(over@left, over@left), samp.rate=8000, bit=16)
+  #ntd() names the wave it hands FUN.
+  checks <- function(wave, ...) {
+    validateIsWave(wave)
+    1
+  }
+  expect_equal(formatWarnings(windowing(over, window.length=100, FUN=checks)), 1)
+  expect_equal(formatWarnings(ntd(over, c(1, 101, 201, 301), checks)), 1)
+  expect_equal(formatWarnings(allChannels(overStereo, checks, channel.param=NULL)), 1)
+  expect_equal(formatWarnings(allChannels(overMC, checks, channel.param=NULL)), 1)
+  expect_equal(formatWarnings(fcis(overStereo, window.length=512, wl=256, channel=1)), 1)
+  expect_equal(formatWarnings(fcis(overMC, window.length=512, wl=256, channel=2)), 1)
+  expect_equal(formatWarnings(fcis(overStereo, window.length=512, wl=256)), 1)
+  expect_equal(formatWarnings(fcis(over, window.length=512, wl=256)), 1)
+  #A wave FUN makes for itself is a wave like any other.
+  good <- tuneR::Wave(round(stats::runif(8000, -1000, 1000)), samp.rate=8000, bit=16)
+  goodStereo <- tuneR::stereo(good, good)
+  makes <- function(wave, ...) {
+    validateIsWave(floatsAsPcm(n=100))
+    1
+  }
+  expect_equal(formatWarnings(windowing(good, window.length=1000, FUN=makes)), 8)
+  expect_equal(formatWarnings(ntd(good, c(1, 101, 201, 301), makes)), 3)
+  expect_equal(formatWarnings(allChannels(goodStereo, makes, channel.param=NULL)), 2)
+})
+
+test_that("a channel FUN is handed on a worker is not checked again", {
+  #.doChannel() is what each worker of a cluster runs for allChannels(), and
+  #counts the channel it hands FUN as checked where it runs.
+  set.seed(291)
+  over <- tuneR::Wave(round(stats::runif(800, -40000, 40000)), samp.rate=8000, bit=16)
+  overStereo <- tuneR::stereo(over, over)
+  checks <- function(w) {
+    validateIsWave(w)
+    1
+  }
+  expect_equal(formatWarnings(.doChannel(2, overStereo, NULL, NULL, checks)), 0)
+  expect_equal(formatWarnings(.doChannel(1, overStereo, "channel", NULL, function(w, channel) checks(w))), 0)
+})
+
+test_that("a wave is counted as checked only while the expression is evaluated", {
+  set.seed(291)
+  over <- tuneR::Wave(round(stats::runif(800, -40000, 40000)), samp.rate=8000, bit=16)
+  bad <- floatsAsPcm()
+  expect_equal(formatWarnings(.asChecked(over, validateIsWave(over))), 0)
+  expect_equal(formatWarnings(.asChecked(over, validateIsWave(bad))), 1)
+  #Counts nest, and each is let go when its expression is done with.
+  expect_equal(formatWarnings(.asChecked(over, {
+    .asChecked(bad, validateIsWave(bad))
+    validateIsWave(over)
+    validateIsWave(bad)
+  })), 1)
+  expect_warning(validateIsWave(over), class = "waveFormatMismatch")
+  #Even where the expression fails.
+  expect_error(.asChecked(over, stop("failed")), "failed")
+  expect_warning(validateIsWave(over), class = "waveFormatMismatch")
+  expect_equal(.asChecked(over, 1 + 1), 2)
+})
+
+test_that("generateNoise() checks the wave before mixing noise into it", {
+  #The mix is rounded to the format, so samples that are not whole would be
+  #turned to whole numbers, here to silence, with nothing to say why.
+  quarter <- tuneR::Wave(rep(0.25, 800), samp.rate=8000, bit=16)
+  expect_warning(
+    noisy <- generateNoise(quarter, "white", noise.ratio=0),
+    "not whole numbers", class = "waveFormatMismatch"
+  )
+  expect_equal(unique(noisy@left), 0)
+  set.seed(291)
+  bad <- floatsAsPcm()
+  #Each source is added by a call of its own.
+  expect_equal(formatWarnings(generateNoise(bad, c("white", "pink"), noise.add=FALSE)), 1)
+  expect_equal(formatWarnings(generateNoise(list(bad, bad), "white")), 2)
+})
+
 test_that("a wave a function gives back is warned about where it is used", {
   set.seed(291)
   tw <- tagWave(tuneR::Wave(round(5000 * stats::rnorm(8000)), samp.rate=8000, bit=16))

@@ -46,7 +46,9 @@ ntd <- function(wave, events, FUN, normalise=FALSE, argument="wave",...) {
    #bit float wave failed tuneR's validity rule outright.
    wave_event <- .rebuildWave(wave@left[events[i]:(events[i+1]-1)], wave)
    if (argument=="wave") {
-     Fk[i] <- do.call(FUN, c(list(wave=wave_event),...))
+     #A sample outside the range of the format is still there once rebuilt, so
+     #a validator in FUN would warn about it again for every interval.
+     Fk[i] <- .asChecked(wave_event, do.call(FUN, c(list(wave=wave_event),...)))
    }
    if (argument=="vector") {
      Fk[i] <- do.call(FUN, c(list(wave_event@left),...))
