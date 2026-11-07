@@ -173,6 +173,9 @@ annotation <- function(
 #' @noRd
 .annotationDate <- function(x) {
   if (inherits(x, "POSIXt")) {
+    #format() of a POSIXlt time passes over tz, so a local time was labelled
+    #UTC without being converted; as a POSIXct time it is converted.
+    x <- as.POSIXct(x)
     whole <- isTRUE(all(as.numeric(x) %% 1 == 0))
     return(format(x, if (whole) "%Y-%m-%dT%H:%M:%SZ" else "%Y-%m-%dT%H:%M:%OS6Z", tz="UTC"))
   }

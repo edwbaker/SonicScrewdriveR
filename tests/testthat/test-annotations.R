@@ -525,6 +525,10 @@ test_that("when an annotation was made is kept as ISO 8601 text", {
   expect_identical(annotation(dateIdentified=utc + 0.25)@dateIdentified,
                    "2026-10-30T09:15:00.250000Z")
   expect_identical(annotation(dateIdentified=as.POSIXlt(utc))@dateIdentified, "2026-10-30T09:15:00Z")
+  # A POSIXlt time in another zone was labelled UTC without being converted.
+  expect_identical(annotation(dateIdentified=as.POSIXlt(london))@dateIdentified, "2026-07-01T11:00:00Z")
+  tokyo <- as.POSIXlt("2026-07-01 20:00:00.5", tz="Asia/Tokyo")
+  expect_identical(annotation(dateIdentified=tokyo)@dateIdentified, "2026-07-01T11:00:00.500000Z")
   expect_identical(annotation(dateIdentified=as.Date("2026-10-30"))@dateIdentified, "2026-10-30")
   # bio.acousti.ca puts a space between a date and its time.
   expect_identical(annotation(dateIdentified="2016-10-17 13:20")@dateIdentified, "2016-10-17T13:20")
