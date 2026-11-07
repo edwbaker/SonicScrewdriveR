@@ -89,6 +89,9 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
     stop("runPipeline() runs over a RecordingSet, not ", .aDescription(set),
          ". recordingSet() makes one.")
   }
+  #A subset keeps the class while it has a uri and a location, and is given
+  #back the columns every set has, such as hash, that it was cut down without.
+  set <- recordingSet(set)
   .validateFolder(store, "store")
   if (!is.numeric(batch) || length(batch) != 1 || is.na(batch) || batch < 1 ||
       batch != round(batch)) {
@@ -206,11 +209,11 @@ pipelineResults <- function(store, p, step=NULL) {
   outline <- .outline(readRDS(file.path(dir, "pipeline.rds"))$pipeline)
   manifests <- .readManifests(dir)
   files <- .latestFiles(.storeRecords(manifests))
-  tables <- unique(do.call(rbind, c(
-    list(data.frame(number=character(0), name=character(0), stringsAsFactors=FALSE)),
-    lapply(manifests, `[[`, "tables")
-  )))
-  tables <- tables[order(match(tables$number, outline$number)), , drop=FALSE]
+  #Named from the pipeline the store was made with: pipelines that write their
+  #calls differently, as dutyCycle(0.2) and dutyCycle(limit = 0.2), share an id
+  #and so a folder, but not the names of their tables.
+  held <- unlist(lapply(manifests, function(m) m$tables$number))
+  tables <- outline[outline$number %in% held, c("number", "name"), drop=FALSE]
   if (!is.null(step)) {
     if (!is.character(step) || length(step) != 1 || is.na(step)) {
       stop("step must be the name of one table, or its number in the outline.")
@@ -397,7 +400,11 @@ pipelineResults <- function(store, p, step=NULL) {
 #' Which files a run has to run
 #'
 #' Every file the store holds no record of, and with `retry` every file whose
-#' last run failed.
+#' last run failed. A file that failed before its hash was known, as a local
+#' file that was not there yet does, is in the store under its location, and
+#' is found there once it has been hashed, so that it is not run again without
+#' `retry`. Only failures are kept without a hash, so a location matches no
+#' file that ran.
 #' @param files The files, with the hashes `.knownHashes()` gives.
 #' @param stored The files of the store.
 #' @param retry Whether to run failed files again.
@@ -405,10 +412,13 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @keywords internal
 #' @noRd
 .toRun <- function(files, stored, retry) {
-  status <- stored$status[match(
-    .fileKey(files$hash, files$location, files$uri),
-    .fileKey(stored$file, stored$location, stored$uri)
-  )]
+  keys <- .fileKey(stored$file, stored$location, stored$uri)
+  found <- match(.fileKey(files$hash, files$location, files$uri), keys)
+  unmatched <- which(is.na(found) & !is.na(files$hash))
+  found[unmatched] <- match(.fileKey(
+    rep(NA_character_, length(unmatched)), files$location[unmatched], files$uri[unmatched]
+  ), keys)
+  status <- stored$status[found]
   return(is.na(status) | (retry & status == "error"))
 }
 
@@ -724,13 +734,17 @@ pipelineResults <- function(store, p, step=NULL) {
 }
 
 #' The hash a store found at each location
+#'
+#' A missing location is no location, so files that have none are not taken
+#' for one another.
 #' @param location Locations.
 #' @param records What `.storeRecords()` gives.
-#' @return A hash for each location, `NA` where the store has none.
+#' @return A hash for each location, `NA` where the store has none or the
+#'   location is `NA`.
 #' @keywords internal
 #' @noRd
 .hashAt <- function(location, records) {
-  hashed <- records[!is.na(records$file), , drop=FALSE]
+  hashed <- records[!is.na(records$file) & !is.na(records$location), , drop=FALSE]
   hashed <- hashed[!duplicated(hashed$location, fromLast=TRUE), , drop=FALSE]
   return(hashed$file[match(location, hashed$location)])
 }
@@ -792,7 +806,10 @@ pipelineResults <- function(store, p, step=NULL) {
 #' Read one table of results from every batch
 #'
 #' The rows of each file come from the batch it was last run in, and a file
-#' whose last run failed has a row holding its error instead.
+#' whose last run failed has a row holding its error instead. Binding adds a
+#' column the first rows lack at the end, as `window_time` is where only a later
+#' file gives its start, so the keys are put back in front of `error` and the
+#' values.
 #' @param number The number of the table's step in the outline.
 #' @param dir The folder of the pipeline in the store.
 #' @param id The pipeline's id.
@@ -818,5 +835,8 @@ pipelineResults <- function(store, p, step=NULL) {
       stringsAsFactors=FALSE
     )
   }
-  return(.bindResults(parts))
+  out <- .bindResults(parts)
+  values <- startsWith(names(out), "value")
+  keys <- setdiff(names(out)[!values], "error")
+  return(out[c(keys, "error", names(out)[values])])
 }

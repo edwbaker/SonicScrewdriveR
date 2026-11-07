@@ -263,6 +263,98 @@ test_that("a file moved since it was run is found in the store, and comes back w
   expect_equal(out$hash, .sha256(moved))
 })
 
+test_that("files without a location are not taken for one another", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  given <- strrep("a", 64)
+  set <- recordingSet(data.frame(uri=c("hashed", "unknown"), location=NA_character_,
+                                 hash=c(given, NA)))
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  out <- runPipeline(p, set, store, quiet=TRUE)
+  expect_equal(out$hash, c(given, NA))
+  files <- attr(pipelineResults(store, p), "files")
+  expect_equal(files$uri, c("hashed", "unknown"))
+  expect_equal(files$file, c(given, NA))
+  msgs <- capture_messages(runPipeline(p, set, store))
+  expect_match(msgs, "0 files to run, 2 already in the store")
+})
+
+test_that("a set cut down to its uri and location is run", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  fa <- .writeTestWav(file.path(dir, "a.wav"))
+  cut <- recordingSet(fa)[, c("uri", "location")]
+  expect_s3_class(cut, "RecordingSet")
+  expect_false("hash" %in% names(cut))
+  p <- pipeline(length())
+  out <- runPipeline(p, cut, file.path(dir, "store"), quiet=TRUE)
+  expect_equal(out$hash, .sha256(fa))
+  expect_equal(pipelineResults(file.path(dir, "store"), p)[[1]]$value, 16000)
+})
+
+test_that("a local file that failed before it could be hashed waits for retry", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  later <- file.path(dir, "later.wav")
+  set <- recordingSet(data.frame(uri="later", location=later))
+  p <- pipeline(length())
+  store <- file.path(dir, "store")
+  runPipeline(p, set, store, quiet=TRUE)
+  expect_equal(attr(pipelineResults(store, p), "files")$file, NA_character_)
+  # Now there, and hashed before the run, it is still the file that failed.
+  .writeTestWav(later)
+  msgs <- capture_messages(runPipeline(p, set, store))
+  expect_match(msgs, "0 files to run, 1 already in the store")
+  msgs <- capture_messages(runPipeline(p, set, store, retry=TRUE))
+  expect_match(msgs[1], "1 file to run, 0 already in the store")
+  files <- attr(pipelineResults(store, p), "files")
+  expect_equal(files$file, .sha256(later))
+  expect_equal(files$status, "ok")
+})
+
+test_that("pipelines that share an id share the names of their tables", {
+  dir <- withr::local_tempdir()
+  # Calls written differently, as these are, give the same id.
+  testthat::local_mocked_bindings(
+    .pipelineIdentity=function(p) list(id=strrep("c", 64), code=c(R="test"))
+  )
+  fa <- .writeTestWav(file.path(dir, "a.wav"), seed=1)
+  fb <- .writeTestWav(file.path(dir, "b.wav"), seed=2)
+  positional <- pipeline(dutyCycle(0.2))
+  named <- pipeline(dutyCycle(limit=0.2))
+  store <- file.path(dir, "store")
+  runPipeline(positional, recordingSet(fa), store, quiet=TRUE)
+  runPipeline(named, recordingSet(fb), store, quiet=TRUE)
+  for (p in list(positional, named)) {
+    res <- pipelineResults(store, p)
+    expect_named(res, "dutyCycle(0.2)")
+    expect_equal(res[[1]]$file, c(.sha256(fa), .sha256(fb)))
+    expect_equal(pipelineResults(store, p, step="1"), res[[1]])
+  }
+})
+
+test_that("a clock time found only in a later file stays among the keys", {
+  .quickIds()
+  dir <- withr::local_tempdir()
+  fa <- .writeTestWav(file.path(dir, "a.wav"), seconds=2, seed=1)
+  fb <- .writeTestWav(file.path(dir, "b.wav"), seconds=2, seed=2)
+  set <- recordingSet(c(fa, fb))
+  set$start <- as.POSIXct(c(NA, "2026-05-01 04:00:00"), tz="UTC")
+  p <- pipeline(windowing(1, time.unit="seconds", then=dutyCycle()))
+  store <- file.path(dir, "store")
+  runPipeline(p, set, store, quiet=TRUE)
+  windows <- pipelineResults(store, p)[[1]]
+  expect_named(windows, c(
+    "file", "pipeline", "window_start", "window_end", "window_length", "window_time",
+    "error", "value"
+  ))
+  expect_equal(
+    windows$window_time,
+    as.POSIXct(c(NA, NA, "2026-05-01 04:00:00", "2026-05-01 04:00:01"), tz="UTC")
+  )
+})
+
 test_that("a file that cannot be hashed before the run fails alone", {
   .quickIds()
   dir <- withr::local_tempdir()
