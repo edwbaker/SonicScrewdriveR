@@ -123,6 +123,20 @@ generateNoise <- function(
       wave@.Data[,i] <- signal.weight * (wave@.Data[,i] - wave.offset) + noise.ratio * channelNoise() + wave.offset
     }
   }
+  #The weighted sum is not whole, and a PCM wave holding it declared a format
+  #its samples did not fit, so it is rounded here, as every function that puts
+  #samples back in a wave rounds them. Every sum lies within full scale, which
+  #is whole, so rounding cannot take a sample past it.
+  if (isTRUE(wave@pcm)) {
+    if (inherits(wave, "WaveMC")) {
+      wave@.Data <- round(wave@.Data)
+    } else {
+      wave@left <- round(wave@left)
+      if (wave@stereo) {
+        wave@right <- round(wave@right)
+      }
+    }
+  }
   return(wave)
 }
 

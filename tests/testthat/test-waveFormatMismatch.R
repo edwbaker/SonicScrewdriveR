@@ -225,6 +225,31 @@ test_that("a wave a function gives back is warned about where it is used", {
   expect_warning(tagWave(untagWave(filtered)), class = "waveFormatMismatch")
 })
 
+test_that("generateNoise() gives a PCM wave whole samples", {
+  #The noise was mixed into the samples unrounded, so the wave it gave back
+  #declared a format its samples did not fit.
+  set.seed(291)
+  for (bit in c(8, 16, 24)) {
+    centre <- if (bit == 8) 128 else 0
+    scale <- if (bit == 8) 25 else 2^(bit - 4)
+    w <- tuneR::Wave(round(scale * stats::rnorm(4000)) + centre, samp.rate=8000, bit=bit)
+    noisy <- generateNoise(w, "white", noise.ratio=0.3)
+    expect_equal(noisy@left, round(noisy@left), info=bit)
+    expect_equal(formatWarnings(cutws(noisy, 1, 100)), 0, info=bit)
+  }
+  st <- tuneR::stereo(w, w)
+  noisy <- generateNoise(st, "white", noise.ratio=0.3)
+  expect_equal(noisy@right, round(noisy@right))
+  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=24)
+  noisy <- generateNoise(mc, "white", noise.ratio=0.3)
+  expect_equal(noisy@.Data, round(noisy@.Data))
+  #Floating point samples are left as they are.
+  fl <- tuneR::Wave(stats::runif(4000, -0.5, 0.5), samp.rate=8000, bit=32, pcm=FALSE)
+  noisy <- generateNoise(fl, "white", noise.ratio=0.3)
+  expect_false(isTRUE(all.equal(noisy@left, round(noisy@left))))
+  expect_silent(validateIsWave(noisy))
+})
+
 test_that("a wave the package makes and only measures is not warned about", {
   #autoBandPass() measures a high-passed copy of the wave, which seewave returns
   #as 16-bit PCM holding samples that are not whole.

@@ -1664,6 +1664,11 @@
   for, and an unsigned 8 bit wave holding a zero gave noise.ref="file" a
   reference of 128 where only 127 is available above the centre. Both are
   bounded now, so the result stays within the format.
+- generateNoise() gave a PCM wave samples that were not whole, as the noise was
+  mixed in without rounding, so the wave declared a format its samples did not
+  fit and was rounded only at its next cut or write. The samples are now
+  rounded to the format, moving each by at most half a quantisation step. A
+  floating point wave is not rounded.
 - convert2seconds(), dielFraction(), yearlyFraction() and dielHistogram() read a
   time that carries no timezone of its own in the timezone of the machine they
   ran on, so the same moment fell at a different point of the day, and sometimes
