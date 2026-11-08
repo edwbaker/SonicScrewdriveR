@@ -9,7 +9,7 @@ delayedWave <- function(delays, n=4800, samp.rate=48000) {
   set.seed(42)
   signal <- stats::rnorm(n + 2000)
   data <- vapply(delays, function(d) signal[(1000 - d) + seq_len(n)], numeric(n))
-  return(tuneR::WaveMC(data * 1e4, samp.rate=samp.rate, bit=32, pcm=FALSE))
+  return(tuneR::WaveMC(data / 10, samp.rate=samp.rate, bit=32, pcm=FALSE))
 }
 
 test_that("tdoa finds known delays", {
@@ -41,7 +41,7 @@ test_that("tdoa correlates envelopes when the waveforms do not match", {
     cbind(
       (pulses * sin(2*pi*8000*t/48000))[200 + seq_len(n)],
       (pulses * sin(2*pi*11000*t/48000))[260 + seq_len(n)]
-    ) * 1e4,
+    ) * 0.5,
     samp.rate = 48000,
     bit = 32,
     pcm = FALSE
@@ -72,7 +72,7 @@ test_that("tdoa interpolates delays to a fraction of a sample", {
   signal[is.na(signal)] <- 0
   k <- c(0:(n/2), (-n/2+1):-1)
   shifted <- Re(stats::fft(stats::fft(signal) * exp(-2i*pi*k*3.75/n), inverse=TRUE))/n
-  w <- tuneR::WaveMC(cbind(signal, shifted) * 1e4, samp.rate=48000, bit=32, pcm=FALSE)
+  w <- tuneR::WaveMC(cbind(signal, shifted) / 4, samp.rate=48000, bit=32, pcm=FALSE)
 
   expect_equal(tdoa(w, interpolate=FALSE)$samples[2], 4)
   expect_equal(tdoa(w)$samples[2], 3.75, tolerance=0.15)

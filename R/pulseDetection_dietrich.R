@@ -121,7 +121,8 @@ pd_dietrich2004 <- function(
     wave <- .pd_dietrich_filter(wave, delta=delta, band=band)
   }
   e_u <- ste(wave, U=U)
-  e_v <- ste(wave, U=V)
+  #ste() checks the format of the wave, and has just done so.
+  e_v <- .withoutFormatWarning(ste(wave, U=V))
 
   n <- length(wave)
   #Only the samples both windows cover can be thresholded: ste() leaves a zero

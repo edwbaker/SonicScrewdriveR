@@ -211,12 +211,16 @@ test_that("normalisation alone moves no boundary", {
   # cancels out of the segmentation and only the filtering of equations 2 to 4
   # can change an answer.
   f <- cricketWave()
-  loud <- f$wave
-  loud@left <- loud@left * 1000
+  #The drone takes the song past 1, which floating point samples do not reach,
+  #so both waves are scaled down from it rather than one scaled up.
+  wave <- f$wave
+  wave@left <- wave@left / 2
+  quiet <- wave
+  quiet@left <- quiet@left / 1000
 
   expect_equal(
-    pd_dietrich2004(f$wave, filter=FALSE)$onsets,
-    pd_dietrich2004(loud, filter=FALSE)$onsets
+    pd_dietrich2004(wave, filter=FALSE)$onsets,
+    pd_dietrich2004(quiet, filter=FALSE)$onsets
   )
 })
 

@@ -129,8 +129,15 @@ windowing <- function(
     FUN2 <- function(start, wave, window.length, ...){
       # Only an incomplete final window reaches past the last sample, and
       # cutws() cuts a point beyond it back to the end of the wave.
-      section <- cutws(wave, from=start, to=start+window.length-1)
-      return(FUN(section, start, window.length, ...))
+      #
+      # cutws() checks the format of the whole wave on every cut, which the
+      # validator above has already done once.
+      section <- .withoutFormatWarning(
+        cutws(wave, from=start, to=start+window.length-1)
+      )
+      # A sample outside the range of the format is still there once cut, so
+      # a validator in FUN would warn about it again for every window.
+      return(.asChecked(section, FUN(section, start, window.length, ...)))
     }
   }
   window.length <- .inSamples(window.length, time.unit, samp.rate)
@@ -204,7 +211,7 @@ windowing <- function(
           next
         }
         if (inherits(wave, c("Wave", "WaveMC"))) {
-          parts[[2*i]] <- cutws(wave, from=gap.start, to=gap.end)
+          parts[[2*i]] <- .withoutFormatWarning(cutws(wave, from=gap.start, to=gap.end))
         } else {
           parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, time.unit="samples")
         }
@@ -212,9 +219,11 @@ windowing <- function(
       l <- do.call(tuneR::bind, untagWave(parts[!vapply(parts, is.null, logical(1))]))
     }
     #The bound wave is given the tags of the wave it was cut from, as tagApply()
-    #gives them to a wave a function returns untagged.
+    #gives them to a wave a function returns untagged, and as there without the
+    #format warning: the wave has been checked, and an untagged one is bound
+    #without a check.
     if (.mdIsTagged(wave)) {
-      l <- tagWave(l, origin=wave@origin)
+      l <- .withoutFormatWarning(tagWave(l, origin=wave@origin))
       l@metadata <- wave@metadata
       l@processing <- wave@processing
     }

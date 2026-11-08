@@ -403,11 +403,24 @@ fcis <- function(
   #The channel asked for is taken here, so that what is windowed below holds one
   #channel. windowing() takes a Wave and not a WaveMC, so this is also what lets
   #a WaveMC be described at all.
-  if (inherits(x, "WaveMC") || (inherits(x, "Wave") && channels > 1)) {
-    x <- .waveChannel(x, channel)
+  #
+  #Taking the channel rebuilds it as a wave of its own, which rounds the samples
+  #of one declaring PCM, so the format is checked first, here, once. A sample
+  #outside the range of the format is still there in the channel taken, and is
+  #counted as checked below, as windowing() would check it again. A wave of
+  #several channels given no channel was handed here by allChannels() above,
+  #which has checked it.
+  given <- inherits(x, c("Wave", "WaveMC"))
+  if (given) {
+    validateIsWaveLike(x)
+    if (inherits(x, "WaveMC") || channels > 1) {
+      x <- .waveChannel(x, channel)
+    }
   }
 
-  if (is.character(x) && length(x) > 1) {
+  if (given) {
+    columns <- .asChecked(x, .fcisColumns(x, window.length, indices, wl, cluster, channel))
+  } else if (is.character(x) && length(x) > 1) {
     columns <- unlist(
       lapply(
         x, .fcisColumns, window.length=window.length, indices=indices, wl=wl,

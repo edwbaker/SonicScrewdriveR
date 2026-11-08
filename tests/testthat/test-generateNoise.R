@@ -365,8 +365,10 @@ test_that("every channel is given noise at the level asked for", {
   out <- generateNoise(st, "white", noise.ratio=0.5)
 
   peak <- 0.5 * max(abs(st@left))
-  expect_equal(max(abs(out@left - 0.5*st@left)), peak)
-  expect_equal(max(abs(out@right - 0.5*st@right)), peak)
+  #A 16-bit wave is given whole samples, so the noise is placed to within half
+  #a quantisation step.
+  expect_lte(abs(max(abs(out@left - 0.5*st@left)) - peak), 0.5)
+  expect_lte(abs(max(abs(out@right - 0.5*st@right)) - peak), 0.5)
 })
 
 test_that("several noise sources stay independent between channels", {

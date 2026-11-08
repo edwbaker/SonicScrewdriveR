@@ -185,8 +185,8 @@ test_that("output structure does not depend on class or channel count", {
 
   mono <- w
   stereo <- tuneR::stereo(w, w)
-  mc1 <- tuneR::WaveMC(cbind(w@left), samp.rate=44100, bit=16)
-  mc3 <- tuneR::WaveMC(cbind(w@left, w@left, w@left), samp.rate=44100, bit=16)
+  mc1 <- tuneR::WaveMC(cbind(w@left), samp.rate=44100, bit=32, pcm=FALSE)
+  mc3 <- tuneR::WaveMC(cbind(w@left, w@left, w@left), samp.rate=44100, bit=32, pcm=FALSE)
 
   # One entry per channel, each entry a list, in every case.
   expect_equal(allChannels(mono, f), list(list(1)))

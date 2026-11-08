@@ -17,7 +17,11 @@
 normalise <- function(wave, unit = NULL, ...) {
   #Nothing was checked here, so anything with a bit slot was passed on to tuneR
   #and anything without it failed on the slot. .tagApplyOne() expects a wave.
-  validateIsWaveLike(wave)
+  #
+  #Samples that do not fit the format are not warned about, as scaling them
+  #into a format is what normalising does: data2Wave() makes a 16-bit wave of
+  #floating point samples, and normalises it.
+  .withoutFormatWarning(validateIsWaveLike(wave))
   if (is.null(unit)) {
     unit <- as.character(wave@bit)
   }

@@ -3,7 +3,7 @@ test_that("entropyStats analyses each channel of multi-channel input", {
   n <- 8000
   set.seed(4)
   L <- tuneR::Wave(round(sin(2*pi*300*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
-  R <- tuneR::Wave(round(rnorm(n) * 15000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(pmax(pmin(rnorm(n) * 15000, 32767), -32768)), samp.rate=sr, bit=16)
 
   # The channels must give different answers for the test to mean anything.
   expect_false(isTRUE(all.equal(entropyStats(L), entropyStats(R))))
@@ -66,7 +66,7 @@ test_that("a tagged wave gives the entropies of the wave it holds", {
   n <- 8000
   set.seed(4)
   L <- tuneR::Wave(round(sin(2*pi*300*(1:n)/sr) * 20000), samp.rate=sr, bit=16)
-  R <- tuneR::Wave(round(rnorm(n) * 15000), samp.rate=sr, bit=16)
+  R <- tuneR::Wave(round(pmax(pmin(rnorm(n) * 15000, 32767), -32768)), samp.rate=sr, bit=16)
 
   waves <- list(L, tuneR::stereo(L, R), tuneR::WaveMC(cbind(L@left, R@left), samp.rate=sr, bit=16))
   for (w in waves) {

@@ -41,7 +41,7 @@ test_that("cutws returns a WaveMC object for WaveMC input", {
 
 test_that("cutws preserves WaveMC properties", {
   w <- tuneR::sine(1000, duration=100, samp.rate=8000)
-  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=16)
+  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=32, pcm=FALSE)
   colnames(mc@.Data) <- c("left", "right")
 
   cut <- cutws(mc, from=1, to=10)
@@ -53,7 +53,7 @@ test_that("cutws preserves WaveMC properties", {
 
 test_that("cutws handles Inf and plotting for WaveMC", {
   w <- tuneR::sine(1000, duration=100, samp.rate=8000)
-  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=16)
+  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=32, pcm=FALSE)
 
   expect_equal(nrow(cutws(mc, from=91, to=Inf)@.Data), 10)
   expect_silent(cutws(mc, from=1, to=10, plot=TRUE))
@@ -85,7 +85,7 @@ test_that("cutws past the end returns the audio that is there, not NA", {
   expect_equal(sum(is.na(cut@left)), 0)
   expect_equal(cut@left, w@left[91:100])
 
-  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=16)
+  mc <- tuneR::WaveMC(cbind(w@left, w@left), samp.rate=8000, bit=32, pcm=FALSE)
   cutmc <- cutws(mc, from=91, to=110)
   expect_equal(nrow(cutmc@.Data), 10)
   expect_equal(sum(is.na(cutmc@.Data)), 0)
@@ -94,7 +94,7 @@ test_that("cutws past the end returns the audio that is there, not NA", {
 })
 
 test_that("from is clamped to the first sample as to is clamped to the last", {
-  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=32, pcm=FALSE)
+  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=16)
 
   # A zero subscript is dropped by R rather than refused, so from=0 used to give
   # a section one sample short and shifted by one, with no error at all.
@@ -107,7 +107,7 @@ test_that("from is clamped to the first sample as to is clamped to the last", {
 })
 
 test_that("a from or to that is not one whole number is refused by name", {
-  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=32, pcm=FALSE)
+  w <- tuneR::Wave(as.numeric(1:10), samp.rate=8000, bit=16)
 
   # as.integer() is NA past the largest integer, so these aborted with R's
   # "missing value where TRUE/FALSE needed" rather than naming from and to.

@@ -723,7 +723,11 @@ tagApply <- function(.w, .fun, ..., label = NULL, untag = NA, cl = NULL) {
   }
 
   if (!.isTagged(res)) {
-    res <- tagWave(res, origin = .w@origin)
+    #The wave is what the function gave back, and what it holds is the
+    #function's doing. A seewave function gives 16-bit PCM holding samples that
+    #are not whole, and a wave like that is warned about where it is next used
+    #rather than here, where nothing has been done with it.
+    res <- .withoutFormatWarning(tagWave(res, origin = .w@origin))
     res@metadata <- .w@metadata
     res@processing <- .w@processing
   }

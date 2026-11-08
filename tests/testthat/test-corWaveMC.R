@@ -9,7 +9,7 @@ pulsedWave <- function(delays, n=8000, samp.rate=8000) {
   envelope <- exp(-((t-2000)^2)/(2*100^2)) + exp(-((t-6000)^2)/(2*100^2))
   signal <- envelope * sin(2*pi*1000*t/samp.rate)
   data <- vapply(delays, function(d) signal[(400 - d) + seq_len(n)], numeric(n))
-  return(tuneR::WaveMC(data * 1e4, samp.rate=samp.rate, bit=32, pcm=FALSE))
+  return(tuneR::WaveMC(data * 0.5, samp.rate=samp.rate, bit=32, pcm=FALSE))
 }
 
 test_that("corWaveMC returns a correlation and a delay for every channel", {

@@ -41,7 +41,8 @@ pd_simple <- function(
   psi=1
 ){
   e_u <- ste(wave, U=U)
-  e_v <- ste(wave, U=V)
+  #ste() checks the format of the wave, and has just done so.
+  e_v <- .withoutFormatWarning(ste(wave, U=V))
   #Only the samples both windows cover can be thresholded: ste() leaves a zero
   #where its window does not fit, and both e_u and e_v are read below. A wave
   #with no samples, or one shorter than the longer window, gives no short term
