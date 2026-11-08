@@ -235,12 +235,14 @@ bandpass <- function( from, to, ...) {
 .filterAllChannels <- function(w, filt) {
   centre <- .waveCentre(w)
   #filterWave() and autoBandPass() have checked the format of the wave already,
-  #and allChannels() would warn about it a second time.
-  filtered <- .withoutFormatWarning(allChannels(
+  #so it counts as checked in allChannels(), and each channel counts as checked
+  #once centred, which for eight bit PCM leaves it outside the format's range. A
+  #wave the filter makes for itself is still checked.
+  filtered <- .asChecked(w, allChannels(
     w,
     function(channel) {
       channel@left <- channel@left - centre
-      do.call(match.fun(filt@func), c(list(channel), filt@params))
+      .asChecked(channel, do.call(match.fun(filt@func), c(list(channel), filt@params)))
     },
     channel.param = NULL
   ))

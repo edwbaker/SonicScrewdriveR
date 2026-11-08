@@ -231,6 +231,24 @@ test_that("a wave handed on to FUN is not checked again, but one FUN makes is", 
   expect_equal(formatWarnings(fcis(overMC, window.length=512, wl=256, channel=2)), 1)
   expect_equal(formatWarnings(fcis(overStereo, window.length=512, wl=256)), 1)
   expect_equal(formatWarnings(fcis(over, window.length=512, wl=256)), 1)
+  #filterWave() hands its filter each channel less its centre, which turns the
+  #integer samples readWave() gives into doubles.
+  passes <- new("WaveFilter", func=function(x) {
+    validateIsWave(x)
+    x
+  })
+  overInt <- over
+  overInt@left <- as.integer(over@left)
+  expect_equal(formatWarnings(filterWave(over, passes)), 1)
+  expect_equal(formatWarnings(filterWave(overInt, passes)), 1)
+  expect_equal(formatWarnings(filterWave(overStereo, passes)), 1)
+  #The windows of a tagged wave are bound and tagged again.
+  tagged <- suppressWarnings(tagWave(over))
+  same <- function(w, ...) w
+  expect_equal(formatWarnings(windowing(tagged, window.length=100, FUN=same, bind.wave=TRUE)), 1)
+  expect_equal(formatWarnings(windowing(
+    tagged, window.length=100, window.overlap=-50, FUN=same, bind.wave=TRUE
+  )), 1)
   #A wave FUN makes for itself is a wave like any other.
   good <- tuneR::Wave(round(stats::runif(8000, -1000, 1000)), samp.rate=8000, bit=16)
   goodStereo <- tuneR::stereo(good, good)
@@ -241,6 +259,15 @@ test_that("a wave handed on to FUN is not checked again, but one FUN makes is", 
   expect_equal(formatWarnings(windowing(good, window.length=1000, FUN=makes)), 8)
   expect_equal(formatWarnings(ntd(good, c(1, 101, 201, 301), makes)), 3)
   expect_equal(formatWarnings(allChannels(goodStereo, makes, channel.param=NULL)), 2)
+  makesFilter <- new("WaveFilter", func=function(x) {
+    validateIsWave(floatsAsPcm(n=100))
+    x
+  })
+  expect_equal(formatWarnings(filterWave(goodStereo, makesFilter)), 2)
+  #An eight bit channel is centred on zero before the filter is given it, which
+  #puts it outside the range of its format.
+  good8 <- tuneR::Wave(round(stats::runif(8000, 0, 255)), samp.rate=8000, bit=8)
+  expect_equal(formatWarnings(filterWave(good8, passes)), 0)
 })
 
 test_that("a channel FUN is handed on a worker is not checked again", {

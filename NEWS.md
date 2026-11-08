@@ -481,11 +481,12 @@
   rebuild a wave without having checked it, now check it. Each call warns once
   about a wave, rather than once for every window, shift or channel, or for
   every function it hands the wave on to: a window, interval or channel that
-  windowing(), ntd() or allChannels() hands `FUN` is not checked again, on the
-  workers of a cluster too, while a wave `FUN` makes for itself is checked as
-  any other. normalise() does not warn, as scaling
-  samples into their format is what it does, and tagApply() does not warn about
-  the wave a function gives back, which is warned about where it is used.
+  windowing(), ntd() or allChannels() hands `FUN`, or filterWave() its filter,
+  is not checked again, on the workers of a cluster too, while a wave `FUN` or
+  the filter makes for itself is checked as any other. normalise() does not
+  warn, as scaling samples into their format is what it does, and tagApply()
+  does not warn about the wave a function gives back, which is warned about
+  where it is used.
 - A new `RecordingSet` class holds a set of recordings to be analysed, as a
   data frame with one row for each recording, wherever the recordings come
   from. Each recording is identified by a `uri` and read from its `location`,

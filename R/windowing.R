@@ -217,9 +217,11 @@ windowing <- function(
       l <- do.call(tuneR::bind, untagWave(parts[!vapply(parts, is.null, logical(1))]))
     }
     #The bound wave is given the tags of the wave it was cut from, as tagApply()
-    #gives them to a wave a function returns untagged.
+    #gives them to a wave a function returns untagged, and as there without the
+    #format warning: the wave has been checked, and an untagged one is bound
+    #without a check.
     if (is(wave, "TaggedWave")) {
-      l <- tagWave(l, origin=wave@origin)
+      l <- .withoutFormatWarning(tagWave(l, origin=wave@origin))
       l@metadata <- wave@metadata
       l@processing <- wave@processing
     }
