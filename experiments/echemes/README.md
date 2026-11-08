@@ -87,6 +87,8 @@ is plausible but not yet demonstrated to that standard.
 | `rule.R` | compares candidate rules against `proto.rds` — how the two defaults were chosen |
 | `validate.R` | runs the detector as written over the same recordings, writes `validate.rds` |
 | `acc.R` | `validate.rds` against the catalogued ranges |
+| `getfun.R` | paged audioBLAST query helper |
+| `provenance/` | the scripts that built the committed data tables |
 
 Run every script from the repository root:
 
@@ -111,3 +113,19 @@ the scripts prefer that column; the share holds all 63.
 `gryl_traits.rds` holds the catalogued trait ranges the measurements are
 compared against. `proto.rds` and `validate.rds` are outputs, committed so that
 `rule.R` and `acc.R` run without the audio.
+
+The three inputs are committed because rebuilding them queries audioBLAST and
+reads the share, but `provenance/` holds the scripts that built them, in order:
+
+```
+Rscript experiments/echemes/provenance/grec.R        # recordings      -> gryl_recs.rds
+Rscript experiments/echemes/provenance/gcat.R        # catalogued traits -> gryl_traits_raw.rds
+Rscript experiments/echemes/provenance/gtraits.R     # parsed ranges   -> gryl_traits.rds
+Rscript experiments/echemes/provenance/gfetchlist.R  # the 63 files    -> gryl_fetch.rds
+Rscript experiments/echemes/provenance/gshare.R      # adds the share column
+Rscript experiments/echemes/provenance/gmeas4.R      # measurements    -> gryl_temp_measured2.rds
+```
+
+`getfun.R` is the paged audioBLAST query helper those scripts share. An empty
+`license` field from the API means the licence is unknown rather than free to
+use; every recording used here carries an explicit CC BY 4.0.
