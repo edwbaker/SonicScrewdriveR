@@ -10,8 +10,9 @@
 #' recording the Animal Sound Archive lists under three species is, and each
 #' file is run once. A file is fetched from its location: a local file is read
 #' where it is, and one at a URL is downloaded, then deleted once it has been
-#' run unless `keep` names a folder to keep it in. Each file is read whole by
-#' [readAudio()], tagged with its location as its origin and with the columns
+#' run unless `keep` names a folder to keep it in. Each file is read by
+#' [readAudio()], whole unless it is too long to hold (see Long files), tagged
+#' with its location as its origin and with the columns
 #' of the set that all of its recordings agree on, such as `start`, `lat` and
 #' `lon`, in the `"recordingSet"` entry of its metadata, and measured by
 #' [calculateMetadata()]. Columns its recordings disagree on, such as the
@@ -25,6 +26,32 @@
 #' hash is recognised by its location once it has been run. A local location is
 #' made absolute before the run, as a worker of a cluster can be working in
 #' another folder.
+#'
+#' @section Long files:
+#' A file is read whole unless it would take more than `max.memory` bytes once
+#' decoded, which is worked out from its header before it is read. R holds a
+#' sample in 4 bytes for a RIFF WAV file of 8, 16 or 32-bit PCM, for an AudioMoth
+#' triggered recording, and for an MP3 file, and in 8 for a WAV file of 24-bit
+#' PCM or floating-point audio and for anything the av package decodes, a WAV
+#' file in the RF64 or BW64 form and FLAC among them. A triggered recording is
+#' measured as it will be once expanded.
+#'
+#' A file over `max.memory` is read a window at a time, by each [windowing()]
+#' at the top of the pipeline, as windowing() reads a file. Each window holds
+#' the samples, and the tags, of the window cut from the whole recording, so
+#' the results are those a whole read gives, and the `wave_hash` of the file is
+#' taken a block at a time. That writes the samples to a temporary file, as the
+#' digest is of all of them at once, so it needs room on disk for 8 bytes a
+#' sample while it is taken, and for a file of more than two channels, whose
+#' channels are written apart and then joined, 8 bytes more for each sample of
+#' one channel. Only a RIFF WAV file of PCM or floating-point audio can be read
+#' in parts that are exact, so any other file over `max.memory`, an MP3 or a
+#' FLAC file among them, fails without being read, as does a triggered
+#' recording, which is expanded whole. So does a file whose pipeline has a step
+#' outside a windowing given `then=`, which needs the whole recording at once,
+#' or windows that are themselves over `max.memory`. The size of a file other
+#' than a WAV file is asked of the av package, and where that is not installed
+#' such a file is read whole.
 #'
 #' @section Batches:
 #' The files not yet in the store are run in batches of `batch` files, and each
@@ -54,6 +81,8 @@
 #' @param store The folder to write the results to. It is made if it does not
 #'   exist.
 #' @param batch How many files to run between writes to the store.
+#' @param max.memory The most memory, in bytes, a file may take once decoded to
+#'   be read whole, 4 GB unless it is given, or `Inf` to read every file whole.
 #' @param keep A folder to keep downloaded files in, or `NULL` to delete each
 #'   one once it has been run. Each file is kept in a folder of its own, named
 #'   from its URL, so that files of the same name from different places are
@@ -80,8 +109,8 @@
 #' head(res[[1]])
 #' merge(res[[1]], set, by.x="file", by.y="hash")[, c("window_start", "value", "uri")]
 #' }
-runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NULL,
-                        quiet=FALSE) {
+runPipeline <- function(p, set, store, batch=1000, max.memory=4e9, keep=NULL, retry=FALSE,
+                        cl=NULL, quiet=FALSE) {
   if (!inherits(p, "Pipeline")) {
     stop("runPipeline() runs a Pipeline, not ", .aDescription(p), ".")
   }
@@ -96,6 +125,10 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
   if (!is.numeric(batch) || length(batch) != 1 || is.na(batch) || batch < 1 ||
       batch != round(batch)) {
     stop("batch must be a whole number of files, at least 1.")
+  }
+  if (!is.numeric(max.memory) || length(max.memory) != 1 || is.na(max.memory) ||
+      max.memory <= 0) {
+    stop("max.memory must be a number of bytes greater than 0, or Inf.")
   }
   if (!is.null(keep)) {
     .validateFolder(keep, "keep")
@@ -132,14 +165,14 @@ runPipeline <- function(p, set, store, batch=1000, keep=NULL, retry=FALSE, cl=NU
   jobs <- .batchJobs(todo, work, group, batch, .nextBatch(dir))
   if (is.null(cl)) {
     for (i in seq_along(jobs)) {
-      ran <- .runPipelineBatch(jobs[[i]], p, identity$id, dir, keep)
+      ran <- .runPipelineBatch(jobs[[i]], p, identity$id, dir, keep, max.memory)
       if (!quiet) {
         message(.batchReport(ran, paste("Batch", i, "of", length(jobs))))
       }
     }
   } else if (length(jobs) > 0) {
     ran <- parallel::parLapply(cl, jobs, .runPipelineBatch, p=p, id=identity$id,
-                               dir=dir, keep=keep)
+                               dir=dir, keep=keep, max.memory=max.memory)
     if (!quiet) {
       message(.batchReport(do.call(rbind, ran), paste(
         length(jobs), if (length(jobs) == 1) "batch" else "batches"
@@ -504,10 +537,11 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @param id Its id.
 #' @param dir Its folder in the store.
 #' @param keep The folder to keep downloads in, or `NULL`.
+#' @param max.memory The most a file may take decoded to be read whole.
 #' @return The records of the files it ran, as written to the store.
 #' @keywords internal
 #' @noRd
-.runPipelineBatch <- function(job, p, id, dir, keep) {
+.runPipelineBatch <- function(job, p, id, dir, keep, max.memory=Inf) {
   outline <- .outline(p)
   numbers <- stats::setNames(outline$number, outline$name)
   records <- list()
@@ -515,7 +549,8 @@ pipelineResults <- function(store, p, step=NULL) {
   measured <- character(0)
   for (i in seq_len(nrow(job$files))) {
     f <- job$files[i, , drop=FALSE]
-    ran <- .runPipelineFile(p, id, f, job$rows[job$rows$.file == f$file, , drop=FALSE], keep)
+    ran <- .runPipelineFile(p, id, f, job$rows[job$rows$.file == f$file, , drop=FALSE], keep,
+                            max.memory)
     records[[length(records) + 1]] <- ran$record
     if (ran$record$status != "ok" || ran$record$file %in% measured) {
       next
@@ -545,11 +580,14 @@ pipelineResults <- function(store, p, step=NULL) {
 #' @param f The file, a row of `.setFiles()`.
 #' @param rows The rows of the set that are this file.
 #' @param keep The folder to keep downloads in, or `NULL`.
+#' @param max.memory The most the file may take decoded to be read whole. A
+#'   file over it is read a window at a time where it can be, and otherwise
+#'   fails before it is read.
 #' @return A list of the file's `record` and its `results`, the rows of each
 #'   table it gave.
 #' @keywords internal
 #' @noRd
-.runPipelineFile <- function(p, id, f, rows, keep) {
+.runPipelineFile <- function(p, id, f, rows, keep, max.memory=Inf) {
   #Until the file has been read, its hash is the one the set gives, which can
   #be wrong.
   failed <- function(e, hash=f$hash, observed=FALSE) {
@@ -569,11 +607,33 @@ pipelineResults <- function(store, p, step=NULL) {
     on.exit(unlink(fetched$temporary, recursive=TRUE), add=TRUE)
   }
   metadata <- .agreedColumns(rows)
+  #Nothing is worked out of a file's size where every file is read whole, and
+  #a file whose size cannot be told is read whole, for readAudio() to say what
+  #is wrong with it.
+  size <- if (is.infinite(max.memory)) NULL else {
+    tryCatch(.decodedSize(fetched$path), error=function(e) NULL)
+  }
+  over <- !is.null(size) && size$bytes > max.memory
+  if (over) {
+    problem <- .longFileProblem(p, size, max.memory)
+    if (!is.null(problem)) {
+      return(failed(simpleError(problem)))
+    }
+  }
+  long <- NULL
   w <- tryCatch({
-    tw <- tagWave(readAudio(fetched$path), origin=f$location)
-    tw@metadata[["recordingSet"]] <- metadata
-    calculateMetadata(tw)
+    if (over) {
+      long <- .longFileWave(fetched$path, f$location, metadata, .hashBlock(size, max.memory))
+      long$wave
+    } else {
+      tw <- tagWave(readAudio(fetched$path), origin=f$location)
+      tw@metadata[["recordingSet"]] <- metadata
+      calculateMetadata(tw)
+    }
   }, error=function(e) e)
+  if (!is.null(long$file$copy)) {
+    on.exit(unlink(long$file$copy), add=TRUE)
+  }
   if (inherits(w, "error")) {
     return(failed(w))
   }
@@ -584,7 +644,7 @@ pipelineResults <- function(store, p, step=NULL) {
       " the set gives it."
     ))))
   }
-  ran <- tryCatch(.runPipelineWave(p, w)$results, error=function(e) e)
+  ran <- tryCatch(.runPipelineWave(p, w, long$file)$results, error=function(e) e)
   if (inherits(ran, "error")) {
     return(failed(ran, hash, observed=TRUE))
   }

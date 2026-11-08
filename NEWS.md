@@ -12,6 +12,15 @@
   moves on; `retry = TRUE` runs failed files again. Batches can be run on a
   cluster with `cl`. The set comes back with the hashes of its local files
   filled in, so that it can be joined to the results.
+- runPipeline() reads a file too long to hold a window at a time. A file that
+  would take more than `max.memory` bytes once decoded, 4 GB unless it is
+  given, is read by each windowing() at the top of the pipeline from disk, its
+  windows holding the samples and tags of windows cut from the whole
+  recording, and its sample digest is taken a block at a time. Only a RIFF WAV
+  file of PCM or floating-point audio can be read in parts exactly, so any
+  other file over the limit, one with a step that needs the whole recording,
+  and one whose windows are over the limit themselves fail without being
+  read. `max.memory = Inf` reads every file whole.
 - pipelineResults() reads a store back as a table for each analysis step, named
   by its path through the pipeline. Each row is keyed by the hash of its file,
   the pipeline's id and where in the recording it was measured, with the clock
@@ -669,6 +678,16 @@
   the paper, so `U/4` is offered rather than assumed.
 
 ## Fixes
+- windowing() refused a WaveMC object as not being a Wave, though it windowed
+  a file of more than two channels, whose windows are WaveMC objects. A WaveMC
+  object, tagged or not, is windowed in memory as its file is, and
+  `bind.wave = TRUE` binds its windows back into one.
+- readAudio() and windowing() read the whole of a file carrying the comment of
+  an AudioMoth triggered recording, to find out whether it could be expanded,
+  before reading any part of it, even where the header already said it was not
+  in the mono 16-bit PCM that can be. Such a file, one converted to stereo or
+  to 24 bits by another program for instance, is now read as any other file is,
+  and one over 2 GB is read rather than refused as too long to expand.
 - Arithmetic with a PseudoWave on the left of the operator, as in
   `pseudoWave("noise", "white") + tw`, gave back the plain wave the PseudoWave
   was turned into, so a tagged wave on the right lost its origin, metadata and
