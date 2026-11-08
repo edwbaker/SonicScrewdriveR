@@ -51,8 +51,8 @@
 #' but the recording can be read a window at a time. Both orders are sound, and
 #' the history of every window records which was used.
 #'
-#' @param wave A Wave object or filename. Using filenames may save loading an
-#'   entire large file into memory.
+#' @param wave A Wave or WaveMC object, or a filename. Using filenames may save
+#'   loading an entire large file into memory.
 #' @param window.length The length of the analysis window, in `time.unit`.
 #' @param window.overlap The overlap between successive windows, in `time.unit`.
 #'   A negative value will result in a gap between windows.
@@ -90,7 +90,7 @@ windowing <- function(
     time.unit, .timeRegionUnits(),
     msg="time.unit must be one of samples, seconds, minutes, hours."
   )
-  if (typeof(wave) == "character" && .isTriggeredRecording(wave)) {
+  if (typeof(wave) == "character" && .isExpandable(wave)) {
     # An AudioMoth triggered recording holds neither the length nor the timing
     # of the recording it stands for, so the file on disk cannot be used to
     # schedule the windows: it would give the length with the periods that did
@@ -121,7 +121,9 @@ windowing <- function(
       readAudio(wave, from=1, to=1, time.unit="samples")@samp.rate
     }
   } else {
-    validateIsWave(wave)
+    #A file of more than two channels is windowed a window at a time as a WaveMC
+    #object, so a WaveMC object is windowed in memory as well.
+    validateIsWaveLike(wave)
     n.samples <- length(wave)
     samp.rate <- wave@samp.rate
     FUN2 <- function(start, wave, window.length, ...){
@@ -182,7 +184,7 @@ windowing <- function(
 
   #inherits() rather than a test of the first class, which the windows of a
   #tagged wave failed: they are tagged, and came back as a list unbound.
-  if (bind.wave && length(l) > 0 && inherits(l[[1]], "Wave")) {
+  if (bind.wave && length(l) > 0 && inherits(l[[1]], c("Wave", "WaveMC"))) {
     #tuneR::bind() copies everything it is given, so binding one window at a time
     #copies the whole of the output so far on every iteration. Collecting the parts
     #and binding them in a single call avoids that.
@@ -208,7 +210,7 @@ windowing <- function(
         if (gap.end < gap.start) {
           next
         }
-        if (inherits(wave, "Wave")) {
+        if (inherits(wave, c("Wave", "WaveMC"))) {
           parts[[2*i]] <- .withoutFormatWarning(cutws(wave, from=gap.start, to=gap.end))
         } else {
           parts[[2*i]] <- readAudio(wave, from=gap.start, to=gap.end, time.unit="samples")
@@ -220,7 +222,7 @@ windowing <- function(
     #gives them to a wave a function returns untagged, and as there without the
     #format warning: the wave has been checked, and an untagged one is bound
     #without a check.
-    if (is(wave, "TaggedWave")) {
+    if (.mdIsTagged(wave)) {
       l <- .withoutFormatWarning(tagWave(l, origin=wave@origin))
       l@metadata <- wave@metadata
       l@processing <- wave@processing

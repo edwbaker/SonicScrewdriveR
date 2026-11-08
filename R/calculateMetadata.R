@@ -66,24 +66,44 @@ calculateMetadata <- function(w) {
     stop("calculateMetadata() takes a Wave, WaveMC, TaggedWave or TaggedWaveMC object.")
   }
   w <- tagWave(w)
+  multi <- methods::is(w, "WaveMC")
+  frames <- if (multi) nrow(w@.Data) else length(w@left)
+  channels <- if (multi) ncol(w@.Data) else if (w@stereo) 2L else 1L
+  w@metadata[["calculatedMetadata"]] <- .calculatedFields(
+    w, frames, channels, .waveHash(w, "full")
+  )
+  return(w)
+}
+
+#' The fields calculateMetadata() keeps
+#'
+#' Given the length and the digest of the samples rather than working them out
+#' from the wave, so that a file too long to read whole is given the same
+#' fields from its header and a digest taken a block at a time.
+#' @param w A tagged wave, which need hold no samples, recording the file it
+#'   was read from.
+#' @param frames,channels The sample frames and channels of the recording.
+#' @param wave_hash The full digest of its samples. It is worked out only once
+#'   the file has been found to exist.
+#' @return A list.
+#' @keywords internal
+#' @noRd
+.calculatedFields <- function(w, frames, channels, wave_hash) {
   file <- .fileStore(w)
   if (!is.null(file) && !file.exists(file)) {
     stop("The file this wave was read from no longer exists: ", file)
   }
-  multi <- methods::is(w, "WaveMC")
-  frames <- if (multi) nrow(w@.Data) else length(w@left)
-  channels <- if (multi) ncol(w@.Data) else if (w@stereo) 2L else 1L
   coding <- if (is.null(file)) {
     list(bit_depth = w@bit, bit_rate = NA_real_, codec = NA_character_)
   } else {
     .fileCoding(file, w)
   }
-  w@metadata[["calculatedMetadata"]] <- list(
+  return(list(
     # The digest audioBlast and a RecordingSet hold, so that one can be read
     # against the other.
     hash = if (is.null(file)) NA_character_ else .audioblast_sha256(file),
     hash_method = if (is.null(file)) NA_character_ else "sha256",
-    wave_hash = .waveHash(w, "full"),
+    wave_hash = wave_hash,
     wave_hash_method = "full",
     frames = frames,
     duration = frames / w@samp.rate,
@@ -95,8 +115,7 @@ calculateMetadata <- function(w) {
     bytes = if (is.null(file)) NA_real_ else file.size(file),
     at = structure(Sys.time(), tzone = "UTC"),
     by = paste("sonicscrewdriver", getNamespaceVersion("sonicscrewdriver"))
-  )
-  return(w)
+  ))
 }
 
 #' How the audio of a file is coded

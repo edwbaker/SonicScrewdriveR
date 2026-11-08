@@ -460,7 +460,7 @@ test_that("local locations reach the batches as absolute paths", {
   withr::local_dir(dir)
   set <- recordingSet(data.frame(uri="r", location="rel.wav"))
   given <- NULL
-  local_mocked_bindings(.runPipelineBatch=function(job, p, id, dir, keep) {
+  local_mocked_bindings(.runPipelineBatch=function(job, p, id, dir, keep, max.memory) {
     given <<- job
     data.frame(status="ok")
   })
@@ -746,7 +746,7 @@ test_that("the store and the folder for downloads are given to the batches as ab
   dir <- withr::local_tempdir()
   set <- recordingSet(.writeTestWav(file.path(dir, "a.wav")))
   given <- list()
-  local_mocked_bindings(.runPipelineBatch=function(job, p, id, dir, keep) {
+  local_mocked_bindings(.runPipelineBatch=function(job, p, id, dir, keep, max.memory) {
     given <<- list(dir=dir, keep=keep)
     data.frame(status="ok")
   })
