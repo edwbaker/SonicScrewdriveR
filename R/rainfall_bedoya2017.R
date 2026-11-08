@@ -56,14 +56,49 @@
   return(psd[freq > lo & freq < hi])
 }
 
+#' Refuse a wave whose 600-1200 Hz band has too few bins to measure
+#'
+#' The ratio Bedoya et al. (2017) threshold is taken across the bins of the
+#' band, and a standard deviation needs two of them. A bin of a 512-sample
+#' window is the sample rate over 512 wide, so from 204.8 kHz up the band
+#' holds one at most: bat detectors record at 250 and 384 kHz. A wave sampled
+#' too slowly to reach the band has too few bins in it for the opposite reason,
+#' and is told so.
+#' @param rate The sample rate of the wave, in Hz.
+#' @param bins How many bins the band holds.
+#' @noRd
+.bandTooNarrow <- function(rate, bins) {
+  hz <- function(x) format(x, scientific=FALSE, trim=TRUE)
+  if (rate / 2 < 1200) {
+    stop(
+      "The method of Bedoya et al. (2017) measures the 600-1200 Hz band, and a wave ",
+      "sampled at ", hz(rate), " Hz reaches only ", hz(rate / 2), " Hz.",
+      call.=FALSE
+    )
+  }
+  stop(
+    "The method of Bedoya et al. (2017) cannot be applied at a sample rate of ",
+    hz(rate), " Hz. Its 600-1200 Hz band holds ", bins,
+    if (bins == 1) " frequency bin" else " frequency bins",
+    " of the 512-sample windows it uses, which are ", hz(signif(rate / 512, 4)),
+    " Hz wide at that rate, and the ratio of the band's mean to its standard ",
+    "deviation needs at least two. Downsampled to 48 kHz, for example, the band ",
+    "holds six.",
+    call.=FALSE
+  )
+}
+
 rainfall_bedoya2017 <- function(wave, Tmean=0.9e-6, Tsnr=3.5) {
   a <- .bandPSD(wave, 600, 1200)
   #Checked before the statistics rather than after, and for any band too small to
   #have a standard deviation rather than only for one of exactly one row. An empty
   #band gave a mean of NaN, which was then compared against the thresholds.
+  #It is an error, rather than a message and NULL as it was. A message is lost
+  #on the workers of a cluster, and a pipeline takes NULL for a step with
+  #nothing to report, so a recording that could not be measured was stored as
+  #one that had been, with no row to say otherwise.
   if (length(a) < 2) {
-    message("Not enough data to create standard deviation")
-    return(NULL)
+    .bandTooNarrow(wave@samp.rate, length(a))
   }
   mean_a <- mean(a)
   #Across the band's bins of a spectrum already averaged over the recording,
