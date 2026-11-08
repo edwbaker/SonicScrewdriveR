@@ -121,6 +121,31 @@ test_that("a second run skips what the store holds, and retry runs failed files 
   expect_equal(res[[2]]$value, c(1, 1))
 })
 
+test_that("a recording rain detection cannot measure fails, rather than leaving no row", {
+  # At 384 kHz the band rainfallDetection() measures holds one bin. It gave NULL,
+  # which is a step with nothing to report, so the file was stored as having run
+  # and its rain table simply had no row for it.
+  .quickIds()
+  dir <- withr::local_tempdir()
+  bat <- .writeTestWav(file.path(dir, "bat.wav"), seconds=0.2, seed=3, rate=384000)
+  bird <- .writeTestWav(file.path(dir, "bird.wav"), seconds=1, seed=4, rate=48000)
+  p <- pipeline(rainfallDetection())
+  store <- file.path(dir, "store")
+  runPipeline(p, recordingSet(c(bat, bird)), store, quiet=TRUE)
+  res <- pipelineResults(store, p)
+  files <- attr(res, "files")
+  expect_equal(files$status, c("error", "ok"))
+  expect_match(files$error[1], paste(
+    "^Step 1 rainfallDetection\\(\\) failed: The method of Bedoya et al\\. \\(2017\\)",
+    "cannot be applied at a sample rate of 384000 Hz\\."
+  ))
+  rain <- res[[1]]
+  expect_setequal(rain$file, c(.sha256(bat), .sha256(bird)))
+  expect_equal(rain$error[rain$file == .sha256(bat)], files$error[1])
+  expect_true(is.na(rain$error[rain$file == .sha256(bird)]))
+  expect_type(rain$value[rain$file == .sha256(bird)], "double")
+})
+
 test_that("batches are written one at a time, and a stopped batch is run again", {
   .quickIds()
   dir <- withr::local_tempdir()

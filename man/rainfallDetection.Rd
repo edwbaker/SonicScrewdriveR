@@ -47,6 +47,14 @@ depends on recorder gain, and across ten labelled rain recordings from one
 site it ran from 2.1e-08 to 1.7e-05. Estimate it from recordings of your own
 recorder, as the hardRain package and the authors of the method both do.
 
+The ratio needs at least two frequency bins in the band, and a bin of the
+512-sample windows the method uses is the sample rate over 512 wide. At
+204.8 kHz and above, which takes in the 250 and 384 kHz of bat detectors,
+the band holds one bin at most, and a wave sampled at 1.2 kHz or less does
+not reach the band at all. Where the band holds fewer than two bins, the method
+stops with an error saying why, which in \code{\link[=runPipeline]{runPipeline()}} fails the file. At
+48 kHz, for instance, the band holds six.
+
 The hardRain package can also be accessed via this wrapper.
 }
 \examples{

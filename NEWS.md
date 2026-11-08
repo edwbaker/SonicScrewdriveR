@@ -697,6 +697,18 @@
   the paper, so `U/4` is offered rather than assumed.
 
 ## Fixes
+- rainfallDetection(method="bedoya2017") printed "Not enough data to create
+  standard deviation" and returned NULL for a wave whose 600-1200 Hz band holds
+  fewer than two frequency bins. A bin of the 512-sample windows it uses is the
+  sample rate over 512 wide, so this is every recording at 204.8 kHz or above,
+  the 250 and 384 kHz of bat detectors among them. In runPipeline() the message
+  was lost on the workers of a cluster, and NULL is a step with nothing to
+  report, so such a file was recorded as having run while its table held no
+  row for it: run over ten audioBlast recordings, the rain table lacked the two
+  bat recordings that every other table held. It now stops with an
+  error giving the sample rate, how many bins the band holds and how wide they
+  are, which fails the file in runPipeline() with that reason. A wave sampled
+  too slowly to reach the band is told so instead.
 - windowing() refused a WaveMC object as not being a Wave, though it windowed
   a file of more than two channels, whose windows are WaveMC objects. A WaveMC
   object, tagged or not, is windowed in memory as its file is, and

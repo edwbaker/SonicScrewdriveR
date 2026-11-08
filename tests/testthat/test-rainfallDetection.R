@@ -116,6 +116,49 @@ test_that("plain broadband noise is not rainfall", {
   expect_equal(rainfallDetection(faint), 0)
 })
 
+test_that("rainfallDetection refuses a band too narrow to measure, saying why", {
+  # The ratio is taken across the band's bins, each the sample rate over 512
+  # wide, and at the 384 and 250 kHz of bat detectors the 600-1200 Hz band holds
+  # one, which has no standard deviation. It printed a message and gave NULL,
+  # which a pipeline stores as a step with nothing to report, so recordings it
+  # could not measure were stored as measured, with no row to say otherwise.
+  noise <- function(sr) {
+    set.seed(13)
+    tuneR::Wave(round(rnorm(sr %/% 10, sd=0.1) * 32767), samp.rate=sr, bit=16, pcm=TRUE)
+  }
+  expect_error(
+    rainfallDetection(noise(384000)),
+    paste("cannot be applied at a sample rate of 384000 Hz. Its 600-1200 Hz band holds",
+          "1 frequency bin of the 512-sample windows it uses, which are 750 Hz wide"),
+    fixed=TRUE
+  )
+  expect_error(rainfallDetection(noise(250000)),
+               "holds 1 frequency bin of the 512-sample windows it uses, which are 488.3 Hz wide",
+               fixed=TRUE)
+  expect_no_message(try(rainfallDetection(noise(384000)), silent=TRUE))
+  # A bin wider than the band leaves it none, and a rate this high is written in
+  # full rather than as 1e+06.
+  expect_error(rainfallDetection(noise(1e6)),
+               "sample rate of 1000000 Hz. Its 600-1200 Hz band holds 0 frequency bins",
+               fixed=TRUE)
+  # At 200 kHz the band still holds two, and at the 48 kHz the message offers, six.
+  expect_type(rainfallDetection(noise(200000)), "double")
+  expect_type(rainfallDetection(noise(48000)), "double")
+  # Each channel is refused as a mono wave is.
+  w <- noise(384000)
+  expect_error(rainfallDetection(tuneR::stereo(w, w)), "384000 Hz", fixed=TRUE)
+})
+
+test_that("rainfallDetection refuses a wave sampled too slowly to reach the band", {
+  set.seed(14)
+  w <- tuneR::Wave(round(rnorm(1000, sd=0.1) * 32767), samp.rate=1000, bit=16, pcm=TRUE)
+  expect_error(
+    rainfallDetection(w),
+    "measures the 600-1200 Hz band, and a wave sampled at 1000 Hz reaches only 500 Hz.",
+    fixed=TRUE
+  )
+})
+
 test_that("rainfall is still detected", {
   sr <- 22050
   set.seed(12)
