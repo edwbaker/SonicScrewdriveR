@@ -64,6 +64,19 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The Wave object unchanged. An error is raised if it is not a Wave object.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A warning of class <code>waveFormatMismatch</code> is raised where the wave's samples do
+not fit the format it declares: a PCM wave holding samples that are not whole
+numbers, or samples outside the range its bit depth holds, or a floating
+point wave holding samples outside -1 to 1. <code><a href="https://rdrr.io/pkg/tuneR/man/Wave.html" class="external-link">tuneR::Wave()</a></code>
+declares 16-bit PCM unless told otherwise, so floating point samples given to
+it without <code>bit=32, pcm=FALSE</code> make such a wave, and functions that cut,
+filter or write it round each sample to a whole number. The check reads 1024
+samples spread evenly over each channel, so that it takes the same time
+however long the recording is, and can miss a fault confined to a few
+samples.</p>
+    </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

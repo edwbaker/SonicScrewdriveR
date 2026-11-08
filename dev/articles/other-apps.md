@@ -230,6 +230,14 @@ data <- audioblast("data", "recordings", source="bio.acousti.ca", id=10754)
 # Download the file to the mole_cricket directory
 audioblastDownload(data, dir="mole_cricket/")
 #> Downloading https://files.audioblast.org/bioacoustica/585_2_Gryllotalpa_vineae_820b.wav
+#> Waiting 4s for retry backoff ■■■■■■■■■                       
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■                
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 
+#> Warning: There was an issue downloading the requested file via audioblast.
+#> There was an issue downloading the requested file via audioblast.
+#> HTTP 503 Service Unavailable.
+#> If this issue continues please contact the audioblast team.
+#> If this issue continues please contact the audioblast team.
 ```
 
 This has downloaded the audio file to the `mole_cricket` directory. It
