@@ -389,9 +389,6 @@
 .streamedDigests <- function(read, column, frames, channels, multi, block) {
   files <- vapply(seq_len(channels), function(ch) tempfile(fileext=".bin"), character(1))
   on.exit(unlink(files), add=TRUE)
-  cons <- lapply(files, file, open="wb")
-  open <- TRUE
-  on.exit(if (open) lapply(cons, close), add=TRUE, after=FALSE)
   #The next block is found from the last, rather than every block being listed
   #first, which for a small block of a long recording would take more memory
   #than the blocks themselves.
@@ -400,12 +397,10 @@
     to <- min(frames, from + block - 1)
     w <- read(from, to)
     for (ch in seq_len(channels)) {
-      writeBin(as.numeric(column(w, ch)), cons[[ch]])
+      .appendSamples(files[ch], as.numeric(column(w, ch)))
     }
     from <- to + 1
   }
-  lapply(cons, close)
-  open <- FALSE
   #A write cut short, as by a full disk, need not fail, and would give the
   #digest of part of the recording, so each file is measured: every sample is
   #written as a double of 8 bytes.
@@ -429,6 +424,24 @@
   }
   return(vapply(digested, function(f) digest::digest(file=f, algo="sha256"), character(1),
                 USE.NAMES=FALSE))
+}
+
+#' Append samples to a file, as the bytes .digestNumeric() would digest
+#'
+#' The file is open only while they are written. A recording can have more
+#' channels than R can hold connections open at once, and a connection left
+#' open by a failed write would take one from every recording read after, and
+#' on Windows keep the file from being deleted.
+#' @param path The file, which is made if there is none.
+#' @param x The samples, as doubles.
+#' @return Nothing.
+#' @keywords internal
+#' @noRd
+.appendSamples <- function(path, x) {
+  con <- file(path, open="ab")
+  on.exit(close(con))
+  writeBin(x, con)
+  return(invisible(NULL))
 }
 
 #' Append one file to another

@@ -302,6 +302,48 @@ test_that("no digest is taken of samples that were not all read or written", {
   expect_setequal(list.files(tempdir(), pattern="\\.bin$"), before)
 })
 
+test_that("a recording of more channels than R holds connections open at once is digested", {
+  # R holds no more than 128 connections open by default, three of them its
+  # console's, and tuneR writes no more than 18 channels, so the file is made
+  # here.
+  channels <- 130
+  frames <- 200
+  set.seed(1)
+  m <- matrix(as.integer(round(stats::runif(frames * channels, -1, 1) * 32767)), frames, channels)
+  path <- mdFile(mdWav(
+    mdChunk("fmt ", c(mdU16(1), mdU16(channels), mdU32(8000), mdU32(8000 * channels * 2),
+                      mdU16(channels * 2), mdU16(16))),
+    mdChunk("data", writeBin(as.integer(t(m)), raw(), size=2, endian="little"))
+  ))
+  whole <- readAudio(path)
+  expect_identical(unname(whole@.Data), m)
+  one <- readAudio(path, from=1, to=1, time.unit="samples")
+  open <- length(getAllConnections())
+  before <- list.files(tempdir(), pattern="\\.bin$")
+  expect_identical(.fileWaveHash(path, "full", one, frames, 50), .waveHash(whole, "full"))
+  expect_length(getAllConnections(), open)
+  expect_setequal(list.files(tempdir(), pattern="\\.bin$"), before)
+  # A write that fails part way leaves no file open, which would take a
+  # connection from every recording read after, and none behind.
+  local({
+    real <- base::writeBin
+    n <- 0
+    local_mocked_bindings(
+      writeBin=function(object, con, ...) {
+        if (!is.raw(con)) {
+          n <<- n + 1
+          if (n == 3) stop("The disk is full.")
+        }
+        real(object, con, ...)
+      },
+      .package="base"
+    )
+    expect_error(.fileWaveHash(path, "full", one, frames, 50), "The disk is full.", fixed=TRUE)
+  })
+  expect_length(getAllConnections(), open)
+  expect_setequal(list.files(tempdir(), pattern="\\.bin$"), before)
+})
+
 test_that("windows read from disk are the windows cut from the whole wave", {
   .longIds()
   dir <- withr::local_tempdir()
