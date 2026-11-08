@@ -63,6 +63,7 @@ the results are read back with <code><a href="pipelineResults.html">pipelineResu
 <span>  <span class="va">set</span>,</span>
 <span>  <span class="va">store</span>,</span>
 <span>  batch <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  max.memory <span class="op">=</span> <span class="fl">4e+09</span>,</span>
 <span>  keep <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  retry <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cl <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -89,6 +90,11 @@ exist.</p></dd>
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>How many files to run between writes to the store.</p></dd>
+
+
+<dt id="arg-max-memory">max.memory<a class="anchor" aria-label="anchor" href="#arg-max-memory"></a></dt>
+<dd><p>The most memory, in bytes, a file may take once decoded to
+be read whole, 4 GB unless it is given, or <code>Inf</code> to read every file whole.</p></dd>
 
 
 <dt id="arg-keep">keep<a class="anchor" aria-label="anchor" href="#arg-keep"></a></dt>
@@ -124,8 +130,9 @@ results by <code>hash</code>.</p>
 recording the Animal Sound Archive lists under three species is, and each
 file is run once. A file is fetched from its location: a local file is read
 where it is, and one at a URL is downloaded, then deleted once it has been
-run unless <code>keep</code> names a folder to keep it in. Each file is read whole by
-<code><a href="readAudio.html">readAudio()</a></code>, tagged with its location as its origin and with the columns
+run unless <code>keep</code> names a folder to keep it in. Each file is read by
+<code><a href="readAudio.html">readAudio()</a></code>, whole unless it is too long to hold (see Long files), tagged
+with its location as its origin and with the columns
 of the set that all of its recordings agree on, such as <code>start</code>, <code>lat</code> and
 <code>lon</code>, in the <code>"recordingSet"</code> entry of its metadata, and measured by
 <code><a href="calculateMetadata.html">calculateMetadata()</a></code>. Columns its recordings disagree on, such as the
@@ -138,6 +145,34 @@ hashed then is left to fail when it is read. A file at a URL the set gives no
 hash is recognised by its location once it has been run. A local location is
 made absolute before the run, as a worker of a cluster can be working in
 another folder.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="long-files">Long files<a class="anchor" aria-label="anchor" href="#long-files"></a></h2>
+
+
+<p>A file is read whole unless it would take more than <code>max.memory</code> bytes once
+decoded, which is worked out from its header before it is read. R holds a
+sample in 4 bytes for a RIFF WAV file of 8, 16 or 32-bit PCM, for an AudioMoth
+triggered recording, and for an MP3 file, and in 8 for a WAV file of 24-bit
+PCM or floating-point audio and for anything the av package decodes, a WAV
+file in the RF64 or BW64 form and FLAC among them. A triggered recording is
+measured as it will be once expanded.</p>
+<p>A file over <code>max.memory</code> is read a window at a time, by each <code><a href="windowing.html">windowing()</a></code>
+at the top of the pipeline, as windowing() reads a file. Each window holds
+the samples, and the tags, of the window cut from the whole recording, so
+the results are those a whole read gives, and the <code>wave_hash</code> of the file is
+taken a block at a time. That writes the samples to a temporary file, as the
+digest is of all of them at once, so it needs room on disk for 8 bytes a
+sample while it is taken, and for a file of more than two channels, whose
+channels are written apart and then joined, 8 bytes more for each sample of
+one channel. Only a RIFF WAV file of PCM or floating-point audio can be read
+in parts that are exact, so any other file over <code>max.memory</code>, an MP3 or a
+FLAC file among them, fails without being read, as does a triggered
+recording, which is expanded whole. So does a file whose pipeline has a step
+outside a windowing given <code>then=</code>, which needs the whole recording at once,
+or windows that are themselves over <code>max.memory</code>. The size of a file other
+than a WAV file is asked of the av package, and where that is not installed
+such a file is read whole.</p>
     </div>
     <div class="section level2">
     <h2 id="batches">Batches<a class="anchor" aria-label="anchor" href="#batches"></a></h2>

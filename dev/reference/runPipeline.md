@@ -17,6 +17,7 @@ runPipeline(
   set,
   store,
   batch = 1000,
+  max.memory = 4e+09,
   keep = NULL,
   retry = FALSE,
   cl = NULL,
@@ -41,6 +42,11 @@ runPipeline(
 - batch:
 
   How many files to run between writes to the store.
+
+- max.memory:
+
+  The most memory, in bytes, a file may take once decoded to be read
+  whole, 4 GB unless it is given, or `Inf` to read every file whole.
 
 - keep:
 
@@ -74,11 +80,12 @@ a recording the Animal Sound Archive lists under three species is, and
 each file is run once. A file is fetched from its location: a local file
 is read where it is, and one at a URL is downloaded, then deleted once
 it has been run unless `keep` names a folder to keep it in. Each file is
-read whole by
+read by
 [`readAudio()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/readAudio.md),
-tagged with its location as its origin and with the columns of the set
-that all of its recordings agree on, such as `start`, `lat` and `lon`,
-in the `"recordingSet"` entry of its metadata, and measured by
+whole unless it is too long to hold (see Long files), tagged with its
+location as its origin and with the columns of the set that all of its
+recordings agree on, such as `start`, `lat` and `lon`, in the
+`"recordingSet"` entry of its metadata, and measured by
 [`calculateMetadata()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/calculateMetadata.md).
 Columns its recordings disagree on, such as the `taxon` of a file listed
 under three species, are left in the set.
@@ -91,6 +98,35 @@ file that cannot be hashed then is left to fail when it is read. A file
 at a URL the set gives no hash is recognised by its location once it has
 been run. A local location is made absolute before the run, as a worker
 of a cluster can be working in another folder.
+
+## Long files
+
+A file is read whole unless it would take more than `max.memory` bytes
+once decoded, which is worked out from its header before it is read. R
+holds a sample in 4 bytes for a RIFF WAV file of 8, 16 or 32-bit PCM,
+for an AudioMoth triggered recording, and for an MP3 file, and in 8 for
+a WAV file of 24-bit PCM or floating-point audio and for anything the av
+package decodes, a WAV file in the RF64 or BW64 form and FLAC among
+them. A triggered recording is measured as it will be once expanded.
+
+A file over `max.memory` is read a window at a time, by each
+[`windowing()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/windowing.md)
+at the top of the pipeline, as windowing() reads a file. Each window
+holds the samples, and the tags, of the window cut from the whole
+recording, so the results are those a whole read gives, and the
+`wave_hash` of the file is taken a block at a time. That writes the
+samples to a temporary file, as the digest is of all of them at once, so
+it needs room on disk for 8 bytes a sample while it is taken, and for a
+file of more than two channels, whose channels are written apart and
+then joined, 8 bytes more for each sample of one channel. Only a RIFF
+WAV file of PCM or floating-point audio can be read in parts that are
+exact, so any other file over `max.memory`, an MP3 or a FLAC file among
+them, fails without being read, as does a triggered recording, which is
+expanded whole. So does a file whose pipeline has a step outside a
+windowing given `then=`, which needs the whole recording at once, or
+windows that are themselves over `max.memory`. The size of a file other
+than a WAV file is asked of the av package, and where that is not
+installed such a file is read whole.
 
 ## Batches
 

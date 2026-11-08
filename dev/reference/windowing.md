@@ -25,8 +25,8 @@ windowing(
 
 - wave:
 
-  A Wave object or filename. Using filenames may save loading an entire
-  large file into memory.
+  A Wave or WaveMC object, or a filename. Using filenames may save
+  loading an entire large file into memory.
 
 - window.length:
 
