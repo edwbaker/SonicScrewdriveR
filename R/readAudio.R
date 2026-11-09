@@ -1240,10 +1240,9 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
 #' libmad held it. They are kept as integers, which take half the memory doubles
 #' do.
 #'
-#' A sample of negative full scale is -2^31 in the 32-bit range, which is the
-#' bit pattern R keeps for a missing integer, so it reaches R as NA. The decoder
-#' gives finite numbers, so NA is never anything else, and is read as the
-#' negative full scale it is rather than as a sample that could not be read.
+#' Negative full scale in the 32-bit range is -2^31, which is the bit pattern R
+#' keeps for a missing integer, so the av package gives it as -2^31 + 1, and
+#' rounding takes that to -32768 as it should.
 #'
 #' The samples are converted a block at a time. Converted whole, the doubles the
 #' arithmetic makes on the way would hold several times the memory of the
@@ -1259,7 +1258,6 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
   while (from <= length(samples)) {
     to <- min(length(samples), from + block - 1)
     x <- round(as.numeric(samples[from:to]) / 2^16)
-    x[is.na(x)] <- -32768
     x[x > 32767] <- 32767
     out[from:to] <- as.integer(x)
     from <- to + 1

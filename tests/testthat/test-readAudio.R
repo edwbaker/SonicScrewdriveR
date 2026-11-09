@@ -2143,12 +2143,12 @@ test_that("readAudio decodes every frame of an MP3 whose first frame borrows fro
   expect_identical(readAudio(cut)@left, w@left)
 })
 
-test_that(".mp3Samples gives 16-bit integers, negative full scale among them", {
-  # The av package gives MP3 audio in the 32-bit range, where negative full
-  # scale is the bit pattern R keeps for a missing integer, and a peak past full
-  # scale rounds to one more than 16 bits hold.
-  x <- c(NA, -2147483647L, -6553600L, 0L, 6553600L, 2147483647L)
-  expect_identical(.mp3Samples(x), c(-32768L, -32768L, -100L, 0L, 100L, 32767L))
+test_that(".mp3Samples gives 16-bit integers, both ends of the range among them", {
+  # The av package gives MP3 audio in the 32-bit range. Negative full scale
+  # comes as -2^31 + 1, as -2^31 is the bit pattern R keeps for a missing
+  # integer, and the largest value rounds to one more than 16 bits hold.
+  x <- c(-2147483647L, -2147418112L, -6553600L, 0L, 6553600L, 2147483647L)
+  expect_identical(.mp3Samples(x), c(-32768L, -32767L, -100L, 0L, 100L, 32767L))
   # A block at a time gives the same as all at once, a block ending part-way
   # through or not.
   expect_identical(.mp3Samples(x, block=4), .mp3Samples(x))
