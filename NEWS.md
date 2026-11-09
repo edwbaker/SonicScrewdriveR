@@ -697,6 +697,19 @@
   the paper, so `U/4` is offered rather than assumed.
 
 ## Fixes
+- readAudio() read a sample at negative full scale a fraction short of what
+  it is. The av package, which reads every format but WAV, decodes to the
+  32-bit range, where negative full scale is -2^31, the bit pattern R keeps
+  for a missing integer, so the package gives -2^31 + 1 instead. Scaled back
+  down, a 16-bit -32768 in a FLAC file was read as -32767.99998, which is not
+  equal to the same sample read from a WAV file, an 8-bit one was 0.00000006
+  rather than 0, and a 24-bit one, returned at 32 bits, was one short of 256
+  times -8388608. Nothing else gives -2^31 + 1 at those depths, so it is now
+  read as the full scale it is. At 32 bits, of integers or floating point,
+  -2^31 + 1 can be a sample of its own, and is left as it is. A 32-bit PCM WAV
+  file had the same trouble by another route: `tuneR::readWave()` gives its
+  samples as integers, so -2^31 came back missing and was read as zero, with a
+  warning that it was not a finite number. It is now read as -2^31.
 - rainfallDetection(method="bedoya2017") printed "Not enough data to create
   standard deviation" and returned NULL for a wave whose 600-1200 Hz band holds
   fewer than two frequency bins. A bin of the 512-sample windows it uses is the

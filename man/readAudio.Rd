@@ -68,6 +68,14 @@ report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of
 a 24bit file are 256 times those \code{tuneR::readWave()} would give for the same
 audio stored as WAVE. Audio stored as floating point is returned as 32bit.
 
+A sample at negative full scale is read as the value it holds. Read through
+the av package it is -2^31 in the 32bit range the package decodes to, which
+R keeps for a missing integer, so the av package gives -2^31 + 1 instead; at
+8, 16 and 24 bits nothing else gives that, and it is read as the full scale
+it is. At 32 bits, of integers or floating point, -2^31 + 1 can be a sample
+of its own, and is left as it is. A 32bit PCM WAVE file read by
+\code{tuneR::readWave()} gives -2^31 for it.
+
 A recording made on a trigger is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is
 read, so that the periods that did not trigger a recording are returned as
 silence and the timing of the triggered recordings is preserved. Such a
