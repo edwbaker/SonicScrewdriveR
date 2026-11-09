@@ -24,12 +24,23 @@
 #' `tuneR::MCnames`), because the av package reports a channel layout that does
 #' not identify the channels of the file.
 #'
-#' Files read through the av package (which is everything that is not WAVE or
-#' MP3, e.g. FLAC) are returned at the bit depth the file was stored at, so that
+#' Files read through the av package (which is everything that is not WAVE,
+#' e.g. FLAC) are returned at the bit depth the file was stored at, so that
 #' the same audio compares equal however it was read. The av package does not
 #' report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of
 #' a 24bit file are 256 times those `tuneR::readWave()` would give for the same
 #' audio stored as WAVE. Audio stored as floating point is returned as 32bit.
+#'
+#' MP3 files are read through the av package too, and returned as 16bit, as
+#' `tuneR::readMP3()` returned them before. That function decodes with libmad
+#' and fills as many samples as the frame headers count: where libmad skips a
+#' frame it cannot decode, as it skips a first frame whose audio begins in bytes
+#' before the start of the file, every later sample comes a frame early and the
+#' last frame's samples are whatever the memory held, which change from one read
+#' to the next. The av package decodes every frame, and drops the encoder's
+#' delay where the file records it, so a recording can be shorter than
+#' `tuneR::readMP3()` gave: `AUDIOMOTH.mp3` is 240000 sample frames rather than
+#' 241920.
 #'
 #' A recording made on a trigger is expanded by [audiomothExpand()] as it is
 #' read, so that the periods that did not trigger a recording are returned as
@@ -145,9 +156,9 @@
 #'
 #' @param file File to read
 #' @param mime MIME type of file to read, or "auto" to read the type from the
-#'   bytes of the file rather than from its name. Supported types are
-#'   "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
-#'   package.
+#'   bytes of the file rather than from its name. "audio/x-wav" is read by
+#'   `tuneR::readWave()`; any other type, "audio/mpeg" (MP3) among them, is read
+#'   by the av package.
 #' @param from Start point in file to return, a number that is not negative,
 #'   and a whole number in samples, which must fall within the recording
 #' @param to End point in file to return, a number that is not negative, and a
@@ -158,7 +169,7 @@
 #' @return A Wave object, or a WaveMC object for a file with more than two
 #'   channels.
 #' @export
-#' @importFrom tuneR readMP3 readWave stereo Wave
+#' @importFrom tuneR readWave stereo Wave
 #' @importFrom tools file_ext
 #' @importFrom mime guess_type
 readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
@@ -271,15 +282,13 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
     }
   }
 
-  if (mime=="audio/mpeg") {
-    # Only the reading is guarded, as it is for a WAV file above: an MP3 file
-    # that readMP3() cannot read is read by the av package instead, but what is
-    # wrong with the part of it asked for is said of the audio that was read.
-    wave <- tryCatch(readMP3(file), error=function(cond) NULL)
-    if (!is.null(wave)) {
-      return(.cutAudio(wave, from, to, time.unit, file))
-    }
-  }
+  # An MP3 file is read by the av package, as every type but a wave file is.
+  # tuneR::readMP3() counts the frames of a file from their headers and fills
+  # that many samples from the frames it decodes, so a frame its decoder skips,
+  # as it skips a first frame whose data begins in bytes before the file, moves
+  # every later sample a frame early and leaves the last frame's samples as
+  # whatever the memory held. Those differ from one read to the next, so the
+  # same file read twice gave different samples and a different hash.
 
   #Check if av package available
   if (package.installed("av", askInstall=TRUE)) {
@@ -331,13 +340,17 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
     #read_audio_bin() attaches sample_rate and channels to the vector it returns,
     #and they would be carried into the slots of the Wave object if left on it.
     samples <- as.vector(samples)
-    samples <- .zeroNonFinite(samples, file)
-
-    #read_audio_bin() fills the 32bit range whatever the file was stored at, so
-    #the samples are scaled back down to the bit depth of the source. Without
-    #this the same audio read as WAVE and as FLAC does not compare equal.
-    bit <- .avBitdepth(info[['sample_fmt']], samples)
-    samples <- samples / 2^(32 - bit)
+    if (.avIsMP3(info)) {
+      samples <- .mp3Samples(samples)
+      bit <- 16
+    } else {
+      samples <- .zeroNonFinite(samples, file)
+      #read_audio_bin() fills the 32bit range whatever the file was stored at, so
+      #the samples are scaled back down to the bit depth of the source. Without
+      #this the same audio read as WAVE and as FLAC does not compare equal.
+      bit <- .avBitdepth(info[['sample_fmt']], samples)
+      samples <- samples / 2^(32 - bit)
+    }
     if (bit == 8) {
       #8bit PCM is unsigned, which is how readWave() returns it.
       samples <- samples + 128
@@ -1203,6 +1216,55 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
     return(TRUE)
   }
   return(frames / rate + 0.1 < min(duration, wanted / rate))
+}
+
+#' Whether the av package decoded MP3 audio
+#'
+#' Told by the decoder rather than by the type the file was read as, so that
+#' the audio of a file named or typed as something else is given as what it is.
+#' @param info The audio of what av::av_media_info() gives.
+#' @return TRUE or FALSE.
+#' @keywords internal
+#' @noRd
+.avIsMP3 <- function(info) {
+  return(isTRUE(info[['codec']][1] %in% c("mp3", "mp3float")))
+}
+
+#' Samples of MP3 audio as 16-bit values
+#'
+#' The av package decodes MP3 to floating point, which read_audio_bin() gives
+#' scaled to fill the 32-bit range. MP3 holds no bit depth of its own, and
+#' tuneR::readMP3(), which read MP3 files before, gave them as 16-bit integers,
+#' so they are given that way still: rounded to the nearest 16-bit value, and a
+#' peak a lossy decoder carried past full scale held at the end of the range, as
+#' libmad held it. They are kept as integers, which take half the memory doubles
+#' do.
+#'
+#' A sample of negative full scale is -2^31 in the 32-bit range, which is the
+#' bit pattern R keeps for a missing integer, so it reaches R as NA. The decoder
+#' gives finite numbers, so NA is never anything else, and is read as the
+#' negative full scale it is rather than as a sample that could not be read.
+#'
+#' The samples are converted a block at a time. Converted whole, the doubles the
+#' arithmetic makes on the way would hold several times the memory of the
+#' integers that come out, and the integers are what max.memory is reckoned in.
+#' @param samples What av::read_audio_bin() returned, as a vector.
+#' @param block How many samples to convert at a time.
+#' @return The samples, as integers from -32768 to 32767.
+#' @keywords internal
+#' @noRd
+.mp3Samples <- function(samples, block=2^20) {
+  out <- integer(length(samples))
+  from <- 1
+  while (from <= length(samples)) {
+    to <- min(length(samples), from + block - 1)
+    x <- round(as.numeric(samples[from:to]) / 2^16)
+    x[is.na(x)] <- -32768
+    x[x > 32767] <- 32767
+    out[from:to] <- as.integer(x)
+    from <- to + 1
+  }
+  return(out)
 }
 
 #' Bit depth of the audio decoded by the av package

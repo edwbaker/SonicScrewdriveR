@@ -697,6 +697,22 @@
   the paper, so `U/4` is offered rather than assumed.
 
 ## Fixes
+- readAudio() reads MP3 files with the av package, as it reads every format
+  but WAV, rather than with `tuneR::readMP3()`. That function counts the frames
+  of a file from their headers, allocates that many samples without clearing
+  them, and fills them from the frames libmad decodes. libmad skips a frame it
+  cannot decode, as it skips a first frame whose audio begins in bytes before
+  the start of the file, which a recording cut from a longer stream can have.
+  Every later sample then came a frame early and the last frame's samples were
+  whatever the memory held, so the same file read twice gave different samples
+  and a different hash. Run over 211 audioBlast recordings, one xeno-canto MP3
+  failed rain detection on Linux with "missing value where TRUE/FALSE needed",
+  as one of those samples was R's missing integer, and 2 of 108 xeno-canto MP3s
+  sampled begin with such a frame. MP3 audio is still returned as 16-bit, but
+  every frame is decoded and the encoder's delay is dropped where the file
+  records it, so `AUDIOMOTH.mp3` reads as the same 240000 sample frames as
+  `AUDIOMOTH.WAV` rather than 241920, and every MP3 gives slightly different
+  samples, and a different hash, than before.
 - rainfallDetection(method="bedoya2017") printed "Not enough data to create
   standard deviation" and returned NULL for a wave whose 600-1200 Hz band holds
   fewer than two frequency bins. A bin of the 512-sample windows it uses is the

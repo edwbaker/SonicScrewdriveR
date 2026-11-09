@@ -3,8 +3,9 @@
 #' The samples of a wave are what grows with the length of a recording, and R
 #' holds them as integers of four bytes or as doubles of eight, depending on
 #' the reader: readWave() gives integers for PCM of 8, 16 and 32 bits and
-#' doubles for 24-bit PCM and floating point, readMP3() gives integers, and
-#' anything the av package decodes, FLAC among them, comes back as doubles. A
+#' doubles for 24-bit PCM and floating point, MP3 is given as 16-bit integers,
+#' and anything else the av package decodes, FLAC among them, comes back as
+#' doubles. A
 #' WAV file is measured from its chunks, and one whose audio size was never
 #' written from the bytes after its data chunk begins, as readAudio() reads it
 #' to the end of the file. A triggered recording is measured as it will be once
