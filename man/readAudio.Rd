@@ -17,9 +17,9 @@ readAudio(
 \item{file}{File to read}
 
 \item{mime}{MIME type of file to read, or "auto" to read the type from the
-bytes of the file rather than from its name. Supported types are
-"audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
-package.}
+bytes of the file rather than from its name. "audio/x-wav" is read by
+\code{tuneR::readWave()}; any other type, "audio/mpeg" (MP3) among them, is read
+by the av package.}
 
 \item{from}{Start point in file to return, a number that is not negative,
 and a whole number in samples, which must fall within the recording}
@@ -61,12 +61,23 @@ read through the av package is named by channel position instead (see
 \code{tuneR::MCnames}), because the av package reports a channel layout that does
 not identify the channels of the file.
 
-Files read through the av package (which is everything that is not WAVE or
-MP3, e.g. FLAC) are returned at the bit depth the file was stored at, so that
+Files read through the av package (which is everything that is not WAVE,
+e.g. FLAC) are returned at the bit depth the file was stored at, so that
 the same audio compares equal however it was read. The av package does not
 report a bit depth of 24, and returns 24bit audio as 32bit, so the samples of
 a 24bit file are 256 times those \code{tuneR::readWave()} would give for the same
 audio stored as WAVE. Audio stored as floating point is returned as 32bit.
+
+MP3 files are read through the av package too, and returned as 16bit, as
+\code{tuneR::readMP3()} returned them before. That function decodes with libmad
+and fills as many samples as the frame headers count: where libmad skips a
+frame it cannot decode, as it skips a first frame whose audio begins in bytes
+before the start of the file, every later sample comes a frame early and the
+last frame's samples are whatever the memory held, which change from one read
+to the next. The av package decodes every frame, and drops the encoder's
+delay where the file records it, so a recording can be shorter than
+\code{tuneR::readMP3()} gave: \code{AUDIOMOTH.mp3} is 240000 sample frames rather than
+241920.
 
 A recording made on a trigger is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is
 read, so that the periods that did not trigger a recording are returned as
