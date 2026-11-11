@@ -40,8 +40,10 @@ test_that("Reading files works", {
   expect_equal(length(w@left), w@samp.rate)
   rm(w)
 
+  # The encoder's delay, which the file records, is dropped, so the MP3 holds
+  # as many sample frames as the WAV.
   w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"))
-  expect_equal(length(w@left), 241920)
+  expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
   expect_equal(w@pcm, TRUE)
@@ -49,7 +51,7 @@ test_that("Reading files works", {
   rm(w)
 
   w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), time.unit="samples")
-  expect_equal(length(w@left), 241920)
+  expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
   expect_equal(w@pcm, TRUE)
@@ -57,7 +59,7 @@ test_that("Reading files works", {
   rm(w)
 
   w <- readAudio(system.file("extdata/AUDIOMOTH.mp3", package="sonicscrewdriver"), mime="audio/mpeg")
-  expect_equal(length(w@left), 241920)
+  expect_equal(length(w@left), 240000)
   expect_equal(w@samp.rate, 48000)
   expect_equal(w@bit, 16)
   expect_equal(w@pcm, TRUE)
@@ -810,8 +812,9 @@ test_that("readAudio reads a file under the wrong extension as what it holds", {
   expect_true(file.copy(wav, asMp3, overwrite=TRUE))
   expect_equal(unfiled(readAudio(asMp3)), unfiled(readAudio(wav)))
 
-  # An MP3 called .wav, which went to the av package instead of to readMP3()
-  # and came back at a different bit depth and length.
+  # An MP3 called .wav, which once went to the av package where the same file
+  # called .mp3 went to readMP3(), and came back at a different bit depth and
+  # length. Both are MP3 by their bytes, and read alike.
   asWav <- tempfile(fileext=".wav")
   on.exit(unlink(asWav), add=TRUE)
   expect_true(file.copy(mp3, asWav, overwrite=TRUE))
@@ -2171,4 +2174,77 @@ test_that("A 32-bit PCM WAV sample of negative full scale is -2^31, not zero wit
   expect_s4_class(w, "WaveMC")
   expect_identical(as.numeric(w@.Data[, 1]), c(-2^31, as.numeric(m[-1, 1])))
   expect_identical(as.numeric(w@.Data[, 2:3]), as.numeric(m[, 2:3]))
+})
+
+test_that("A part of an MP3 is the same samples as that part of the whole", {
+  skip_if_not_installed("av")
+  # An MP3 file is read through the av package too, now, and is decoded only as
+  # far as the end point asked for.
+  f <- system.file("extdata/STEREO.mp3", package="sonicscrewdriver")
+  whole <- readAudio(f)
+  rate <- whole@samp.rate
+  part <- readAudio(f, from=1, to=2.5)
+  expect_identical(part@left, whole@left[(rate + 1):(2.5 * rate)])
+  expect_identical(part@right, whole@right[(rate + 1):(2.5 * rate)])
+  expect_identical(
+    readAudio(f, from=1000, to=50000, time.unit="samples")@left,
+    whole@left[1000:50000]
+  )
+})
+
+test_that("readAudio decodes every frame of an MP3 whose first frame borrows from before it", {
+  skip_if_not_installed("av")
+  # A recording cut from a longer stream can begin with a frame whose audio data
+  # starts in the frames before the cut. libmad, which tuneR::readMP3() decodes
+  # with, skips that frame, and readMP3() then moved every later sample a frame
+  # early and left the samples at the end as whatever the memory held. Such a
+  # file is made here by cutting an encoded one before a frame like that.
+  set.seed(20261109)
+  noise <- as.integer(pmax(pmin(round(stats::rnorm(96000, sd=4000)), 32767), -32768))
+  wav <- tempfile(fileext=".wav")
+  whole <- tempfile(fileext=".mp3")
+  cut <- tempfile(fileext=".mp3")
+  on.exit(unlink(c(wav, whole, cut)), add=TRUE)
+  tuneR::writeWave(tuneR::Wave(left=noise, samp.rate=48000, bit=16), wav)
+  av::av_audio_convert(wav, whole, verbose=FALSE)
+  bytes <- readBin(whole, raw(), file.size(whole))
+  frames <- mp3Frames(bytes)
+  first <- which(!frames$info & frames$mdb > 0)[1]
+  writeBin(bytes[frames$start[first]:length(bytes)], cut)
+  cutFrames <- mp3Frames(readBin(cut, raw(), file.size(cut)))
+  # The cut file is what it is meant to be: it begins with an audio frame, not
+  # an Info frame, whose data begins before the start of the file.
+  expect_false(cutFrames$info[1])
+  expect_gt(cutFrames$mdb[1], 0)
+
+  w <- readAudio(cut)
+  # Every frame is decoded. With no Info frame there is no encoder delay
+  # recorded, so nothing is dropped, and the first frame is not either.
+  expect_equal(length(w@left), nrow(cutFrames) * 1152)
+  # Every frame is in its place: from the third frame on, the samples are those
+  # of the whole file at one offset, through to the whole file's last frame.
+  W <- readAudio(whole)@left
+  probe <- 2 * 1152 + seq_len(2000)
+  offsets <- Filter(
+    function(d) min(probe + d) >= 1 && identical(W[probe + d], w@left[probe]),
+    -4000:4000
+  )
+  expect_length(offsets, 1)
+  last <- (length(W) - 1151):length(W)
+  expect_identical(w@left[last - offsets[1]], W[last])
+  # And it reads the same every time.
+  expect_identical(readAudio(cut)@left, w@left)
+})
+
+test_that(".mp3Samples gives 16-bit integers, both ends of the range among them", {
+  # The av package gives MP3 audio in the 32-bit range. Negative full scale
+  # comes as -2^31 + 1, as -2^31 is the bit pattern R keeps for a missing
+  # integer, and the largest value rounds to one more than 16 bits hold.
+  x <- c(-2147483647L, -2147418112L, -6553600L, 0L, 6553600L, 2147483647L)
+  expect_identical(.mp3Samples(x), c(-32768L, -32767L, -100L, 0L, 100L, 32767L))
+  # A block at a time gives the same as all at once, a block ending part-way
+  # through or not.
+  expect_identical(.mp3Samples(x, block=4), .mp3Samples(x))
+  expect_identical(.mp3Samples(x, block=3), .mp3Samples(x))
+  expect_identical(.mp3Samples(integer(0)), integer(0))
 })
