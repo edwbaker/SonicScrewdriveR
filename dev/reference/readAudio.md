@@ -27,8 +27,9 @@ readAudio(
 - mime:
 
   MIME type of file to read, or "auto" to read the type from the bytes
-  of the file rather than from its name. Supported types are
-  "audio/x-wav" and "audio/mpeg" (MP3); any other type is read by the av
+  of the file rather than from its name. "audio/x-wav" is read by
+  [`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html);
+  any other type, "audio/mpeg" (MP3) among them, is read by the av
   package.
 
 - from:
@@ -85,14 +86,36 @@ named by channel position instead (see
 the av package reports a channel layout that does not identify the
 channels of the file.
 
-Files read through the av package (which is everything that is not WAVE
-or MP3, e.g. FLAC) are returned at the bit depth the file was stored at,
-so that the same audio compares equal however it was read. The av
-package does not report a bit depth of 24, and returns 24bit audio as
-32bit, so the samples of a 24bit file are 256 times those
+Files read through the av package (which is everything that is not WAVE,
+e.g. FLAC) are returned at the bit depth the file was stored at, so that
+the same audio compares equal however it was read. The av package does
+not report a bit depth of 24, and returns 24bit audio as 32bit, so the
+samples of a 24bit file are 256 times those
 [`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html) would
 give for the same audio stored as WAVE. Audio stored as floating point
 is returned as 32bit.
+
+MP3 files are read through the av package too, and returned as 16bit, as
+[`tuneR::readMP3()`](https://rdrr.io/pkg/tuneR/man/readMP3.html)
+returned them before. That function decodes with libmad and fills as
+many samples as the frame headers count: where libmad skips a frame it
+cannot decode, as it skips a first frame whose audio begins in bytes
+before the start of the file, every later sample comes a frame early and
+the last frame's samples are whatever the memory held, which change from
+one read to the next. The av package decodes every frame, and drops the
+encoder's delay where the file records it, so a recording can be shorter
+than [`tuneR::readMP3()`](https://rdrr.io/pkg/tuneR/man/readMP3.html)
+gave: `AUDIOMOTH.mp3` is 240000 sample frames rather than 241920.
+
+A sample at negative full scale is read as the value it holds. Read
+through the av package it is -2^31 in the 32bit range the package
+decodes to, which R keeps for a missing integer, so the av package gives
+-2^31 + 1 instead; at 8, 16 and 24 bits nothing else gives that, and it
+is read as the full scale it is. At 32 bits, of integers or floating
+point, -2^31 + 1 can be a sample of its own, and is left as it is. A
+32bit PCM WAVE file read by
+[`tuneR::readWave()`](https://rdrr.io/pkg/tuneR/man/readWave.html) gives
+-2^31 for it.
 
 A recording made on a trigger is expanded by
 [`audiomothExpand()`](https://sonicscrewdriver.ebaker.me.uk/dev/reference/audiomothExpand.md)
