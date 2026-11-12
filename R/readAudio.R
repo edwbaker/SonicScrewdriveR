@@ -42,6 +42,14 @@
 #' `tuneR::readMP3()` gave: `AUDIOMOTH.mp3` is 240000 sample frames rather than
 #' 241920.
 #'
+#' A sample at negative full scale is read as the value it holds. Read through
+#' the av package it is -2^31 in the 32bit range the package decodes to, which
+#' R keeps for a missing integer, so the av package gives -2^31 + 1 instead; at
+#' 8, 16 and 24 bits nothing else gives that, and it is read as the full scale
+#' it is. At 32 bits, of integers or floating point, -2^31 + 1 can be a sample
+#' of its own, and is left as it is. A 32bit PCM WAVE file read by
+#' `tuneR::readWave()` gives -2^31 for it.
+#'
 #' A recording made on a trigger is expanded by [audiomothExpand()] as it is
 #' read, so that the periods that did not trigger a recording are returned as
 #' silence and the timing of the triggered recordings is preserved. Such a
@@ -276,7 +284,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
       if (!is.null(repaired) && is.null(truncation)) {
         .unwrittenWarning(file)
       }
-      wave <- .waveFinite(wave, file)
+      wave <- .waveFinite(.wavNegativeFullScale(wave), file)
       .wavRateWarning(wave, file)
       return(.recordFile(wave, file))
     }
@@ -349,11 +357,7 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
       #the samples are scaled back down to the bit depth of the source. Without
       #this the same audio read as WAVE and as FLAC does not compare equal.
       bit <- .avBitdepth(info[['sample_fmt']], samples)
-      samples <- samples / 2^(32 - bit)
-    }
-    if (bit == 8) {
-      #8bit PCM is unsigned, which is how readWave() returns it.
-      samples <- samples + 128
+      samples <- .avScaled(samples, bit)
     }
 
     if (channels == 1) {
@@ -729,6 +733,39 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
     " and ", if (n == 1) "has" else "have", " been read as zero."
   )
   invisible(NULL)
+}
+
+#' A 32-bit PCM sample of negative full scale, as readWave() reads it
+#'
+#' readWave() gives the samples of 32-bit PCM as integers, and -2^31 is the bit
+#' pattern R keeps for a missing integer, so a sample at negative full scale
+#' came back as NA, and was then read as zero with a warning that it was not a
+#' finite number. Integers hold nothing that is not finite, so an NA among them
+#' is never anything else, and is given as the -2^31 it is.
+#'
+#' @param wave A Wave or WaveMC object, as readWave() returned it
+#' @return The object, with any such sample given as -2^31
+#' @keywords internal
+#' @noRd
+.wavNegativeFullScale <- function(wave) {
+  if (!wave@pcm || wave@bit != 32) {
+    return(wave)
+  }
+  restore <- function(x) {
+    if (!is.integer(x) || !anyNA(x)) {
+      return(x)
+    }
+    storage.mode(x) <- "double"
+    x[is.na(x)] <- -2^31
+    return(x)
+  }
+  if (inherits(wave, "WaveMC")) {
+    wave@.Data <- restore(wave@.Data)
+  } else {
+    wave@left <- restore(wave@left)
+    wave@right <- restore(wave@right)
+  }
+  return(wave)
 }
 
 #' Read any sample that is not a finite number as zero
@@ -1216,6 +1253,68 @@ readAudio <- function(file, mime="auto", from=0, to=Inf, time.unit="seconds",
     return(TRUE)
   }
   return(frames / rate + 0.1 < min(duration, wanted / rate))
+}
+
+#' Samples the av package decoded, at the bit depth of the source
+#'
+#' read_audio_bin() fills the 32-bit range whatever the file was stored at, so
+#' a sample of a source of fewer bits is a whole multiple of 2^(32 - bit), and
+#' is divided back down. All but one: negative full scale is -2^31 in that
+#' range, which is the bit pattern R keeps for a missing integer, so the av
+#' package gives it as -2^31 + 1, and divided down it fell a fraction short of
+#' the sample it stands for. A 16-bit -32768 was read as -32767.99998, not equal
+#' to the same sample read from a WAV file, and an 8-bit 0 as 0.00000006. No
+#' sample of fewer than 32 bits gives -2^31 + 1, which is odd, so it is read as
+#' the negative full scale it is.
+#'
+#' A 24-bit source is decoded to 32 bits and given at 32, as .avBitdepth() says,
+#' and its samples are multiples of 256, so the same holds of it: where every
+#' other sample is a multiple of 256, -2^31 + 1 is read as -2^31, 256 times the
+#' -8388608 readWave() gives for it. In 32-bit integers -2^31 + 1 can be a
+#' sample of its own, and floating point gives positive full scale as 2^31 - 1
+#' too, so there it is left as it is.
+#' @param samples What av::read_audio_bin() returned, as a vector.
+#' @param bit The bit depth .avBitdepth() gives.
+#' @return The samples at that bit depth, 8-bit samples unsigned.
+#' @keywords internal
+#' @noRd
+.avScaled <- function(samples, bit) {
+  #Compared as an integer, so that the integers read_audio_bin() gives are not
+  #copied whole as doubles to compare them.
+  low <- which(samples == -2147483647L)
+  restore <- length(low) > 0 && (bit < 32 || .allMultiplesOf(samples, 256, -2147483647L))
+  samples <- samples / 2^(32 - bit)
+  if (restore) {
+    samples[low] <- -2^(bit - 1)
+  }
+  if (bit == 8) {
+    #8bit PCM is unsigned, which is how readWave() returns it.
+    samples <- samples + 128
+  }
+  return(samples)
+}
+
+#' Whether every value of a vector but one is a multiple of a number
+#'
+#' Asked a block at a time, and given up at the first block that answers no,
+#' so that the audio of a long recording is not copied whole to answer it.
+#' @param x A numeric vector.
+#' @param k The number.
+#' @param except The value that is not asked of.
+#' @param block How many values to ask of at a time.
+#' @return TRUE or FALSE.
+#' @keywords internal
+#' @noRd
+.allMultiplesOf <- function(x, k, except, block=2^20) {
+  from <- 1
+  while (from <= length(x)) {
+    v <- x[from:min(length(x), from + block - 1)]
+    if (!all(v %% k == 0 | v == except)) {
+      return(FALSE)
+    }
+    from <- from + block
+  }
+  return(TRUE)
 }
 
 #' Whether the av package decoded MP3 audio

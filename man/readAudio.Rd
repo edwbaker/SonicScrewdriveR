@@ -79,6 +79,14 @@ delay where the file records it, so a recording can be shorter than
 \code{tuneR::readMP3()} gave: \code{AUDIOMOTH.mp3} is 240000 sample frames rather than
 241920.
 
+A sample at negative full scale is read as the value it holds. Read through
+the av package it is -2^31 in the 32bit range the package decodes to, which
+R keeps for a missing integer, so the av package gives -2^31 + 1 instead; at
+8, 16 and 24 bits nothing else gives that, and it is read as the full scale
+it is. At 32 bits, of integers or floating point, -2^31 + 1 can be a sample
+of its own, and is left as it is. A 32bit PCM WAVE file read by
+\code{tuneR::readWave()} gives -2^31 for it.
+
 A recording made on a trigger is expanded by \code{\link[=audiomothExpand]{audiomothExpand()}} as it is
 read, so that the periods that did not trigger a recording are returned as
 silence and the timing of the triggered recordings is preserved. Such a

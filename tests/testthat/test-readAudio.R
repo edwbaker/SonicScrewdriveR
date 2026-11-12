@@ -2083,6 +2083,99 @@ test_that("Bounding the decode does not change the audio that comes back", {
   expect_identical(readAudio(f, from=0, to=600)@left, whole@left)
 })
 
+test_that("Negative full scale read through the av package is the sample it is at 8, 16 and 24 bits", {
+  skip_if_not_installed("av")
+  # The av package decodes to the 32-bit range, where negative full scale is
+  # -2^31, which R keeps for a missing integer; the package gives -2^31 + 1, and
+  # scaled back down it was a fraction short: -32767.99998 for a 16-bit -32768,
+  # and 0.00000006 for an 8-bit 0. An RF64 file is read by the av package and a
+  # RIFF one by readWave(), so the two are read from the same samples.
+  for (bits in c(8, 16)) {
+    x <- rep(c(-2^(bits - 1), -2^(bits - 1) + 1, -1, 0, 1, 2^(bits - 1) - 1), 10)
+    viaAv <- readAudio(fsWav(x, bits, form="RF64"))
+    viaWave <- readAudio(fsWav(x, bits))
+    expect_identical(as.numeric(viaAv@left), as.numeric(viaWave@left), label=paste(bits, "bits"))
+    expect_equal(viaAv@bit, bits)
+  }
+  # 24 bits are decoded to 32 and given at 32, 256 times what readWave() gives.
+  x <- rep(c(-8388608, -8388607, -1, 0, 1, 8388607), 10)
+  viaAv <- readAudio(fsWav(x, 24, form="RF64"))
+  expect_equal(viaAv@bit, 32)
+  expect_identical(as.numeric(viaAv@left), 256 * as.numeric(readAudio(fsWav(x, 24))@left))
+
+  # A FLAC file, the commonest way into this path.
+  x <- rep(c(-32768L, -32767L, 0L, 32767L), 500)
+  wav <- withr::local_tempfile(fileext=".wav")
+  flac <- withr::local_tempfile(fileext=".flac")
+  tuneR::writeWave(tuneR::Wave(left=x, samp.rate=48000, bit=16), wav)
+  av::av_audio_convert(wav, flac, verbose=FALSE)
+  expect_identical(as.numeric(readAudio(flac)@left), as.numeric(x))
+})
+
+test_that("At 32 bits through the av package, -2^31 + 1 is left as it is", {
+  skip_if_not_installed("av")
+  # Of 32-bit integers -2^31 + 1 is a sample of its own, and the -2^31 the av
+  # package gives as it cannot be told from one.
+  x <- rep(c(-2^31, -2^31 + 1, -1, 0, 1, 2^31 - 1), 10)
+  expect_identical(
+    as.numeric(readAudio(fsWav(x, 32, form="RF64"))@left),
+    rep(c(-2^31 + 1, -2^31 + 1, -1, 0, 1, 2^31 - 1), 10)
+  )
+  # Floating point gives full scale as 2^31 - 1 at the top as well.
+  x <- rep(c(-1, -0.5, 0, 0.5, 1), 10)
+  expect_identical(
+    as.numeric(readAudio(fsWav(x, "float", form="RF64"))@left),
+    rep(c(-2^31 + 1, -2^30, 0, 2^30, 2^31 - 1), 10)
+  )
+})
+
+test_that(".allMultiplesOf answers a block at a time", {
+  x <- c(256, 512, -2147483647, 0, -256)
+  expect_true(.allMultiplesOf(x, 256, -2147483647))
+  expect_true(.allMultiplesOf(x, 256, -2147483647, block=2))
+  expect_false(.allMultiplesOf(c(x, 1), 256, -2147483647, block=2))
+  expect_false(.allMultiplesOf(c(1, x), 256, -2147483647, block=2))
+  expect_true(.allMultiplesOf(numeric(0), 256, -2147483647))
+})
+
+test_that("A 32-bit PCM WAV sample of negative full scale is -2^31, not zero with a warning", {
+  # readWave() gives 32-bit PCM as integers, so -2^31 came back as R's missing
+  # integer and was read as zero, with a warning that it was not finite.
+  x <- rep(c(-2^31, -2^31 + 1, -1, 0, 1, 2^31 - 1), 10)
+  expect_no_warning(w <- readAudio(fsWav(x, 32)))
+  expect_identical(as.numeric(w@left), x)
+  # A part of the file, which readWave() cuts as it reads.
+  expect_identical(as.numeric(readAudio(fsWav(x, 32), from=7, to=12, time.unit="samples")@left), x[7:12])
+
+  # Stereo, and more channels than two, which come back as a WaveMC object.
+  st <- withr::local_tempfile(fileext=".wav")
+  ints <- as.integer(c(-2147483647, -1, 0, 2147483647))
+  tuneR::writeWave(tuneR::Wave(left=rep(ints, 5), right=rev(rep(ints, 5)), samp.rate=8000, bit=32), st)
+  # writeWave() cannot be given -2^31, being R's NA, so it is put in the bytes,
+  # as the first sample of the left channel. The data chunk is the last in the
+  # file, so its audio is the file's last bytes.
+  bytes <- readBin(st, raw(), file.size(st))
+  start <- length(bytes) - 2 * 20 * 4 + 1
+  bytes[start:(start + 3)] <- as.raw(c(0, 0, 0, 0x80))
+  writeBin(bytes, st)
+  expect_no_warning(w <- readAudio(st))
+  expect_identical(as.numeric(w@left), c(-2^31, rep(as.numeric(ints), 5)[-1]))
+  expect_identical(as.numeric(w@right), rev(rep(as.numeric(ints), 5)))
+
+  mc <- withr::local_tempfile(fileext=".wav")
+  m <- matrix(rep(ints, 6), ncol=3, dimnames=list(NULL, c("FL", "FR", "FC")))
+  tuneR::writeWave(tuneR::WaveMC(data=m, samp.rate=8000, bit=32), mc)
+  bytes <- readBin(mc, raw(), file.size(mc))
+  # The first sample of the first channel.
+  start <- length(bytes) - length(m) * 4 + 1
+  bytes[start:(start + 3)] <- as.raw(c(0, 0, 0, 0x80))
+  writeBin(bytes, mc)
+  expect_no_warning(w <- readAudio(mc))
+  expect_s4_class(w, "WaveMC")
+  expect_identical(as.numeric(w@.Data[, 1]), c(-2^31, as.numeric(m[-1, 1])))
+  expect_identical(as.numeric(w@.Data[, 2:3]), as.numeric(m[, 2:3]))
+})
+
 test_that("A part of an MP3 is the same samples as that part of the whole", {
   skip_if_not_installed("av")
   # An MP3 file is read through the av package too, now, and is decoded only as
